@@ -1,0 +1,493 @@
+PILLARS CHARACTER GENERATION - COMPLETE STEPS AND OPTIONS
+==========================================================
+
+This document outlines all steps and options for generating a character in the Pillars RPG system.
+Use this as a reference for creating an automated character generation program.
+
+==========================================================
+STEP 1: BASE ATTRIBUTES
+==========================================================
+
+Starting Age: 16 years old
+
+Players have TWO OPTIONS for determining base attributes:
+
+OPTION A: ROLL DICE
+- Roll 3d6 for each of the following attributes:
+  * Strength (STR)
+  * Dexterity (DEX)
+  * Intelligence (INT)
+  * Wisdom (WIS)
+  * Constitution (CON)
+  * Charisma (CHR)
+
+OPTION B: POINT ALLOCATION
+- Distribute 65 points among the six attributes:
+  * Strength (STR)
+  * Dexterity (DEX)
+  * Intelligence (INT)
+  * Wisdom (WIS)
+  * Constitution (CON)
+  * Charisma (CHR)
+
+ATTRIBUTE MODIFIERS TABLE:
+Attribute Value | Modifier
+3               | -5
+4               | -4
+5               | -3
+6               | -2
+7               | -1
+8-13            | 0
+14              | +1
+15              | +2
+16              | +3
+17              | +4
+18              | +5
+
+==========================================================
+STEP 2: APPEARANCE
+==========================================================
+
+Roll 1d6:
+1 = Pretty (ask GM to further qualify)
+2-5 = Average
+6 = Ugly (ask GM to further qualify)
+
+Note: Appearance can help with Charisma-related aspects but is not a distinct liability or benefit by itself.
+
+==========================================================
+STEP 3: HEIGHT
+==========================================================
+
+OPTION A: Player chooses height
+OPTION B: Roll 1d6 and use table below
+
+D6 | Hands | Imperial | Special Rules
+1  | 14    | 4'8"     | If rolled 1, roll again: subtract 4" and keep rolling until non-1, otherwise height is 14 hands
+2  | 15    | 5'0"     | -
+3  | 16    | 5'4"     | -
+4  | 17    | 5'8"     | -
+5  | 18    | 6'0"     | -
+6  | 19    | 6'4"     | If rolled 6, roll again: add 4" and keep rolling until non-6, otherwise height is 19 hands
+
+Note: 1 hand = 4 inches
+
+==========================================================
+STEP 4: WEIGHT
+==========================================================
+
+Formula: Base Weight + (STR ÷ 2) stones
+Note: 1 stone = 14 pounds
+
+OPTION A: Player chooses base weight between 8-12 stones
+OPTION B: Roll 1d6 and use table below
+
+D6 | Base Weight (stones) | Base Weight (lbs)
+1  | 8                    | 112
+2  | 9                    | 126
+3  | 10                   | 140
+4  | 11                   | 154
+5  | 12                   | 168
+6  | 13                   | 182
+
+==========================================================
+STEP 5: PROVENANCE (SOCIAL CLASS)
+==========================================================
+
+Roll percentile dice (d100) OR choose Merchant or Commoner
+(Must roll if attempting Nobility)
+
+PERCENTILE | CLASS
+1-10       | Nobility (roll again on Nobility sub-table)
+11-30      | Merchant (roll again or choose from Merchant sub-table)
+31-100     | Commoner (roll again or choose from Commoner sub-table)
+
+NOBILITY SUB-TABLE (roll d100):
+1          | Monarch
+2-5        | Royal Family
+6-12       | Duke
+12-30      | March/Border Lords
+31-40      | Count/Earl
+41-46      | Viscount
+47-60      | Baron
+60-85      | Baronet
+86-100     | Knights and Warrior Nobility
+
+MERCHANT SUB-TABLE (roll d100 or choose):
+1-70       | Retail
+70-95      | Wholesale
+94-100     | Specialty
+
+COMMONER SUB-TABLE (roll d100 or choose):
+1-70       | Laborer
+70-100     | Crafts
+
+Crafts
+1-50 smith, builder, wainwright etc.
+51-85 medical, herb lore, maker
+85-100 magic
+
+
+
+show
+==========================================================
+STEP 7: WEALTH
+==========================================================
+
+Roll percentile dice OR choose wealth level (cannot choose Rich)
+
+PERCENTILE | WEALTH LEVEL | STARTING COIN
+0-15       | Subsistence  | 10
+16-70      | Moderate     | 100
+71-95      | Merchant     | 100 + percentile dice
+96-100     | Rich         | Consult DM
+
+Note: Wealth is independent of social class (can be poor noble, rich commoner, etc.)
+
+==========================================================
+STEP 8: PRIOR EXPERIENCE (OPTIONAL)
+==========================================================
+
+Characters start at age 16 but can age through prior experience.
+For each year of prior experience, character can:
+- Gain skill points or skills
+- Earn material rewards
+- Risk death (based on survivability rolls)
+- Age (with potential penalties)
+
+IMPORTANT: Each year of prior experience advances character age by 1 year.
+
+==========================================================
+STEP 9: CHOOSE SKILL TRACK (for each year of prior experience)
+==========================================================
+
+TRACK NAME    | ACCEPTANCE REQUIREMENT              | SURVIVABILITY | INITIAL SKILLS (Year 1 only)
+--------------+-------------------------------------+---------------+--------------------------------
+Army          | 8+ on 2d6 + STR/DEX modifiers      | 5             | - Sword +1 to hit
+              |                                     |               | - Sword +1 parry
+--------------+-------------------------------------+---------------+--------------------------------
+Navy          | 8+ on 2d6 + STR/DEX/INT modifiers  | 5             | - Cutlass +1 to hit
+              |                                     |               | - Cutlass +1 parry
+              |                                     |               | - Swimming
+--------------+-------------------------------------+---------------+--------------------------------
+Officer       | Must be promoted OR be Rich        | 5             | - Morale
+              |                                     |               | - Ken
+              |                                     |               | - Literacy
+              |                                     |               | - Weapon hit, parry
+--------------+-------------------------------------+---------------+--------------------------------
+Rangers       | STR or DEX and INT or WIS bonus required     | 6             | - Weapon hit, parry
+              |          |               | - Tracking
+              |                                     |               | - Wood lore
+              |                                     |               | - Ken
+              |                                     |               | - Literacy
+--------------+-------------------------------------+---------------+--------------------------------
+Random        | No requirements                     | Roll d8       | - Random skill
+              |                                     | (re-roll 5s)  | - Swimming
+--------------+-------------------------------------+---------------+--------------------------------
+Worker        | No requirements                     | 4             | - Laborer
+              |                                     |               | (Additional Laborer if poor/working class)
+--------------+-------------------------------------+---------------+--------------------------------
+Crafts        | No requirements                     | 3             | - Laborer
+              |                                     |               | - Literacy
+              |                                     |               | Choose craft type (see Crafts sub-table)
+--------------+-------------------------------------+---------------+--------------------------------
+Merchant      | 10+ on 2d6 if poor                 | 3             | - Coins
+              | 8+ on 2d6 if working class         |               | - Literacy
+              | 6+ on 2d6 if above working class   |               |
+--------------+-------------------------------------+---------------+--------------------------------
+Magic         | See Magic section                   | Varies        | See Magic spell tables
+
+CRAFTS SUB-TABLE (roll d6 or choose):
+1 | Smith (armorer, weapon smith, general maker)
+2 | Agriculture
+3 | Tailor
+4 | Science (roll d6):
+    1-2 | Maps, logistics, accounting
+    3-4 | Potions/medicine
+    5-6 | Physics (pulleys, ropes, engineering)
+        OR Builder (roll d4):
+           1 | Wainwright
+           2 | Shipwright
+           3 | Mason
+           4 | Structures (homes, fortifications)
+5 | Medical
+6 | Magic
+
+SURVIVABILITY VALUES BY TRACK:
+Army: 5
+Rangers: 6
+Navy: 5
+Officer: 5
+Random: Roll d8 (re-roll on 5)
+Worker: 4
+Crafts: 3
+Merchant: 3
+
+==========================================================
+STEP 10: SURVIVABILITY CHECK (for each year of prior experience)
+==========================================================
+
+For each year in a skill track:
+Roll 3d6 and get HIGHER than the survivability number for that track.
+Apply STR, DEX, INT, WIS modifiers to the roll.
+
+If roll fails: Character dies. Stop character generation.
+If roll succeeds: Continue to skill acquisition.
+
+==========================================================
+STEP 11: SKILL ACQUISITION (for each year of prior experience)
+==========================================================
+
+For each year in a skill track, roll 1d12 and consult the appropriate column:
+
+D12 ROLL | ARMY            | RANGERS                        | NAVY             | OFFICER   | RANDOM             | WORKER             | CRAFTS             | MERCHANT
+---------+-----------------+--------------------------------+------------------+-----------+--------------------+--------------------+--------------------+----------------------
+1        | Sword           | Sword                          | Cutlass          | Morale    | Climbing & Running | Laborer (Str, Dex) | Smith              | Coins
+2        | Archery         | Archery                        | Sailing          | Morale    | Medic              | Morale             | Smith              | Literacy
+3        | Morale          | Archery                        | Ropes & Climbing | Tactics   | Stealth            | Growing            | Builder            | Persuade
+4        | Running         | Tracking                       | Swimming         | Tactics   | -1 STR             | Wood Lore          | Arts & Crafts      | Persuade
+5        | Literacy        | Course/Path                    | Medic            | Logistics | -1 DEX             | Portage            | Potions/Herbs      | Weather, Course/Path
+6        | Medic           | Wood Lore                      | Weather          | Medic     | Persuade           | Builder            | Medic              | Ken
+7        | Climbing        | Medic & Herb Lore              | Literacy         | Persuade  | Potions/Herbs      | Mining             | Literacy           | Ken
+8        | +1 STR          | +1 STR                         | +1 STR           | +1 STR    | +1 STR             | +1 STR             | +1 STR             | -1 STR
+9        | +1 DEX          | +1 DEX                         | +1 DEX           | +1 DEX    | +1 DEX             | +1 DEX             | +1 DEX             | -1 DEX
+10       | Medic           | +1 INT                         | +1 INT           | +1 INT    | Crafts Skill       | +1 INT             | +1 INT             | Talent
+11       | Ranger Skill    | Stealth/Weather/Wood Lore      | Officer Skill    | Promotion | Jack of All Trades | Random             | Merchant Skill     | Random
+12       | Field Promotion | Talent                         | Field Promotion  | Random    | Random             | Crafts Skill       | Jack of All Trades | Jack of All Trades
+
+SPECIAL SKILL RESULTS:
+- Ranger Skill: Roll 1d12 on Rangers column
+- Officer Skill: Roll 1d12 on Officer column
+- Merchant Skill: Roll 1d12 on Merchant column
+- Crafts Skill: Roll 1d12 on Crafts column
+- Random: Roll d8 for column, then 2d6 for skill (use d8 reference row at bottom of table)
+- Talent: Player chooses any talent/skill of their choice
+- Field Promotion/Promotion: Character gains rank and access to Officer track
+- Jack of All Trades: Special skill
+
+NOTES:
+- If character already has a skill and rolls it again, they get +1 towards next skill level
+- Course/Path = Navigation-related skillset
+- Ken = Knowledge or data
+- Morale = +1 or -1 on die rolls (can positively or negatively affect other beings)
+
+==========================================================
+STEP 12: REWARDS (for each year of prior experience)
+==========================================================
+
+TRACK     | REWARD PER YEAR
+----------+--------------------------------------------------------
+Army      | 100 monetary units + percentile dice
+Navy      | 110 monetary units + percentile dice
+Officer   | Rank × 100 monetary units + percentile dice (rolled twice)
+Rangers   | Varies (see GM)
+Random    | Varies (see GM)
+Worker    | 100 monetary units + 10 MU per skill/level used
+Crafts    | 100 monetary units + 50 MU per skill/level used
+Merchant  | See GM
+
+==========================================================
+STEP 13: AGING EFFECTS
+==========================================================
+
+Calculate total years of prior experience to determine age.
+Age = 16 + (number of terms completed)
+
+Check aging table for attribute penalties:
+
+TERMS | AGE | STR | DEX | INT | WIS | CON
+------+-----+-----+-----+-----+-----+-----
+4     | 34  | 0   | 0   | 0   | 0   | 0
+5     | 38  | -1  | -1  | 0   | 0   | 0
+6     | 42  | -1  | -1  | 0   | 0   | -1
+7     | 46  | -1  | -1  | 0   | 0   | -1
+8     | 50  | -1  | -1  | 0   | 0   | -1
+9     | 54  | -1  | -1  | 0   | 0   | -1
+10    | 58  | -1  | -1  | 0   | 0   | -1
+11    | 62  | -1  | -1  | 0   | 0   | -1
+12    | 66  | -1  | -1  | 0   | 0   | -1
+13    | 70  | -2  | -2  | -1  | -1  | -2
+
+Note: Apply aging penalties AFTER all prior experience is complete.
+
+==========================================================
+STEP 14: CALCULATE DERIVED ATTRIBUTES
+==========================================================
+
+FATIGUE POINTS:
+Formula: CON + WIS + (DEX OR STR - player chooses higher) + 1d6 + INT/WIS modifiers
+
+Fatigue Effects:
+- At 1/2 fatigue or lower (but above 5): -1 penalty
+- Between 0 and 5 points: -2 penalty
+- At 0 fatigue: Unconscious
+- Negative their initial fatigue points: Saving throw per turn to avoid death
+- Negative twice their fatigue points: Dead
+
+BODY POINTS:
+Formula: CON + (DEX OR STR - player chooses higher) + 1d6 + INT/WIS modifiers
+
+Body Effects:
+- At 1/2 body or lower (but above 5): -1 penalty
+- Between 0 and 5 body points: -2 penalty
+- At 0 body: Unconscious
+- Negative their initial body points: Saving throw per turn to avoid death
+- Negative twice their body points: Dead
+
+==========================================================
+STEP 15: MAGIC SKILLS (if Magic track chosen)
+==========================================================
+
+Roll percentile dice to determine school access:
+
+PERCENTILE | SCHOOL TYPE
+0-70       | Common Schools of Magic
+71-100     | Less Common Schools of Magic
+
+COMMON SCHOOLS (roll d10 if percentile 0-70):
+1-3  | Elemental Fire
+4-5  | Elemental Lightning
+6    | Elemental Water
+7    | Elemental Earth
+8    | Elemental Wind
+9    | All Elements
+10   | Passage
+11   | Protection
+12   | Mending
+
+LESS COMMON SCHOOLS (roll d6 if percentile 71-100):
+1-3  | Weather
+4    | Counter
+5    | Arcane Help
+6    | Control
+
+SPELL PROGRESSION BY SCHOOL:
+
+ELEMENTAL (Fire/Water/Lightning/Earth/Wind):
+Level 1: Missile
+Level 2: Ball
+Level 3: Bolt
+Level 4: Shield
+Level 5: Barrier
+Level 6: Elemental
+
+PASSAGE:
+Level 1: Detect Magic, Light
+Level 2: Knock, Hold, Blur
+Level 3: Transparency, Detect Invisibility, Lock
+Level 4: Breathing
+Level 5: Flying
+Level 6: Pass Wall
+Level 7: Shape Change
+
+PROTECTION:
+Level 1: Counter 1, Shield, Detect Magic
+Level 2: Counter 2, Shield Wall, Knowledge
+Level 3: Counter 3, Minor Protection from Element
+Level 4: Counter 4, Major Protection from Element
+Level 5: Counter 5, Encase
+
+MENDING:
+Level 1: Heal
+Level 2: Cure
+Level 3: Web/Joining, Breaking
+Level 4: Shaping
+
+WEATHER:
+Level 1: Detect Weather
+Level 2: Wind, Wind Counter
+Level 3: Rain, Rain Counter
+Level 4: Storm, Storm Counter
+
+ARCANE/TRUE MAGIC:
+Level 1: Wild Magic
+Level 2: Any Level 2 spell ++
+Level 3: Controlled Magic
+Level 4: Summon, Control
+Level 5: Bind
+Level 6: Ask
+
+CONTROL:
+Level 1: Persuade Minor, Calm, Enrage
+Level 2: Minor Illusion (including Blur), Fatigue
+Level 3: Wound, Effect Mental State/Senses (Sleep, Confusion, Blind, Deafen, Laugh)
+Level 4: Persuade Major, Illusion (including Transparency)
+Level 5: Major Illusion, Area, Effect Senses (any combination)
+Level 6: Force (effect any physical state: Paralyze, Move, Breath, Run, Sleep)
+
+SPELL SKILL PROGRESSION:
+Level 1: Cast spell normally
+Level 2: Cast without hand gestures
+Level 3: Cast without verbal incantation, protection from same spell
+Level 4: Costs 1/3 less fatigue, halt same spell
+Level 5: Costs 1/2 less fatigue, reflect same spell back onto caster
+Level 6: Costs 2/3 less fatigue, invert spell, reflect same spell group back onto caster
+
+SPELL CASTING MECHANICS:
+- Roll under INT or WIS (depends on spell) for successful casting
+- Spell costs skill level in fatigue points
+- Low rolls (3, 4, 6) and high rolls (16, 17, 18) are special - consult GM
+- Roll -1 of what needed: spell fails but don't lose fatigue
+
+==========================================================
+STEP 16: STARTING EQUIPMENT (OPTIONAL)
+==========================================================
+
+Based on starting wealth, character may purchase equipment.
+Refer to equipment lists in handbook for:
+- Weapons
+- Armor
+- Adventuring gear
+- Tools
+- Supplies
+
+Standard Pack includes:
+- Waterskin
+- 50' rope
+- Tinderbox
+- Bedroll
+- Blanket
+
+Rations options:
+- One month cram: 1 gp (doesn't expire, but -1 penalty per month if eaten solely)
+- One month regular rations: 30 gp (spoils after a month)
+
+==========================================================
+CHARACTER GENERATION COMPLETE
+==========================================================
+
+Final character should have:
+✓ Six base attributes (STR, DEX, INT, WIS, CON, CHR)
+✓ Appearance (1-6)
+✓ Height (in hands and/or imperial)
+✓ Weight (in stones and/or lbs)
+✓ Social class (Nobility/Merchant/Commoner with subtype)
+✓ Location background (City/Village/Rural)
+✓ Wealth level and starting coin
+✓ Current age
+✓ All skills acquired through prior experience
+✓ Any attribute bonuses/penalties from skills or aging
+✓ Fatigue Points
+✓ Body Points
+✓ Starting equipment (optional)
+✓ Magic spells (if applicable)
+
+==========================================================
+ADDITIONAL NOTES FOR PROGRAM IMPLEMENTATION
+==========================================================
+
+1. Track all die rolls for transparency
+2. Allow player choice where specified (attributes, height, weight, etc.)
+3. Enforce requirements (acceptance rolls, survivability)
+4. Apply modifiers in correct order:
+   - Calculate base attributes
+   - Apply skill bonuses during prior experience
+   - Apply aging penalties after all prior experience
+   - Calculate derived attributes (Fatigue, Body) with final values
+5. Handle special cases:
+   - Duplicate skill rolls grant +1 to next level
+   - Promotion grants access to Officer track
+   - Death ends character generation
+6. Display clear summaries at each major step
+7. Allow backtracking or re-rolling where appropriate
+8. Validate all choices against requirements
