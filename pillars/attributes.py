@@ -1660,8 +1660,7 @@ def roll_survivability_check(survivability: int) -> Tuple[int, bool]:
 
 def roll_prior_experience(
     skill_track: SkillTrack,
-    min_years: int = 0,
-    max_years: int = 18
+    years: int = 0
 ) -> PriorExperience:
     """
     Generate prior experience for a character.
@@ -1674,8 +1673,9 @@ def roll_prior_experience(
 
     Args:
         skill_track: The character's chosen skill track
-        min_years: Minimum years of service (default 0)
-        max_years: Maximum years of service (default 18, for age 34)
+        years: Years of prior experience (0-18).
+               Use -1 for random (0-18 years).
+               Default is 0 (no prior experience).
 
     Returns:
         PriorExperience object with complete record
@@ -1684,8 +1684,13 @@ def roll_prior_experience(
     track = skill_track.track
     survivability = skill_track.survivability
 
-    # Randomly determine how many years the character attempts
-    target_years = random.randint(min_years, max_years)
+    # Determine target years
+    if years == -1:
+        # Random years (0-18)
+        target_years = random.randint(0, 18)
+    else:
+        # Clamp to valid range
+        target_years = max(0, min(18, years))
 
     yearly_results = []
     all_skills = []

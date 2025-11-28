@@ -1281,7 +1281,7 @@ class TestPriorExperience(unittest.TestCase):
             craft_type=None,
             craft_rolls=None
         )
-        experience = roll_prior_experience(skill_track, min_years=1, max_years=5)
+        experience = roll_prior_experience(skill_track, years=5)
         self.assertIsInstance(experience, PriorExperience)
         self.assertEqual(experience.starting_age, 16)
         self.assertEqual(experience.track, TrackType.ARMY)
@@ -1298,7 +1298,7 @@ class TestPriorExperience(unittest.TestCase):
             craft_type=None,
             craft_rolls=None
         )
-        experience = roll_prior_experience(skill_track, min_years=5, max_years=5)
+        experience = roll_prior_experience(skill_track, years=5)
         if not experience.died:
             self.assertEqual(experience.total_skill_points, experience.years_served)
 
@@ -1315,7 +1315,7 @@ class TestPriorExperience(unittest.TestCase):
             craft_type=None,
             craft_rolls=None
         )
-        experience = roll_prior_experience(skill_track, min_years=1, max_years=1)
+        experience = roll_prior_experience(skill_track, years=1)
         for skill in initial_skills:
             self.assertIn(skill, experience.all_skills)
 
@@ -1333,7 +1333,7 @@ class TestPriorExperience(unittest.TestCase):
                 craft_type=None,
                 craft_rolls=None
             )
-            experience = roll_prior_experience(skill_track, min_years=18, max_years=18)
+            experience = roll_prior_experience(skill_track, years=18)
             if experience.died:
                 # Years served should be less than max
                 self.assertLess(experience.years_served, 18)
@@ -1354,7 +1354,7 @@ class TestPriorExperience(unittest.TestCase):
             craft_type=None,
             craft_rolls=None
         )
-        experience = roll_prior_experience(skill_track, min_years=0, max_years=0)
+        experience = roll_prior_experience(skill_track, years=0)
         self.assertEqual(experience.years_served, 0)
         self.assertEqual(experience.total_skill_points, 0)
         self.assertEqual(len(experience.yearly_results), 0)
@@ -1373,9 +1373,51 @@ class TestPriorExperience(unittest.TestCase):
             craft_type=None,
             craft_rolls=None
         )
-        experience = roll_prior_experience(skill_track, min_years=10, max_years=10)
+        experience = roll_prior_experience(skill_track, years=10)
         if not experience.died:
             self.assertEqual(experience.final_age, 16 + 10)  # 26
+
+    def test_prior_experience_random_years(self):
+        """Test that years=-1 gives random years (0-18)."""
+        skill_track = SkillTrack(
+            track=TrackType.CRAFTS,
+            acceptance_check=None,
+            survivability=3,
+            survivability_roll=None,
+            initial_skills=[],
+            craft_type=None,
+            craft_rolls=None
+        )
+        years_seen = set()
+        for seed in range(200):
+            random.seed(seed)
+            experience = roll_prior_experience(skill_track, years=-1)
+            if not experience.died:
+                years_seen.add(experience.years_served)
+        # Should see variety of years
+        self.assertGreater(len(years_seen), 5)
+
+    def test_prior_experience_clamps_years(self):
+        """Test that years are clamped to 0-18 range."""
+        skill_track = SkillTrack(
+            track=TrackType.CRAFTS,
+            acceptance_check=None,
+            survivability=3,
+            survivability_roll=None,
+            initial_skills=[],
+            craft_type=None,
+            craft_rolls=None
+        )
+        # Test negative (not -1) gets clamped to 0
+        random.seed(42)
+        experience = roll_prior_experience(skill_track, years=-5)
+        self.assertEqual(experience.years_served, 0)
+
+        # Test over 18 gets clamped to 18
+        random.seed(42)
+        experience = roll_prior_experience(skill_track, years=25)
+        # May die before 18, but target was 18
+        self.assertLessEqual(experience.years_served, 18)
 
     def test_year_result_str_representation(self):
         """Test YearResult string representation."""

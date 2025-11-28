@@ -7,6 +7,9 @@
         button { font-size: 18px; padding: 10px 20px; cursor: pointer; }
         pre { background: #f4f4f4; padding: 20px; white-space: pre-wrap; }
         .died { color: red; font-weight: bold; }
+        label { font-size: 16px; }
+        input[type="number"] { font-size: 16px; width: 60px; padding: 5px; }
+        .form-row { margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -14,7 +17,14 @@
 
     <form method="post">
         {% csrf_token %}
-        <button type="submit">Generate Character</button>
+        <div class="form-row">
+            <label for="years">Years of Prior Experience:</label>
+            <input type="number" id="years" name="years" value="{{ years }}" min="-1" max="18">
+            <small>(0-18, or -1 for random)</small>
+        </div>
+        <div class="form-row">
+            <button type="submit">Generate Character</button>
+        </div>
     </form>
 
     {% if character %}

@@ -86,9 +86,14 @@ class Character:
         return "\n".join(lines)
 
 
-def generate_character() -> Character:
+def generate_character(years: int = 0) -> Character:
     """
     Generate a complete Pillars RPG character.
+
+    Args:
+        years: Years of prior experience (0-18).
+               Use -1 for random (0-18 years).
+               Default is 0 (no prior experience).
 
     Returns:
         Character object with all attributes, skills, and prior experience
@@ -113,7 +118,7 @@ def generate_character() -> Character:
         optimize=True
     )
 
-    prior_experience = roll_prior_experience(skill_track)
+    prior_experience = roll_prior_experience(skill_track, years=years)
 
     return Character(
         attributes=attributes,
