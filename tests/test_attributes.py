@@ -1242,29 +1242,43 @@ class TestPriorExperience(unittest.TestCase):
         self.assertLessEqual(roll, 12)
 
     def test_roll_survivability_check_range(self):
-        """Test survivability check roll range (2d6 = 2-12)."""
+        """Test survivability check roll range (3d6 = 3-18)."""
         for seed in range(50):
             random.seed(seed)
-            roll, survived = roll_survivability_check(5)
-            self.assertGreaterEqual(roll, 2)
-            self.assertLessEqual(roll, 12)
+            roll, total, survived = roll_survivability_check(5)
+            self.assertGreaterEqual(roll, 3)
+            self.assertLessEqual(roll, 18)
+            # With no modifier, total should equal roll
+            self.assertEqual(roll, total)
+
+    def test_roll_survivability_check_with_modifier(self):
+        """Test survivability check with attribute modifiers."""
+        random.seed(42)
+        # Positive modifier
+        roll, total, survived = roll_survivability_check(10, total_modifier=5)
+        self.assertEqual(total, roll + 5)
+
+        # Negative modifier
+        random.seed(42)
+        roll2, total2, survived2 = roll_survivability_check(10, total_modifier=-3)
+        self.assertEqual(total2, roll2 - 3)
 
     def test_roll_survivability_check_pass_fail(self):
         """Test survivability check pass/fail logic."""
-        # With target 2, should almost always pass (2d6 >= 2)
+        # With target 3, should always pass (3d6 >= 3)
         passed_count = 0
         for seed in range(100):
             random.seed(seed)
-            roll, survived = roll_survivability_check(2)
+            roll, total, survived = roll_survivability_check(3)
             if survived:
                 passed_count += 1
         self.assertEqual(passed_count, 100)  # All should pass
 
-        # With target 12, should rarely pass (need exactly 12)
+        # With target 18, should rarely pass (need exactly 18)
         passed_count = 0
         for seed in range(100):
             random.seed(seed)
-            roll, survived = roll_survivability_check(12)
+            roll, total, survived = roll_survivability_check(18)
             if survived:
                 passed_count += 1
         self.assertLess(passed_count, 10)  # Very few should pass
@@ -1429,12 +1443,16 @@ class TestPriorExperience(unittest.TestCase):
             skill_points=1,
             survivability_target=5,
             survivability_roll=8,
+            survivability_modifier=2,
+            survivability_total=10,
             survived=True
         )
         result_str = str(result)
         self.assertIn("Year 20", result_str)
         self.assertIn("Tactics", result_str)
         self.assertIn("Survived", result_str)
+        self.assertIn("+2", result_str)  # Modifier should be shown
+        self.assertIn("=10", result_str)  # Total should be shown
 
     def test_year_result_str_death(self):
         """Test YearResult string representation on death."""
@@ -1446,10 +1464,13 @@ class TestPriorExperience(unittest.TestCase):
             skill_points=1,
             survivability_target=6,
             survivability_roll=4,
+            survivability_modifier=-2,
+            survivability_total=2,
             survived=False
         )
         result_str = str(result)
         self.assertIn("DIED", result_str)
+        self.assertIn("-2", result_str)  # Negative modifier
 
     def test_prior_experience_str_representation(self):
         """Test PriorExperience string representation."""

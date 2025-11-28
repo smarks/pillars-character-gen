@@ -1561,13 +1561,16 @@ class YearResult:
     skill_roll: int
     skill_points: int  # Always 1
     survivability_target: int
-    survivability_roll: int
+    survivability_roll: int  # Base 3d6 roll
+    survivability_modifier: int  # Sum of all attribute modifiers
+    survivability_total: int  # Roll + modifier
     survived: bool
 
     def __str__(self) -> str:
         status = "Survived" if self.survived else "DIED"
+        mod_str = f"{self.survivability_modifier:+d}" if self.survivability_modifier != 0 else "+0"
         return (f"Year {self.year}: {self.skill_gained} (+1 SP) | "
-                f"Survival: {self.survivability_roll} vs {self.survivability_target}+ [{status}]")
+                f"Survival: {self.survivability_roll}{mod_str}={self.survivability_total} vs {self.survivability_target}+ [{status}]")
 
 
 @dataclass
@@ -1643,24 +1646,27 @@ def roll_yearly_skill(track: TrackType, year_index: int) -> Tuple[str, int]:
     return skill, roll
 
 
-def roll_survivability_check(survivability: int) -> Tuple[int, bool]:
+def roll_survivability_check(survivability: int, total_modifier: int = 0) -> Tuple[int, int, bool]:
     """
-    Roll a survivability check (2d6 >= survivability target).
+    Roll a survivability check (3d6 + all attribute modifiers >= survivability target).
 
     Args:
         survivability: Target number to meet or exceed
+        total_modifier: Sum of all attribute modifiers (STR + DEX + INT + WIS + CON + CHR)
 
     Returns:
-        Tuple of (roll result, survived boolean)
+        Tuple of (base roll, total with modifiers, survived boolean)
     """
-    roll = sum(roll_dice(2, 6))
-    survived = roll >= survivability
-    return roll, survived
+    roll = sum(roll_dice(3, 6))
+    total = roll + total_modifier
+    survived = total >= survivability
+    return roll, total, survived
 
 
 def roll_prior_experience(
     skill_track: SkillTrack,
-    years: int = 0
+    years: int = 0,
+    total_modifier: int = 0
 ) -> PriorExperience:
     """
     Generate prior experience for a character.
@@ -1669,13 +1675,14 @@ def roll_prior_experience(
     Each year they gain:
     - 1 skill point
     - 1 skill from their track's skill table
-    - Must pass a survivability roll or die
+    - Must pass a survivability roll (3d6 + all attribute modifiers >= target) or die
 
     Args:
         skill_track: The character's chosen skill track
         years: Years of prior experience (0-18).
                Use -1 for random (0-18 years).
                Default is 0 (no prior experience).
+        total_modifier: Sum of all attribute modifiers (STR+DEX+INT+WIS+CON+CHR)
 
     Returns:
         PriorExperience object with complete record
@@ -1713,8 +1720,8 @@ def roll_prior_experience(
         # Gain skill point
         total_skill_points += 1
 
-        # Survivability check
-        surv_roll, survived = roll_survivability_check(survivability)
+        # Survivability check (3d6 + all attribute modifiers >= target)
+        surv_roll, surv_total, survived = roll_survivability_check(survivability, total_modifier)
 
         year_result = YearResult(
             year=current_age,
@@ -1724,6 +1731,8 @@ def roll_prior_experience(
             skill_points=1,
             survivability_target=survivability,
             survivability_roll=surv_roll,
+            survivability_modifier=total_modifier,
+            survivability_total=surv_total,
             survived=survived
         )
         yearly_results.append(year_result)
