@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pillars Character Generator</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        button { font-size: 18px; padding: 10px 20px; cursor: pointer; }
+        pre { background: #f4f4f4; padding: 20px; white-space: pre-wrap; }
+        .died { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Pillars Character Generator</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Generate Character</button>
+    </form>
+
+    {% if character %}
+    <h2>Generated Character</h2>
+    <pre {% if character.died %}class="died"{% endif %}>{{ character }}</pre>
+    {% endif %}
+</body>
+</html>

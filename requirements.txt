@@ -1,1 +1,5 @@
+# Core library (no web dependencies)
 pytest>=7.4.0
+
+# Web app (optional - only needed for webapp/)
+django>=5.0

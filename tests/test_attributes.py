@@ -4,7 +4,7 @@ Unit tests for character attribute generation.
 
 import unittest
 import random
-from main.helpers.attributes import (
+from pillars.attributes import (
     get_attribute_modifier,
     roll_single_attribute_3d6,
     roll_single_attribute_4d6_drop_lowest,

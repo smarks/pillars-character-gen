@@ -9,7 +9,7 @@ from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 import random
-from main.helpers.dice import roll_dice, roll_with_drop_lowest, roll_demon_die, roll_percentile, roll_die
+from pillars.dice import roll_dice, roll_with_drop_lowest, roll_demon_die, roll_percentile, roll_die
 
 
 # Attribute names
@@ -828,8 +828,6 @@ def roll_location() -> Location:
     Returns:
         Location object with roll, location type, skills, and modifiers
     """
-    from main.helpers.dice import roll_die
-
     roll = roll_percentile()
     skill_roll = None
     attribute_roll = None

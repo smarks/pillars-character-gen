@@ -4,7 +4,7 @@ Unit tests for dice rolling utilities.
 
 import unittest
 import random
-from main.helpers.dice import (
+from pillars.dice import (
     roll_die,
     roll_dice,
     roll_and_sum,
