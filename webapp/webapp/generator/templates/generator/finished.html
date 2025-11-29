@@ -3,62 +3,17 @@
 {% block title %}Character Sheet - Pillars{% endblock %}
 
 {% block extra_css %}
-.attributes-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin: 15px 0;
-}
-.attribute {
-    background: #f4f4f4;
-    padding: 10px;
-    text-align: center;
+.markdown-output {
+    background: #fff;
     border: 1px solid #ccc;
-}
-.attribute .name { font-weight: bold; font-size: 0.9em; }
-.attribute .value { font-size: 1.5em; font-weight: bold; }
-.attribute .modifier { color: #666; font-size: 0.9em; }
-
-.derived-stats {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    margin-top: 15px;
-}
-.derived-stat {
-    background: #333;
-    color: white;
-    padding: 10px;
-    text-align: center;
-}
-.derived-stat .label { font-size: 0.9em; color: #aaa; }
-.derived-stat .value { font-size: 1.3em; font-weight: bold; }
-
-.experience-log {
-    font-size: 0.9em;
-    background: #f4f4f4;
-    padding: 15px;
-    border: 1px solid #ddd;
-}
-.experience-log .year-entry {
-    padding: 5px 0;
-    border-bottom: 1px dotted #ccc;
-}
-.experience-log .year-entry:last-child { border-bottom: none; }
-
-.death-notice {
-    background: #c44;
-    color: white;
     padding: 20px;
-    text-align: center;
-    margin-top: 20px;
-    font-size: 1.2em;
-    font-weight: bold;
+    font-family: monospace;
+    font-size: 14px;
+    white-space: pre-wrap;
+    line-height: 1.4;
 }
-
-@media print {
-    .attributes-grid { gap: 5px; }
-    .derived-stat { background: #666; }
+.copy-btn {
+    margin-bottom: 10px;
 }
 {% endblock %}
 
@@ -66,157 +21,53 @@
 <div class="top-bar">
     <h1>Character Sheet</h1>
     <div>
+        <button onclick="copyToClipboard()" class="btn copy-btn">Copy to Clipboard</button>
+        <a href="{% url 'generator' %}" class="btn primary">New Character</a>
         <a href="{% url 'welcome' %}" class="btn">&larr; Home</a>
-        <button onclick="window.print()" class="btn">Print</button>
     </div>
 </div>
 
-<div class="section">
-    <h2>Pillars Character</h2>
-    {% if character_data.skill_track %}
-    <p><strong>{{ character_data.skill_track.track }} Track</strong></p>
-    {% else %}
-    <p><strong>Age 16 - No Prior Experience</strong></p>
-    {% endif %}
-</div>
-
-<div class="section">
-    <h3>Attributes</h3>
-    <div class="attributes-grid">
-        <div class="attribute">
-            <div class="name">STRENGTH</div>
-            <div class="value">{{ character_data.attributes.STR }}</div>
-            <div class="modifier">{% with mod=character_data.attributes.STR %}{% if mod >= 14 %}+{% elif mod <= 7 %}-{% else %}+0{% endif %}{% endwith %}</div>
-        </div>
-        <div class="attribute">
-            <div class="name">DEXTERITY</div>
-            <div class="value">{{ character_data.attributes.DEX }}</div>
-        </div>
-        <div class="attribute">
-            <div class="name">INTELLIGENCE</div>
-            <div class="value">{{ character_data.attributes.INT }}</div>
-        </div>
-        <div class="attribute">
-            <div class="name">WISDOM</div>
-            <div class="value">{{ character_data.attributes.WIS }}</div>
-        </div>
-        <div class="attribute">
-            <div class="name">CONSTITUTION</div>
-            <div class="value">{{ character_data.attributes.CON }}</div>
-        </div>
-        <div class="attribute">
-            <div class="name">CHARISMA</div>
-            <div class="value">{{ character_data.attributes.CHR }}</div>
-        </div>
-    </div>
-    <div class="derived-stats">
-        <div class="derived-stat">
-            <div class="label">Fatigue Points</div>
-            <div class="value">{{ character_data.attributes.fatigue_points }}</div>
-        </div>
-        <div class="derived-stat">
-            <div class="label">Body Points</div>
-            <div class="value">{{ character_data.attributes.body_points }}</div>
-        </div>
-    </div>
-</div>
-
-<div class="section">
-    <h3>Background</h3>
-    <div class="info-row">
-        <span>Age</span>
-        <span><strong>{{ years|add:16 }}</strong></span>
-    </div>
-    <div class="info-row">
-        <span>Appearance</span>
-        <span>{{ character_data.appearance }}</span>
-    </div>
-    <div class="info-row">
-        <span>Height</span>
-        <span>{{ character_data.height }}</span>
-    </div>
-    <div class="info-row">
-        <span>Weight</span>
-        <span>{{ character_data.weight }}</span>
-    </div>
-    <div class="info-row">
-        <span>Provenance</span>
-        <span>{{ character_data.provenance }}</span>
-    </div>
-    <div class="info-row">
-        <span>Location</span>
-        <span>{{ character_data.location }}</span>
-    </div>
-    <div class="info-row">
-        <span>Literacy</span>
-        <span>{{ character_data.literacy }}</span>
-    </div>
-    <div class="info-row">
-        <span>Wealth</span>
-        <span>{{ character_data.wealth }}</span>
-    </div>
-</div>
+<div class="markdown-output" id="character-sheet">{{ character_data.str_repr }}
 
 {% if character_data.skill_track %}
-<div class="section">
-    <h3>Skill Track</h3>
-    <div class="info-row">
-        <span>Track</span>
-        <span><strong>{{ character_data.skill_track.track }}</strong></span>
-    </div>
-    <div class="info-row">
-        <span>Survivability</span>
-        <span>{{ character_data.skill_track.survivability }}+</span>
-    </div>
-    {% if character_data.skill_track.craft_type %}
-    <div class="info-row">
-        <span>Craft Type</span>
-        <span>{{ character_data.skill_track.craft_type }}</span>
-    </div>
-    {% endif %}
-    {% if character_data.skill_track.magic_school %}
-    <div class="info-row">
-        <span>Magic School</span>
-        <span>{{ character_data.skill_track.magic_school }}</span>
-    </div>
-    {% endif %}
-</div>
+**Track**
+{{ character_data.skill_track.track }} (Survivability {{ character_data.skill_track.survivability }}+)
+{% if character_data.skill_track.craft_type %}Craft Type: {{ character_data.skill_track.craft_type }}{% endif %}
+{% if character_data.skill_track.magic_school %}Magic School: {{ character_data.skill_track.magic_school }}{% endif %}
 {% endif %}
 
 {% if skills %}
-<div class="section">
-    <h3>Skills ({{ skills|length }})</h3>
-    <div class="skills-list">
-        {% for skill in skills %}
-        <span class="skill-tag">{{ skill }}</span>
-        {% endfor %}
-    </div>
-</div>
-{% endif %}
+**Skills** ({{ skills|length }})
+{% for skill in skills %}- {{ skill }}
+{% endfor %}{% endif %}
 
 {% if years > 0 %}
-<div class="section">
-    <h3>Prior Experience Log</h3>
-    <div class="experience-log">
-        {% for yr in yearly_results %}
-        <div class="year-entry {% if yr.survived %}survived{% else %}died{% endif %}">
-            Year {{ yr.year }} (Age {{ yr.year }}): {{ yr.skill }} |
-            Survival {{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }}
-            {% if yr.survived %}[OK]{% else %}[DIED]{% endif %}
-        </div>
-        {% endfor %}
-    </div>
-</div>
-{% endif %}
+**Prior Experience**
+Starting Age: 16
+Final Age: {{ years|add:16 }}
+Years Served: {{ years }}
+
+{% for yr in yearly_results %}Age {{ yr.year }}: {{ yr.skill }} | Survival: {{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+ [{% if yr.survived %}OK{% else %}DIED{% endif %}]
+{% endfor %}{% endif %}
 
 {% if died %}
-<div class="death-notice">
-    THIS CHARACTER DIED DURING PRIOR EXPERIENCE
-</div>
-{% endif %}
+**THIS CHARACTER DIED DURING PRIOR EXPERIENCE**
+{% endif %}</div>
 
-<div class="button-group no-print" style="text-align: center; margin-top: 30px;">
-    <a href="{% url 'generator' %}" class="btn primary">Create New Character</a>
-    <a href="{% url 'welcome' %}" class="btn">Back to Home</a>
-</div>
+<script>
+function copyToClipboard() {
+    var text = document.getElementById('character-sheet').innerText;
+    navigator.clipboard.writeText(text).then(function() {
+        alert('Character sheet copied to clipboard!');
+    }).catch(function(err) {
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('Character sheet copied to clipboard!');
+    });
+}
+</script>
 {% endblock %}

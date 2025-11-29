@@ -88,7 +88,7 @@ class IndexViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Character Generator')
         # Character should be auto-generated and displayed
-        self.assertContains(response, 'PILLARS CHARACTER')
+        self.assertContains(response, 'Pillars Character')
 
     def test_initial_character_has_no_skill_track_or_experience(self):
         """Test that initial character does NOT show skill track or prior experience."""
@@ -116,7 +116,7 @@ class IndexViewTests(TestCase):
             'action': 'reroll_none',
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'PILLARS CHARACTER')
+        self.assertContains(response, 'Pillars Character')
 
     def test_reroll_physical_focus(self):
         """Test re-rolling a character with physical focus."""
@@ -124,7 +124,7 @@ class IndexViewTests(TestCase):
             'action': 'reroll_physical',
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'PILLARS CHARACTER')
+        self.assertContains(response, 'Pillars Character')
 
     def test_reroll_mental_focus(self):
         """Test re-rolling a character with mental focus."""
@@ -132,7 +132,7 @@ class IndexViewTests(TestCase):
             'action': 'reroll_mental',
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'PILLARS CHARACTER')
+        self.assertContains(response, 'Pillars Character')
 
     def test_add_experience_redirects_to_track_selection(self):
         """Test that add experience redirects to track selection."""
@@ -374,7 +374,7 @@ class UIFlowTests(TestCase):
         response = self.client.get(reverse('index'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Character Generator')
-        self.assertContains(response, 'PILLARS CHARACTER')
+        self.assertContains(response, 'Pillars Character')
 
         # Step 2: Finish the character
         response = self.client.post(reverse('index'), {
@@ -427,21 +427,21 @@ class UIFlowTests(TestCase):
         """Test re-rolling characters with different focuses."""
         # Load initial character
         response = self.client.get(reverse('index'))
-        self.assertContains(response, 'PILLARS CHARACTER')
+        self.assertContains(response, 'Pillars Character')
 
         # Re-roll with physical focus
         response = self.client.post(reverse('index'), {
             'action': 'reroll_physical',
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'PILLARS CHARACTER')
+        self.assertContains(response, 'Pillars Character')
 
         # Re-roll with mental focus
         response = self.client.post(reverse('index'), {
             'action': 'reroll_mental',
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'PILLARS CHARACTER')
+        self.assertContains(response, 'Pillars Character')
 
     def test_start_over_from_interactive(self):
         """Test start over button from interactive mode."""
@@ -551,7 +551,7 @@ class AttributeFocusTests(TestCase):
             'action': 'reroll_physical',
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'PILLARS CHARACTER')
+        self.assertContains(response, 'Pillars Character')
 
     def test_mental_focus_web_generation(self):
         """Test generating a character with mental focus via web."""
@@ -559,7 +559,7 @@ class AttributeFocusTests(TestCase):
             'action': 'reroll_mental',
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'PILLARS CHARACTER')
+        self.assertContains(response, 'Pillars Character')
 
 
 class MagicTrackUITests(TestCase):

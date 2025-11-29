@@ -26,7 +26,7 @@ I played D&D for the first time in 7th grade back in 1977. I was an active playe
 
 A while ago I decided to stop missing the kind of D&D I loved and started doing something about it. The Pillars campaign is the result. It is not finished and hopefully never will be.
 
----
+
 
 ## What is Pillars?
 
@@ -40,7 +40,7 @@ Now it is easy to play D&D without any homebrew elements at all. This is not tha
 
 Pillars is being developed primarily by Spencer Marks, with Stan Hickman helping quite a bit especially with the math bits. It's my hope that additional play testers will help further its development. Think old school D&D.
 
----
+
 
 ## System Foundation
 
@@ -66,7 +66,7 @@ There's no endgame, and there's nothing in particular a character must do other 
 
 My focus includes strong elements of storytelling, puzzle solving, and free-form character development. By free-form, I mean you develop your character(s) organically, without specific templates or required skill trees.
 
----
+
 
 ## Core Mechanics
 
@@ -82,7 +82,7 @@ Success depends on both your character's capabilities and the difficulty of what
 
 Character's start out at age 16. However, you can age your character using prior experience tables. 
 
----
+
 
 ## Getting Started
 
@@ -92,7 +92,6 @@ The rules are intentionally accessible—you don't need to master hundreds of pa
 
 Ready to explore the Pillars world? Let's begin your adventure.
 
----
 
 ## Gameplay
 
@@ -158,6 +157,8 @@ These days, the tribes and customs have become even more diversified than when t
 
 As a new player, your character will start on the main land but there are many choices to made in the creation of your character beyond determining characteristics. 
 
+-- /meta --
+
 -- lore --
 ### Places
 
@@ -170,6 +171,8 @@ South and West lay the waters of the **Dragon Isles**, a land of mountainous des
 Down below South and West are the **Dragon Isles**.  Little and less is known of isles, of which there are many, nor the dragons that inhabit them as they like to keep to themselves. However sparse, other sentiment races inhabit the isles facilitating trade. 
 
 To the south east lies much water and finally the **Old Emporium**. While city states still, exotic and splendid, can be found a long the vast coastline. Less is known about the inner lands  away from the coast and further south. The city states are independent.
+
+--/ lore -- 
 
 -- players_handbook --
 ## Characters
@@ -674,6 +677,8 @@ Push is a first level spell available in all categories or schools but is not al
 	4. Storm, Storm counter 
 	
 **Arcane or True Magic**
+-- / Player_handook  --
+
 
 -- DM_handbook --
 

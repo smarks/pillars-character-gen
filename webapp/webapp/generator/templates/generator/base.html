@@ -156,9 +156,41 @@
 
         /* Print styles */
         @media print {
-            .top-bar, .button-group, button, .btn, .no-print { display: none; }
+            .top-bar, .button-group, button, .btn, .no-print, .dice-roller { display: none; }
             body { padding: 0; }
             .section { border: none; padding: 10px 0; }
+        }
+
+        /* Dice roller */
+        .dice-roller {
+            margin-top: 40px;
+            padding: 15px;
+            border-top: 2px solid #ccc;
+            background: #f9f9f9;
+        }
+        .dice-roller h4 { margin: 0 0 10px 0; }
+        .dice-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .dice-controls select {
+            font-family: monospace;
+            font-size: 14px;
+            padding: 5px;
+        }
+        .dice-controls button {
+            padding: 5px 15px;
+            margin: 0;
+        }
+        .dice-result {
+            font-size: 16px;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            min-height: 20px;
         }
 
         {% block extra_css %}{% endblock %}
@@ -166,5 +198,70 @@
 </head>
 <body>
     {% block content %}{% endblock %}
+
+    <div class="dice-roller">
+        <h4>Dice Roller</h4>
+        <div class="dice-controls">
+            <select id="dice-count">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+            </select>
+            <select id="dice-size">
+                <option value="4">d4</option>
+                <option value="6" selected>d6</option>
+                <option value="8">d8</option>
+                <option value="10">d10</option>
+                <option value="12">d12</option>
+                <option value="20">d20</option>
+            </select>
+            <button type="button" onclick="rollDice()">Roll</button>
+            <button type="button" onclick="rollPercentile()">Roll d100</button>
+            <button type="button" onclick="rollDemonDie()">Demon Die (d6)</button>
+        </div>
+        <div class="dice-result" id="dice-result">-</div>
+    </div>
+
+    <script>
+    function rollDice() {
+        var count = parseInt(document.getElementById('dice-count').value);
+        var size = parseInt(document.getElementById('dice-size').value);
+        var rolls = [];
+        var total = 0;
+        for (var i = 0; i < count; i++) {
+            var roll = Math.floor(Math.random() * size) + 1;
+            rolls.push(roll);
+            total += roll;
+        }
+        var result = count + 'd' + size + ': [' + rolls.join(', ') + '] = ' + total;
+        document.getElementById('dice-result').textContent = result;
+    }
+
+    function rollPercentile() {
+        var tens = Math.floor(Math.random() * 10) * 10;
+        var ones = Math.floor(Math.random() * 10);
+        var result = tens + ones;
+        if (result === 0) result = 100;
+        document.getElementById('dice-result').textContent = 'd100: ' + result + ' (tens: ' + tens + ', ones: ' + ones + ')';
+    }
+
+    function rollDemonDie() {
+        var roll = Math.floor(Math.random() * 6) + 1;
+        var result = 'd6 Demon Die: ' + roll;
+        if (roll === 1) {
+            result += ' - DEMON! Roll again and subtract.';
+        } else if (roll === 6) {
+            result += ' - EXPLODE! Roll again and add.';
+        }
+        document.getElementById('dice-result').textContent = result;
+    }
+    </script>
 </body>
 </html>

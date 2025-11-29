@@ -123,9 +123,7 @@ class Character:
             Multi-line string with formatted character information.
         """
         lines = [
-            "=" * 60,
-            "PILLARS CHARACTER",
-            "=" * 60,
+            "**Pillars Character**",
             "",
             str(self.attributes),
             "",
@@ -149,9 +147,7 @@ class Character:
 
             if self.died:
                 lines.append("")
-                lines.append("!" * 60)
-                lines.append("THIS CHARACTER DIED DURING PRIOR EXPERIENCE!")
-                lines.append("!" * 60)
+                lines.append("**THIS CHARACTER DIED DURING PRIOR EXPERIENCE!**")
 
         return "\n".join(lines)
 

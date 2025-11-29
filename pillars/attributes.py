@@ -178,16 +178,26 @@ class CharacterAttributes:
 
     def __str__(self) -> str:
         """Format attributes for display."""
-        lines = [f"Character Attributes (Generated via {self.generation_method})", "=" * 50]
+        lines = [f"**Attributes** ({self.generation_method})"]
+
+        # Build a dict of roll details for quick lookup
+        roll_by_attr = {r.attribute_name: r for r in self.roll_details}
 
         for attr in CORE_ATTRIBUTES:
             value = getattr(self, attr)
             modifier = self.get_modifier(attr)
             mod_str = f"+{modifier}" if modifier >= 0 else str(modifier)
-            lines.append(f"{attr}: {value:2d} (modifier: {mod_str})")
+
+            # Include dice rolls if available
+            if attr in roll_by_attr:
+                roll = roll_by_attr[attr]
+                all_str = ",".join(map(str, roll.all_rolls))
+                kept_str = ",".join(map(str, roll.kept_rolls))
+                lines.append(f"- {attr}: {value:2d} ({mod_str})  [rolled {all_str} → kept {kept_str}]")
+            else:
+                lines.append(f"- {attr}: {value:2d} ({mod_str})")
 
         # Add derived stats with calculation breakdown
-        lines.append("-" * 50)
         higher_phys = max(self.STR, self.DEX)
         higher_phys_name = "STR" if self.STR >= self.DEX else "DEX"
         int_mod = self.get_modifier("INT")
@@ -198,11 +208,11 @@ class CharacterAttributes:
 
         # Fatigue: CON + WIS + max(STR,DEX) + 1d6 + INT/WIS mods
         fatigue_calc = f"{self.CON}+{self.WIS}+{higher_phys}+{self.fatigue_roll}{mod_str}"
-        lines.append(f"Fatigue Points: {self.fatigue_points}  (CON+WIS+{higher_phys_name}+1d6 = {fatigue_calc})")
+        lines.append(f"- Fatigue Points: {self.fatigue_points}  (CON+WIS+{higher_phys_name}+1d6 = {fatigue_calc})")
 
         # Body: CON + max(STR,DEX) + 1d6 + INT/WIS mods
         body_calc = f"{self.CON}+{higher_phys}+{self.body_roll}{mod_str}"
-        lines.append(f"Body Points: {self.body_points}  (CON+{higher_phys_name}+1d6 = {body_calc})")
+        lines.append(f"- Body Points: {self.body_points}  (CON+{higher_phys_name}+1d6 = {body_calc})")
 
         return "\n".join(lines)
 
@@ -2213,9 +2223,7 @@ class PriorExperience:
 
     def __str__(self) -> str:
         lines = [
-            f"\n{'='*60}",
-            f"PRIOR EXPERIENCE ({self.track.value} Track)",
-            f"{'='*60}",
+            f"\n**Prior Experience** ({self.track.value} Track)",
             f"Starting Age: {self.starting_age}",
         ]
 
@@ -2227,34 +2235,20 @@ class PriorExperience:
             lines.append(f"Years Served: {self.years_served}")
 
         # Display survivability with attribute breakdown
-        lines.append(f"\nSurvivability Target: {self.survivability_target}+")
-        lines.append("Survivability Roll: 3d6 + attribute modifiers")
+        lines.append(f"Survivability Target: {self.survivability_target}+")
 
         if self.attribute_scores and self.attribute_modifiers:
-            # Show each attribute: score (modifier)
-            attr_parts = []
-            for attr in CORE_ATTRIBUTES:
-                score = self.attribute_scores.get(attr, 0)
-                mod = self.attribute_modifiers.get(attr, 0)
-                mod_str = f"+{mod}" if mod >= 0 else str(mod)
-                attr_parts.append(f"{attr}:{score}({mod_str})")
-            lines.append(f"  Attributes: {' '.join(attr_parts)}")
-
             # Show total modifier calculation
             total_mod = sum(self.attribute_modifiers.values())
-            mod_breakdown = ' '.join(f"{m:+d}" for m in self.attribute_modifiers.values())
             total_str = f"+{total_mod}" if total_mod >= 0 else str(total_mod)
-            lines.append(f"  Total Modifier: {mod_breakdown} = {total_str}")
+            lines.append(f"Total Modifier: {total_str}")
 
-        lines.append(f"\nYear-by-Year Progression:")
-        lines.append("-" * 60)
+        lines.append(f"\n**Year-by-Year**")
 
         for result in self.yearly_results:
             lines.append(str(result))
 
-        lines.append("-" * 60)
-        lines.append(f"\nTOTAL SKILL POINTS: {self.total_skill_points}")
-        lines.append(f"SKILLS GAINED ({len(self.all_skills)}):")
+        lines.append(f"\n**Skills** ({len(self.all_skills)})")
 
         # Group and count skills
         skill_counts: Dict[str, int] = {}
@@ -2263,9 +2257,9 @@ class PriorExperience:
 
         for skill, count in sorted(skill_counts.items()):
             if count > 1:
-                lines.append(f"  - {skill} x{count}")
+                lines.append(f"- {skill} x{count}")
             else:
-                lines.append(f"  - {skill}")
+                lines.append(f"- {skill}")
 
         # Show cumulative aging effects if any
         if self.aging_effects:
