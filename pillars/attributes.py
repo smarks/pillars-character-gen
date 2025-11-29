@@ -186,10 +186,23 @@ class CharacterAttributes:
             mod_str = f"+{modifier}" if modifier >= 0 else str(modifier)
             lines.append(f"{attr}: {value:2d} (modifier: {mod_str})")
 
-        # Add derived stats
+        # Add derived stats with calculation breakdown
         lines.append("-" * 50)
-        lines.append(f"Fatigue Points: {self.fatigue_points}")
-        lines.append(f"Body Points: {self.body_points}")
+        higher_phys = max(self.STR, self.DEX)
+        higher_phys_name = "STR" if self.STR >= self.DEX else "DEX"
+        int_mod = self.get_modifier("INT")
+        wis_mod = self.get_modifier("WIS")
+        int_mod_str = f"{int_mod:+d}" if int_mod != 0 else ""
+        wis_mod_str = f"{wis_mod:+d}" if wis_mod != 0 else ""
+        mod_str = f"{int_mod_str}{wis_mod_str}" if (int_mod != 0 or wis_mod != 0) else ""
+
+        # Fatigue: CON + WIS + max(STR,DEX) + 1d6 + INT/WIS mods
+        fatigue_calc = f"{self.CON}+{self.WIS}+{higher_phys}+{self.fatigue_roll}{mod_str}"
+        lines.append(f"Fatigue Points: {self.fatigue_points}  (CON+WIS+{higher_phys_name}+1d6 = {fatigue_calc})")
+
+        # Body: CON + max(STR,DEX) + 1d6 + INT/WIS mods
+        body_calc = f"{self.CON}+{higher_phys}+{self.body_roll}{mod_str}"
+        lines.append(f"Body Points: {self.body_points}  (CON+{higher_phys_name}+1d6 = {body_calc})")
 
         return "\n".join(lines)
 
