@@ -1479,16 +1479,22 @@ class TestPriorExperience(unittest.TestCase):
             final_age=20,
             years_served=4,
             track=TrackType.NAVY,
+            survivability_target=6,
             yearly_results=[],
             total_skill_points=4,
             all_skills=["Swimming", "Sailing", "Navigation", "Rope Use"],
             died=False,
-            death_year=None
+            death_year=None,
+            attribute_scores={"STR": 12, "DEX": 14, "INT": 10, "WIS": 11, "CON": 13, "CHR": 9},
+            attribute_modifiers={"STR": 0, "DEX": 1, "INT": 0, "WIS": 0, "CON": 0, "CHR": 0}
         )
         result_str = str(experience)
         self.assertIn("Navy", result_str)
         self.assertIn("TOTAL SKILL POINTS: 4", result_str)
         self.assertIn("Swimming", result_str)
+        self.assertIn("Survivability Target: 6+", result_str)
+        self.assertIn("STR:12", result_str)
+        self.assertIn("DEX:14(+1)", result_str)
 
     def test_prior_experience_str_on_death(self):
         """Test PriorExperience string shows death."""
@@ -1497,6 +1503,7 @@ class TestPriorExperience(unittest.TestCase):
             final_age=19,
             years_served=3,
             track=TrackType.ARMY,
+            survivability_target=5,
             yearly_results=[],
             total_skill_points=3,
             all_skills=["Sword +1 to hit"],
@@ -1514,6 +1521,7 @@ class TestPriorExperience(unittest.TestCase):
             final_age=20,
             years_served=4,
             track=TrackType.ARMY,
+            survivability_target=5,
             yearly_results=[],
             total_skill_points=4,
             all_skills=["Sword +1 to hit", "Sword +1 to hit", "Shield", "Tactics"],

@@ -119,8 +119,16 @@ def generate_character(years: int = 0) -> Character:
     )
 
     # Calculate total attribute modifier for survivability checks
-    total_modifier = sum(attributes.get_all_modifiers().values())
-    prior_experience = roll_prior_experience(skill_track, years=years, total_modifier=total_modifier)
+    attribute_modifiers = attributes.get_all_modifiers()
+    total_modifier = sum(attribute_modifiers.values())
+    attribute_scores = {attr: getattr(attributes, attr) for attr in ["STR", "DEX", "INT", "WIS", "CON", "CHR"]}
+    prior_experience = roll_prior_experience(
+        skill_track,
+        years=years,
+        total_modifier=total_modifier,
+        attribute_scores=attribute_scores,
+        attribute_modifiers=attribute_modifiers
+    )
 
     return Character(
         attributes=attributes,

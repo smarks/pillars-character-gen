@@ -1580,11 +1580,14 @@ class PriorExperience:
     final_age: int  # Age at end (or death)
     years_served: int
     track: TrackType
+    survivability_target: int
     yearly_results: List[YearResult]
     total_skill_points: int
     all_skills: List[str]
     died: bool
     death_year: Optional[int]
+    attribute_scores: Optional[Dict[str, int]] = None  # Raw attribute scores
+    attribute_modifiers: Optional[Dict[str, int]] = None  # Attribute modifiers
 
     def __str__(self) -> str:
         lines = [
@@ -1600,6 +1603,26 @@ class PriorExperience:
         else:
             lines.append(f"Final Age: {self.final_age}")
             lines.append(f"Years Served: {self.years_served}")
+
+        # Display survivability with attribute breakdown
+        lines.append(f"\nSurvivability Target: {self.survivability_target}+")
+        lines.append("Survivability Roll: 3d6 + attribute modifiers")
+
+        if self.attribute_scores and self.attribute_modifiers:
+            # Show each attribute: score (modifier)
+            attr_parts = []
+            for attr in CORE_ATTRIBUTES:
+                score = self.attribute_scores.get(attr, 0)
+                mod = self.attribute_modifiers.get(attr, 0)
+                mod_str = f"+{mod}" if mod >= 0 else str(mod)
+                attr_parts.append(f"{attr}:{score}({mod_str})")
+            lines.append(f"  Attributes: {' '.join(attr_parts)}")
+
+            # Show total modifier calculation
+            total_mod = sum(self.attribute_modifiers.values())
+            mod_breakdown = ' '.join(f"{m:+d}" for m in self.attribute_modifiers.values())
+            total_str = f"+{total_mod}" if total_mod >= 0 else str(total_mod)
+            lines.append(f"  Total Modifier: {mod_breakdown} = {total_str}")
 
         lines.append(f"\nYear-by-Year Progression:")
         lines.append("-" * 60)
@@ -1666,7 +1689,9 @@ def roll_survivability_check(survivability: int, total_modifier: int = 0) -> Tup
 def roll_prior_experience(
     skill_track: SkillTrack,
     years: int = 0,
-    total_modifier: int = 0
+    total_modifier: int = 0,
+    attribute_scores: Optional[Dict[str, int]] = None,
+    attribute_modifiers: Optional[Dict[str, int]] = None
 ) -> PriorExperience:
     """
     Generate prior experience for a character.
@@ -1683,6 +1708,8 @@ def roll_prior_experience(
                Use -1 for random (0-18 years).
                Default is 0 (no prior experience).
         total_modifier: Sum of all attribute modifiers (STR+DEX+INT+WIS+CON+CHR)
+        attribute_scores: Dict of raw attribute scores (for display)
+        attribute_modifiers: Dict of attribute modifiers (for display)
 
     Returns:
         PriorExperience object with complete record
@@ -1749,9 +1776,12 @@ def roll_prior_experience(
         final_age=final_age,
         years_served=years_served,
         track=track,
+        survivability_target=survivability,
         yearly_results=yearly_results,
         total_skill_points=total_skill_points,
         all_skills=all_skills,
         died=died,
-        death_year=death_year
+        death_year=death_year,
+        attribute_scores=attribute_scores,
+        attribute_modifiers=attribute_modifiers
     )
