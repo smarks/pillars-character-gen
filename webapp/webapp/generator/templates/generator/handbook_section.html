@@ -1,0 +1,81 @@
+{% extends "generator/base.html" %}
+
+{% block title %}{{ title }} - Pillars{% endblock %}
+
+{% block extra_css %}
+.handbook-content {
+    line-height: 1.7;
+}
+.handbook-content h2 {
+    border-bottom: 2px solid #333;
+    padding-bottom: 10px;
+    margin-top: 40px;
+}
+.handbook-content h3 {
+    margin-top: 30px;
+    color: #333;
+}
+.handbook-content h4 {
+    margin-top: 25px;
+    color: #555;
+}
+.handbook-content p {
+    margin: 15px 0;
+}
+.handbook-content a {
+    color: #36c;
+}
+.handbook-content hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 30px 0;
+}
+.handbook-content ul, .handbook-content ol {
+    padding-left: 25px;
+}
+.handbook-content li {
+    margin: 8px 0;
+}
+.handbook-content code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border: 1px solid #ddd;
+}
+.handbook-content pre {
+    background: #f4f4f4;
+    padding: 15px;
+    border: 1px solid #ddd;
+    overflow-x: auto;
+}
+.handbook-content blockquote {
+    border-left: 4px solid #333;
+    margin: 20px 0;
+    padding-left: 20px;
+    color: #666;
+    font-style: italic;
+}
+.handbook-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+.handbook-content th, .handbook-content td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+.handbook-content th {
+    background: #f4f4f4;
+}
+{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>{{ title }}</h1>
+    <a href="{% url 'welcome' %}" class="btn">&larr; Home</a>
+</div>
+
+<div class="handbook-content">
+    {{ content|safe }}
+</div>
+{% endblock %}

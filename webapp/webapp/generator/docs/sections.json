@@ -1,0 +1,50 @@
+{
+  "sections": [
+    {
+      "tag": "meta",
+      "display_name": "Meta",
+      "url_path": "meta",
+      "icon": "&#9432;"
+    },
+    {
+      "tag": "lore",
+      "display_name": "Background",
+      "url_path": "lore",
+      "icon": "&#128220;"
+    },
+    {
+      "tag": "players_handbook",
+      "display_name": "Player's Handbook",
+      "url_path": "handbook",
+      "icon": "&#128214;"
+    },
+    {
+      "tag": "DM_handbook",
+      "display_name": "DM",
+      "url_path": "dm",
+      "icon": "&#128218;"
+    }
+  ],
+  "tag_config": {
+    "meta": {
+      "display_name": "Meta",
+      "url_path": "meta",
+      "icon": "&#9432;"
+    },
+    "lore": {
+      "display_name": "Background",
+      "url_path": "lore",
+      "icon": "&#128220;"
+    },
+    "players_handbook": {
+      "display_name": "Player's Handbook",
+      "url_path": "handbook",
+      "icon": "&#128214;"
+    },
+    "DM_handbook": {
+      "display_name": "DM",
+      "url_path": "dm",
+      "icon": "&#128218;"
+    }
+  }
+}

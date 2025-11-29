@@ -24,18 +24,26 @@
     <h1>PILLARS</h1>
     <p class="subtitle">A Role-Playing Game</p>
 
-    <div class="nav-links">
+            <div class="nav-links">
         <a href="{% url 'generator' %}" class="nav-link">
             <span class="icon">&#9876;</span>
             Character Generator
         </a>
+        <a href="{% url 'meta' %}" class="nav-link">
+            <span class="icon">&#9432;</span>
+            Meta
+        </a>
         <a href="{% url 'lore' %}" class="nav-link">
             <span class="icon">&#128220;</span>
-            Lore
+            Background
         </a>
         <a href="{% url 'handbook' %}" class="nav-link">
             <span class="icon">&#128214;</span>
             Player's Handbook
+        </a>
+        <a href="{% url 'dm' %}" class="nav-link">
+            <span class="icon">&#128218;</span>
+            DM
         </a>
     </div>
 </div>

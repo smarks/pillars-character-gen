@@ -8,6 +8,9 @@ urlpatterns = [
     path('interactive/', views.interactive, name='interactive'),
     path('select-track/', views.select_track, name='select_track'),
     path('start-over/', views.start_over, name='start_over'),
-    path('lore/', views.lore, name='lore'),
-    path('handbook/', views.handbook, name='handbook'),
+    # Handbook sections - use generic view with extracted markdown files
+    path('meta/', views.handbook_section, {'section': 'meta'}, name='meta'),
+    path('lore/', views.handbook_section, {'section': 'lore'}, name='lore'),
+    path('handbook/', views.handbook_section, {'section': 'players_handbook'}, name='handbook'),
+    path('dm/', views.handbook_section, {'section': 'DM_handbook'}, name='dm'),
 ]
