@@ -1897,9 +1897,7 @@ def roll_prior_experience(
     death_year = None
     years_served = 0
     aging_effects = AgingEffects()
-
-    # Add initial skills from track (Year 1 skills)
-    all_skills.extend(skill_track.initial_skills)
+    initial_skills_granted = False
 
     for year_index in range(target_years):
         years_served = year_index + 1
@@ -1910,6 +1908,11 @@ def roll_prior_experience(
             total_modifier=total_modifier,
             aging_effects=aging_effects
         )
+
+        # Grant initial skills after completing first year (age 17)
+        if not initial_skills_granted:
+            all_skills.extend(skill_track.initial_skills)
+            initial_skills_granted = True
 
         all_skills.append(year_result.skill_gained)
         total_skill_points += 1

@@ -29,7 +29,7 @@ def index(request):
                 # Store character state in session for interactive mode
                 request.session['interactive_character'] = serialize_character(character)
                 request.session['interactive_years'] = 0
-                request.session['interactive_skills'] = list(character.skill_track.initial_skills)
+                request.session['interactive_skills'] = []  # No skills until first year completed
                 request.session['interactive_skill_points'] = 0
                 request.session['interactive_yearly_results'] = []
                 request.session['interactive_aging'] = {'str': 0, 'dex': 0, 'int': 0, 'wis': 0, 'con': 0}
@@ -122,6 +122,11 @@ def interactive(request):
             # Update session state
             years_completed += 1
             skill_points += 1
+
+            # Grant initial skills after completing first year (age 17)
+            if years_completed == 1:
+                skills.extend(initial_skills)
+
             skills.append(year_result.skill_gained)
 
             # Store the year result

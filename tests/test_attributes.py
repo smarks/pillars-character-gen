@@ -1372,8 +1372,8 @@ class TestPriorExperience(unittest.TestCase):
         self.assertEqual(experience.years_served, 0)
         self.assertEqual(experience.total_skill_points, 0)
         self.assertEqual(len(experience.yearly_results), 0)
-        # Should still have initial skills
-        self.assertEqual(experience.all_skills, ["Coins", "Literacy"])
+        # No skills until first year is completed (age 17)
+        self.assertEqual(experience.all_skills, [])
 
     def test_prior_experience_age_calculation(self):
         """Test that final age is calculated correctly."""
