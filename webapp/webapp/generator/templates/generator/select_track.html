@@ -83,6 +83,54 @@
     <pre>{{ character }}</pre>
 </div>
 
+{% if has_experience %}
+<div class="section">
+    <h3>Prior Experience ({{ current_track }} Track)</h3>
+    <div class="info-row">
+        <span>Years Completed:</span>
+        <span><strong>{{ years_completed }}</strong></span>
+    </div>
+    <div class="info-row">
+        <span>Current Age:</span>
+        <span><strong>{{ years_completed|add:16 }}</strong></span>
+    </div>
+    {% if died %}
+    <div class="danger-box">
+        <strong>CHARACTER DIED</strong> during prior experience!
+    </div>
+    {% endif %}
+    {% if skills %}
+    <p><strong>Skills Gained:</strong></p>
+    <div class="skills-list">
+        {% for skill in skills %}
+        <span class="skill-tag">{{ skill }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% if yearly_results %}
+    <h4>Year-by-Year Results</h4>
+    <table>
+        <tr>
+            <th>Age</th>
+            <th>Skill</th>
+            <th>Survival</th>
+            <th>Result</th>
+        </tr>
+        {% for yr in yearly_results %}
+        <tr>
+            <td>{{ yr.year }}</td>
+            <td>{{ yr.skill }}</td>
+            <td>{{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+</td>
+            <td class="{% if yr.survived %}survived{% else %}died{% endif %}">
+                {% if yr.survived %}Survived{% else %}DIED{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+</div>
+{% endif %}
+
 <form method="post" id="experience-form">
     {% csrf_token %}
 
@@ -109,6 +157,7 @@
             </label>
         </div>
 
+        {% if not has_experience %}
         <div class="control-row">
             <label>Track Selection:</label>
             <div class="radio-group">
@@ -122,10 +171,13 @@
                 </label>
             </div>
         </div>
+        {% endif %}
 
         <div class="control-row">
-            <button type="submit" name="action" value="add_experience" class="primary">Add Experience</button>
-            <button type="submit" name="action" value="finish" class="success">Finish (No Experience)</button>
+            {% if not died %}
+            <button type="submit" name="action" value="add_experience" class="primary">Add {% if has_experience %}More {% endif %}Experience</button>
+            {% endif %}
+            <button type="submit" name="action" value="finish" class="success">{% if has_experience %}Finish Character{% else %}Finish (No Experience){% endif %}</button>
             <button type="submit" name="action" value="start_over" class="danger">Start Over</button>
         </div>
     </div>
@@ -148,6 +200,7 @@
     </div>
     {% endif %}
 
+    {% if not has_experience %}
     <!-- Manual Track Selection (shown when manual mode selected) -->
     <div class="section manual-track-section" id="manual-track-section">
         <h3>Select Your Track</h3>
@@ -242,6 +295,7 @@
             {% endfor %}
         </div>
     </div>
+    {% endif %}
 </form>
 
 <script>

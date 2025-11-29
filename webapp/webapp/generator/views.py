@@ -380,10 +380,10 @@ def select_track(request):
                     chosen_track=chosen_track,  # None for auto, or specific track
                 )
 
-                # Store character and show finished page
+                # Store character in session
                 request.session['current_character'] = serialize_character(final_character)
 
-                # Build yearly results for display
+                # Build yearly results for display and store in session
                 yearly_results = []
                 skills = []
                 if final_character.prior_experience:
@@ -400,18 +400,40 @@ def select_track(request):
                             'survived': yr.survived,
                         })
 
-                return render(request, 'generator/finished.html', {
-                    'character_data': serialize_character(final_character),
-                    'years': years,
-                    'skills': skills,
-                    'yearly_results': yearly_results,
-                    'aging': {},
-                    'died': final_character.died,
-                })
+                # Store experience data in session
+                request.session['interactive_years'] = years
+                request.session['interactive_skills'] = skills
+                request.session['interactive_yearly_results'] = yearly_results
+                request.session['interactive_died'] = final_character.died
+                request.session['interactive_track_name'] = final_character.skill_track.track.value
+                request.session['interactive_survivability'] = final_character.skill_track.survivability
+
+                # Keep pending session so we stay on prior experience page
+                request.session['pending_character'] = serialize_character(final_character)
+                request.session['pending_str_mod'] = final_character.attributes.get_modifier('STR')
+                request.session['pending_dex_mod'] = final_character.attributes.get_modifier('DEX')
+                request.session['pending_int_mod'] = final_character.attributes.get_modifier('INT')
+                request.session['pending_wis_mod'] = final_character.attributes.get_modifier('WIS')
+
+                # Redirect back to prior experience page
+                return redirect('select_track')
+
+    # Get experience data if any
+    years_completed = request.session.get('interactive_years', 0)
+    skills = request.session.get('interactive_skills', [])
+    yearly_results = request.session.get('interactive_yearly_results', [])
+    died = request.session.get('interactive_died', False)
+    track_name = request.session.get('interactive_track_name', '')
 
     return render(request, 'generator/select_track.html', {
         'character': character,
         'track_info': track_info,
+        'years_completed': years_completed,
+        'skills': skills,
+        'yearly_results': yearly_results,
+        'died': died,
+        'has_experience': years_completed > 0,
+        'current_track': track_name,
     })
 
 
