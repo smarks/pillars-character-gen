@@ -483,6 +483,81 @@ class UIFlowTests(TestCase):
         # Character may or may not have died, but page should load
 
 
+class AttributeFocusTests(TestCase):
+    """Tests for the attribute focus feature."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_physical_focus_generates_str_or_dex_bonus(self):
+        """Test that physical focus ensures STR or DEX +1."""
+        from pillars.generator import generate_character
+
+        # Generate 10 characters with physical focus
+        for _ in range(10):
+            char = generate_character(years=0, attribute_focus='physical')
+            str_mod = char.attributes.get_modifier("STR")
+            dex_mod = char.attributes.get_modifier("DEX")
+            self.assertTrue(
+                str_mod >= 1 or dex_mod >= 1,
+                f"Physical focus should have STR({str_mod}) or DEX({dex_mod}) >= 1"
+            )
+
+    def test_mental_focus_generates_int_or_wis_bonus(self):
+        """Test that mental focus ensures INT or WIS +1."""
+        from pillars.generator import generate_character
+
+        # Generate 10 characters with mental focus
+        for _ in range(10):
+            char = generate_character(years=0, attribute_focus='mental')
+            int_mod = char.attributes.get_modifier("INT")
+            wis_mod = char.attributes.get_modifier("WIS")
+            self.assertTrue(
+                int_mod >= 1 or wis_mod >= 1,
+                f"Mental focus should have INT({int_mod}) or WIS({wis_mod}) >= 1"
+            )
+
+    def test_no_focus_generates_any_character(self):
+        """Test that no focus doesn't restrict attributes."""
+        from pillars.generator import generate_character
+
+        # Just make sure it generates without error
+        char = generate_character(years=0, attribute_focus=None)
+        self.assertIsNotNone(char.attributes)
+
+    def test_index_shows_attribute_focus_option(self):
+        """Test that the index page has attribute focus options."""
+        response = self.client.get(reverse('index'))
+        self.assertContains(response, 'Attribute Focus')
+        self.assertContains(response, 'attribute_focus')
+        self.assertContains(response, 'Physical (STR or DEX +1)')
+        self.assertContains(response, 'Mental (INT or WIS +1)')
+
+    def test_physical_focus_web_generation(self):
+        """Test generating a character with physical focus via web."""
+        response = self.client.post(reverse('index'), {
+            'mode': 'standard',
+            'years': '0',
+            'track_selection': 'auto',
+            'attribute_focus': 'physical',
+            'action': 'generate',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Generated Character')
+
+    def test_mental_focus_web_generation(self):
+        """Test generating a character with mental focus via web."""
+        response = self.client.post(reverse('index'), {
+            'mode': 'standard',
+            'years': '0',
+            'track_selection': 'auto',
+            'attribute_focus': 'mental',
+            'action': 'generate',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Generated Character')
+
+
 class MagicTrackUITests(TestCase):
     """UI tests specifically for Magic track functionality."""
 

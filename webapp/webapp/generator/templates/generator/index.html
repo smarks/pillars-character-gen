@@ -30,6 +30,25 @@
         {% csrf_token %}
 
         <div class="mode-section">
+            <h3>Attribute Focus</h3>
+            <p>Ensure character has at least +1 bonus in selected attributes:</p>
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="attribute_focus" value="none" checked>
+                    No preference (random)
+                </label>
+                <label>
+                    <input type="radio" name="attribute_focus" value="physical">
+                    Physical (STR or DEX +1)
+                </label>
+                <label>
+                    <input type="radio" name="attribute_focus" value="mental">
+                    Mental (INT or WIS +1)
+                </label>
+            </div>
+        </div>
+
+        <div class="mode-section">
             <h3>Generation Mode</h3>
             <div class="radio-group">
                 <label>

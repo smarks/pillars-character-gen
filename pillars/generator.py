@@ -92,7 +92,11 @@ class Character:
         return "\n".join(lines)
 
 
-def generate_character(years: int = 0, chosen_track: Optional[TrackType] = None) -> Character:
+def generate_character(
+    years: int = 0,
+    chosen_track: Optional[TrackType] = None,
+    attribute_focus: Optional[str] = None
+) -> Character:
     """
     Generate a complete Pillars RPG character.
 
@@ -103,11 +107,31 @@ def generate_character(years: int = 0, chosen_track: Optional[TrackType] = None)
         chosen_track: If provided, attempt to use this track instead of auto-selecting.
                      Will roll for acceptance if required. If acceptance fails,
                      the character will have a failed skill_track.
+        attribute_focus: If 'physical', ensure STR or DEX has +1 bonus.
+                        If 'mental', ensure INT or WIS has +1 bonus.
+                        If None or 'none', no requirement.
 
     Returns:
         Character object with all attributes, skills, and prior experience
     """
-    attributes = generate_attributes_4d6_drop_lowest()
+    # Generate attributes, re-rolling if focus requirement not met
+    max_attempts = 100  # Prevent infinite loops
+    for _ in range(max_attempts):
+        attributes = generate_attributes_4d6_drop_lowest()
+
+        # Check if focus requirement is met
+        if attribute_focus == 'physical':
+            str_mod = attributes.get_modifier("STR")
+            dex_mod = attributes.get_modifier("DEX")
+            if str_mod >= 1 or dex_mod >= 1:
+                break  # Focus requirement met
+        elif attribute_focus == 'mental':
+            int_mod = attributes.get_modifier("INT")
+            wis_mod = attributes.get_modifier("WIS")
+            if int_mod >= 1 or wis_mod >= 1:
+                break  # Focus requirement met
+        else:
+            break  # No focus requirement
     appearance = roll_appearance()
     height = roll_height()
     weight = roll_weight(attributes.STR)

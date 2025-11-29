@@ -32,6 +32,7 @@ def index(request):
     years = 0  # Default value
     mode = request.POST.get('mode', 'standard')
     track_selection = request.POST.get('track_selection', 'auto')
+    attribute_focus = request.POST.get('attribute_focus', 'none')
 
     if request.method == 'POST':
         action = request.POST.get('action', 'generate')
@@ -40,14 +41,18 @@ def index(request):
             return start_over(request)
 
         if action == 'generate':
+            # Convert 'none' to None for the generator
+            focus = attribute_focus if attribute_focus != 'none' else None
+
             # Check if user wants to choose their track
             if track_selection == 'choose':
                 # Generate base character and redirect to track selection
-                character = generate_character(years=0)
+                character = generate_character(years=0, attribute_focus=focus)
                 # Store in session for track selection page
                 request.session['pending_character'] = serialize_character(character)
                 request.session['pending_years'] = int(request.POST.get('years', '0'))
                 request.session['pending_mode'] = mode
+                request.session['pending_attribute_focus'] = attribute_focus
                 # Store character stats needed for track availability
                 request.session['pending_str_mod'] = character.attributes.get_modifier("STR")
                 request.session['pending_dex_mod'] = character.attributes.get_modifier("DEX")
@@ -60,7 +65,7 @@ def index(request):
 
             if mode == 'interactive':
                 # Start interactive mode - generate base character with 0 years
-                character = generate_character(years=0)
+                character = generate_character(years=0, attribute_focus=focus)
                 # Store character state in session for interactive mode
                 request.session['interactive_character'] = serialize_character(character)
                 request.session['interactive_years'] = 0
@@ -98,7 +103,7 @@ def index(request):
                     years = int(years_input)
                 except ValueError:
                     years = 0
-                character = generate_character(years=years)
+                character = generate_character(years=years, attribute_focus=focus)
 
                 # Store character state in session so user can continue interactively
                 store_character_in_session(request, character)
@@ -142,6 +147,7 @@ def select_track(request):
     wealth_level = request.session.get('pending_wealth_level', 'Moderate')
     pending_years = request.session.get('pending_years', 0)
     pending_mode = request.session.get('pending_mode', 'standard')
+    pending_attribute_focus = request.session.get('pending_attribute_focus', 'none')
 
     # Get track availability
     track_availability = get_track_availability(
@@ -223,8 +229,14 @@ def select_track(request):
             clear_pending_session(request)
 
             # Generate complete character with chosen track
+            # Convert 'none' to None for the generator
+            focus = pending_attribute_focus if pending_attribute_focus != 'none' else None
             from pillars.generator import TrackType as GT
-            final_character = generate_character(years=pending_years, chosen_track=chosen_track)
+            final_character = generate_character(
+                years=pending_years,
+                chosen_track=chosen_track,
+                attribute_focus=focus
+            )
 
             if pending_mode == 'interactive':
                 # Go to interactive mode
@@ -286,6 +298,7 @@ def clear_pending_session(request):
         'pending_character', 'pending_years', 'pending_mode',
         'pending_str_mod', 'pending_dex_mod', 'pending_int_mod', 'pending_wis_mod',
         'pending_social_class', 'pending_sub_class', 'pending_wealth_level',
+        'pending_attribute_focus',
     ]
     for key in keys:
         if key in request.session:
