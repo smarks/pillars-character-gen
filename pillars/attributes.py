@@ -147,6 +147,11 @@ class CharacterAttributes:
     CHR: int
     generation_method: str
     roll_details: List[AttributeRoll] = field(default_factory=list)
+    # Derived stats - calculated from core attributes
+    fatigue_points: int = 0
+    body_points: int = 0
+    fatigue_roll: int = 0  # The 1d6 roll for fatigue
+    body_roll: int = 0  # The 1d6 roll for body
 
     def get_modifier(self, attribute: str) -> int:
         """
@@ -181,6 +186,11 @@ class CharacterAttributes:
             mod_str = f"+{modifier}" if modifier >= 0 else str(modifier)
             lines.append(f"{attr}: {value:2d} (modifier: {mod_str})")
 
+        # Add derived stats
+        lines.append("-" * 50)
+        lines.append(f"Fatigue Points: {self.fatigue_points}")
+        lines.append(f"Body Points: {self.body_points}")
+
         return "\n".join(lines)
 
 
@@ -214,6 +224,53 @@ def get_attribute_modifier(value: int) -> int:
     else:
         # Should not happen with standard table
         return 0
+
+
+def calculate_fatigue_points(
+    con: int, wis: int, str_val: int, dex: int, int_mod: int, wis_mod: int, roll: int
+) -> int:
+    """
+    Calculate Fatigue Points for a character.
+
+    Formula: CON + WIS + max(STR, DEX) + 1d6 + INT modifier + WIS modifier
+
+    Args:
+        con: Constitution score
+        wis: Wisdom score
+        str_val: Strength score
+        dex: Dexterity score
+        int_mod: Intelligence modifier
+        wis_mod: Wisdom modifier
+        roll: The 1d6 roll result
+
+    Returns:
+        Total fatigue points
+    """
+    higher_physical = max(str_val, dex)
+    return con + wis + higher_physical + roll + int_mod + wis_mod
+
+
+def calculate_body_points(
+    con: int, str_val: int, dex: int, int_mod: int, wis_mod: int, roll: int
+) -> int:
+    """
+    Calculate Body Points for a character.
+
+    Formula: CON + max(STR, DEX) + 1d6 + INT modifier + WIS modifier
+
+    Args:
+        con: Constitution score
+        str_val: Strength score
+        dex: Dexterity score
+        int_mod: Intelligence modifier
+        wis_mod: Wisdom modifier
+        roll: The 1d6 roll result
+
+    Returns:
+        Total body points
+    """
+    higher_physical = max(str_val, dex)
+    return con + higher_physical + roll + int_mod + wis_mod
 
 
 def roll_single_attribute_3d6() -> Tuple[List[int], int]:
@@ -320,10 +377,41 @@ def generate_attributes_4d6_drop_lowest() -> CharacterAttributes:
         )
         roll_details.append(roll_detail)
 
+    # Calculate derived stats
+    int_mod = get_attribute_modifier(attributes["INT"])
+    wis_mod = get_attribute_modifier(attributes["WIS"])
+
+    # Roll 1d6 for fatigue and body points
+    fatigue_roll = roll_die(6)
+    body_roll = roll_die(6)
+
+    fatigue_points = calculate_fatigue_points(
+        con=attributes["CON"],
+        wis=attributes["WIS"],
+        str_val=attributes["STR"],
+        dex=attributes["DEX"],
+        int_mod=int_mod,
+        wis_mod=wis_mod,
+        roll=fatigue_roll
+    )
+
+    body_points = calculate_body_points(
+        con=attributes["CON"],
+        str_val=attributes["STR"],
+        dex=attributes["DEX"],
+        int_mod=int_mod,
+        wis_mod=wis_mod,
+        roll=body_roll
+    )
+
     return CharacterAttributes(
         **attributes,
         generation_method="4d6 drop lowest",
-        roll_details=roll_details
+        roll_details=roll_details,
+        fatigue_points=fatigue_points,
+        body_points=body_points,
+        fatigue_roll=fatigue_roll,
+        body_roll=body_roll
     )
 
 

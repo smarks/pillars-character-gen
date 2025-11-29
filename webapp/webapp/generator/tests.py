@@ -613,3 +613,76 @@ class MagicTrackUITests(TestCase):
         response = self.client.get(reverse('select_track'))
         # Should show survivability 7 for Magic
         self.assertContains(response, 'Survivability:</strong> 7')
+
+
+class TrackSelectionContinueTests(TestCase):
+    """Tests for continuing in interactive mode after track selection."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_continue_interactive_after_track_selection(self):
+        """Test that Continue Interactive works after track selection in standard mode.
+
+        This tests the bug fix where the form on index.html, when rendered from
+        select_track view, needs to POST to the index view not the current URL.
+        """
+        # Step 1: Go to track selection with standard mode and some years
+        response = self.client.post(reverse('index'), {
+            'mode': 'standard',
+            'years': '3',
+            'track_selection': 'choose',
+            'action': 'generate',
+        })
+        self.assertRedirects(response, reverse('select_track'))
+
+        # Step 2: Select Worker track (always available, guaranteed to succeed)
+        response = self.client.post(reverse('select_track'), {
+            'chosen_track': 'WORKER',
+            'action': 'select_track',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Generated Character')
+
+        # Check session has character data from store_character_in_session
+        self.assertIn('interactive_character', self.client.session)
+
+        # Step 3: Now click "Continue in Interactive Mode"
+        # This form POST should go to index view (not select_track)
+        response = self.client.post(reverse('index'), {
+            'action': 'continue_interactive',
+        }, follow=True)
+
+        # Should redirect to interactive page and show interactive mode
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Interactive Prior Experience')
+        # Should still have the character's years of experience
+        self.assertIn('interactive_years', self.client.session)
+        self.assertEqual(self.client.session['interactive_years'], 3)
+
+    def test_finish_character_after_track_selection(self):
+        """Test that Finish button works after track selection."""
+        # Step 1: Go to track selection
+        self.client.post(reverse('index'), {
+            'mode': 'standard',
+            'years': '2',
+            'track_selection': 'choose',
+            'action': 'generate',
+        })
+
+        # Step 2: Select a track
+        self.client.post(reverse('select_track'), {
+            'chosen_track': 'WORKER',
+            'action': 'select_track',
+        })
+
+        # Step 3: Click "Finish & Show Character Sheet"
+        response = self.client.post(reverse('index'), {
+            'action': 'finish_character',
+        })
+
+        # Should show final character
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Generated Character')
+        # Session should be cleared
+        self.assertNotIn('interactive_character', self.client.session)

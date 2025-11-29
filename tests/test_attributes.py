@@ -1661,5 +1661,181 @@ class TestWealth(unittest.TestCase):
         self.assertIn((96, 100), WEALTH_TABLE)
 
 
+class TestFatigueAndBodyPoints(unittest.TestCase):
+    """Test fatigue and body point calculations."""
+
+    def test_fatigue_points_formula(self):
+        """Test fatigue points calculation formula.
+
+        Formula: CON + WIS + max(STR, DEX) + 1d6 + INT_mod + WIS_mod
+        """
+        from pillars.attributes import calculate_fatigue_points
+
+        # Example: CON=10, WIS=12, STR=14, DEX=10, INT_mod=0, WIS_mod=0, roll=3
+        # max(14, 10) = 14
+        # 10 + 12 + 14 + 3 + 0 + 0 = 39
+        result = calculate_fatigue_points(
+            con=10, wis=12, str_val=14, dex=10,
+            int_mod=0, wis_mod=0, roll=3
+        )
+        self.assertEqual(result, 39)
+
+    def test_fatigue_points_with_modifiers(self):
+        """Test fatigue points with INT/WIS modifiers."""
+        from pillars.attributes import calculate_fatigue_points
+
+        # CON=12, WIS=14, STR=10, DEX=16, INT_mod=2, WIS_mod=1, roll=4
+        # max(10, 16) = 16
+        # 12 + 14 + 16 + 4 + 2 + 1 = 49
+        result = calculate_fatigue_points(
+            con=12, wis=14, str_val=10, dex=16,
+            int_mod=2, wis_mod=1, roll=4
+        )
+        self.assertEqual(result, 49)
+
+    def test_fatigue_points_with_negative_modifiers(self):
+        """Test fatigue points with negative modifiers."""
+        from pillars.attributes import calculate_fatigue_points
+
+        # CON=8, WIS=8, STR=12, DEX=10, INT_mod=-2, WIS_mod=-2, roll=2
+        # max(12, 10) = 12
+        # 8 + 8 + 12 + 2 + (-2) + (-2) = 26
+        result = calculate_fatigue_points(
+            con=8, wis=8, str_val=12, dex=10,
+            int_mod=-2, wis_mod=-2, roll=2
+        )
+        self.assertEqual(result, 26)
+
+    def test_body_points_formula(self):
+        """Test body points calculation formula.
+
+        Formula: CON + max(STR, DEX) + 1d6 + INT_mod + WIS_mod
+        """
+        from pillars.attributes import calculate_body_points
+
+        # Example: CON=10, STR=14, DEX=10, INT_mod=0, WIS_mod=0, roll=3
+        # max(14, 10) = 14
+        # 10 + 14 + 3 + 0 + 0 = 27
+        result = calculate_body_points(
+            con=10, str_val=14, dex=10,
+            int_mod=0, wis_mod=0, roll=3
+        )
+        self.assertEqual(result, 27)
+
+    def test_body_points_with_modifiers(self):
+        """Test body points with INT/WIS modifiers."""
+        from pillars.attributes import calculate_body_points
+
+        # CON=12, STR=10, DEX=16, INT_mod=2, WIS_mod=1, roll=4
+        # max(10, 16) = 16
+        # 12 + 16 + 4 + 2 + 1 = 35
+        result = calculate_body_points(
+            con=12, str_val=10, dex=16,
+            int_mod=2, wis_mod=1, roll=4
+        )
+        self.assertEqual(result, 35)
+
+    def test_body_points_with_negative_modifiers(self):
+        """Test body points with negative modifiers."""
+        from pillars.attributes import calculate_body_points
+
+        # CON=8, STR=12, DEX=10, INT_mod=-2, WIS_mod=-2, roll=2
+        # max(12, 10) = 12
+        # 8 + 12 + 2 + (-2) + (-2) = 18
+        result = calculate_body_points(
+            con=8, str_val=12, dex=10,
+            int_mod=-2, wis_mod=-2, roll=2
+        )
+        self.assertEqual(result, 18)
+
+    def test_fatigue_minus_body_equals_wis(self):
+        """Test that fatigue - body = WIS (when same rolls)."""
+        from pillars.attributes import calculate_fatigue_points, calculate_body_points
+
+        # Using same values and roll, fatigue - body should equal WIS
+        wis = 14
+        fatigue = calculate_fatigue_points(
+            con=10, wis=wis, str_val=12, dex=10,
+            int_mod=0, wis_mod=0, roll=3
+        )
+        body = calculate_body_points(
+            con=10, str_val=12, dex=10,
+            int_mod=0, wis_mod=0, roll=3
+        )
+        # Note: Different rolls in practice, but formula-wise fatigue has WIS
+        self.assertEqual(fatigue - wis, body)
+
+    def test_generated_attributes_have_fatigue_and_body(self):
+        """Test that generated attributes include fatigue and body points."""
+        random.seed(42)
+        attrs = generate_attributes_4d6_drop_lowest()
+
+        self.assertIsInstance(attrs.fatigue_points, int)
+        self.assertIsInstance(attrs.body_points, int)
+        self.assertGreater(attrs.fatigue_points, 0)
+        self.assertGreater(attrs.body_points, 0)
+
+    def test_fatigue_roll_stored(self):
+        """Test that the 1d6 fatigue roll is stored."""
+        random.seed(42)
+        attrs = generate_attributes_4d6_drop_lowest()
+
+        self.assertIsInstance(attrs.fatigue_roll, int)
+        self.assertGreaterEqual(attrs.fatigue_roll, 1)
+        self.assertLessEqual(attrs.fatigue_roll, 6)
+
+    def test_body_roll_stored(self):
+        """Test that the 1d6 body roll is stored."""
+        random.seed(42)
+        attrs = generate_attributes_4d6_drop_lowest()
+
+        self.assertIsInstance(attrs.body_roll, int)
+        self.assertGreaterEqual(attrs.body_roll, 1)
+        self.assertLessEqual(attrs.body_roll, 6)
+
+    def test_fatigue_and_body_in_str_output(self):
+        """Test that fatigue and body appear in string output."""
+        random.seed(42)
+        attrs = generate_attributes_4d6_drop_lowest()
+
+        output = str(attrs)
+        self.assertIn("Fatigue Points:", output)
+        self.assertIn("Body Points:", output)
+
+    def test_fatigue_points_range(self):
+        """Test reasonable range of fatigue points over many rolls."""
+        min_fp = float('inf')
+        max_fp = 0
+
+        for seed in range(100):
+            random.seed(seed)
+            attrs = generate_attributes_4d6_drop_lowest()
+            min_fp = min(min_fp, attrs.fatigue_points)
+            max_fp = max(max_fp, attrs.fatigue_points)
+
+        # Minimum possible (all 3s, -5 mods, roll 1): 3+3+3+1+(-5)+(-5) = 0
+        # Maximum possible (all 18s, +5 mods, roll 6): 18+18+18+6+5+5 = 70
+        # In practice with 4d6 drop lowest, ranges are more realistic
+        self.assertGreater(min_fp, 0)  # Should always be positive in practice
+        self.assertLess(max_fp, 80)    # Should be reasonable
+
+    def test_body_points_range(self):
+        """Test reasonable range of body points over many rolls."""
+        min_bp = float('inf')
+        max_bp = 0
+
+        for seed in range(100):
+            random.seed(seed)
+            attrs = generate_attributes_4d6_drop_lowest()
+            min_bp = min(min_bp, attrs.body_points)
+            max_bp = max(max_bp, attrs.body_points)
+
+        # Body is always less than fatigue (no WIS component)
+        # Minimum possible: 3+3+1+(-5)+(-5) = -3 but realistically positive
+        # Maximum possible: 18+18+6+5+5 = 52
+        self.assertGreater(min_bp, 0)  # Should always be positive in practice
+        self.assertLess(max_bp, 60)    # Should be reasonable
+
+
 if __name__ == '__main__':
     unittest.main()

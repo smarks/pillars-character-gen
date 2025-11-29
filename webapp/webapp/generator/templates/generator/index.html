@@ -98,7 +98,7 @@
     <div class="mode-section">
         <h3>What would you like to do?</h3>
         <p>Your character survived {{ years }} year{{ years|pluralize }} of prior experience.</p>
-        <form method="post">
+        <form method="post" action="{% url 'index' %}">
             {% csrf_token %}
             <button type="submit" name="action" value="continue_interactive" class="continue-btn">
                 Continue in Interactive Mode
