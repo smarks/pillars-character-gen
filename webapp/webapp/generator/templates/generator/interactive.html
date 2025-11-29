@@ -27,7 +27,9 @@
 
     <div class="section">
         <h3>Skill Track: {{ track_name }}</h3>
-        <p><strong>Survivability Target:</strong> {{ survivability }}+ (roll 3d6 + attribute modifiers)</p>
+        <p><strong>Survivability Target:</strong> {{ survivability }}+</p>
+        <p><strong>Survivability Roll:</strong> 3d6{% if total_modifier >= 0 %}+{% endif %}{{ total_modifier }}
+            ({% for attr, mod in attr_modifiers.items %}{{ attr }}:{% if mod >= 0 %}+{% endif %}{{ mod }}{% if not forloop.last %} {% endif %}{% endfor %})</p>
         <p><strong>Initial Skills:</strong> {{ initial_skills|join:", " }}</p>
     </div>
 

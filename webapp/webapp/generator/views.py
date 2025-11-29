@@ -38,6 +38,12 @@ def index(request):
                 request.session['interactive_survivability'] = character.skill_track.survivability
                 request.session['interactive_initial_skills'] = list(character.skill_track.initial_skills)
 
+                # Store attribute info for survivability display
+                attr_mods = character.attributes.get_all_modifiers()
+                total_mod = sum(attr_mods.values())
+                request.session['interactive_attr_modifiers'] = attr_mods
+                request.session['interactive_total_modifier'] = total_mod
+
                 return render(request, 'generator/interactive.html', {
                     'character': character,
                     'years_completed': 0,
@@ -48,6 +54,8 @@ def index(request):
                     'track_name': character.skill_track.track.value,
                     'survivability': character.skill_track.survivability,
                     'initial_skills': character.skill_track.initial_skills,
+                    'attr_modifiers': attr_mods,
+                    'total_modifier': total_mod,
                 })
             else:
                 years_input = request.POST.get('years', '0')
@@ -79,6 +87,8 @@ def interactive(request):
     track_name = request.session.get('interactive_track_name', '')
     survivability = request.session.get('interactive_survivability', 0)
     initial_skills = request.session.get('interactive_initial_skills', [])
+    attr_modifiers = request.session.get('interactive_attr_modifiers', {})
+    total_modifier = request.session.get('interactive_total_modifier', 0)
 
     # Reconstruct character for display
     character = deserialize_character(char_data)
@@ -178,6 +188,8 @@ def interactive(request):
         'track_name': track_name,
         'survivability': survivability,
         'initial_skills': initial_skills,
+        'attr_modifiers': attr_modifiers,
+        'total_modifier': total_modifier,
     })
 
 
@@ -363,6 +375,8 @@ def clear_interactive_session(request):
         'interactive_track_name',
         'interactive_survivability',
         'interactive_initial_skills',
+        'interactive_attr_modifiers',
+        'interactive_total_modifier',
     ]
     for key in keys:
         if key in request.session:
