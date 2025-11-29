@@ -17,9 +17,14 @@
     <h3>What would you like to do?</h3>
     <form method="post">
         {% csrf_token %}
-        <div class="button-group">
+        <!-- Hidden default submit for Enter key -->
+        <button type="submit" name="action" value="add_experience" style="position: absolute; left: -9999px;"></button>
+        <div class="button-row">
             <button type="submit" name="action" value="finish" class="success">
                 Finish Character
+            </button>
+            <button type="submit" name="action" value="add_experience" class="primary">
+                Add Prior Experience &rarr;
             </button>
         </div>
         <div class="button-group">
@@ -31,11 +36,6 @@
             </button>
             <button type="submit" name="action" value="reroll_mental">
                 Re-roll (INT/WIS Focus)
-            </button>
-        </div>
-        <div class="button-group">
-            <button type="submit" name="action" value="add_experience" class="primary">
-                Add Prior Experience
             </button>
         </div>
     </form>
