@@ -325,6 +325,10 @@ def select_track(request):
             )
 
             if pending_mode == 'interactive':
+                # For interactive mode, we track experience separately in session
+                # variables, so set prior_experience to None to avoid showing
+                # a confusing "Years Served: 0" in the character display
+                final_character.prior_experience = None
 
                 # Store character with skill track in session for generator
                 request.session['current_character'] = serialize_character(final_character)
