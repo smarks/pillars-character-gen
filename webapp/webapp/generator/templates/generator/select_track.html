@@ -40,9 +40,10 @@
     position: relative;
     background: #fafafa;
 }
-.track-card.available { border-color: #4a4; background: #f8fff8; }
-.track-card.requires-roll { border-color: #fa0; background: #fffaf0; }
+.track-card.available { border-color: #4a4; background: #f8fff8; cursor: pointer; }
+.track-card.requires-roll { border-color: #fa0; background: #fffaf0; cursor: pointer; }
 .track-card.impossible { border-color: #ccc; background: #f4f4f4; opacity: 0.6; }
+.track-card.selected { border-color: #00f; border-width: 3px; background: #e8e8ff; }
 .track-card h4 { margin: 0 0 10px 0; }
 .track-card .details { font-size: 0.9em; color: #666; }
 .track-card .requirement { font-style: italic; margin: 5px 0; }
@@ -74,6 +75,12 @@
 <div class="top-bar">
     <h1>Prior Experience</h1>
     <a href="{% url 'start_over' %}" class="btn danger">Start Over</a>
+</div>
+
+<!-- Character Stats -->
+<div class="section">
+    <h3>Your Character</h3>
+    <pre>{{ character }}</pre>
 </div>
 
 <form method="post" id="experience-form">
@@ -256,6 +263,21 @@ document.querySelectorAll('input[name="track_mode"]').forEach(function(radio) {
 // Disable years selector when interactive mode is checked
 document.getElementById('interactive-checkbox').addEventListener('change', function() {
     document.getElementById('years-select').disabled = this.checked;
+});
+
+// Make clicking on track cards select the radio button
+document.querySelectorAll('.track-card').forEach(function(card) {
+    card.addEventListener('click', function(e) {
+        var radio = this.querySelector('input[type="radio"]');
+        if (radio && !this.classList.contains('impossible')) {
+            radio.checked = true;
+            // Add visual feedback
+            document.querySelectorAll('.track-card').forEach(function(c) {
+                c.classList.remove('selected');
+            });
+            this.classList.add('selected');
+        }
+    });
 });
 </script>
 {% endblock %}
