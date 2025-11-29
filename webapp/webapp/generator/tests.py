@@ -282,10 +282,12 @@ class InteractiveModeMagicTests(TestCase):
         self.client.get(reverse('index'))
         # Add experience goes to track selection first
         self.client.post(reverse('index'), {'action': 'add_experience'})
-        # Select a track
+        # Select a track with interactive mode
         response = self.client.post(reverse('select_track'), {
             'chosen_track': 'WORKER',
-            'action': 'select_track',
+            'track_mode': 'manual',
+            'interactive_mode': 'on',
+            'action': 'add_experience',
         })
         # Should redirect to interactive
         self.assertRedirects(response, reverse('interactive'))
@@ -344,7 +346,9 @@ class StartOverTests(TestCase):
         # Select a track to get to interactive mode
         self.client.post(reverse('select_track'), {
             'chosen_track': 'WORKER',
-            'action': 'select_track',
+            'track_mode': 'manual',
+            'interactive_mode': 'on',
+            'action': 'add_experience',
         })
 
         # Verify session has data
@@ -389,10 +393,12 @@ class UIFlowTests(TestCase):
         # Should go to track selection first
         self.assertRedirects(response, reverse('select_track'))
 
-        # Step 2: Select a track
+        # Step 2: Select a track with interactive mode
         response = self.client.post(reverse('select_track'), {
             'chosen_track': 'WORKER',
-            'action': 'select_track',
+            'track_mode': 'manual',
+            'interactive_mode': 'on',
+            'action': 'add_experience',
         })
         # Should redirect to interactive mode
         self.assertRedirects(response, reverse('interactive'))
@@ -444,7 +450,9 @@ class UIFlowTests(TestCase):
         self.client.post(reverse('index'), {'action': 'add_experience'})
         self.client.post(reverse('select_track'), {
             'chosen_track': 'WORKER',
-            'action': 'select_track',
+            'track_mode': 'manual',
+            'interactive_mode': 'on',
+            'action': 'add_experience',
         })
 
         # Continue a few years
@@ -469,7 +477,9 @@ class UIFlowTests(TestCase):
         self.client.post(reverse('index'), {'action': 'add_experience'})
         self.client.post(reverse('select_track'), {
             'chosen_track': 'WORKER',
-            'action': 'select_track',
+            'track_mode': 'manual',
+            'interactive_mode': 'on',
+            'action': 'add_experience',
         })
 
         # Add one year
@@ -598,7 +608,9 @@ class ReturnToGeneratorTests(TestCase):
         # Select a track to get to interactive mode
         self.client.post(reverse('select_track'), {
             'chosen_track': 'WORKER',
-            'action': 'select_track',
+            'track_mode': 'manual',
+            'interactive_mode': 'on',
+            'action': 'add_experience',
         })
 
         # Verify interactive return flag is now set
@@ -623,7 +635,9 @@ class ReturnToGeneratorTests(TestCase):
         self.client.post(reverse('index'), {'action': 'add_experience'})
         self.client.post(reverse('select_track'), {
             'chosen_track': 'WORKER',
-            'action': 'select_track',
+            'track_mode': 'manual',
+            'interactive_mode': 'on',
+            'action': 'add_experience',
         })
 
         # Continue one year

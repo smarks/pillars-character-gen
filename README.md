@@ -10,8 +10,7 @@ A Python-based character generation system for the Pillars tabletop RPG, featuri
 
 ## Features
 
-- **4d6 Drop Lowest Method**: Roll 4d6 and keep the best 3 for each attribute (recommended)
-- **3d6 Method**: Traditional roll 3d6 for each attribute
+- **4d6 Drop Lowest Method**: Roll 4d6 and keep the best 3 for each attribute 
 - **Point Buy System**: Allocate 65 points among attributes
 - **Detailed Roll Tracking**: See every die roll and which dice were kept/dropped
 - **Attribute Modifiers**: Automatic calculation of modifiers based on attribute values
@@ -26,7 +25,6 @@ character_gen/
 ├── test_dice.py                     # Unit tests for dice module
 ├── test_attributes.py               # Unit tests for attributes module
 ├── generate_character.py            # Interactive character generator
-├── character_generation_steps.txt   # Complete character generation reference
 └── README.md                        # This file
 ```
 
@@ -37,12 +35,6 @@ character_gen/
 ```bash
 python3 generate_character.py
 ```
-
-This launches an interactive menu where you can:
-1. Generate using 3d6 method
-2. Generate using 4d6 drop lowest method (recommended)
-3. Generate and compare multiple characters
-4. Compare both generation methods
 
 ### Run Tests
 

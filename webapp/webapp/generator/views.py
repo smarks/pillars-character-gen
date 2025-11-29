@@ -218,11 +218,18 @@ def store_current_character(request, character):
 
 
 def select_track(request):
-    """Handle skill track selection page."""
+    """
+    Handle prior experience page with track selection.
+
+    This page allows the user to:
+    - Choose years of experience (1-10) or interactive mode
+    - Auto-select or manually select a skill track
+    - Finish without experience, or add experience
+    """
     # Check if we have a pending character
     pending_char = request.session.get('pending_character')
     if not pending_char:
-        return redirect('index')
+        return redirect('generator')
 
     # Get stored character info
     str_mod = request.session.get('pending_str_mod', 0)
@@ -232,9 +239,6 @@ def select_track(request):
     social_class = request.session.get('pending_social_class', 'Commoner')
     sub_class = request.session.get('pending_sub_class', 'Laborer')
     wealth_level = request.session.get('pending_wealth_level', 'Moderate')
-    pending_years = request.session.get('pending_years', 0)
-    pending_mode = request.session.get('pending_mode', 'standard')
-    pending_attribute_focus = request.session.get('pending_attribute_focus', 'none')
 
     # Get track availability
     track_availability = get_track_availability(
@@ -272,72 +276,85 @@ def select_track(request):
     if request.method == 'POST':
         action = request.POST.get('action', '')
 
-        if action == 'select_track':
+        if action == 'start_over':
+            clear_pending_session(request)
+            return redirect('start_over')
+
+        elif action == 'finish':
+            # Finish without experience - go to final character display
+            clear_pending_session(request)
+            char_data = request.session.get('current_character')
+            if char_data:
+                return render(request, 'generator/finished.html', {
+                    'character_data': char_data,
+                    'years': 0,
+                    'skills': [],
+                    'yearly_results': [],
+                    'aging': {},
+                    'died': False,
+                })
+            return redirect('generator')
+
+        elif action == 'add_experience':
+            # Get form data
+            interactive_mode = request.POST.get('interactive_mode') == 'on'
+            track_mode = request.POST.get('track_mode', 'auto')
+            years = int(request.POST.get('years', 5)) if not interactive_mode else 0
             chosen_track_name = request.POST.get('chosen_track', '')
-            try:
-                chosen_track = TrackType[chosen_track_name]
-            except KeyError:
-                # Invalid track, show error
-                return render(request, 'generator/select_track.html', {
-                    'character': character,
-                    'track_info': track_info,
-                    'pending_years': pending_years,
-                    'pending_mode': pending_mode,
-                    'error': 'Invalid track selected',
-                })
 
-            # Attempt to create skill track with chosen track
-            skill_track = create_skill_track_for_choice(
-                chosen_track=chosen_track,
-                str_mod=str_mod,
-                dex_mod=dex_mod,
-                int_mod=int_mod,
-                wis_mod=wis_mod,
-                social_class=social_class,
-                sub_class=sub_class,
-                wealth_level=wealth_level,
-            )
+            # Determine the track to use
+            chosen_track = None
+            if track_mode == 'manual':
+                if not chosen_track_name:
+                    return render(request, 'generator/select_track.html', {
+                        'character': character,
+                        'track_info': track_info,
+                        'error': 'Please select a track when using manual selection',
+                    })
+                try:
+                    chosen_track = TrackType[chosen_track_name]
+                except KeyError:
+                    return render(request, 'generator/select_track.html', {
+                        'character': character,
+                        'track_info': track_info,
+                        'error': 'Invalid track selected',
+                    })
 
-            # Check if accepted
-            if not skill_track.acceptance_check.accepted:
-                # Failed acceptance roll - show result and let them try again
-                return render(request, 'generator/select_track.html', {
-                    'character': character,
-                    'track_info': track_info,
-                    'pending_years': pending_years,
-                    'pending_mode': pending_mode,
-                    'acceptance_failed': True,
-                    'failed_track': chosen_track.value,
-                    'acceptance_check': skill_track.acceptance_check,
-                })
+                # Check acceptance for manual track
+                skill_track = create_skill_track_for_choice(
+                    chosen_track=chosen_track,
+                    str_mod=str_mod,
+                    dex_mod=dex_mod,
+                    int_mod=int_mod,
+                    wis_mod=wis_mod,
+                    social_class=social_class,
+                    sub_class=sub_class,
+                    wealth_level=wealth_level,
+                )
 
-            # Accepted! Now complete the character generation
-            # Save return_to_generator flag before clearing pending session
-            return_to_generator = request.session.get('pending_return_to_generator', False)
+                if not skill_track.acceptance_check.accepted:
+                    return render(request, 'generator/select_track.html', {
+                        'character': character,
+                        'track_info': track_info,
+                        'acceptance_failed': True,
+                        'failed_track': chosen_track.value,
+                        'acceptance_check': skill_track.acceptance_check,
+                    })
 
             # Clear pending session data
             clear_pending_session(request)
 
-            # Generate complete character with chosen track
-            # Convert 'none' to None for the generator
-            focus = pending_attribute_focus if pending_attribute_focus != 'none' else None
-            from pillars.generator import TrackType as GT
-            final_character = generate_character(
-                years=pending_years,
-                chosen_track=chosen_track,
-                attribute_focus=focus
-            )
-
-            if pending_mode == 'interactive':
-                # For interactive mode, we track experience separately in session
-                # variables, so set prior_experience to None to avoid showing
-                # a confusing "Years Served: 0" in the character display
+            # Generate character with experience
+            if interactive_mode:
+                # Interactive mode - generate character with track but no years yet
+                final_character = generate_character(
+                    years=0,
+                    chosen_track=chosen_track,  # None for auto, or specific track
+                )
                 final_character.prior_experience = None
 
-                # Store character with skill track in session for generator
+                # Store character and go to interactive mode
                 request.session['current_character'] = serialize_character(final_character)
-
-                # Go to interactive mode
                 request.session['interactive_character'] = serialize_character(final_character)
                 request.session['interactive_years'] = 0
                 request.session['interactive_skills'] = []
@@ -348,38 +365,53 @@ def select_track(request):
                 request.session['interactive_track_name'] = final_character.skill_track.track.value
                 request.session['interactive_survivability'] = final_character.skill_track.survivability
                 request.session['interactive_initial_skills'] = list(final_character.skill_track.initial_skills)
-
-                # Set return to generator flag if coming from new generator flow
-                if return_to_generator:
-                    request.session['interactive_return_to_generator'] = True
+                request.session['interactive_return_to_generator'] = True
 
                 attr_mods = final_character.attributes.get_all_modifiers()
                 total_mod = sum(attr_mods.values())
                 request.session['interactive_attr_modifiers'] = attr_mods
                 request.session['interactive_total_modifier'] = total_mod
 
-                # Redirect to interactive page instead of rendering directly
                 return redirect('interactive')
             else:
-                # Standard mode - show completed character
-                store_character_in_session(request, final_character)
-                return render(request, 'generator/index.html', {
-                    'character': final_character,
-                    'years': pending_years,
-                    'can_continue': not final_character.died,
-                    'track_accepted': True,
-                    'accepted_track': chosen_track.value,
-                })
+                # Standard mode - generate character with specified years
+                final_character = generate_character(
+                    years=years,
+                    chosen_track=chosen_track,  # None for auto, or specific track
+                )
 
-        elif action == 'cancel':
-            clear_pending_session(request)
-            return redirect('index')
+                # Store character and show finished page
+                request.session['current_character'] = serialize_character(final_character)
+
+                # Build yearly results for display
+                yearly_results = []
+                skills = []
+                if final_character.prior_experience:
+                    skills = list(final_character.skill_track.initial_skills)
+                    for yr in final_character.prior_experience.yearly_results:
+                        skills.append(yr.skill_gained)
+                        yearly_results.append({
+                            'year': yr.year,
+                            'skill': yr.skill_gained,
+                            'surv_roll': yr.survivability_roll,
+                            'surv_mod': yr.survivability_modifier,
+                            'surv_total': yr.survivability_total,
+                            'surv_target': yr.survivability_target,
+                            'survived': yr.survived,
+                        })
+
+                return render(request, 'generator/finished.html', {
+                    'character_data': serialize_character(final_character),
+                    'years': years,
+                    'skills': skills,
+                    'yearly_results': yearly_results,
+                    'aging': {},
+                    'died': final_character.died,
+                })
 
     return render(request, 'generator/select_track.html', {
         'character': character,
         'track_info': track_info,
-        'pending_years': pending_years,
-        'pending_mode': pending_mode,
     })
 
 

@@ -73,7 +73,11 @@
 
 <div class="section">
     <h2>Pillars Character</h2>
+    {% if character_data.skill_track %}
     <p><strong>{{ character_data.skill_track.track }} Track</strong></p>
+    {% else %}
+    <p><strong>Age 16 - No Prior Experience</strong></p>
+    {% endif %}
 </div>
 
 <div class="section">
@@ -153,6 +157,7 @@
     </div>
 </div>
 
+{% if character_data.skill_track %}
 <div class="section">
     <h3>Skill Track</h3>
     <div class="info-row">
@@ -176,6 +181,7 @@
     </div>
     {% endif %}
 </div>
+{% endif %}
 
 {% if skills %}
 <div class="section">

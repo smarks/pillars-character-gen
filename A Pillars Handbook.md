@@ -1,6 +1,3 @@
----
-vc-id: 0b4b4c3d-55e9-4c05-8fc2-2fd24e97db5c
----
 - [[#A Bit About The Author|A Bit About The Author]]
 - [[#What is Pillars?|What is Pillars?]]
 - [[#System Foundation|System Foundation]]
@@ -22,6 +19,7 @@ vc-id: 0b4b4c3d-55e9-4c05-8fc2-2fd24e97db5c
 	- [[#Creating a Character#Survivability|Survivability]]
 	- [[#Creating a Character#Skill Tracks|Skill Tracks]]
 
+-- meta --
 ### A Bit About The Author
 
 I played D&D for the first time in 7th grade back in 1977. I was an active player for the next 25 years, but slowed down around the turn of the century. D&D and the entire gaming ecosystem has changed tremendously since then, and I found myself not really liking how the D&D ruleset has evolved. However, it's really cool to see the thousands of RPG systems that have been developed.
@@ -136,7 +134,7 @@ However, there are **prior experience** tables that new characters can use to fl
 
 ### Setting
 
-The known world, referred to commonly as the Circle of the World has existed in its current organizational state for roughy 4000 long nights. 
+The known world, referred to commonly as the Circle of the World it has existed in its current organizational state for roughy 4000 long nights. 
 
 A long night can be thought of as a year. The long night  is a consistent, predictable interval that occurs after the same number of short nights or simply nights. A short night equates to what we could call a day. 
 
@@ -147,17 +145,6 @@ The primary world of Pillars is _old_ layers of civilizations have come and gone
 
 Most the inhabitants are aware that they are not alone and that earth is just one node in a vast cosmos. 
 
-### Places
-
-In the far northeast lies The **Splinterings**  - an archipelago of  islands of various sizes that range from tiny to lands that might take a two or three weeks to walk around. These islands are the home to tribal clans of humanoids.  It is said that before the there were the Splinters, these lands were once unified under the Ur  or All Ruler.  When war came the splinters will formed. Now each island is fiercely independent. While some clans closer to the larger islands do a healthy business trading, they remain distance.  
-
-South and West lay the waters of the **Dragon Isles**, a land of mountainous desolation, desert isles and a few villages and towns, but these are sparse and sparsely populated.  There are dragons here though although usually they do not like to bothered with mortals. 
-
-**The Navel** is a vast kingdom rich from trade and its' central location which sets squat in the middle of the common  lands. At the center of The Navel is the Crystal isle on which empire has built there palace. The Navel is also the center of the **Wayfarer's Guild** and close to the islands of Roke and Marriage - home to serval schools of science and magic. 
-
-Down below South and West are the **Dragon Isles**.  Little and less is known of isles, of which there are many, nor the dragons that inhabit them as they like to keep to themselves. However sparse, other sentiment races inhabit the isles facilitating trade. 
-
-To the south east lies much water and finally the **Old Emporium**. While city states still, exotic and splendid, can be found a long the vast coastline. Less is known about the inner lands  away from the coast and further south. The city states are independent.
 
 # Starting Out
 
@@ -171,7 +158,20 @@ These days, the tribes and customs have become even more diversified than when t
 
 As a new player, your character will start on the main land but there are many choices to made in the creation of your character beyond determining characteristics. 
 
-Let's create a character.
+-- lore --
+### Places
+
+In the far northeast lies The **Splinterings**  - an archipelago of  islands of various sizes that range from tiny to lands that might take a two or three weeks to walk around. These islands are the home to tribal clans of humanoids.  It is said that before the there were the Splinters, these lands were once unified under the Ur  or All Ruler.  When war came the splinters will formed. Now each island is fiercely independent. While some clans closer to the larger islands do a healthy business trading, they remain distance.  
+
+South and West lay the waters of the **Dragon Isles**, a land of mountainous desolation, desert isles and a few villages and towns, but these are sparse and sparsely populated.  There are dragons here though although usually they do not like to bothered with mortals. 
+
+**The Navel** is a vast kingdom rich from trade and its' central location which sets squat in the middle of the common  lands. At the center of The Navel is the Crystal isle on which empire has built there palace. The Navel is also the center of the **Wayfarer's Guild** and close to the islands of Roke and Marriage - home to serval schools of science and magic. 
+
+Down below South and West are the **Dragon Isles**.  Little and less is known of isles, of which there are many, nor the dragons that inhabit them as they like to keep to themselves. However sparse, other sentiment races inhabit the isles facilitating trade. 
+
+To the south east lies much water and finally the **Old Emporium**. While city states still, exotic and splendid, can be found a long the vast coastline. Less is known about the inner lands  away from the coast and further south. The city states are independent.
+
+-- players_handbook --
 ## Characters
 
 ### Creating a Character
@@ -674,6 +674,9 @@ Push is a first level spell available in all categories or schools but is not al
 	4. Storm, Storm counter 
 	
 **Arcane or True Magic**
+
+-- DM_handbook --
+
 	1. Wild magic 
 	2. Any level 2 spell ++
 	3. Controlled magic
@@ -688,6 +691,10 @@ Push is a first level spell available in all categories or schools but is not al
 	4. Persuade Major, Illusion (including transparency) 
 	5. Major Illusion, Area (single target spells effect area),  Effect Senses (any of Sleep, Confusion, Blind, Deafen, Laugh etc.)
 	6. Force  (effect any physical state  Paralyze, Move, Breath, Run, Sleep etc.)
+
+
+
+### Determine Prior Experience 
 
 For each year, spent in a track roll a d12 
 
@@ -716,6 +723,7 @@ If your character already has a skill and rolls the same skill, they get a +1 to
 - talent - character’s chooses a talent of their choice
 - morale +1 or -1 on die rolls (you can positively or negatively affect other beings 
 
+-- / DM_handbook --
 ## Basic Economic Context
 
 - **Poverty line**: 10 gp/month (barely surviving)
