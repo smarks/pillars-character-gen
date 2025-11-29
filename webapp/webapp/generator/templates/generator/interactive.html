@@ -26,6 +26,12 @@
     <h1>Interactive Prior Experience</h1>
 
     <div class="section">
+        <h3>Skill Track: {{ track_name }}</h3>
+        <p><strong>Survivability Target:</strong> {{ survivability }}+ (roll 3d6 + attribute modifiers)</p>
+        <p><strong>Initial Skills:</strong> {{ initial_skills|join:", " }}</p>
+    </div>
+
+    <div class="section">
         <h3>Character Summary</h3>
         <p><strong>Current Age:</strong> {{ current_age }}</p>
         <p><strong>Years of Experience:</strong> {{ years_completed }}</p>

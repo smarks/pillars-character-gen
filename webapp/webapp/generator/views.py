@@ -34,6 +34,9 @@ def index(request):
                 request.session['interactive_yearly_results'] = []
                 request.session['interactive_aging'] = {'str': 0, 'dex': 0, 'int': 0, 'wis': 0, 'con': 0}
                 request.session['interactive_died'] = False
+                request.session['interactive_track_name'] = character.skill_track.track.value
+                request.session['interactive_survivability'] = character.skill_track.survivability
+                request.session['interactive_initial_skills'] = list(character.skill_track.initial_skills)
 
                 return render(request, 'generator/interactive.html', {
                     'character': character,
@@ -42,6 +45,9 @@ def index(request):
                     'yearly_results': [],
                     'can_continue': True,
                     'mode': 'interactive',
+                    'track_name': character.skill_track.track.value,
+                    'survivability': character.skill_track.survivability,
+                    'initial_skills': character.skill_track.initial_skills,
                 })
             else:
                 years_input = request.POST.get('years', '0')
@@ -70,6 +76,9 @@ def interactive(request):
     yearly_results_data = request.session.get('interactive_yearly_results', [])
     aging_data = request.session.get('interactive_aging', {})
     died = request.session.get('interactive_died', False)
+    track_name = request.session.get('interactive_track_name', '')
+    survivability = request.session.get('interactive_survivability', 0)
+    initial_skills = request.session.get('interactive_initial_skills', [])
 
     # Reconstruct character for display
     character = deserialize_character(char_data)
@@ -166,6 +175,9 @@ def interactive(request):
         'died': died,
         'aging': aging_data,
         'mode': 'interactive',
+        'track_name': track_name,
+        'survivability': survivability,
+        'initial_skills': initial_skills,
     })
 
 
@@ -348,6 +360,9 @@ def clear_interactive_session(request):
         'interactive_yearly_results',
         'interactive_aging',
         'interactive_died',
+        'interactive_track_name',
+        'interactive_survivability',
+        'interactive_initial_skills',
     ]
     for key in keys:
         if key in request.session:
