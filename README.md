@@ -33,4 +33,15 @@ python3 -m pytest test_dice.py -v
 python3 -m pytest test_attributes.py -v
 ```
 
+```run the server
+ cd webapp
+  python manage.py runserver
+
+  Or from the project root:
+
+  python webapp/manage.py runserver
+
+  Make sure you activate your virtual environment first:
+
+  source .venv/bin/activate
 
