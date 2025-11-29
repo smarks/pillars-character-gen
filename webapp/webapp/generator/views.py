@@ -56,7 +56,21 @@ from pillars.attributes import (
 
 
 def welcome(request):
-    """Welcome page with links to main sections."""
+    """Welcome page with links to main sections.
+
+    Clears any existing character data so clicking 'Character Generator'
+    starts a fresh character.
+    """
+    # Clear character session data
+    request.session.pop('current_character', None)
+    request.session.pop('interactive_years', None)
+    request.session.pop('interactive_skills', None)
+    request.session.pop('interactive_yearly_results', None)
+    request.session.pop('interactive_aging', None)
+    request.session.pop('interactive_died', None)
+    request.session.pop('pending_character', None)
+    request.session.modified = True
+
     return render(request, 'generator/welcome.html')
 
 
