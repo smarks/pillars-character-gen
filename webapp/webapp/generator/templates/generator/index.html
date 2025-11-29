@@ -14,10 +14,17 @@
         .mode-section h3 { margin-top: 0; }
         .radio-group { margin: 10px 0; }
         .radio-group label { margin-right: 20px; }
+        .continue-btn { background-color: #4a4; color: white; }
+        .finish-btn { background-color: #fa0; color: black; }
+        .start-over-btn { background-color: #c44; color: white; font-size: 14px; padding: 8px 16px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     </style>
 </head>
 <body>
-    <h1>Pillars Character Generator</h1>
+    <div class="top-bar">
+        <h1>Pillars Character Generator</h1>
+        <a href="{% url 'start_over' %}"><button type="button" class="start-over-btn">Start Over</button></a>
+    </div>
 
     <form method="post">
         {% csrf_token %}
@@ -45,6 +52,20 @@
             </div>
         </div>
 
+        <div class="mode-section">
+            <h3>Skill Track Selection</h3>
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="track_selection" value="auto" checked>
+                    Automatic (system picks optimal track)
+                </label>
+                <label>
+                    <input type="radio" name="track_selection" value="choose">
+                    Choose Track (see available tracks and pick one)
+                </label>
+            </div>
+        </div>
+
         <div class="form-row">
             <button type="submit" name="action" value="generate">Generate Character</button>
         </div>
@@ -53,6 +74,22 @@
     {% if character %}
     <h2>Generated Character</h2>
     <pre {% if character.died %}class="died"{% endif %}>{{ character }}</pre>
+
+    {% if can_continue %}
+    <div class="mode-section">
+        <h3>What would you like to do?</h3>
+        <p>Your character survived {{ years }} year{{ years|pluralize }} of prior experience.</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" name="action" value="continue_interactive" class="continue-btn">
+                Continue in Interactive Mode
+            </button>
+            <button type="submit" name="action" value="finish_character" class="finish-btn">
+                Finish &amp; Show Character Sheet
+            </button>
+        </form>
+    </div>
+    {% endif %}
     {% endif %}
 
     <script>

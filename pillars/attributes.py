@@ -1106,6 +1106,85 @@ class CraftType(Enum):
     MAGIC = "Magic"
 
 
+class MagicSchool(Enum):
+    """Enumeration of magic schools."""
+    # Common Schools (0-70 percentile)
+    ELEMENTAL_FIRE = "Elemental Fire"
+    ELEMENTAL_LIGHTNING = "Elemental Lightning"
+    ELEMENTAL_WATER = "Elemental Water"
+    ELEMENTAL_EARTH = "Elemental Earth"
+    ELEMENTAL_WIND = "Elemental Wind"
+    ALL_ELEMENTS = "All Elements"
+    PASSAGE = "Passage"
+    PROTECTION = "Protection"
+    MENDING = "Mending"
+    # Less Common Schools (71-100 percentile)
+    WEATHER = "Weather"
+    COUNTER = "Counter"
+    ARCANE_HELP = "Arcane Help"
+    CONTROL = "Control"
+
+
+# Magic school spell progressions
+MAGIC_SPELL_PROGRESSION = {
+    # Elemental schools share the same progression
+    MagicSchool.ELEMENTAL_FIRE: [
+        "Fire Missile", "Fire Ball", "Fire Bolt", "Fire Shield", "Fire Barrier", "Fire Elemental"
+    ],
+    MagicSchool.ELEMENTAL_LIGHTNING: [
+        "Lightning Missile", "Lightning Ball", "Lightning Bolt", "Lightning Shield", "Lightning Barrier", "Lightning Elemental"
+    ],
+    MagicSchool.ELEMENTAL_WATER: [
+        "Water Missile", "Water Ball", "Water Bolt", "Water Shield", "Water Barrier", "Water Elemental"
+    ],
+    MagicSchool.ELEMENTAL_EARTH: [
+        "Earth Missile", "Earth Ball", "Earth Bolt", "Earth Shield", "Earth Barrier", "Earth Elemental"
+    ],
+    MagicSchool.ELEMENTAL_WIND: [
+        "Wind Missile", "Wind Ball", "Wind Bolt", "Wind Shield", "Wind Barrier", "Wind Elemental"
+    ],
+    MagicSchool.ALL_ELEMENTS: [
+        "Elemental Missile", "Elemental Ball", "Elemental Bolt", "Elemental Shield", "Elemental Barrier", "Summon Elemental"
+    ],
+    MagicSchool.PASSAGE: [
+        "Detect Magic/Light", "Knock/Hold/Blur", "Transparency/Detect Invisibility/Lock",
+        "Breathing", "Flying", "Pass Wall", "Shape Change"
+    ],
+    MagicSchool.PROTECTION: [
+        "Counter 1/Shield/Detect Magic", "Counter 2/Shield Wall/Knowledge",
+        "Counter 3/Minor Protection from Element", "Counter 4/Major Protection from Element",
+        "Counter 5/Encase"
+    ],
+    MagicSchool.MENDING: [
+        "Heal", "Cure", "Web/Joining/Breaking", "Shaping"
+    ],
+    MagicSchool.WEATHER: [
+        "Detect Weather", "Wind/Wind Counter", "Rain/Rain Counter", "Storm/Storm Counter"
+    ],
+    MagicSchool.COUNTER: [
+        "Counter 1", "Counter 2", "Counter 3", "Counter 4", "Counter 5", "Counter 6"
+    ],
+    MagicSchool.ARCANE_HELP: [
+        "Wild Magic", "Any Level 2 spell", "Controlled Magic", "Summon/Control", "Bind", "Ask"
+    ],
+    MagicSchool.CONTROL: [
+        "Persuade Minor/Calm/Enrage", "Minor Illusion/Fatigue",
+        "Wound/Effect Mental State", "Persuade Major/Illusion",
+        "Major Illusion/Area/Effect Senses", "Force (Paralyze/Move/etc)"
+    ],
+}
+
+# Spell skill mastery levels (applies to all spells)
+SPELL_SKILL_MASTERY = {
+    1: "Cast spell normally",
+    2: "Cast without hand gestures",
+    3: "Cast without verbal incantation, protection from same spell",
+    4: "Costs 1/3 less fatigue, halt same spell",
+    5: "Costs 1/2 less fatigue, reflect same spell back onto caster",
+    6: "Costs 2/3 less fatigue, invert spell, reflect same spell group back onto caster",
+}
+
+
 # Track survivability values
 TRACK_SURVIVABILITY = {
     TrackType.ARMY: 5,
@@ -1116,7 +1195,7 @@ TRACK_SURVIVABILITY = {
     TrackType.WORKER: 4,
     TrackType.CRAFTS: 3,
     TrackType.MERCHANT: 3,
-    TrackType.MAGIC: None,  # Varies
+    TrackType.MAGIC: 7,  # Most dangerous track
 }
 
 # Initial skills by track (Year 1 only)
@@ -1162,6 +1241,8 @@ class SkillTrack:
     initial_skills: List[str]
     craft_type: Optional[CraftType]  # For Crafts track
     craft_rolls: Optional[List[int]]  # Rolls made to determine craft
+    magic_school: Optional['MagicSchool'] = None  # For Magic track
+    magic_school_rolls: Optional[Dict[str, int]] = None  # Rolls made to determine school
 
     def __str__(self) -> str:
         lines = [f"Skill Track: {self.track.value}"]
@@ -1173,6 +1254,12 @@ class SkillTrack:
         if self.craft_type:
             rolls_str = ", ".join(map(str, self.craft_rolls)) if self.craft_rolls else ""
             lines.append(f"  Craft: {self.craft_type.value} (Rolled: [{rolls_str}])")
+
+        if self.magic_school:
+            rolls_info = ""
+            if self.magic_school_rolls:
+                rolls_info = f" (Percentile: {self.magic_school_rolls.get('percentile', '?')}, School: {self.magic_school_rolls.get('school', '?')})"
+            lines.append(f"  Magic School: {self.magic_school.value}{rolls_info}")
 
         lines.append(f"  Initial Skills: {', '.join(self.initial_skills)}")
 
@@ -1236,6 +1323,84 @@ def roll_craft_type() -> Tuple[CraftType, List[int]]:
         return CraftType.MEDICAL, rolls
     else:  # main_roll == 6
         return CraftType.MAGIC, rolls
+
+
+def roll_magic_school() -> Tuple[MagicSchool, Dict[str, int]]:
+    """
+    Roll for magic school using percentile and sub-tables.
+
+    PERCENTILE | SCHOOL TYPE
+    0-70       | Common Schools of Magic
+    71-100     | Less Common Schools of Magic
+
+    Returns:
+        Tuple of (MagicSchool, dict of rolls made)
+    """
+    rolls = {}
+
+    # Roll percentile (1-100)
+    percentile = roll_percentile()
+    rolls['percentile'] = percentile
+
+    if percentile <= 70:
+        # Common Schools - roll d12
+        school_roll = roll_die(12)
+        rolls['school'] = school_roll
+
+        if school_roll <= 3:
+            return MagicSchool.ELEMENTAL_FIRE, rolls
+        elif school_roll <= 5:
+            return MagicSchool.ELEMENTAL_LIGHTNING, rolls
+        elif school_roll == 6:
+            return MagicSchool.ELEMENTAL_WATER, rolls
+        elif school_roll == 7:
+            return MagicSchool.ELEMENTAL_EARTH, rolls
+        elif school_roll == 8:
+            return MagicSchool.ELEMENTAL_WIND, rolls
+        elif school_roll == 9:
+            return MagicSchool.ALL_ELEMENTS, rolls
+        elif school_roll == 10:
+            return MagicSchool.PASSAGE, rolls
+        elif school_roll == 11:
+            return MagicSchool.PROTECTION, rolls
+        else:  # school_roll == 12
+            return MagicSchool.MENDING, rolls
+    else:
+        # Less Common Schools - roll d6
+        school_roll = roll_die(6)
+        rolls['school'] = school_roll
+
+        if school_roll <= 3:
+            return MagicSchool.WEATHER, rolls
+        elif school_roll == 4:
+            return MagicSchool.COUNTER, rolls
+        elif school_roll == 5:
+            return MagicSchool.ARCANE_HELP, rolls
+        else:  # school_roll == 6
+            return MagicSchool.CONTROL, rolls
+
+
+def check_magic_acceptance(int_mod: int, wis_mod: int) -> AcceptanceCheck:
+    """
+    Check if character meets Magic track requirements.
+    Requirement: INT or WIS bonus required (magic requires mental aptitude)
+    """
+    has_mental = int_mod > 0 or wis_mod > 0
+    accepted = has_mental
+
+    if has_mental:
+        reason = f"Has INT({int_mod:+d}) or WIS({wis_mod:+d}) bonus"
+    else:
+        reason = "No INT or WIS bonus - magic requires mental aptitude"
+
+    return AcceptanceCheck(
+        track=TrackType.MAGIC,
+        accepted=accepted,
+        roll=None,
+        target=None,
+        modifiers={"INT": int_mod, "WIS": wis_mod},
+        reason=reason
+    )
 
 
 def check_army_acceptance(str_mod: int, dex_mod: int) -> AcceptanceCheck:
@@ -1368,6 +1533,249 @@ def check_merchant_acceptance(social_class: str, wealth_level: str) -> Acceptanc
     )
 
 
+def get_track_availability(
+    str_mod: int,
+    dex_mod: int,
+    int_mod: int,
+    wis_mod: int,
+    social_class: str,
+    wealth_level: str,
+    is_promoted: bool = False
+) -> Dict[TrackType, Dict]:
+    """
+    Get availability status for all tracks without rolling dice.
+    Used to show which tracks are available for user selection.
+
+    Returns:
+        Dict mapping TrackType to availability info:
+        {
+            'available': bool - True if always available or can attempt
+            'requires_roll': bool - True if acceptance requires dice roll
+            'auto_accept': bool - True if no requirements
+            'impossible': bool - True if character can never qualify
+            'requirement': str - Description of requirements
+            'roll_info': str - Info about the acceptance roll if applicable
+        }
+    """
+    availability = {}
+
+    # Always available tracks (no requirements)
+    for track in [TrackType.RANDOM, TrackType.WORKER, TrackType.CRAFTS]:
+        availability[track] = {
+            'available': True,
+            'requires_roll': False,
+            'auto_accept': True,
+            'impossible': False,
+            'requirement': "No requirements",
+            'roll_info': None
+        }
+
+    # Army: 8+ on 2d6 + STR + DEX
+    total_mod = str_mod + dex_mod
+    # With 2d6, minimum roll is 2, maximum is 12
+    # If total_mod + 12 < 8, impossible. If total_mod + 2 >= 8, auto-accept
+    army_min = 2 + total_mod
+    army_max = 12 + total_mod
+    availability[TrackType.ARMY] = {
+        'available': army_max >= 8,  # Can possibly succeed
+        'requires_roll': True,
+        'auto_accept': army_min >= 8,  # Always succeeds
+        'impossible': army_max < 8,  # Can never succeed
+        'requirement': f"2d6 + STR({str_mod:+d}) + DEX({dex_mod:+d}) ≥ 8",
+        'roll_info': f"Need 8+, your modifier: {total_mod:+d}"
+    }
+
+    # Navy: 8+ on 2d6 + STR + DEX + INT
+    total_mod = str_mod + dex_mod + int_mod
+    navy_min = 2 + total_mod
+    navy_max = 12 + total_mod
+    availability[TrackType.NAVY] = {
+        'available': navy_max >= 8,
+        'requires_roll': True,
+        'auto_accept': navy_min >= 8,
+        'impossible': navy_max < 8,
+        'requirement': f"2d6 + STR({str_mod:+d}) + DEX({dex_mod:+d}) + INT({int_mod:+d}) ≥ 8",
+        'roll_info': f"Need 8+, your modifier: {total_mod:+d}"
+    }
+
+    # Ranger: Need STR or DEX bonus AND INT or WIS bonus (no roll)
+    has_physical = str_mod > 0 or dex_mod > 0
+    has_mental = int_mod > 0 or wis_mod > 0
+    ranger_eligible = has_physical and has_mental
+    availability[TrackType.RANGER] = {
+        'available': ranger_eligible,
+        'requires_roll': False,
+        'auto_accept': ranger_eligible,
+        'impossible': not ranger_eligible,
+        'requirement': "Requires STR or DEX bonus AND INT or WIS bonus",
+        'roll_info': None
+    }
+
+    # Officer: Must be Rich or promoted (no roll)
+    is_rich = wealth_level == "Rich"
+    officer_eligible = is_rich or is_promoted
+    availability[TrackType.OFFICER] = {
+        'available': officer_eligible,
+        'requires_roll': False,
+        'auto_accept': officer_eligible,
+        'impossible': not officer_eligible,
+        'requirement': "Requires Rich wealth or promotion",
+        'roll_info': None
+    }
+
+    # Merchant: 2d6 vs variable target based on social standing
+    is_poor = wealth_level == "Subsistence"
+    is_working_class = (wealth_level == "Moderate" and
+                       social_class in ["Commoner", "Laborer"])
+    if is_poor:
+        target = 10
+        class_desc = "poor"
+    elif is_working_class:
+        target = 8
+        class_desc = "working class"
+    else:
+        target = 6
+        class_desc = "above working class"
+
+    merchant_min = 2
+    merchant_max = 12
+    availability[TrackType.MERCHANT] = {
+        'available': merchant_max >= target,
+        'requires_roll': True,
+        'auto_accept': merchant_min >= target,
+        'impossible': merchant_max < target,
+        'requirement': f"2d6 ≥ {target} ({class_desc})",
+        'roll_info': f"Need {target}+ on 2d6"
+    }
+
+    # Magic track: Requires INT or WIS bonus (no roll, just attribute check)
+    has_mental = int_mod > 0 or wis_mod > 0
+    availability[TrackType.MAGIC] = {
+        'available': has_mental,
+        'requires_roll': False,
+        'auto_accept': has_mental,
+        'impossible': not has_mental,
+        'requirement': "Requires INT or WIS bonus",
+        'roll_info': None
+    }
+
+    return availability
+
+
+def create_skill_track_for_choice(
+    chosen_track: TrackType,
+    str_mod: int,
+    dex_mod: int,
+    int_mod: int,
+    wis_mod: int,
+    social_class: str,
+    sub_class: str,
+    wealth_level: str,
+    is_promoted: bool = False
+) -> SkillTrack:
+    """
+    Create a skill track for a user-chosen track, rolling for acceptance if needed.
+
+    Args:
+        chosen_track: The track the user wants
+        Other args: Character stats for acceptance checks
+
+    Returns:
+        SkillTrack object (may have accepted=False if roll failed)
+    """
+    # Determine acceptance
+    acceptance_check = None
+
+    if chosen_track == TrackType.RANDOM:
+        acceptance_check = AcceptanceCheck(
+            track=TrackType.RANDOM, accepted=True, roll=None, target=None,
+            modifiers={}, reason="No requirements"
+        )
+    elif chosen_track == TrackType.WORKER:
+        acceptance_check = AcceptanceCheck(
+            track=TrackType.WORKER, accepted=True, roll=None, target=None,
+            modifiers={}, reason="No requirements"
+        )
+    elif chosen_track == TrackType.CRAFTS:
+        acceptance_check = AcceptanceCheck(
+            track=TrackType.CRAFTS, accepted=True, roll=None, target=None,
+            modifiers={}, reason="No requirements"
+        )
+    elif chosen_track == TrackType.ARMY:
+        acceptance_check = check_army_acceptance(str_mod, dex_mod)
+    elif chosen_track == TrackType.NAVY:
+        acceptance_check = check_navy_acceptance(str_mod, dex_mod, int_mod)
+    elif chosen_track == TrackType.RANGER:
+        acceptance_check = check_ranger_acceptance(str_mod, dex_mod, int_mod, wis_mod)
+    elif chosen_track == TrackType.OFFICER:
+        is_rich = wealth_level == "Rich"
+        acceptance_check = check_officer_acceptance(is_rich, is_promoted)
+    elif chosen_track == TrackType.MERCHANT:
+        acceptance_check = check_merchant_acceptance(social_class, wealth_level)
+    elif chosen_track == TrackType.MAGIC:
+        acceptance_check = check_magic_acceptance(int_mod, wis_mod)
+    else:
+        # Unknown track
+        acceptance_check = AcceptanceCheck(
+            track=chosen_track, accepted=False, roll=None, target=None,
+            modifiers={}, reason="Unknown track"
+        )
+
+    # If not accepted, return with failure
+    if not acceptance_check.accepted:
+        return SkillTrack(
+            track=chosen_track,
+            acceptance_check=acceptance_check,
+            survivability=0,
+            survivability_roll=None,
+            initial_skills=[],
+            craft_type=None,
+            craft_rolls=None
+        )
+
+    # Accepted - build the full skill track
+    survivability_roll = None
+    if chosen_track == TrackType.RANDOM:
+        survivability, survivability_roll = roll_survivability_random()
+    else:
+        survivability = TRACK_SURVIVABILITY.get(chosen_track, 5)
+        if survivability is None:
+            survivability = 5
+
+    initial_skills = list(TRACK_INITIAL_SKILLS.get(chosen_track, []))
+
+    craft_type = None
+    craft_rolls = None
+    magic_school = None
+    magic_school_rolls = None
+
+    if chosen_track == TrackType.WORKER:
+        if wealth_level == "Subsistence" or sub_class == "Laborer":
+            initial_skills.append("Laborer (bonus)")
+    elif chosen_track == TrackType.CRAFTS:
+        craft_type, craft_rolls = roll_craft_type()
+        initial_skills.append(f"Craft: {craft_type.value}")
+    elif chosen_track == TrackType.MAGIC:
+        magic_school, magic_school_rolls = roll_magic_school()
+        # Get first spell from school progression
+        spells = MAGIC_SPELL_PROGRESSION.get(magic_school, [])
+        if spells:
+            initial_skills.append(f"Spell: {spells[0]}")
+        initial_skills.append(f"School: {magic_school.value}")
+
+    return SkillTrack(
+        track=chosen_track,
+        acceptance_check=acceptance_check,
+        survivability=survivability,
+        survivability_roll=survivability_roll,
+        initial_skills=initial_skills,
+        craft_type=craft_type,
+        craft_rolls=craft_rolls,
+        magic_school=magic_school,
+        magic_school_rolls=magic_school_rolls
+    )
+
+
 def get_eligible_tracks(
     str_mod: int,
     dex_mod: int,
@@ -1421,8 +1829,10 @@ def get_eligible_tracks(
     if merchant_check.accepted:
         eligible.append((TrackType.MERCHANT, merchant_check))
 
-    # Magic track - placeholder, requires separate magic system
-    # eligible.append((TrackType.MAGIC, ...))
+    # Magic track - requires INT or WIS bonus
+    magic_check = check_magic_acceptance(int_mod, wis_mod)
+    if magic_check.accepted:
+        eligible.append((TrackType.MAGIC, magic_check))
 
     return eligible
 
@@ -1573,6 +1983,18 @@ def roll_skill_track(
         craft_type, craft_rolls = roll_craft_type()
         initial_skills.append(f"Craft: {craft_type.value}")
 
+    # Handle Magic track
+    magic_school = None
+    magic_school_rolls = None
+
+    if track == TrackType.MAGIC:
+        magic_school, magic_school_rolls = roll_magic_school()
+        # Get first spell from school progression
+        spells = MAGIC_SPELL_PROGRESSION.get(magic_school, [])
+        if spells:
+            initial_skills.append(f"Spell: {spells[0]}")
+        initial_skills.append(f"School: {magic_school.value}")
+
     return SkillTrack(
         track=track,
         acceptance_check=acceptance_check,
@@ -1580,7 +2002,9 @@ def roll_skill_track(
         survivability_roll=survivability_roll,
         initial_skills=initial_skills,
         craft_type=craft_type,
-        craft_rolls=craft_rolls
+        craft_rolls=craft_rolls,
+        magic_school=magic_school,
+        magic_school_rolls=magic_school_rolls
     )
 
 
@@ -1752,17 +2176,35 @@ class PriorExperience:
         return "\n".join(lines)
 
 
-def roll_yearly_skill(track: TrackType, year_index: int) -> Tuple[str, int]:
+def roll_yearly_skill(
+    track: TrackType,
+    year_index: int,
+    magic_school: Optional[MagicSchool] = None
+) -> Tuple[str, int]:
     """
     Roll for a skill from the track's skill table.
 
     Args:
         track: The character's skill track
         year_index: Which year of service (0-based)
+        magic_school: For Magic track, the character's magic school
 
     Returns:
         Tuple of (skill name, roll used)
     """
+    # Special handling for Magic track - progress through school spells
+    if track == TrackType.MAGIC and magic_school:
+        spells = MAGIC_SPELL_PROGRESSION.get(magic_school, [])
+        if spells:
+            # Progress through spells sequentially
+            # year_index 0 = already got spell 0 as initial, so start at 1
+            spell_index = (year_index + 1) % len(spells)
+            roll = spell_index + 1  # Pseudo-roll for display
+            spell_name = spells[spell_index]
+            mastery_level = min(spell_index + 1, 6)  # Mastery 1-6
+            mastery_name = SPELL_SKILL_MASTERY.get(mastery_level, "")
+            return f"Spell: {spell_name} ({mastery_name})", roll
+
     skill_table = TRACK_YEARLY_SKILLS.get(track, TRACK_YEARLY_SKILLS[TrackType.RANDOM])
 
     # Roll d12 (or use modulo for year progression variety)
@@ -1822,8 +2264,8 @@ def roll_single_year(
     aging_modifier = sum(aging_effects.total_penalties().values())
     adjusted_modifier = total_modifier + aging_modifier
 
-    # Gain skill
-    skill, skill_roll = roll_yearly_skill(track, year_index)
+    # Gain skill (pass magic_school for Magic track)
+    skill, skill_roll = roll_yearly_skill(track, year_index, skill_track.magic_school)
 
     # Survivability check (3d6 + all attribute modifiers >= target)
     surv_roll, surv_total, survived = roll_survivability_check(survivability, adjusted_modifier)

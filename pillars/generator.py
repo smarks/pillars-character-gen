@@ -21,6 +21,8 @@ from pillars.attributes import (
     roll_skill_track,
     roll_prior_experience,
     roll_single_year,
+    get_track_availability,
+    create_skill_track_for_choice,
     CharacterAttributes,
     Appearance,
     Height,
@@ -33,6 +35,7 @@ from pillars.attributes import (
     PriorExperience,
     YearResult,
     AgingEffects,
+    TrackType,
 )
 
 
@@ -89,7 +92,7 @@ class Character:
         return "\n".join(lines)
 
 
-def generate_character(years: int = 0) -> Character:
+def generate_character(years: int = 0, chosen_track: Optional[TrackType] = None) -> Character:
     """
     Generate a complete Pillars RPG character.
 
@@ -97,6 +100,9 @@ def generate_character(years: int = 0) -> Character:
         years: Years of prior experience (0-18).
                Use -1 for random (0-18 years).
                Default is 0 (no prior experience).
+        chosen_track: If provided, attempt to use this track instead of auto-selecting.
+                     Will roll for acceptance if required. If acceptance fails,
+                     the character will have a failed skill_track.
 
     Returns:
         Character object with all attributes, skills, and prior experience
@@ -110,16 +116,30 @@ def generate_character(years: int = 0) -> Character:
     literacy = roll_literacy_check(attributes.INT, location.literacy_check_modifier)
     wealth = roll_wealth()
 
-    skill_track = roll_skill_track(
-        str_mod=attributes.get_modifier("STR"),
-        dex_mod=attributes.get_modifier("DEX"),
-        int_mod=attributes.get_modifier("INT"),
-        wis_mod=attributes.get_modifier("WIS"),
-        social_class=provenance.social_class,
-        sub_class=provenance.sub_class,
-        wealth_level=wealth.wealth_level,
-        optimize=True
-    )
+    if chosen_track is not None:
+        # User chose a specific track - roll for acceptance
+        skill_track = create_skill_track_for_choice(
+            chosen_track=chosen_track,
+            str_mod=attributes.get_modifier("STR"),
+            dex_mod=attributes.get_modifier("DEX"),
+            int_mod=attributes.get_modifier("INT"),
+            wis_mod=attributes.get_modifier("WIS"),
+            social_class=provenance.social_class,
+            sub_class=provenance.sub_class,
+            wealth_level=wealth.wealth_level,
+        )
+    else:
+        # Auto-select optimal track
+        skill_track = roll_skill_track(
+            str_mod=attributes.get_modifier("STR"),
+            dex_mod=attributes.get_modifier("DEX"),
+            int_mod=attributes.get_modifier("INT"),
+            wis_mod=attributes.get_modifier("WIS"),
+            social_class=provenance.social_class,
+            sub_class=provenance.sub_class,
+            wealth_level=wealth.wealth_level,
+            optimize=True
+        )
 
     # Calculate total attribute modifier for survivability checks
     attribute_modifiers = attributes.get_all_modifiers()

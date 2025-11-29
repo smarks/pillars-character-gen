@@ -20,10 +20,15 @@
         .status-info { font-size: 1.2em; margin: 10px 0; }
         .warning-box { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 15px 0; }
         .danger-box { background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; margin: 15px 0; }
+        .start-over-btn { background-color: #c44; color: white; font-size: 14px; padding: 8px 16px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     </style>
 </head>
 <body>
-    <h1>Interactive Prior Experience</h1>
+    <div class="top-bar">
+        <h1>Interactive Prior Experience</h1>
+        <a href="{% url 'start_over' %}"><button type="button" class="start-over-btn">Start Over</button></a>
+    </div>
 
     <div class="section">
         <h3>Skill Track: {{ track_name }}</h3>
