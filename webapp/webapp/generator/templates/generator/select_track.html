@@ -1,14 +1,9 @@
 {% extends "generator/base.html" %}
+{% load skill_filters %}
 
 {% block title %}Pillars Character Generator - Prior Experience{% endblock %}
 
 {% block extra_css %}
-.controls-section {
-    background: #f0f0f0;
-    padding: 20px;
-    border: 2px solid #333;
-    margin-bottom: 20px;
-}
 .control-row {
     display: flex;
     align-items: center;
@@ -74,7 +69,7 @@
 {% block content %}
 <div class="top-bar">
     <h1>Prior Experience</h1>
-    <a href="{% url 'start_over' %}" class="btn danger">Start Over</a>
+    <a href="{% url 'welcome' %}" class="btn">&larr; Home</a>
 </div>
 
 <!-- Character Stats -->
@@ -102,7 +97,7 @@
     {% if skills %}
     <p><strong>Skills Gained:</strong></p>
     <div class="skills-list">
-        {% for skill in skills %}
+        {% for skill in skills|consolidate_skills %}
         <span class="skill-tag">{{ skill }}</span>
         {% endfor %}
     </div>
@@ -134,53 +129,6 @@
 <form method="post" id="experience-form">
     {% csrf_token %}
 
-    <!-- Controls Section at Top -->
-    <div class="controls-section">
-        <div class="control-row">
-            <label>Years:</label>
-            <select name="years" id="years-select">
-                <option value="1">1 year</option>
-                <option value="2">2 years</option>
-                <option value="3">3 years</option>
-                <option value="4">4 years</option>
-                <option value="5" selected>5 years</option>
-                <option value="6">6 years</option>
-                <option value="7">7 years</option>
-                <option value="8">8 years</option>
-                <option value="9">9 years</option>
-                <option value="10">10 years</option>
-            </select>
-            <span>— or —</span>
-            <label>
-                <input type="checkbox" name="interactive_mode" id="interactive-checkbox">
-                Interactive Mode (year by year)
-            </label>
-        </div>
-
-        {% if not has_experience %}
-        <div class="control-row">
-            <label>Track Selection:</label>
-            <div class="radio-group">
-                <label>
-                    <input type="radio" name="track_mode" value="auto" checked>
-                    Auto-select best track
-                </label>
-                <label>
-                    <input type="radio" name="track_mode" value="manual">
-                    Manually select track
-                </label>
-            </div>
-        </div>
-        {% endif %}
-
-        <div class="control-row">
-            {% if not died %}
-            <button type="submit" name="action" value="add_experience" class="primary">Add {% if has_experience %}More {% endif %}Experience</button>
-            {% endif %}
-            <button type="submit" name="action" value="finish" class="success">{% if has_experience %}Finish Character{% else %}Finish (No Experience){% endif %}</button>
-            <button type="submit" name="action" value="start_over" class="danger">Start Over</button>
-        </div>
-    </div>
 
     {% if error %}
     <div class="danger-box">
@@ -296,6 +244,54 @@
         </div>
     </div>
     {% endif %}
+
+    <div class="section">
+        <h3>What would you like to do?</h3>
+        <div class="control-row">
+            <label>Years:</label>
+            <select name="years" id="years-select">
+                <option value="1">1 year</option>
+                <option value="2">2 years</option>
+                <option value="3">3 years</option>
+                <option value="4">4 years</option>
+                <option value="5" selected>5 years</option>
+                <option value="6">6 years</option>
+                <option value="7">7 years</option>
+                <option value="8">8 years</option>
+                <option value="9">9 years</option>
+                <option value="10">10 years</option>
+            </select>
+            <span>— or —</span>
+            <label>
+                <input type="checkbox" name="interactive_mode" id="interactive-checkbox">
+                Interactive Mode (year by year)
+            </label>
+        </div>
+
+        {% if not has_experience %}
+        <div class="control-row">
+            <label>Track Selection:</label>
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="track_mode" value="auto" checked>
+                    Auto-select best track
+                </label>
+                <label>
+                    <input type="radio" name="track_mode" value="manual">
+                    Manually select track
+                </label>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="button-group">
+            {% if not died %}
+            <button type="submit" name="action" value="add_experience" class="primary">Add {% if has_experience %}More {% endif %}Experience</button>
+            {% endif %}
+            <button type="submit" name="action" value="finish" class="success">{% if has_experience %}Finish Character{% else %}Finish (No Experience){% endif %}</button>
+            <a href="{% url 'start_over' %}" class="btn danger">Start Over</a>
+        </div>
+    </div>
 </form>
 
 <script>

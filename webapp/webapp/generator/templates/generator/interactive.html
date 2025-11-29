@@ -1,11 +1,12 @@
 {% extends "generator/base.html" %}
+{% load skill_filters %}
 
 {% block title %}Pillars Character Generator - Interactive Mode{% endblock %}
 
 {% block content %}
 <div class="top-bar">
     <h1>Interactive Prior Experience</h1>
-    <a href="{% url 'start_over' %}" class="btn danger">Start Over</a>
+    <a href="{% url 'welcome' %}" class="btn">&larr; Home</a>
 </div>
 
 <div class="section">
@@ -99,28 +100,10 @@
 {% endif %}
 
 <div class="section">
-    <h3>What would you like to do?</h3>
-    <form method="post" action="{% url 'interactive' %}">
-        {% csrf_token %}
-        {% if can_continue %}
-        <button type="submit" name="action" value="continue" class="success">
-            Continue Another Year (Age {{ current_age }} &rarr; {{ current_age|add:1 }})
-        </button>
-        {% endif %}
-        <button type="submit" name="action" value="stop" class="warning">
-            {% if died %}View Final Character{% else %}Stop Here & Finish{% endif %}
-        </button>
-        <button type="submit" name="action" value="new" class="danger">
-            Start Over (New Character)
-        </button>
-    </form>
-</div>
-
-<div class="section">
     <h3>Skills Acquired</h3>
     {% if skills %}
     <div class="skills-list">
-        {% for skill in skills %}
+        {% for skill in skills|consolidate_skills %}
         <span class="skill-tag">{{ skill }}</span>
         {% endfor %}
     </div>
@@ -146,4 +129,21 @@
     <summary>View Full Character Sheet</summary>
     <pre>{{ character }}</pre>
 </details>
+
+<div class="section">
+    <h3>What would you like to do?</h3>
+    <form method="post" action="{% url 'interactive' %}">
+        {% csrf_token %}
+        <div class="button-group">
+            {% if can_continue %}
+            <button type="submit" name="action" value="continue" class="success">Continue Another Year (Age {{ current_age }} &rarr; {{ current_age|add:1 }})</button>
+            {% endif %}
+        </div>
+        <div class="button-group">
+            <button type="submit" name="action" value="stop" class="primary">Add Prior Experience</button>
+            <button type="submit" name="action" value="finish" class="success">{% if died %}View Final Character{% else %}Finish Character{% endif %}</button>
+            <a href="{% url 'start_over' %}" class="btn danger">Start Over</a>
+        </div>
+    </form>
+</div>
 {% endblock %}

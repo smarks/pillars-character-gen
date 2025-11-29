@@ -1,4 +1,5 @@
 {% extends "generator/base.html" %}
+{% load skill_filters %}
 
 {% block title %}Pillars Character Generator{% endblock %}
 
@@ -13,34 +14,6 @@
     <pre>{{ character }}</pre>
 </div>
 
-<div class="section">
-    <h3>What would you like to do?</h3>
-    <form method="post">
-        {% csrf_token %}
-        <!-- Hidden default submit for Enter key -->
-        <button type="submit" name="action" value="add_experience" style="position: absolute; left: -9999px;"></button>
-        <div class="button-row">
-            <button type="submit" name="action" value="finish" class="success">
-                Finish Character
-            </button>
-            <button type="submit" name="action" value="add_experience" class="primary">
-                Add Prior Experience &rarr;
-            </button>
-        </div>
-        <div class="button-group">
-            <button type="submit" name="action" value="reroll_none">
-                Re-roll (No Focus)
-            </button>
-            <button type="submit" name="action" value="reroll_physical">
-                Re-roll (STR/DEX Focus)
-            </button>
-            <button type="submit" name="action" value="reroll_mental">
-                Re-roll (INT/WIS Focus)
-            </button>
-        </div>
-    </form>
-</div>
-
 {% if has_experience %}
 <div class="section">
     <h3>Prior Experience</h3>
@@ -52,14 +25,6 @@
         <span>Final Age:</span>
         <span><strong>{{ years_completed|add:16 }}</strong></span>
     </div>
-    {% if skills %}
-    <p><strong>Skills Gained:</strong></p>
-    <div class="skills-list">
-        {% for skill in skills %}
-        <span class="skill-tag">{{ skill }}</span>
-        {% endfor %}
-    </div>
-    {% endif %}
 
     {% if yearly_results %}
     <h4>Year-by-Year Results</h4>
@@ -84,4 +49,21 @@
     {% endif %}
 </div>
 {% endif %}
+
+<div class="section">
+    <h3>What would you like to do?</h3>
+    <form method="post">
+        {% csrf_token %}
+        <div class="button-group">
+            <button type="submit" name="action" value="add_experience" class="primary">Add Prior Experience</button>
+            <button type="submit" name="action" value="finish" class="success">Finish Character</button>
+            <a href="{% url 'start_over' %}" class="btn danger">Start Over</a>
+        </div>
+        <div class="button-group">
+            <button type="submit" name="action" value="reroll_none">Re-roll (No Focus)</button>
+            <button type="submit" name="action" value="reroll_physical">Re-roll (STR/DEX Focus)</button>
+            <button type="submit" name="action" value="reroll_mental">Re-roll (INT/WIS Focus)</button>
+        </div>
+    </form>
+</div>
 {% endblock %}

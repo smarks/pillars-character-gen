@@ -476,7 +476,76 @@ def select_track(request):
 
                 return redirect('interactive')
             else:
-                # Standard mode - generate character with specified years
+                # Standard mode - add years of experience
+                # Check if we already have experience (adding more years)
+                existing_years = request.session.get('interactive_years', 0)
+                existing_skills = request.session.get('interactive_skills', [])
+                existing_yearly_results = request.session.get('interactive_yearly_results', [])
+                existing_aging = request.session.get('interactive_aging', {'str': 0, 'dex': 0, 'int': 0, 'wis': 0, 'con': 0})
+
+                if existing_years > 0:
+                    # Adding MORE experience to existing character
+                    character = deserialize_character(pending_char)
+                    skill_track = character.skill_track
+                    total_modifier = sum(character.attributes.get_all_modifiers().values())
+
+                    # Reconstruct aging effects from session
+                    aging_effects = AgingEffects(
+                        str_penalty=existing_aging.get('str', 0),
+                        dex_penalty=existing_aging.get('dex', 0),
+                        int_penalty=existing_aging.get('int', 0),
+                        wis_penalty=existing_aging.get('wis', 0),
+                        con_penalty=existing_aging.get('con', 0),
+                    )
+
+                    # Roll additional years
+                    new_yearly_results = []
+                    new_skills = []
+                    died = False
+                    for i in range(years):
+                        year_index = existing_years + i
+                        year_result = roll_single_year(
+                            skill_track=skill_track,
+                            year_index=year_index,
+                            total_modifier=total_modifier,
+                            aging_effects=aging_effects
+                        )
+                        new_skills.append(year_result.skill_gained)
+                        new_yearly_results.append({
+                            'year': year_result.year,
+                            'skill': year_result.skill_gained,
+                            'surv_roll': year_result.survivability_roll,
+                            'surv_mod': year_result.survivability_modifier,
+                            'surv_total': year_result.survivability_total,
+                            'surv_target': year_result.survivability_target,
+                            'survived': year_result.survived,
+                        })
+                        if not year_result.survived:
+                            died = True
+                            break
+
+                    # Append to existing experience
+                    all_skills = existing_skills + new_skills
+                    all_yearly_results = existing_yearly_results + new_yearly_results
+                    total_years = existing_years + len(new_yearly_results)
+
+                    # Store updated experience data in session
+                    request.session['interactive_years'] = total_years
+                    request.session['interactive_skills'] = all_skills
+                    request.session['interactive_yearly_results'] = all_yearly_results
+                    request.session['interactive_died'] = died
+                    request.session['interactive_aging'] = {
+                        'str': aging_effects.str_penalty,
+                        'dex': aging_effects.dex_penalty,
+                        'int': aging_effects.int_penalty,
+                        'wis': aging_effects.wis_penalty,
+                        'con': aging_effects.con_penalty,
+                    }
+
+                    # Redirect back to prior experience page
+                    return redirect('select_track')
+
+                # First time adding experience - generate character with track
                 final_character = generate_character(
                     years=years,
                     chosen_track=chosen_track,  # None for auto, or specific track
@@ -699,23 +768,24 @@ def interactive(request):
             latest_result = year_result
             current_age = 16 + years_completed
 
-        elif action == 'stop' or action == 'finish':
-            # Check if we should return to the generator page
-            return_to_generator = request.session.get('interactive_return_to_generator', False)
-
-            if return_to_generator:
-                # Clear the flag but keep experience data for the generator
+        elif action == 'stop':
+            # Go back to generator to add more experience
+            if 'interactive_return_to_generator' in request.session:
                 del request.session['interactive_return_to_generator']
-                request.session.modified = True
-                return redirect('generator')
-            else:
-                # Original behavior - clear session and show final character
-                final_character = build_final_character(request.session)
-                clear_interactive_session(request)
-                return render(request, 'generator/index.html', {
-                    'character': final_character,
+            request.session.modified = True
+            return redirect('generator')
+
+        elif action == 'finish':
+            # Show the finished character sheet
+            char_data = request.session.get('current_character')
+            if char_data:
+                return render(request, 'generator/finished.html', {
+                    'character_data': char_data,
                     'years': years_completed,
-                    'from_interactive': True,
+                    'skills': skills,
+                    'yearly_results': yearly_results_data,
+                    'aging': aging_data,
+                    'died': died,
                 })
 
         elif action == 'new':

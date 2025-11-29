@@ -1,4 +1,5 @@
 {% extends "generator/base.html" %}
+{% load skill_filters %}
 
 {% block title %}Character Sheet - Pillars{% endblock %}
 
@@ -22,7 +23,6 @@
     <h1>Character Sheet</h1>
     <div>
         <button onclick="copyToClipboard()" class="btn copy-btn">Copy to Clipboard</button>
-        <a href="{% url 'generator' %}" class="btn primary">New Character</a>
         <a href="{% url 'welcome' %}" class="btn">&larr; Home</a>
     </div>
 </div>
@@ -36,16 +36,15 @@
 {% if character_data.skill_track.magic_school %}Magic School: {{ character_data.skill_track.magic_school }}{% endif %}
 {% endif %}
 
-{% if skills %}
-**Skills** ({{ skills|length }})
-{% for skill in skills %}- {{ skill }}
-{% endfor %}{% endif %}
-
 {% if years > 0 %}
 **Prior Experience**
 Starting Age: 16
 Final Age: {{ years|add:16 }}
 Years Served: {{ years }}
+{% if skills %}
+Skills Gained ({{ skills|length }}):
+{% for skill in skills|consolidate_skills %}- {{ skill }}
+{% endfor %}{% endif %}
 
 {% for yr in yearly_results %}Age {{ yr.year }}: {{ yr.skill }} | Survival: {{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+ [{% if yr.survived %}OK{% else %}DIED{% endif %}]
 {% endfor %}{% endif %}
@@ -53,6 +52,18 @@ Years Served: {{ years }}
 {% if died %}
 **THIS CHARACTER DIED DURING PRIOR EXPERIENCE**
 {% endif %}</div>
+
+<div class="section">
+    <h3>What would you like to do?</h3>
+    <form method="post" action="{% url 'generator' %}">
+        {% csrf_token %}
+        <div class="button-group">
+            <button type="submit" name="action" value="add_experience" class="primary">Add Prior Experience</button>
+            <button type="submit" name="action" value="finish" class="success">Finish Character</button>
+            <a href="{% url 'start_over' %}" class="btn danger">Start Over</a>
+        </div>
+    </form>
+</div>
 
 <script>
 function copyToClipboard() {
