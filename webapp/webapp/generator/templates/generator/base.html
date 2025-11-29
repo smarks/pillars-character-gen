@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Pillars{% endblock %}</title>
+    <style>
+        /* Base styles - minimal, clean design */
+        body {
+            font-family: monospace;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            color: #333;
+        }
+
+        h1, h2, h3 { margin-top: 0; }
+        h1 { border-bottom: 2px solid #333; padding-bottom: 10px; }
+
+        /* Buttons */
+        button, .btn {
+            font-family: monospace;
+            font-size: 16px;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            background: #f4f4f4;
+            text-decoration: none;
+            display: inline-block;
+            color: #333;
+        }
+        button:hover, .btn:hover {
+            background: #e4e4e4;
+        }
+        button.success, .btn.success { background: #4a4; color: white; border-color: #4a4; }
+        button.success:hover, .btn.success:hover { background: #3a3; }
+        button.warning, .btn.warning { background: #fa0; color: black; border-color: #fa0; }
+        button.warning:hover, .btn.warning:hover { background: #e90; }
+        button.danger, .btn.danger { background: #c44; color: white; border-color: #c44; }
+        button.danger:hover, .btn.danger:hover { background: #b33; }
+        button.primary, .btn.primary { background: #36c; color: white; border-color: #36c; }
+        button.primary:hover, .btn.primary:hover { background: #25b; }
+
+        /* Sections */
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            background: #fafafa;
+        }
+        .section h2, .section h3 { margin-top: 0; }
+
+        /* Pre blocks for character display */
+        pre {
+            background: #f4f4f4;
+            padding: 20px;
+            white-space: pre-wrap;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+
+        /* Tables */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        th { background: #f4f4f4; }
+
+        /* Status colors */
+        .survived { color: green; font-weight: bold; }
+        .died { color: red; font-weight: bold; }
+        .aging { color: orange; font-weight: bold; }
+
+        /* Alert boxes */
+        .info-box { background: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; margin: 15px 0; }
+        .warning-box { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 15px 0; }
+        .danger-box { background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; margin: 15px 0; }
+        .success-box { background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; margin: 15px 0; }
+
+        /* Top bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+        }
+        .top-bar h1 { border: none; padding: 0; margin: 0; }
+
+        /* Navigation links for welcome page */
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 40px 0;
+        }
+        .nav-link {
+            display: block;
+            padding: 20px 40px;
+            border: 2px solid #333;
+            text-decoration: none;
+            color: #333;
+            text-align: center;
+            min-width: 150px;
+        }
+        .nav-link:hover {
+            background: #f4f4f4;
+        }
+        .nav-link .icon {
+            font-size: 2em;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* Button groups */
+        .button-group {
+            margin: 15px 0;
+        }
+
+        /* Info rows */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dotted #ccc;
+        }
+        .info-row:last-child { border-bottom: none; }
+
+        /* Skills list */
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        .skill-tag {
+            background: #333;
+            color: white;
+            padding: 5px 12px;
+            font-size: 0.9em;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-bar, .button-group, button, .btn, .no-print { display: none; }
+            body { padding: 0; }
+            .section { border: none; padding: 10px 0; }
+        }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+    {% block content %}{% endblock %}
+</body>
+</html>

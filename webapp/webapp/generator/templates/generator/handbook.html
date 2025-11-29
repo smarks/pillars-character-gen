@@ -1,126 +1,81 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Player's Handbook - Pillars</title>
-    <style>
-        body {
-            font-family: 'Georgia', serif;
-            background: #1a1a2e;
-            color: #eee;
-            margin: 0;
-            padding: 0;
-        }
-        .header {
-            background: linear-gradient(145deg, #2a2a4a, #1a1a2e);
-            border-bottom: 2px solid #c9a227;
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .header h1 {
-            color: #c9a227;
-            margin: 0;
-            font-size: 1.8em;
-        }
-        .back-link {
-            padding: 10px 20px;
-            background: transparent;
-            border: 2px solid #c9a227;
-            border-radius: 8px;
-            color: #c9a227;
-            text-decoration: none;
-            font-size: 1em;
-            transition: all 0.3s ease;
-        }
-        .back-link:hover {
-            background: rgba(201, 162, 39, 0.2);
-        }
-        .content {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 40px;
-            line-height: 1.8;
-        }
-        .content h2 {
-            color: #c9a227;
-            border-bottom: 1px solid #c9a227;
-            padding-bottom: 10px;
-            margin-top: 40px;
-        }
-        .content h3 {
-            color: #d4af37;
-            margin-top: 30px;
-        }
-        .content h4 {
-            color: #e0c068;
-            margin-top: 25px;
-        }
-        .content p {
-            margin: 15px 0;
-        }
-        .content a {
-            color: #6fb3d2;
-        }
-        .content strong {
-            color: #fff;
-        }
-        .content hr {
-            border: none;
-            border-top: 1px solid #444;
-            margin: 30px 0;
-        }
-        .content ul, .content ol {
-            padding-left: 25px;
-        }
-        .content li {
-            margin: 8px 0;
-        }
-        .content code {
-            background: #2a2a4a;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-        .content pre {
-            background: #2a2a4a;
-            padding: 15px;
-            border-radius: 8px;
-            overflow-x: auto;
-        }
-        .content blockquote {
-            border-left: 4px solid #c9a227;
-            margin: 20px 0;
-            padding-left: 20px;
-            color: #aaa;
-            font-style: italic;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        th, td {
-            border: 1px solid #444;
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background: #2a2a4a;
-            color: #c9a227;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Player's Handbook</h1>
-        <a href="{% url 'welcome' %}" class="back-link">&larr; Back to Home</a>
-    </div>
-    <div class="content">
-        {{ content|safe }}
-    </div>
-</body>
-</html>
+{% extends "generator/base.html" %}
+
+{% block title %}Player's Handbook - Pillars{% endblock %}
+
+{% block extra_css %}
+.handbook-content {
+    line-height: 1.7;
+}
+.handbook-content h2 {
+    border-bottom: 2px solid #333;
+    padding-bottom: 10px;
+    margin-top: 40px;
+}
+.handbook-content h3 {
+    margin-top: 30px;
+    color: #333;
+}
+.handbook-content h4 {
+    margin-top: 25px;
+    color: #555;
+}
+.handbook-content p {
+    margin: 15px 0;
+}
+.handbook-content a {
+    color: #36c;
+}
+.handbook-content hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 30px 0;
+}
+.handbook-content ul, .handbook-content ol {
+    padding-left: 25px;
+}
+.handbook-content li {
+    margin: 8px 0;
+}
+.handbook-content code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border: 1px solid #ddd;
+}
+.handbook-content pre {
+    background: #f4f4f4;
+    padding: 15px;
+    border: 1px solid #ddd;
+    overflow-x: auto;
+}
+.handbook-content blockquote {
+    border-left: 4px solid #333;
+    margin: 20px 0;
+    padding-left: 20px;
+    color: #666;
+    font-style: italic;
+}
+.handbook-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+.handbook-content th, .handbook-content td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+.handbook-content th {
+    background: #f4f4f4;
+}
+{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>Player's Handbook</h1>
+    <a href="{% url 'welcome' %}" class="btn">&larr; Home</a>
+</div>
+
+<div class="handbook-content">
+    {{ content|safe }}
+</div>
+{% endblock %}

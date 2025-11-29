@@ -1,236 +1,87 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Pillars Character Generator</title>
-    <style>
-        body {
-            font-family: 'Georgia', serif;
-            background: #1a1a2e;
-            color: #eee;
-            margin: 0;
-            padding: 0;
-        }
-        .header {
-            background: linear-gradient(145deg, #2a2a4a, #1a1a2e);
-            border-bottom: 2px solid #c9a227;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .header h1 {
-            color: #c9a227;
-            margin: 0;
-            font-size: 1.6em;
-        }
-        .header-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        .btn {
-            padding: 10px 20px;
-            border: 2px solid #c9a227;
-            border-radius: 8px;
-            background: transparent;
-            color: #c9a227;
-            text-decoration: none;
-            font-size: 1em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .btn:hover {
-            background: rgba(201, 162, 39, 0.2);
-        }
-        .btn-primary {
-            background: #c9a227;
-            color: #1a1a2e;
-            font-weight: bold;
-        }
-        .btn-primary:hover {
-            background: #d4af37;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 30px;
-        }
-        .character-display {
-            background: #2a2a4a;
-            border: 1px solid #444;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        .character-display pre {
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            margin: 0;
-            white-space: pre-wrap;
-            color: #ddd;
-        }
-        .controls {
-            background: #2a2a4a;
-            border: 1px solid #444;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        .controls h2 {
-            color: #c9a227;
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 1.3em;
-        }
-        .control-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .control-group:last-child {
-            margin-bottom: 0;
-        }
-        .btn-finish {
-            background: #2d5a2d;
-            border-color: #4a4;
-            color: #4f4;
-        }
-        .btn-finish:hover {
-            background: #3d6a3d;
-        }
-        .btn-reroll {
-            background: #4a3a2a;
-            border-color: #a86;
-            color: #da8;
-        }
-        .btn-reroll:hover {
-            background: #5a4a3a;
-        }
-        .btn-experience {
-            background: #2a3a5a;
-            border-color: #68a;
-            color: #8ad;
-        }
-        .btn-experience:hover {
-            background: #3a4a6a;
-        }
-        .experience-section {
-            background: #2a2a4a;
-            border: 1px solid #444;
-            border-radius: 10px;
-            padding: 25px;
-        }
-        .experience-section h2 {
-            color: #c9a227;
-            margin-top: 0;
-        }
-        .experience-summary {
-            margin-bottom: 20px;
-        }
-        .experience-summary p {
-            margin: 5px 0;
-        }
-        .skills-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .skill-tag {
-            background: #3a3a5a;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.9em;
-        }
-        .year-result {
-            padding: 10px;
-            margin: 5px 0;
-            background: #3a3a5a;
-            border-radius: 5px;
-            font-size: 0.9em;
-        }
-        .year-result.survived {
-            border-left: 3px solid #4a4;
-        }
-        .year-result.died {
-            border-left: 3px solid #a44;
-            color: #faa;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Character Generator</h1>
-        <div class="header-buttons">
-            <a href="{% url 'welcome' %}" class="btn">&larr; Home</a>
+{% extends "generator/base.html" %}
+
+{% block title %}Pillars Character Generator{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>Character Generator</h1>
+    <a href="{% url 'welcome' %}" class="btn">&larr; Home</a>
+</div>
+
+<div class="section">
+    <h3>Your Character</h3>
+    <pre>{{ character }}</pre>
+</div>
+
+<div class="section">
+    <h3>What would you like to do?</h3>
+    <form method="post">
+        {% csrf_token %}
+        <div class="button-group">
+            <button type="submit" name="action" value="finish" class="success">
+                Finish Character
+            </button>
         </div>
+        <div class="button-group">
+            <button type="submit" name="action" value="reroll_none">
+                Re-roll (No Focus)
+            </button>
+            <button type="submit" name="action" value="reroll_physical">
+                Re-roll (STR/DEX Focus)
+            </button>
+            <button type="submit" name="action" value="reroll_mental">
+                Re-roll (INT/WIS Focus)
+            </button>
+        </div>
+        <div class="button-group">
+            <button type="submit" name="action" value="add_experience" class="primary">
+                Add Prior Experience
+            </button>
+        </div>
+    </form>
+</div>
+
+{% if has_experience %}
+<div class="section">
+    <h3>Prior Experience</h3>
+    <div class="info-row">
+        <span>Years Completed:</span>
+        <span><strong>{{ years_completed }}</strong></span>
     </div>
-
-    <div class="container">
-        <!-- Character Display -->
-        <div class="character-display">
-            <pre>{{ character }}</pre>
-        </div>
-
-        <!-- Controls -->
-        <div class="controls">
-            <h2>What would you like to do?</h2>
-            <form method="post">
-                {% csrf_token %}
-                <div class="control-group">
-                    <button type="submit" name="action" value="finish" class="btn btn-finish">
-                        &#10004; Finish Character
-                    </button>
-                </div>
-                <div class="control-group">
-                    <button type="submit" name="action" value="reroll_none" class="btn btn-reroll">
-                        &#9858; Re-roll (No Focus)
-                    </button>
-                    <button type="submit" name="action" value="reroll_physical" class="btn btn-reroll">
-                        &#9876; Re-roll (STR/DEX Focus)
-                    </button>
-                    <button type="submit" name="action" value="reroll_mental" class="btn btn-reroll">
-                        &#9733; Re-roll (INT/WIS Focus)
-                    </button>
-                </div>
-                <div class="control-group">
-                    <button type="submit" name="action" value="add_experience" class="btn btn-experience">
-                        &#128218; Add Prior Experience
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Prior Experience Section (if any) -->
-        {% if has_experience %}
-        <div class="experience-section">
-            <h2>Prior Experience</h2>
-            <div class="experience-summary">
-                <p><strong>Years Completed:</strong> {{ years_completed }}</p>
-                <p><strong>Final Age:</strong> {{ years_completed|add:16 }}</p>
-                {% if skills %}
-                <p><strong>Skills Gained:</strong></p>
-                <div class="skills-list">
-                    {% for skill in skills %}
-                    <span class="skill-tag">{{ skill }}</span>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-
-            {% if yearly_results %}
-            <h3>Year-by-Year Results</h3>
-            {% for yr in yearly_results %}
-            <div class="year-result {% if yr.survived %}survived{% else %}died{% endif %}">
-                <strong>Year {{ yr.year }}:</strong> {{ yr.skill }} |
-                Survival: {{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+
-                {% if yr.survived %}[Survived]{% else %}[DIED]{% endif %}
-            </div>
-            {% endfor %}
-            {% endif %}
-        </div>
-        {% endif %}
+    <div class="info-row">
+        <span>Final Age:</span>
+        <span><strong>{{ years_completed|add:16 }}</strong></span>
     </div>
-</body>
-</html>
+    {% if skills %}
+    <p><strong>Skills Gained:</strong></p>
+    <div class="skills-list">
+        {% for skill in skills %}
+        <span class="skill-tag">{{ skill }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if yearly_results %}
+    <h4>Year-by-Year Results</h4>
+    <table>
+        <tr>
+            <th>Age</th>
+            <th>Skill</th>
+            <th>Survival</th>
+            <th>Result</th>
+        </tr>
+        {% for yr in yearly_results %}
+        <tr>
+            <td>{{ yr.year }}</td>
+            <td>{{ yr.skill }}</td>
+            <td>{{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+</td>
+            <td class="{% if yr.survived %}survived{% else %}died{% endif %}">
+                {% if yr.survived %}Survived{% else %}DIED{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

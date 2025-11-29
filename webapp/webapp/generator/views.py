@@ -95,6 +95,10 @@ def start_over(request):
     """Clear all session data and redirect to welcome page."""
     clear_interactive_session(request)
     clear_pending_session(request)
+    # Also clear the current character
+    if 'current_character' in request.session:
+        del request.session['current_character']
+    request.session.modified = True
     return redirect('welcome')
 
 
