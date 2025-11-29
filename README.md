@@ -1,5 +1,11 @@
 # Pillars RPG Character Generator
 
+PYTHONPATH=/Users/sam/Documents/dev/Pillars/character_gen python manage.py runserver 8001
+
+  Or you can add this to your shell profile (.bashrc or .zshrc) as an alias:
+
+
+
 A Python-based character generation system for the Pillars tabletop RPG, featuring generalized, reusable dice rolling methods and comprehensive testing.
 
 ## Features

@@ -77,104 +77,96 @@ class HandbookPageTests(TestCase):
 
 
 class IndexViewTests(TestCase):
-    """Tests for the main index view."""
+    """Tests for the main index view (new auto-generate flow)."""
 
     def setUp(self):
         self.client = Client()
 
-    def test_index_page_loads(self):
-        """Test that the index page loads successfully."""
+    def test_index_page_loads_with_character(self):
+        """Test that the index page loads with auto-generated character."""
         response = self.client.get(reverse('index'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Pillars Character Generator')
+        self.assertContains(response, 'Character Generator')
+        # Character should be auto-generated and displayed
+        self.assertContains(response, 'PILLARS CHARACTER')
 
-    def test_index_has_track_selection_option(self):
-        """Test that index page has track selection options."""
+    def test_initial_character_has_no_skill_track_or_experience(self):
+        """Test that initial character does NOT show skill track or prior experience."""
         response = self.client.get(reverse('index'))
-        self.assertContains(response, 'track_selection')
-        self.assertContains(response, 'Choose Track')
+        self.assertEqual(response.status_code, 200)
+        # Character should have basic info
+        self.assertContains(response, 'Wealth:')
+        # But NOT skill track or prior experience
+        self.assertNotContains(response, 'PRIOR EXPERIENCE')
+        self.assertNotContains(response, 'Track)')  # Would appear as "(Ranger Track)" etc.
 
-    def test_generate_standard_character(self):
-        """Test generating a character in standard mode."""
+    def test_index_has_control_buttons(self):
+        """Test that index page has the control buttons."""
+        response = self.client.get(reverse('index'))
+        self.assertContains(response, 'Finish Character')
+        self.assertContains(response, 'Re-roll')
+        self.assertContains(response, 'Add Prior Experience')
+
+    def test_reroll_no_focus(self):
+        """Test re-rolling a character with no focus."""
+        # First load to get initial character
+        self.client.get(reverse('index'))
+        # Re-roll with no focus
         response = self.client.post(reverse('index'), {
-            'mode': 'standard',
-            'years': '3',
-            'track_selection': 'auto',
-            'action': 'generate',
+            'action': 'reroll_none',
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Generated Character')
+        self.assertContains(response, 'PILLARS CHARACTER')
 
-    def test_generate_interactive_mode_redirects(self):
-        """Test that interactive mode sets up session correctly."""
+    def test_reroll_physical_focus(self):
+        """Test re-rolling a character with physical focus."""
         response = self.client.post(reverse('index'), {
-            'mode': 'interactive',
-            'years': '0',
-            'track_selection': 'auto',
-            'action': 'generate',
+            'action': 'reroll_physical',
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Interactive Prior Experience')
-        # Check session was set up
-        self.assertIn('interactive_character', self.client.session)
+        self.assertContains(response, 'PILLARS CHARACTER')
 
-    def test_choose_track_redirects_to_select_track(self):
-        """Test that choosing track option redirects to track selection page."""
+    def test_reroll_mental_focus(self):
+        """Test re-rolling a character with mental focus."""
         response = self.client.post(reverse('index'), {
-            'mode': 'standard',
-            'years': '3',
-            'track_selection': 'choose',
-            'action': 'generate',
+            'action': 'reroll_mental',
         })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'PILLARS CHARACTER')
+
+    def test_add_experience_redirects_to_track_selection(self):
+        """Test that add experience redirects to track selection."""
+        # First load to get character
+        self.client.get(reverse('index'))
+        # Add experience
+        response = self.client.post(reverse('index'), {
+            'action': 'add_experience',
+        })
+        # Should redirect to track selection first
         self.assertRedirects(response, reverse('select_track'))
+        # Session should have pending character
+        self.assertIn('pending_character', self.client.session)
+        self.assertTrue(self.client.session.get('pending_return_to_generator', False))
+
+    def test_finish_shows_character_sheet(self):
+        """Test that finish displays the character sheet."""
+        # First load to get character
+        self.client.get(reverse('index'))
+        # Finish
+        response = self.client.post(reverse('index'), {
+            'action': 'finish',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Character Sheet')
 
 
 class SelectTrackViewTests(TestCase):
-    """Tests for the track selection view."""
+    """Tests for the track selection view (legacy - not used in new UI)."""
 
-    def setUp(self):
-        self.client = Client()
-        # First generate a character to get to track selection
-        self.client.post(reverse('index'), {
-            'mode': 'standard',
-            'years': '3',
-            'track_selection': 'choose',
-            'action': 'generate',
-        })
-
-    def test_select_track_page_loads(self):
-        """Test that select track page loads after setup."""
+    def test_select_track_redirects_without_pending_character(self):
+        """Test that select track redirects to index if no pending character."""
         response = self.client.get(reverse('select_track'))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Select Skill Track')
-
-    def test_select_track_shows_basic_tracks(self):
-        """Test that basic track types are shown (always available)."""
-        response = self.client.get(reverse('select_track'))
-        # Check for track names that are always available
-        self.assertContains(response, 'Random')
-        self.assertContains(response, 'Worker')
-        self.assertContains(response, 'Crafts')
-        # These require rolls but should still show
-        self.assertContains(response, 'Army')
-        self.assertContains(response, 'Navy')
-        self.assertContains(response, 'Merchant')
-        # Magic may or may not show depending on character's INT/WIS
-
-    def test_select_track_shows_magic_requirement(self):
-        """Test that Magic track shows its requirement."""
-        response = self.client.get(reverse('select_track'))
-        self.assertContains(response, 'INT or WIS bonus')
-
-    def test_select_worker_track(self):
-        """Test selecting Worker track (always available)."""
-        response = self.client.post(reverse('select_track'), {
-            'chosen_track': 'WORKER',  # Use enum name, not display name
-            'action': 'select_track',
-        })
-        # Should render index with generated character (not redirect)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Generated Character')
+        self.assertRedirects(response, reverse('index'))
 
 
 class MagicTrackTests(TestCase):
@@ -279,23 +271,26 @@ class MagicTrackTests(TestCase):
 
 
 class InteractiveModeMagicTests(TestCase):
-    """Tests for Magic track in interactive mode."""
+    """Tests for interactive mode with tracks."""
 
     def setUp(self):
         self.client = Client()
 
-    def test_interactive_mode_with_magic_track(self):
-        """Test that interactive mode works with Magic track."""
-        # First get to track selection with a character that can use Magic
-        response = self.client.post(reverse('index'), {
-            'mode': 'interactive',
-            'years': '0',
-            'track_selection': 'choose',
-            'action': 'generate',
+    def test_interactive_mode_works(self):
+        """Test that interactive mode works after track selection."""
+        # First load generator to get character
+        self.client.get(reverse('index'))
+        # Add experience goes to track selection first
+        self.client.post(reverse('index'), {'action': 'add_experience'})
+        # Select a track
+        response = self.client.post(reverse('select_track'), {
+            'chosen_track': 'WORKER',
+            'action': 'select_track',
         })
-
-        # Should redirect to track selection
-        self.assertRedirects(response, reverse('select_track'))
+        # Should redirect to interactive
+        self.assertRedirects(response, reverse('interactive'))
+        # Check we're set up for interactive
+        self.assertIn('interactive_character', self.client.session)
 
 
 class SessionSerializationTests(TestCase):
@@ -337,14 +332,19 @@ class SessionSerializationTests(TestCase):
 class StartOverTests(TestCase):
     """Tests for the start over functionality."""
 
+    def setUp(self):
+        self.client = Client()
+
     def test_start_over_clears_session(self):
         """Test that start over clears all session data."""
-        # First create some session data
-        self.client.post(reverse('index'), {
-            'mode': 'interactive',
-            'years': '0',
-            'track_selection': 'auto',
-            'action': 'generate',
+        # First create some session data by loading generator and going through flow
+        self.client.get(reverse('index'))
+        # Add experience goes to track selection now
+        self.client.post(reverse('index'), {'action': 'add_experience'})
+        # Select a track to get to interactive mode
+        self.client.post(reverse('select_track'), {
+            'chosen_track': 'WORKER',
+            'action': 'select_track',
         })
 
         # Verify session has data
@@ -359,44 +359,45 @@ class StartOverTests(TestCase):
 
 
 class UIFlowTests(TestCase):
-    """End-to-end UI flow tests for the character generator."""
+    """End-to-end UI flow tests for the character generator (new flow)."""
 
     def setUp(self):
         self.client = Client()
 
-    def test_full_standard_generation_flow(self):
-        """Test complete standard mode character generation flow."""
-        # Step 1: Load index page
+    def test_full_generator_flow(self):
+        """Test complete character generation flow with new UI."""
+        # Step 1: Load index page - character auto-generated
         response = self.client.get(reverse('index'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Generate Character')
+        self.assertContains(response, 'Character Generator')
+        self.assertContains(response, 'PILLARS CHARACTER')
 
-        # Step 2: Generate character with 5 years experience
+        # Step 2: Finish the character
         response = self.client.post(reverse('index'), {
-            'mode': 'standard',
-            'years': '5',
-            'track_selection': 'auto',
-            'action': 'generate',
+            'action': 'finish',
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Generated Character')
-        # Should show prior experience section
-        self.assertContains(response, 'PRIOR EXPERIENCE')
+        self.assertContains(response, 'Character Sheet')
 
     def test_full_interactive_mode_flow(self):
         """Test complete interactive mode flow with year-by-year progression."""
-        # Step 1: Start interactive mode
+        # Step 1: Load generator and add experience
+        self.client.get(reverse('index'))
         response = self.client.post(reverse('index'), {
-            'mode': 'interactive',
-            'years': '0',
-            'track_selection': 'auto',
-            'action': 'generate',
+            'action': 'add_experience',
         })
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Interactive Prior Experience')
-        self.assertContains(response, 'Continue Another Year')
+        # Should go to track selection first
+        self.assertRedirects(response, reverse('select_track'))
 
-        # Step 2: Continue for first year
+        # Step 2: Select a track
+        response = self.client.post(reverse('select_track'), {
+            'chosen_track': 'WORKER',
+            'action': 'select_track',
+        })
+        # Should redirect to interactive mode
+        self.assertRedirects(response, reverse('interactive'))
+
+        # Step 3: Continue for first year
         response = self.client.post(reverse('interactive'), {
             'action': 'continue',
         })
@@ -404,105 +405,46 @@ class UIFlowTests(TestCase):
         # Should show year 1 results
         self.assertContains(response, 'Years of Experience')
 
-        # Step 3: Stop and finish
+        # Step 4: Stop and return to generator
         response = self.client.post(reverse('interactive'), {
             'action': 'stop',
         })
-        self.assertEqual(response.status_code, 200)
-        # Should show final character
-        self.assertContains(response, 'Generated Character')
+        # Should redirect back to generator
+        self.assertRedirects(response, reverse('generator'))
 
-    def test_track_selection_flow(self):
-        """Test the track selection UI flow."""
-        # Step 1: Request track selection
+        # Step 5: Generator should show experience info
+        response = self.client.get(reverse('generator'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Prior Experience')
+
+    def test_reroll_flow(self):
+        """Test re-rolling characters with different focuses."""
+        # Load initial character
+        response = self.client.get(reverse('index'))
+        self.assertContains(response, 'PILLARS CHARACTER')
+
+        # Re-roll with physical focus
         response = self.client.post(reverse('index'), {
-            'mode': 'standard',
-            'years': '3',
-            'track_selection': 'choose',
-            'action': 'generate',
-        })
-        self.assertRedirects(response, reverse('select_track'))
-
-        # Step 2: View track selection page
-        response = self.client.get(reverse('select_track'))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Select Skill Track')
-        self.assertContains(response, 'Available Skill Tracks')
-        # Should show track cards
-        self.assertContains(response, 'track-card')
-
-        # Step 3: Select a track
-        response = self.client.post(reverse('select_track'), {
-            'chosen_track': 'CRAFTS',
-            'action': 'select_track',
+            'action': 'reroll_physical',
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Generated Character')
-        self.assertContains(response, 'Crafts')
+        self.assertContains(response, 'PILLARS CHARACTER')
 
-    def test_track_selection_shows_magic_track(self):
-        """Test that Magic track appears in track selection when eligible."""
-        # Start track selection
-        self.client.post(reverse('index'), {
-            'mode': 'standard',
-            'years': '0',
-            'track_selection': 'choose',
-            'action': 'generate',
-        })
-
-        response = self.client.get(reverse('select_track'))
-        self.assertEqual(response.status_code, 200)
-
-        # Magic track should always be shown (even if impossible for this char)
-        self.assertContains(response, 'Magic')
-        self.assertContains(response, 'INT or WIS bonus')
-        self.assertContains(response, 'Survivability:</strong> 7')
-
-    def test_interactive_mode_with_chosen_track(self):
-        """Test interactive mode after choosing a track."""
-        # Step 1: Go to track selection with interactive mode
+        # Re-roll with mental focus
         response = self.client.post(reverse('index'), {
-            'mode': 'interactive',
-            'years': '0',
-            'track_selection': 'choose',
-            'action': 'generate',
-        })
-        self.assertRedirects(response, reverse('select_track'))
-
-        # Step 2: Select Worker track
-        response = self.client.post(reverse('select_track'), {
-            'chosen_track': 'WORKER',
-            'action': 'select_track',
+            'action': 'reroll_mental',
         })
         self.assertEqual(response.status_code, 200)
-        # Should be in interactive mode
-        self.assertContains(response, 'Interactive Prior Experience')
-        self.assertContains(response, 'Worker')
-
-    def test_cancel_track_selection(self):
-        """Test canceling track selection returns to index."""
-        # Go to track selection
-        self.client.post(reverse('index'), {
-            'mode': 'standard',
-            'years': '3',
-            'track_selection': 'choose',
-            'action': 'generate',
-        })
-
-        # Cancel
-        response = self.client.post(reverse('select_track'), {
-            'action': 'cancel',
-        })
-        self.assertRedirects(response, reverse('index'))
+        self.assertContains(response, 'PILLARS CHARACTER')
 
     def test_start_over_from_interactive(self):
         """Test start over button from interactive mode."""
-        # Start interactive mode
-        self.client.post(reverse('index'), {
-            'mode': 'interactive',
-            'years': '0',
-            'track_selection': 'auto',
-            'action': 'generate',
+        # Load generator and go through track selection to interactive mode
+        self.client.get(reverse('index'))
+        self.client.post(reverse('index'), {'action': 'add_experience'})
+        self.client.post(reverse('select_track'), {
+            'chosen_track': 'WORKER',
+            'action': 'select_track',
         })
 
         # Continue a few years
@@ -520,40 +462,28 @@ class UIFlowTests(TestCase):
         # Session should be cleared
         self.assertNotIn('interactive_character', self.client.session)
 
-    def test_continue_after_standard_generation(self):
-        """Test continuing in interactive mode after standard generation."""
-        # Generate character with 3 years
-        response = self.client.post(reverse('index'), {
-            'mode': 'standard',
-            'years': '3',
-            'track_selection': 'auto',
-            'action': 'generate',
+    def test_finish_after_experience(self):
+        """Test finishing a character after adding experience."""
+        # Load generator and go through track selection
+        self.client.get(reverse('index'))
+        self.client.post(reverse('index'), {'action': 'add_experience'})
+        self.client.post(reverse('select_track'), {
+            'chosen_track': 'WORKER',
+            'action': 'select_track',
+        })
+
+        # Add one year
+        self.client.post(reverse('interactive'), {'action': 'continue'})
+
+        # Return to generator
+        self.client.post(reverse('interactive'), {'action': 'stop'})
+
+        # Finish the character
+        response = self.client.post(reverse('generator'), {
+            'action': 'finish',
         })
         self.assertEqual(response.status_code, 200)
-
-        # Should show continue option if character survived
-        if 'can_continue' in response.context and response.context['can_continue']:
-            self.assertContains(response, 'Continue in Interactive Mode')
-
-            # Continue in interactive mode - this redirects to interactive page
-            response = self.client.post(reverse('index'), {
-                'action': 'continue_interactive',
-            }, follow=True)  # Follow the redirect
-            self.assertEqual(response.status_code, 200)
-            self.assertContains(response, 'Interactive Prior Experience')
-
-    def test_character_death_flow(self):
-        """Test flow when character dies during prior experience."""
-        # Generate with many years (high chance of death with high survivability)
-        response = self.client.post(reverse('index'), {
-            'mode': 'standard',
-            'years': '18',
-            'track_selection': 'auto',
-            'action': 'generate',
-        })
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Generated Character')
-        # Character may or may not have died, but page should load
+        self.assertContains(response, 'Character Sheet')
 
 
 class AttributeFocusTests(TestCase):
@@ -598,47 +528,38 @@ class AttributeFocusTests(TestCase):
         char = generate_character(years=0, attribute_focus=None)
         self.assertIsNotNone(char.attributes)
 
-    def test_index_shows_attribute_focus_option(self):
-        """Test that the index page has attribute focus options."""
+    def test_reroll_buttons_available(self):
+        """Test that re-roll buttons with different focuses are available."""
         response = self.client.get(reverse('index'))
-        self.assertContains(response, 'Attribute Focus')
-        self.assertContains(response, 'attribute_focus')
-        self.assertContains(response, 'Physical (STR or DEX +1)')
-        self.assertContains(response, 'Mental (INT or WIS +1)')
+        self.assertContains(response, 'reroll_none')
+        self.assertContains(response, 'reroll_physical')
+        self.assertContains(response, 'reroll_mental')
 
     def test_physical_focus_web_generation(self):
         """Test generating a character with physical focus via web."""
         response = self.client.post(reverse('index'), {
-            'mode': 'standard',
-            'years': '0',
-            'track_selection': 'auto',
-            'attribute_focus': 'physical',
-            'action': 'generate',
+            'action': 'reroll_physical',
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Generated Character')
+        self.assertContains(response, 'PILLARS CHARACTER')
 
     def test_mental_focus_web_generation(self):
         """Test generating a character with mental focus via web."""
         response = self.client.post(reverse('index'), {
-            'mode': 'standard',
-            'years': '0',
-            'track_selection': 'auto',
-            'attribute_focus': 'mental',
-            'action': 'generate',
+            'action': 'reroll_mental',
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Generated Character')
+        self.assertContains(response, 'PILLARS CHARACTER')
 
 
 class MagicTrackUITests(TestCase):
-    """UI tests specifically for Magic track functionality."""
+    """Tests for Magic track functionality."""
 
     def setUp(self):
         self.client = Client()
 
     def test_magic_track_shows_school_info(self):
-        """Test that selecting Magic track shows school information."""
+        """Test that Magic track includes school information."""
         from pillars.attributes import create_skill_track_for_choice, TrackType
 
         # Create a Magic track to verify it includes school info
@@ -656,106 +577,62 @@ class MagicTrackUITests(TestCase):
         self.assertIn('Spell:', skill_str)
         self.assertIn('School:', skill_str)
 
-    def test_magic_track_in_track_order(self):
-        """Test that Magic track is included in the track selection order."""
-        # Go to track selection
-        self.client.post(reverse('index'), {
-            'mode': 'standard',
-            'years': '0',
-            'track_selection': 'choose',
-            'action': 'generate',
-        })
 
-        response = self.client.get(reverse('select_track'))
-
-        # Magic should appear in the page
-        self.assertContains(response, 'Magic')
-        # Should show as a track card
-        content = response.content.decode()
-        self.assertIn('Magic', content)
-
-    def test_magic_track_survivability_displayed(self):
-        """Test that Magic track shows survivability 7 (most dangerous)."""
-        self.client.post(reverse('index'), {
-            'mode': 'standard',
-            'years': '0',
-            'track_selection': 'choose',
-            'action': 'generate',
-        })
-
-        response = self.client.get(reverse('select_track'))
-        # Should show survivability 7 for Magic
-        self.assertContains(response, 'Survivability:</strong> 7')
-
-
-class TrackSelectionContinueTests(TestCase):
-    """Tests for continuing in interactive mode after track selection."""
+class ReturnToGeneratorTests(TestCase):
+    """Tests for returning to generator after interactive mode."""
 
     def setUp(self):
         self.client = Client()
 
-    def test_continue_interactive_after_track_selection(self):
-        """Test that Continue Interactive works after track selection in standard mode.
+    def test_return_to_generator_after_experience(self):
+        """Test that stopping interactive mode returns to generator."""
+        # Load generator
+        self.client.get(reverse('index'))
 
-        This tests the bug fix where the form on index.html, when rendered from
-        select_track view, needs to POST to the index view not the current URL.
-        """
-        # Step 1: Go to track selection with standard mode and some years
-        response = self.client.post(reverse('index'), {
-            'mode': 'standard',
-            'years': '3',
-            'track_selection': 'choose',
-            'action': 'generate',
-        })
-        self.assertRedirects(response, reverse('select_track'))
+        # Add experience - goes to track selection
+        self.client.post(reverse('index'), {'action': 'add_experience'})
 
-        # Step 2: Select Worker track (always available, guaranteed to succeed)
-        response = self.client.post(reverse('select_track'), {
-            'chosen_track': 'WORKER',
-            'action': 'select_track',
-        })
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Generated Character')
+        # Verify pending flag is set
+        self.assertTrue(self.client.session.get('pending_return_to_generator', False))
 
-        # Check session has character data from store_character_in_session
-        self.assertIn('interactive_character', self.client.session)
-
-        # Step 3: Now click "Continue in Interactive Mode"
-        # This form POST should go to index view (not select_track)
-        response = self.client.post(reverse('index'), {
-            'action': 'continue_interactive',
-        }, follow=True)
-
-        # Should redirect to interactive page and show interactive mode
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Interactive Prior Experience')
-        # Should still have the character's years of experience
-        self.assertIn('interactive_years', self.client.session)
-        self.assertEqual(self.client.session['interactive_years'], 3)
-
-    def test_finish_character_after_track_selection(self):
-        """Test that Finish button works after track selection."""
-        # Step 1: Go to track selection
-        self.client.post(reverse('index'), {
-            'mode': 'standard',
-            'years': '2',
-            'track_selection': 'choose',
-            'action': 'generate',
-        })
-
-        # Step 2: Select a track
+        # Select a track to get to interactive mode
         self.client.post(reverse('select_track'), {
             'chosen_track': 'WORKER',
             'action': 'select_track',
         })
 
-        # Step 3: Click "Finish & Show Character Sheet"
-        response = self.client.post(reverse('index'), {
-            'action': 'finish_character',
+        # Verify interactive return flag is now set
+        self.assertTrue(self.client.session.get('interactive_return_to_generator', False))
+
+        # Continue one year
+        self.client.post(reverse('interactive'), {'action': 'continue'})
+
+        # Stop - should redirect to generator
+        response = self.client.post(reverse('interactive'), {'action': 'stop'})
+        self.assertRedirects(response, reverse('generator'))
+
+        # Flag should be cleared
+        self.assertNotIn('interactive_return_to_generator', self.client.session)
+
+    def test_generator_shows_experience_after_return(self):
+        """Test that generator shows prior experience after returning."""
+        # Load generator
+        self.client.get(reverse('index'))
+
+        # Add experience - go through track selection
+        self.client.post(reverse('index'), {'action': 'add_experience'})
+        self.client.post(reverse('select_track'), {
+            'chosen_track': 'WORKER',
+            'action': 'select_track',
         })
 
-        # Should show final character
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Generated Character')
-        # Session should be cleared
-        self.assertNotIn('interactive_character', self.client.session)
+        # Continue one year
+        self.client.post(reverse('interactive'), {'action': 'continue'})
+        self.client.post(reverse('interactive'), {'action': 'stop'})
+
+        # Load generator page
+        response = self.client.get(reverse('generator'))
+
+        # Should show prior experience section
+        self.assertContains(response, 'Prior Experience')
+        self.assertContains(response, 'Year')

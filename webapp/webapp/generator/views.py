@@ -1,3 +1,36 @@
+"""
+Django views for the Pillars Character Generator web application.
+
+This module handles all the web UI for character generation. The main user flow is:
+
+1. WELCOME PAGE (welcome view)
+   - Entry point with links to Generator, Lore, and Handbook
+
+2. CHARACTER GENERATOR (index view)
+   - Auto-generates a character on first load (without skill track)
+   - User sees their stats and can:
+     - Re-roll with different attribute focus options
+     - Add Prior Experience (goes to track selection)
+     - Finish (shows final character sheet)
+
+3. TRACK SELECTION (select_track view)
+   - User chooses a skill track (Ranger, Army, Magic, etc.)
+   - Some tracks require acceptance rolls
+   - After selection, redirects to interactive mode
+
+4. INTERACTIVE MODE (interactive view)
+   - Year-by-year prior experience
+   - Each year: roll survival, gain skill, check for death
+   - User can stop anytime and return to generator
+
+5. FINISHED CHARACTER (finished.html template)
+   - Pretty-printed character sheet for printing
+
+Session Keys Used:
+    - current_character: The main character data (serialized dict)
+    - pending_*: Temporary data during track selection flow
+    - interactive_*: Data for the interactive prior experience mode
+"""
 import json
 import os
 import markdown
@@ -66,107 +99,118 @@ def start_over(request):
 
 
 def index(request):
-    """Main page with generate button."""
-    character = None
-    years = 0  # Default value
-    mode = request.POST.get('mode', 'standard')
-    track_selection = request.POST.get('track_selection', 'auto')
-    attribute_focus = request.POST.get('attribute_focus', 'none')
+    """
+    Main character generator page.
 
-    if request.method == 'POST':
-        action = request.POST.get('action', 'generate')
+    This is the primary view for character creation. On GET request, it either:
+    - Generates a new character (if none in session)
+    - Displays the existing character (if returning from prior experience)
 
-        if action == 'start_over':
-            return start_over(request)
+    On POST request, it handles these actions:
+    - 'reroll_none': Generate new character with random attributes
+    - 'reroll_physical': Generate new character guaranteed STR or DEX +1
+    - 'reroll_mental': Generate new character guaranteed INT or WIS +1
+    - 'add_experience': Redirect to track selection, then interactive mode
+    - 'finish': Show the final character sheet
 
-        if action == 'generate':
-            # Convert 'none' to None for the generator
-            focus = attribute_focus if attribute_focus != 'none' else None
+    Important: Initial characters are generated with skip_track=True so they
+    don't have a skill track or prior experience yet. This lets users review
+    their base stats before committing to a career path.
 
-            # Check if user wants to choose their track
-            if track_selection == 'choose':
-                # Generate base character and redirect to track selection
-                character = generate_character(years=0, attribute_focus=focus)
-                # Store in session for track selection page
-                request.session['pending_character'] = serialize_character(character)
-                request.session['pending_years'] = int(request.POST.get('years', '0'))
-                request.session['pending_mode'] = mode
-                request.session['pending_attribute_focus'] = attribute_focus
-                # Store character stats needed for track availability
-                request.session['pending_str_mod'] = character.attributes.get_modifier("STR")
-                request.session['pending_dex_mod'] = character.attributes.get_modifier("DEX")
-                request.session['pending_int_mod'] = character.attributes.get_modifier("INT")
-                request.session['pending_wis_mod'] = character.attributes.get_modifier("WIS")
-                request.session['pending_social_class'] = character.provenance.social_class
-                request.session['pending_sub_class'] = character.provenance.sub_class
-                request.session['pending_wealth_level'] = character.wealth.wealth_level
-                return redirect('select_track')
+    Template: generator/index.html
+    """
+    action = request.POST.get('action', '') if request.method == 'POST' else ''
 
-            if mode == 'interactive':
-                # Start interactive mode - generate base character with 0 years
-                character = generate_character(years=0, attribute_focus=focus)
-                # Store character state in session for interactive mode
-                request.session['interactive_character'] = serialize_character(character)
-                request.session['interactive_years'] = 0
-                request.session['interactive_skills'] = []  # No skills until first year completed
-                request.session['interactive_skill_points'] = 0
-                request.session['interactive_yearly_results'] = []
-                request.session['interactive_aging'] = {'str': 0, 'dex': 0, 'int': 0, 'wis': 0, 'con': 0}
-                request.session['interactive_died'] = False
-                request.session['interactive_track_name'] = character.skill_track.track.value
-                request.session['interactive_survivability'] = character.skill_track.survivability
-                request.session['interactive_initial_skills'] = list(character.skill_track.initial_skills)
+    # Handle different actions
+    if action == 'reroll_none':
+        # Re-roll with no focus - skip_track for initial character
+        character = generate_character(years=0, attribute_focus=None, skip_track=True)
+        store_current_character(request, character)
 
-                # Store attribute info for survivability display
-                attr_mods = character.attributes.get_all_modifiers()
-                total_mod = sum(attr_mods.values())
-                request.session['interactive_attr_modifiers'] = attr_mods
-                request.session['interactive_total_modifier'] = total_mod
+    elif action == 'reroll_physical':
+        # Re-roll with physical focus (STR/DEX)
+        character = generate_character(years=0, attribute_focus='physical', skip_track=True)
+        store_current_character(request, character)
 
-                return render(request, 'generator/interactive.html', {
-                    'character': character,
-                    'years_completed': 0,
-                    'current_age': 16,
-                    'yearly_results': [],
-                    'can_continue': True,
-                    'mode': 'interactive',
-                    'track_name': character.skill_track.track.value,
-                    'survivability': character.skill_track.survivability,
-                    'initial_skills': character.skill_track.initial_skills,
-                    'attr_modifiers': attr_mods,
-                    'total_modifier': total_mod,
-                })
-            else:
-                years_input = request.POST.get('years', '0')
-                try:
-                    years = int(years_input)
-                except ValueError:
-                    years = 0
-                character = generate_character(years=years, attribute_focus=focus)
+    elif action == 'reroll_mental':
+        # Re-roll with mental focus (INT/WIS)
+        character = generate_character(years=0, attribute_focus='mental', skip_track=True)
+        store_current_character(request, character)
 
-                # Store character state in session so user can continue interactively
-                store_character_in_session(request, character)
+    elif action == 'add_experience':
+        # Go to track selection first, then interactive mode
+        char_data = request.session.get('current_character')
+        if char_data:
+            # Store character info for track selection
+            character = deserialize_character(char_data)
+            request.session['pending_character'] = char_data
+            request.session['pending_years'] = 0
+            request.session['pending_mode'] = 'interactive'
+            request.session['pending_str_mod'] = character.attributes.get_modifier('STR')
+            request.session['pending_dex_mod'] = character.attributes.get_modifier('DEX')
+            request.session['pending_int_mod'] = character.attributes.get_modifier('INT')
+            request.session['pending_wis_mod'] = character.attributes.get_modifier('WIS')
+            request.session['pending_social_class'] = char_data.get('provenance_social_class', 'Commoner')
+            request.session['pending_sub_class'] = char_data.get('provenance_sub_class', 'Laborer')
+            request.session['pending_wealth_level'] = char_data.get('wealth_level', 'Moderate')
+            request.session['pending_return_to_generator'] = True
+            return redirect('select_track')
+        else:
+            # No character, generate one
+            character = generate_character(years=0, skip_track=True)
+            store_current_character(request, character)
 
-        elif action == 'continue_interactive':
-            # User wants to continue from standard mode to interactive mode
-            return redirect('interactive')
-
-        elif action == 'finish_character':
-            # User wants to finalize and show the complete character sheet
-            final_character = build_final_character(request.session)
-            years_completed = request.session.get('interactive_years', 0)
-            clear_interactive_session(request)
-            return render(request, 'generator/index.html', {
-                'character': final_character,
-                'years': years_completed,
-                'from_interactive': True,
+    elif action == 'finish':
+        # Show finished character page
+        char_data = request.session.get('current_character')
+        if char_data:
+            return render(request, 'generator/finished.html', {
+                'character_data': char_data,
+                'years': request.session.get('interactive_years', 0),
+                'skills': request.session.get('interactive_skills', []),
+                'yearly_results': request.session.get('interactive_yearly_results', []),
+                'aging': request.session.get('interactive_aging', {}),
+                'died': request.session.get('interactive_died', False),
             })
+        # No character, redirect to generate
+        character = generate_character(years=0, skip_track=True)
+        store_current_character(request, character)
+
+    else:
+        # GET request or unknown action - check for existing character or generate new
+        char_data = request.session.get('current_character')
+        if char_data and not action:
+            # Return from prior experience - use existing character
+            character = deserialize_character(char_data)
+        else:
+            # Generate new character without track/experience
+            character = generate_character(years=0, skip_track=True)
+            store_current_character(request, character)
+
+    # Get prior experience info if any
+    years_completed = request.session.get('interactive_years', 0)
+    skills = request.session.get('interactive_skills', [])
+    yearly_results = request.session.get('interactive_yearly_results', [])
 
     return render(request, 'generator/index.html', {
         'character': character,
-        'years': years,
-        'can_continue': character and not character.died if character else False,
+        'years_completed': years_completed,
+        'skills': skills,
+        'yearly_results': yearly_results,
+        'has_experience': years_completed > 0,
     })
+
+
+def store_current_character(request, character):
+    """Store character in session for the generator flow."""
+    request.session['current_character'] = serialize_character(character)
+    # Clear any prior experience data when re-rolling
+    request.session['interactive_years'] = 0
+    request.session['interactive_skills'] = []
+    request.session['interactive_yearly_results'] = []
+    request.session['interactive_aging'] = {'str': 0, 'dex': 0, 'int': 0, 'wis': 0, 'con': 0}
+    request.session['interactive_died'] = False
+    request.session.modified = True
 
 
 def select_track(request):
@@ -264,6 +308,9 @@ def select_track(request):
                 })
 
             # Accepted! Now complete the character generation
+            # Save return_to_generator flag before clearing pending session
+            return_to_generator = request.session.get('pending_return_to_generator', False)
+
             # Clear pending session data
             clear_pending_session(request)
 
@@ -278,6 +325,10 @@ def select_track(request):
             )
 
             if pending_mode == 'interactive':
+
+                # Store character with skill track in session for generator
+                request.session['current_character'] = serialize_character(final_character)
+
                 # Go to interactive mode
                 request.session['interactive_character'] = serialize_character(final_character)
                 request.session['interactive_years'] = 0
@@ -290,24 +341,17 @@ def select_track(request):
                 request.session['interactive_survivability'] = final_character.skill_track.survivability
                 request.session['interactive_initial_skills'] = list(final_character.skill_track.initial_skills)
 
+                # Set return to generator flag if coming from new generator flow
+                if return_to_generator:
+                    request.session['interactive_return_to_generator'] = True
+
                 attr_mods = final_character.attributes.get_all_modifiers()
                 total_mod = sum(attr_mods.values())
                 request.session['interactive_attr_modifiers'] = attr_mods
                 request.session['interactive_total_modifier'] = total_mod
 
-                return render(request, 'generator/interactive.html', {
-                    'character': final_character,
-                    'years_completed': 0,
-                    'current_age': 16,
-                    'yearly_results': [],
-                    'can_continue': True,
-                    'mode': 'interactive',
-                    'track_name': final_character.skill_track.track.value,
-                    'survivability': final_character.skill_track.survivability,
-                    'initial_skills': final_character.skill_track.initial_skills,
-                    'attr_modifiers': attr_mods,
-                    'total_modifier': total_mod,
-                })
+                # Redirect to interactive page instead of rendering directly
+                return redirect('interactive')
             else:
                 # Standard mode - show completed character
                 store_character_in_session(request, final_character)
@@ -337,7 +381,7 @@ def clear_pending_session(request):
         'pending_character', 'pending_years', 'pending_mode',
         'pending_str_mod', 'pending_dex_mod', 'pending_int_mod', 'pending_wis_mod',
         'pending_social_class', 'pending_sub_class', 'pending_wealth_level',
-        'pending_attribute_focus',
+        'pending_attribute_focus', 'pending_return_to_generator',
     ]
     for key in keys:
         if key in request.session:
@@ -492,14 +536,23 @@ def interactive(request):
             current_age = 16 + years_completed
 
         elif action == 'stop' or action == 'finish':
-            # Clear session and show final character
-            final_character = build_final_character(request.session)
-            clear_interactive_session(request)
-            return render(request, 'generator/index.html', {
-                'character': final_character,
-                'years': years_completed,
-                'from_interactive': True,
-            })
+            # Check if we should return to the generator page
+            return_to_generator = request.session.get('interactive_return_to_generator', False)
+
+            if return_to_generator:
+                # Clear the flag but keep experience data for the generator
+                del request.session['interactive_return_to_generator']
+                request.session.modified = True
+                return redirect('generator')
+            else:
+                # Original behavior - clear session and show final character
+                final_character = build_final_character(request.session)
+                clear_interactive_session(request)
+                return render(request, 'generator/index.html', {
+                    'character': final_character,
+                    'years': years_completed,
+                    'from_interactive': True,
+                })
 
         elif action == 'new':
             # Clear session and start over
@@ -528,7 +581,7 @@ def interactive(request):
 
 def serialize_character(character):
     """Serialize character to JSON-compatible dict for session storage."""
-    return {
+    data = {
         'attributes': {
             'STR': character.attributes.STR,
             'DEX': character.attributes.DEX,
@@ -546,19 +599,29 @@ def serialize_character(character):
         'height': str(character.height),
         'weight': str(character.weight),
         'provenance': str(character.provenance),
+        'provenance_social_class': character.provenance.social_class if hasattr(character.provenance, 'social_class') else 'Commoner',
+        'provenance_sub_class': character.provenance.sub_class if hasattr(character.provenance, 'sub_class') else 'Laborer',
         'location': str(character.location),
         'literacy': str(character.literacy),
         'wealth': str(character.wealth),
-        'skill_track': {
+        'wealth_level': character.wealth.wealth_level if hasattr(character.wealth, 'wealth_level') else 'Moderate',
+        'str_repr': str(character),
+    }
+
+    # Only include skill_track if it exists
+    if character.skill_track is not None:
+        data['skill_track'] = {
             'track': character.skill_track.track.value,
             'survivability': character.skill_track.survivability,
             'initial_skills': list(character.skill_track.initial_skills),
             'craft_type': character.skill_track.craft_type.value if character.skill_track.craft_type else None,
             'magic_school': character.skill_track.magic_school.value if character.skill_track.magic_school else None,
             'magic_school_rolls': character.skill_track.magic_school_rolls,
-        },
-        'str_repr': str(character),
-    }
+        }
+    else:
+        data['skill_track'] = None
+
+    return data
 
 
 def deserialize_character(data):
@@ -595,17 +658,23 @@ def deserialize_character(data):
                 },
                 '_get_mod': lambda self, attr: get_modifier_for_value(getattr(self, attr)),
             })()
-            self.skill_track = SkillTrack(
-                track=TrackType(data['skill_track']['track']),
-                acceptance_check=None,
-                survivability=data['skill_track']['survivability'],
-                survivability_roll=None,
-                initial_skills=data['skill_track']['initial_skills'],
-                craft_type=CraftType(data['skill_track']['craft_type']) if data['skill_track'].get('craft_type') else None,
-                craft_rolls=None,
-                magic_school=MagicSchool(data['skill_track']['magic_school']) if data['skill_track'].get('magic_school') else None,
-                magic_school_rolls=data['skill_track'].get('magic_school_rolls'),
-            )
+
+            # Handle None skill_track (initial character without track assigned)
+            if data.get('skill_track') is not None:
+                self.skill_track = SkillTrack(
+                    track=TrackType(data['skill_track']['track']),
+                    acceptance_check=None,
+                    survivability=data['skill_track']['survivability'],
+                    survivability_roll=None,
+                    initial_skills=data['skill_track']['initial_skills'],
+                    craft_type=CraftType(data['skill_track']['craft_type']) if data['skill_track'].get('craft_type') else None,
+                    craft_rolls=None,
+                    magic_school=MagicSchool(data['skill_track']['magic_school']) if data['skill_track'].get('magic_school') else None,
+                    magic_school_rolls=data['skill_track'].get('magic_school_rolls'),
+                )
+            else:
+                self.skill_track = None
+
             self._str_repr = data['str_repr']
 
         def __str__(self):
@@ -722,6 +791,7 @@ def clear_interactive_session(request):
         'interactive_initial_skills',
         'interactive_attr_modifiers',
         'interactive_total_modifier',
+        'interactive_return_to_generator',
     ]
     for key in keys:
         if key in request.session:
