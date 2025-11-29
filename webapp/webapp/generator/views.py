@@ -1,5 +1,8 @@
 import json
+import os
+import markdown
 from django.shortcuts import render, redirect
+from django.conf import settings
 from pillars import generate_character
 from pillars.attributes import (
     roll_single_year,
@@ -19,11 +22,47 @@ from pillars.attributes import (
 )
 
 
+def welcome(request):
+    """Welcome page with links to main sections."""
+    return render(request, 'generator/welcome.html')
+
+
+def lore(request):
+    """Lore page - placeholder for now."""
+    return render(request, 'generator/lore.html')
+
+
+def handbook(request):
+    """Display the Player's Handbook."""
+    # Path to the handbook markdown file
+    handbook_path = os.path.join(settings.BASE_DIR, '..', 'A Pillars Handbook.md')
+
+    try:
+        with open(handbook_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Remove the YAML frontmatter if present
+        if content.startswith('---'):
+            parts = content.split('---', 2)
+            if len(parts) >= 3:
+                content = parts[2]
+
+        # Convert markdown to HTML
+        html_content = markdown.markdown(
+            content,
+            extensions=['tables', 'fenced_code', 'toc']
+        )
+    except FileNotFoundError:
+        html_content = "<p>Handbook not found.</p>"
+
+    return render(request, 'generator/handbook.html', {'content': html_content})
+
+
 def start_over(request):
-    """Clear all session data and redirect to index."""
+    """Clear all session data and redirect to welcome page."""
     clear_interactive_session(request)
     clear_pending_session(request)
-    return redirect('index')
+    return redirect('welcome')
 
 
 def index(request):

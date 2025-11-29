@@ -3,6 +3,79 @@ from django.urls import reverse
 from pillars.attributes import TrackType, MagicSchool
 
 
+class WelcomePageTests(TestCase):
+    """Tests for the welcome/landing page."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_welcome_page_loads(self):
+        """Test that welcome page loads successfully."""
+        response = self.client.get(reverse('welcome'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'PILLARS')
+
+    def test_welcome_has_generator_link(self):
+        """Test that welcome page has link to character generator."""
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, 'Character Generator')
+        self.assertContains(response, reverse('generator'))
+
+    def test_welcome_has_lore_link(self):
+        """Test that welcome page has link to lore."""
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, 'Lore')
+        self.assertContains(response, reverse('lore'))
+
+    def test_welcome_has_handbook_link(self):
+        """Test that welcome page has link to handbook."""
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, "Player's Handbook")
+        self.assertContains(response, reverse('handbook'))
+
+
+class LorePageTests(TestCase):
+    """Tests for the lore page."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_lore_page_loads(self):
+        """Test that lore page loads successfully."""
+        response = self.client.get(reverse('lore'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Lore')
+
+    def test_lore_has_back_link(self):
+        """Test that lore page has link back to home."""
+        response = self.client.get(reverse('lore'))
+        self.assertContains(response, reverse('welcome'))
+
+
+class HandbookPageTests(TestCase):
+    """Tests for the handbook page."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_handbook_page_loads(self):
+        """Test that handbook page loads successfully."""
+        response = self.client.get(reverse('handbook'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Player's Handbook")
+
+    def test_handbook_has_content(self):
+        """Test that handbook page has markdown content."""
+        response = self.client.get(reverse('handbook'))
+        # Should contain some heading from the handbook
+        self.assertContains(response, 'Pillars')
+
+    def test_handbook_has_back_link(self):
+        """Test that handbook page has link back to home."""
+        response = self.client.get(reverse('handbook'))
+        self.assertContains(response, reverse('welcome'))
+
+
 class IndexViewTests(TestCase):
     """Tests for the main index view."""
 
@@ -279,7 +352,7 @@ class StartOverTests(TestCase):
 
         # Start over
         response = self.client.get(reverse('start_over'))
-        self.assertRedirects(response, reverse('index'))
+        self.assertRedirects(response, reverse('welcome'))
 
         # Session should be cleared
         self.assertNotIn('interactive_character', self.client.session)
@@ -442,7 +515,7 @@ class UIFlowTests(TestCase):
 
         # Start over
         response = self.client.get(reverse('start_over'))
-        self.assertRedirects(response, reverse('index'))
+        self.assertRedirects(response, reverse('welcome'))
 
         # Session should be cleared
         self.assertNotIn('interactive_character', self.client.session)

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lore - Pillars</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            background: #1a1a2e;
+            color: #eee;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #c9a227;
+        }
+        p {
+            font-size: 1.2em;
+            color: #888;
+            font-style: italic;
+        }
+        .back-link {
+            margin-top: 40px;
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(145deg, #2a2a4a, #1a1a2e);
+            border: 2px solid #c9a227;
+            border-radius: 10px;
+            color: #c9a227;
+            text-decoration: none;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+        .back-link:hover {
+            background: linear-gradient(145deg, #3a3a5a, #2a2a4a);
+            transform: translateY(-3px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lore</h1>
+        <p>Coming soon...</p>
+        <a href="{% url 'welcome' %}" class="back-link">&larr; Back to Home</a>
+    </div>
+</body>
+</html>

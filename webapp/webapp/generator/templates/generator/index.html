@@ -17,13 +17,18 @@
         .continue-btn { background-color: #4a4; color: white; }
         .finish-btn { background-color: #fa0; color: black; }
         .start-over-btn { background-color: #c44; color: white; font-size: 14px; padding: 8px 16px; }
+        .home-btn { background-color: #336; color: white; font-size: 14px; padding: 8px 16px; margin-right: 10px; }
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .top-bar-buttons { display: flex; gap: 10px; }
     </style>
 </head>
 <body>
     <div class="top-bar">
         <h1>Pillars Character Generator</h1>
-        <a href="{% url 'start_over' %}"><button type="button" class="start-over-btn">Start Over</button></a>
+        <div class="top-bar-buttons">
+            <a href="{% url 'welcome' %}"><button type="button" class="home-btn">&larr; Home</button></a>
+            <a href="{% url 'start_over' %}"><button type="button" class="start-over-btn">Start Over</button></a>
+        </div>
     </div>
 
     <form method="post">
