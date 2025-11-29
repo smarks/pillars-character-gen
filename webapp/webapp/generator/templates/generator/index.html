@@ -4,12 +4,16 @@
     <title>Pillars Character Generator</title>
     <style>
         body { font-family: monospace; padding: 20px; }
-        button { font-size: 18px; padding: 10px 20px; cursor: pointer; }
+        button { font-size: 18px; padding: 10px 20px; cursor: pointer; margin-right: 10px; }
         pre { background: #f4f4f4; padding: 20px; white-space: pre-wrap; }
         .died { color: red; font-weight: bold; }
         label { font-size: 16px; }
         input[type="number"] { font-size: 16px; width: 60px; padding: 5px; }
         .form-row { margin-bottom: 10px; }
+        .mode-section { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; }
+        .mode-section h3 { margin-top: 0; }
+        .radio-group { margin: 10px 0; }
+        .radio-group label { margin-right: 20px; }
     </style>
 </head>
 <body>
@@ -17,13 +21,32 @@
 
     <form method="post">
         {% csrf_token %}
-        <div class="form-row">
-            <label for="years">Years of Prior Experience:</label>
-            <input type="number" id="years" name="years" value="{{ years }}" min="-1" max="18">
-            <small>(0-18, or -1 for random)</small>
+
+        <div class="mode-section">
+            <h3>Generation Mode</h3>
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="mode" value="standard" checked>
+                    Standard (specify years upfront)
+                </label>
+                <label>
+                    <input type="radio" name="mode" value="interactive">
+                    Interactive (year by year)
+                </label>
+            </div>
         </div>
+
+        <div class="mode-section" id="standard-options">
+            <h3>Standard Mode Options</h3>
+            <div class="form-row">
+                <label for="years">Years of Prior Experience:</label>
+                <input type="number" id="years" name="years" value="{{ years }}" min="-1" max="18">
+                <small>(0-18, or -1 for random)</small>
+            </div>
+        </div>
+
         <div class="form-row">
-            <button type="submit">Generate Character</button>
+            <button type="submit" name="action" value="generate">Generate Character</button>
         </div>
     </form>
 
@@ -31,5 +54,19 @@
     <h2>Generated Character</h2>
     <pre {% if character.died %}class="died"{% endif %}>{{ character }}</pre>
     {% endif %}
+
+    <script>
+        // Toggle visibility of standard options based on mode selection
+        document.querySelectorAll('input[name="mode"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                var standardOptions = document.getElementById('standard-options');
+                if (this.value === 'interactive') {
+                    standardOptions.style.display = 'none';
+                } else {
+                    standardOptions.style.display = 'block';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

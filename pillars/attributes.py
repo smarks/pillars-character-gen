@@ -30,6 +30,93 @@ ATTRIBUTE_MODIFIERS = {
     18: 5
 }
 
+# Aging effects table: years of experience -> cumulative attribute penalties
+# Format: {years: {"STR": penalty, "DEX": penalty, "INT": penalty, "WIS": penalty, "CON": penalty}}
+# Note: These are cumulative penalties applied at each threshold
+AGING_EFFECTS = {
+    # 0-18 years (age 16-34): No penalties
+    19: {"STR": -1, "DEX": -1, "INT": 0, "WIS": 0, "CON": 0},   # Age 35-38 (term 5)
+    23: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": -1},    # Age 39-42 (term 6)
+    27: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},     # Age 43-46 (term 7)
+    31: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},     # Age 47-50 (term 8)
+    35: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},     # Age 51-54 (term 9)
+    39: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},     # Age 55-58 (term 10)
+    43: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},     # Age 59-62 (term 11)
+    47: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},     # Age 63-66 (term 12)
+    51: {"STR": -1, "DEX": -1, "INT": -1, "WIS": -1, "CON": -1}, # Age 67-70 (term 13)
+}
+
+
+@dataclass
+class AgingEffects:
+    """Stores cumulative aging penalties for a character."""
+    str_penalty: int = 0
+    dex_penalty: int = 0
+    int_penalty: int = 0
+    wis_penalty: int = 0
+    con_penalty: int = 0
+
+    def total_penalties(self) -> Dict[str, int]:
+        """Return all penalties as a dictionary."""
+        return {
+            "STR": self.str_penalty,
+            "DEX": self.dex_penalty,
+            "INT": self.int_penalty,
+            "WIS": self.wis_penalty,
+            "CON": self.con_penalty,
+            "CHR": 0  # CHR is not affected by aging
+        }
+
+    def apply_year(self, years_of_experience: int) -> Dict[str, int]:
+        """
+        Apply aging effects for reaching a new year of experience.
+        Returns any new penalties applied this year.
+        """
+        new_penalties = {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0}
+
+        if years_of_experience in AGING_EFFECTS:
+            effects = AGING_EFFECTS[years_of_experience]
+            self.str_penalty += effects["STR"]
+            self.dex_penalty += effects["DEX"]
+            self.int_penalty += effects["INT"]
+            self.wis_penalty += effects["WIS"]
+            self.con_penalty += effects["CON"]
+            new_penalties = effects.copy()
+
+        return new_penalties
+
+    def __str__(self) -> str:
+        penalties = []
+        if self.str_penalty: penalties.append(f"STR {self.str_penalty:+d}")
+        if self.dex_penalty: penalties.append(f"DEX {self.dex_penalty:+d}")
+        if self.int_penalty: penalties.append(f"INT {self.int_penalty:+d}")
+        if self.wis_penalty: penalties.append(f"WIS {self.wis_penalty:+d}")
+        if self.con_penalty: penalties.append(f"CON {self.con_penalty:+d}")
+
+        if penalties:
+            return f"Aging Penalties: {', '.join(penalties)}"
+        return "Aging Penalties: None"
+
+
+def get_aging_effects_for_age(age: int) -> AgingEffects:
+    """
+    Calculate cumulative aging effects for a given age.
+
+    Args:
+        age: Character's current age
+
+    Returns:
+        AgingEffects object with all cumulative penalties
+    """
+    years_of_experience = age - 16  # Starting age is 16
+    effects = AgingEffects()
+
+    for threshold in sorted(AGING_EFFECTS.keys()):
+        if years_of_experience >= threshold:
+            effects.apply_year(threshold)
+
+    return effects
+
 
 @dataclass
 class AttributeRoll:
@@ -1555,7 +1642,7 @@ TRACK_YEARLY_SKILLS = {
 @dataclass
 class YearResult:
     """Result of a single year of prior experience."""
-    year: int  # Age (16-34)
+    year: int  # Age (16+)
     track: TrackType
     skill_gained: str
     skill_roll: int
@@ -1565,12 +1652,21 @@ class YearResult:
     survivability_modifier: int  # Sum of all attribute modifiers
     survivability_total: int  # Roll + modifier
     survived: bool
+    aging_penalties: Optional[Dict[str, int]] = None  # Any new aging penalties this year
 
     def __str__(self) -> str:
         status = "Survived" if self.survived else "DIED"
         mod_str = f"{self.survivability_modifier:+d}" if self.survivability_modifier != 0 else "+0"
-        return (f"Year {self.year}: {self.skill_gained} (+1 SP) | "
-                f"Survival: {self.survivability_roll}{mod_str}={self.survivability_total} vs {self.survivability_target}+ [{status}]")
+        result = (f"Year {self.year}: {self.skill_gained} (+1 SP) | "
+                  f"Survival: {self.survivability_roll}{mod_str}={self.survivability_total} vs {self.survivability_target}+ [{status}]")
+
+        # Show aging penalties if any were applied this year
+        if self.aging_penalties:
+            penalties = [f"{k} {v:+d}" for k, v in self.aging_penalties.items() if v != 0]
+            if penalties:
+                result += f" | AGING: {', '.join(penalties)}"
+
+        return result
 
 
 @dataclass
@@ -1588,6 +1684,7 @@ class PriorExperience:
     death_year: Optional[int]
     attribute_scores: Optional[Dict[str, int]] = None  # Raw attribute scores
     attribute_modifiers: Optional[Dict[str, int]] = None  # Attribute modifiers
+    aging_effects: Optional[AgingEffects] = None  # Cumulative aging penalties
 
     def __str__(self) -> str:
         lines = [
@@ -1645,6 +1742,13 @@ class PriorExperience:
             else:
                 lines.append(f"  - {skill}")
 
+        # Show cumulative aging effects if any
+        if self.aging_effects:
+            penalties = self.aging_effects.total_penalties()
+            has_penalties = any(v != 0 for v in penalties.values())
+            if has_penalties:
+                lines.append(f"\n{self.aging_effects}")
+
         return "\n".join(lines)
 
 
@@ -1686,17 +1790,72 @@ def roll_survivability_check(survivability: int, total_modifier: int = 0) -> Tup
     return roll, total, survived
 
 
+def roll_single_year(
+    skill_track: SkillTrack,
+    year_index: int,
+    total_modifier: int,
+    aging_effects: AgingEffects
+) -> YearResult:
+    """
+    Roll a single year of prior experience.
+
+    Args:
+        skill_track: The character's chosen skill track
+        year_index: Which year of service (0-based)
+        total_modifier: Sum of all attribute modifiers (before aging)
+        aging_effects: Current aging effects (will be updated if crossing threshold)
+
+    Returns:
+        YearResult for this year
+    """
+    starting_age = 16
+    current_age = starting_age + year_index
+    years_of_experience = year_index + 1
+    track = skill_track.track
+    survivability = skill_track.survivability
+
+    # Check for aging effects this year
+    aging_this_year = aging_effects.apply_year(years_of_experience)
+    has_aging = any(v != 0 for v in aging_this_year.values())
+
+    # Adjust modifier for aging penalties
+    aging_modifier = sum(aging_effects.total_penalties().values())
+    adjusted_modifier = total_modifier + aging_modifier
+
+    # Gain skill
+    skill, skill_roll = roll_yearly_skill(track, year_index)
+
+    # Survivability check (3d6 + all attribute modifiers >= target)
+    surv_roll, surv_total, survived = roll_survivability_check(survivability, adjusted_modifier)
+
+    return YearResult(
+        year=current_age,
+        track=track,
+        skill_gained=skill,
+        skill_roll=skill_roll,
+        skill_points=1,
+        survivability_target=survivability,
+        survivability_roll=surv_roll,
+        survivability_modifier=adjusted_modifier,
+        survivability_total=surv_total,
+        survived=survived,
+        aging_penalties=aging_this_year if has_aging else None
+    )
+
+
 def roll_prior_experience(
     skill_track: SkillTrack,
     years: int = 0,
     total_modifier: int = 0,
     attribute_scores: Optional[Dict[str, int]] = None,
-    attribute_modifiers: Optional[Dict[str, int]] = None
+    attribute_modifiers: Optional[Dict[str, int]] = None,
+    allow_aging: bool = False
 ) -> PriorExperience:
     """
     Generate prior experience for a character.
 
     Characters can have 0-18 years of prior experience (ages 16-34).
+    If allow_aging is True, can go beyond 18 years with aging penalties.
     Each year they gain:
     - 1 skill point
     - 1 skill from their track's skill table
@@ -1704,12 +1863,14 @@ def roll_prior_experience(
 
     Args:
         skill_track: The character's chosen skill track
-        years: Years of prior experience (0-18).
+        years: Years of prior experience.
                Use -1 for random (0-18 years).
                Default is 0 (no prior experience).
+               If allow_aging=True, can exceed 18.
         total_modifier: Sum of all attribute modifiers (STR+DEX+INT+WIS+CON+CHR)
         attribute_scores: Dict of raw attribute scores (for display)
         attribute_modifiers: Dict of attribute modifiers (for display)
+        allow_aging: If True, allow more than 18 years with aging effects
 
     Returns:
         PriorExperience object with complete record
@@ -1722,8 +1883,11 @@ def roll_prior_experience(
     if years == -1:
         # Random years (0-18)
         target_years = random.randint(0, 18)
+    elif allow_aging:
+        # Allow any number of years
+        target_years = max(0, years)
     else:
-        # Clamp to valid range
+        # Clamp to valid range (0-18)
         target_years = max(0, min(18, years))
 
     yearly_results = []
@@ -1732,41 +1896,28 @@ def roll_prior_experience(
     died = False
     death_year = None
     years_served = 0
+    aging_effects = AgingEffects()
 
     # Add initial skills from track (Year 1 skills)
     all_skills.extend(skill_track.initial_skills)
 
     for year_index in range(target_years):
-        current_age = starting_age + year_index
         years_served = year_index + 1
 
-        # Gain skill
-        skill, skill_roll = roll_yearly_skill(track, year_index)
-        all_skills.append(skill)
-
-        # Gain skill point
-        total_skill_points += 1
-
-        # Survivability check (3d6 + all attribute modifiers >= target)
-        surv_roll, surv_total, survived = roll_survivability_check(survivability, total_modifier)
-
-        year_result = YearResult(
-            year=current_age,
-            track=track,
-            skill_gained=skill,
-            skill_roll=skill_roll,
-            skill_points=1,
-            survivability_target=survivability,
-            survivability_roll=surv_roll,
-            survivability_modifier=total_modifier,
-            survivability_total=surv_total,
-            survived=survived
+        year_result = roll_single_year(
+            skill_track=skill_track,
+            year_index=year_index,
+            total_modifier=total_modifier,
+            aging_effects=aging_effects
         )
+
+        all_skills.append(year_result.skill_gained)
+        total_skill_points += 1
         yearly_results.append(year_result)
 
-        if not survived:
+        if not year_result.survived:
             died = True
-            death_year = current_age
+            death_year = year_result.year
             break
 
     final_age = starting_age + years_served if not died else death_year
@@ -1783,5 +1934,6 @@ def roll_prior_experience(
         died=died,
         death_year=death_year,
         attribute_scores=attribute_scores,
-        attribute_modifiers=attribute_modifiers
+        attribute_modifiers=attribute_modifiers,
+        aging_effects=aging_effects if years_served > 18 else None
     )

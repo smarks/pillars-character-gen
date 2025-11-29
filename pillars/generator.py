@@ -20,6 +20,7 @@ from pillars.attributes import (
     roll_wealth,
     roll_skill_track,
     roll_prior_experience,
+    roll_single_year,
     CharacterAttributes,
     Appearance,
     Height,
@@ -30,6 +31,8 @@ from pillars.attributes import (
     Wealth,
     SkillTrack,
     PriorExperience,
+    YearResult,
+    AgingEffects,
 )
 
 

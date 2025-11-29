@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pillars Character Generator - Interactive Mode</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        button { font-size: 18px; padding: 10px 20px; cursor: pointer; margin-right: 10px; }
+        button.danger { background-color: #f44; color: white; }
+        button.warning { background-color: #fa0; color: black; }
+        button.success { background-color: #4a4; color: white; }
+        pre { background: #f4f4f4; padding: 20px; white-space: pre-wrap; }
+        .died { color: red; font-weight: bold; }
+        .survived { color: green; font-weight: bold; }
+        .aging { color: orange; font-weight: bold; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .section h3 { margin-top: 0; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background: #f4f4f4; }
+        .status-info { font-size: 1.2em; margin: 10px 0; }
+        .warning-box { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 15px 0; }
+        .danger-box { background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <h1>Interactive Prior Experience</h1>
+
+    <div class="section">
+        <h3>Character Summary</h3>
+        <p><strong>Current Age:</strong> {{ current_age }}</p>
+        <p><strong>Years of Experience:</strong> {{ years_completed }}</p>
+        <p><strong>Skill Points Earned:</strong> {{ skill_points }}</p>
+        {% if years_completed > 18 %}
+        <p class="aging"><strong>Note:</strong> Character is past age 34 and subject to aging effects!</p>
+        {% endif %}
+    </div>
+
+    {% if yearly_results %}
+    <div class="section">
+        <h3>Prior Experience History</h3>
+        <table>
+            <tr>
+                <th>Age</th>
+                <th>Skill Gained</th>
+                <th>Survival Roll</th>
+                <th>Result</th>
+            </tr>
+            {% for yr in yearly_results %}
+            <tr {% if not yr.survived %}class="died"{% endif %}>
+                <td>{{ yr.year }}</td>
+                <td>{{ yr.skill }}</td>
+                <td>{{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+</td>
+                <td>
+                    {% if yr.survived %}
+                    <span class="survived">SURVIVED</span>
+                    {% else %}
+                    <span class="died">DIED</span>
+                    {% endif %}
+                    {% if yr.aging %}
+                        {% for attr, val in yr.aging.items %}
+                            {% if val != 0 %}
+                            <span class="aging">({{ attr }} {{ val }})</span>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endif %}
+
+    {% if died %}
+    <div class="danger-box">
+        <h3>Character Died!</h3>
+        <p>Your character died during their {{ years_completed }}{% if years_completed == 1 %}st{% elif years_completed == 2 %}nd{% elif years_completed == 3 %}rd{% else %}th{% endif %} year of prior experience at age {{ current_age }}.</p>
+    </div>
+    {% elif years_completed >= 18 %}
+    <div class="warning-box">
+        <h3>Aging Warning!</h3>
+        <p>Your character is {{ current_age }} years old. Continuing beyond age 34 will result in aging penalties to attributes.</p>
+        {% if years_completed == 19 %}
+        <p class="aging">At age 35: STR -1, DEX -1</p>
+        {% elif years_completed == 23 %}
+        <p class="aging">At age 39: CON -1</p>
+        {% elif years_completed >= 51 %}
+        <p class="aging">At age 67: STR -1, DEX -1, INT -1, WIS -1, CON -1</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="section">
+        <h3>What would you like to do?</h3>
+        <form method="post" action="{% url 'interactive' %}">
+            {% csrf_token %}
+            {% if can_continue %}
+            <button type="submit" name="action" value="continue" class="success">
+                Continue Another Year (Age {{ current_age }} &rarr; {{ current_age|add:1 }})
+            </button>
+            {% endif %}
+            <button type="submit" name="action" value="stop" class="warning">
+                {% if died %}View Final Character{% else %}Stop Here & Finish{% endif %}
+            </button>
+            <button type="submit" name="action" value="new" class="danger">
+                Start Over (New Character)
+            </button>
+        </form>
+    </div>
+
+    <div class="section">
+        <h3>Skills Acquired</h3>
+        <ul>
+            {% for skill in skills %}
+            <li>{{ skill }}</li>
+            {% empty %}
+            <li><em>No skills yet (only initial skills from track)</em></li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    {% if aging.str or aging.dex or aging.int or aging.wis or aging.con %}
+    <div class="section">
+        <h3>Cumulative Aging Penalties</h3>
+        <ul>
+            {% if aging.str %}<li>STR: {{ aging.str }}</li>{% endif %}
+            {% if aging.dex %}<li>DEX: {{ aging.dex }}</li>{% endif %}
+            {% if aging.int %}<li>INT: {{ aging.int }}</li>{% endif %}
+            {% if aging.wis %}<li>WIS: {{ aging.wis }}</li>{% endif %}
+            {% if aging.con %}<li>CON: {{ aging.con }}</li>{% endif %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <details>
+        <summary>View Full Character Sheet</summary>
+        <pre>{{ character }}</pre>
+    </details>
+</body>
+</html>
