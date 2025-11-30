@@ -17,15 +17,15 @@
 {% endif %}
 
 <div class="section">
-    <p style="margin-bottom: 20px;">As a Dungeon Master, you can change user roles below.</p>
+    <p style="margin-bottom: 20px;">As an Admin, you can manage user roles below.</p>
 
     <table>
         <thead>
             <tr>
                 <th>Username</th>
                 <th>Email</th>
-                <th>Current Role</th>
-                <th>Change Role</th>
+                <th>Current Roles</th>
+                <th>Change Roles</th>
             </tr>
         </thead>
         <tbody>
@@ -33,14 +33,18 @@
             <tr>
                 <td>{{ profile.user.username }}</td>
                 <td>{{ profile.user.email|default:"-" }}</td>
-                <td>{{ profile.get_role_display }}</td>
+                <td>{{ profile.get_roles_display }}</td>
                 <td>
-                    <form method="post" action="{% url 'change_user_role' profile.user.id %}" style="display: inline;">
+                    <form method="post" action="{% url 'change_user_role' profile.user.id %}">
                         {% csrf_token %}
-                        <select name="role" onchange="this.form.submit()">
-                            <option value="player" {% if profile.role == 'player' %}selected{% endif %}>Player</option>
-                            <option value="dm" {% if profile.role == 'dm' %}selected{% endif %}>Dungeon Master</option>
-                        </select>
+                        {% for role_value, role_label in role_choices %}
+                        <label style="margin-right: 10px;">
+                            <input type="checkbox" name="roles" value="{{ role_value }}"
+                                {% if role_value in profile.roles %}checked{% endif %}>
+                            {{ role_label }}
+                        </label>
+                        {% endfor %}
+                        <button type="submit" class="btn primary" style="margin-left: 10px;">Save</button>
                     </form>
                 </td>
             </tr>

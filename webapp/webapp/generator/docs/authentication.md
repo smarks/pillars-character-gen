@@ -11,11 +11,11 @@ The Pillars Character Generator uses **Django's built-in authentication** with c
 
 ## Models
 
-### UserProfile (`models.py:5-19`)
+### UserProfile (`models.py:5-41`)
 
 One-to-one extension of Django's `User` model:
 
-- `role`: User role - either `'player'` or `'dm'` (Dungeon Master). Defaults to `'player'`
+- `roles`: JSON list of role strings. Users can have multiple roles.
 - `phone`: Optional phone number for SMS notifications
 - `discord_handle`: Optional Discord username
 - Created automatically during registration
@@ -25,11 +25,28 @@ One-to-one extension of Django's `User` model:
 | Role | Value | Description |
 |------|-------|-------------|
 | Player | `'player'` | Standard user who creates and plays characters |
-| Dungeon Master | `'dm'` | Game master with potential access to DM-specific features |
+| Dungeon Master | `'dm'` | Game master with access to DM handbook |
+| Admin | `'admin'` | Full access including user management |
 
-Access the role via `request.user.profile.role` in views or `user.profile.role` in templates.
+Users can have multiple roles (e.g., `['admin', 'dm']`).
 
-### SavedCharacter (`models.py:15-27`)
+#### Helper Methods
+
+```python
+profile.has_role('dm')      # Check for specific role
+profile.is_admin()          # Check if admin
+profile.is_dm()             # Check if DM
+profile.is_player()         # Check if player
+profile.get_roles_display() # Human-readable role list
+```
+
+Access in templates:
+```django
+{% if user.profile.is_admin %}...{% endif %}
+{% if user.profile.is_dm %}...{% endif %}
+```
+
+### SavedCharacter (`models.py:44-56`)
 
 Links characters to users:
 
@@ -49,25 +66,26 @@ Links characters to users:
 | `/save-character/` | `save_character` | Save current character (POST, AJAX) |
 | `/load-character/<id>/` | `load_character` | Load saved character into session |
 | `/delete-character/<id>/` | `delete_character` | Delete a saved character (POST) |
-| `/manage-users/` | `manage_users` | DM-only: List and manage user roles |
-| `/change-role/<id>/` | `change_user_role` | DM-only: Change a user's role (POST) |
+| `/manage-users/` | `manage_users` | Admin-only: List and manage user roles |
+| `/change-role/<id>/` | `change_user_role` | Admin-only: Change a user's roles (POST) |
 
 ## Views
 
-### Registration (`views.py:1190-1205`)
+### Registration
 
 - Uses custom `RegistrationForm` extending `UserCreationForm`
-- Collects: username, password, role selection, optional email/phone/Discord
+- Collects: username, password, role selection (player or DM), optional email/phone/Discord
+- Admin role can only be assigned via the Manage Users page
 - Auto-creates `UserProfile` with selected role on save
 - Auto-logs in user after registration
 
-### Login (`views.py:1208-1223`)
+### Login
 
 - Uses Django's `AuthenticationForm`
 - Supports `?next=` redirect parameter
 - Redirects authenticated users to welcome page
 
-### Logout (`views.py:1226-1230`)
+### Logout
 
 - Clears session and redirects to welcome
 
@@ -82,10 +100,16 @@ Uses `@login_required` decorator:
 
 ### DM-Only Views
 
-Uses `@dm_required` decorator (requires `role == 'dm'`):
+Uses `@dm_required` decorator (requires DM or Admin role):
+
+- DM Handbook page
+
+### Admin-Only Views
+
+Uses `@admin_required` decorator (requires Admin role):
 
 - `manage_users` - View all users and their roles
-- `change_user_role` - Change any user's role (also uses `@require_POST`)
+- `change_user_role` - Change any user's roles (also uses `@require_POST`)
 
 ## Character Save/Load Flow
 
@@ -121,6 +145,7 @@ LOGOUT_REDIRECT_URL = 'welcome'
 - CSRF protection enabled on all forms
 - Character ownership validated on load/delete
 - Character deletion requires client-side confirmation
+- Admin role cannot be self-assigned during registration
 
 ### Development Mode Warnings
 
@@ -136,10 +161,38 @@ For production, update `settings.py` with:
 
 ## Default Accounts
 
-A default DM account is created for administration:
+### Development
 
-| Username | Password | Role |
-|----------|----------|------|
-| `dm` | `foobar` | Dungeon Master |
+For local development, create users manually via Django shell or admin.
 
-**Change the password in production!**
+### Deployment
+
+Use the management command with environment variables:
+
+```bash
+# Set environment variables
+export PILLARS_ADMIN_USERNAME=sam        # optional, defaults to 'sam'
+export PILLARS_ADMIN_PASSWORD=secretpass # required
+export PILLARS_ADMIN_EMAIL=sam@example.com # optional
+
+export PILLARS_DM_USERNAME=dm            # optional, defaults to 'dm'
+export PILLARS_DM_PASSWORD=secretpass    # required
+export PILLARS_DM_EMAIL=dm@example.com   # optional
+
+# Run the command
+python manage.py create_default_users
+```
+
+Add this to your deployment script after `migrate`:
+
+```bash
+python manage.py migrate
+python manage.py create_default_users
+```
+
+| User | Environment Variables | Default Roles |
+|------|----------------------|---------------|
+| Admin | `PILLARS_ADMIN_*` | admin, dm |
+| DM | `PILLARS_DM_*` | dm |
+
+If a password variable is not set, that user will be skipped.

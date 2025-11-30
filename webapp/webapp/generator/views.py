@@ -47,7 +47,12 @@ from django.contrib.auth.decorators import login_required
 class RegistrationForm(UserCreationForm):
     """Custom registration form with optional contact fields."""
     email = forms.EmailField(required=False, help_text='Optional')
-    role = forms.ChoiceField(choices=UserProfile.ROLE_CHOICES, initial='player', help_text='Select your role')
+    # Only show player/dm choices during registration (admin is assigned manually)
+    REGISTRATION_ROLE_CHOICES = [
+        ('player', 'Player'),
+        ('dm', 'Dungeon Master'),
+    ]
+    role = forms.ChoiceField(choices=REGISTRATION_ROLE_CHOICES, initial='player', help_text='Select your role')
     phone = forms.CharField(max_length=20, required=False, help_text='Optional - for SMS notifications')
     discord_handle = forms.CharField(max_length=100, required=False, help_text='Optional - e.g. username#1234')
 
@@ -60,9 +65,10 @@ class RegistrationForm(UserCreationForm):
         user.email = self.cleaned_data.get('email', '')
         if commit:
             user.save()
+            role = self.cleaned_data.get('role', 'player')
             UserProfile.objects.create(
                 user=user,
-                role=self.cleaned_data.get('role', 'player'),
+                roles=[role],  # Store as list
                 phone=self.cleaned_data.get('phone', ''),
                 discord_handle=self.cleaned_data.get('discord_handle', ''),
             )
@@ -1327,37 +1333,50 @@ def delete_character(request, char_id):
 # =============================================================================
 
 def dm_required(view_func):
-    """Decorator that requires user to be a DM."""
+    """Decorator that requires user to be a DM or Admin."""
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('login')
-        if not hasattr(request.user, 'profile') or request.user.profile.role != 'dm':
+        if not hasattr(request.user, 'profile') or not (request.user.profile.is_dm() or request.user.profile.is_admin()):
             messages.error(request, 'You must be a Dungeon Master to access this page.')
             return redirect('welcome')
         return view_func(request, *args, **kwargs)
     return wrapper
 
 
-@dm_required
+def admin_required(view_func):
+    """Decorator that requires user to be an Admin."""
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        if not hasattr(request.user, 'profile') or not request.user.profile.is_admin():
+            messages.error(request, 'You must be an Admin to access this page.')
+            return redirect('welcome')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+@admin_required
 def manage_users(request):
-    """DM view to manage user roles."""
+    """Admin view to manage user roles."""
     users = UserProfile.objects.select_related('user').all()
-    return render(request, 'generator/manage_users.html', {'users': users})
+    role_choices = UserProfile.ROLE_CHOICES
+    return render(request, 'generator/manage_users.html', {'users': users, 'role_choices': role_choices})
 
 
-@dm_required
+@admin_required
 @require_POST
 def change_user_role(request, user_id):
-    """Change a user's role (DM only)."""
+    """Change a user's roles (Admin only)."""
     try:
         profile = UserProfile.objects.get(user_id=user_id)
-        new_role = request.POST.get('role')
-        if new_role in ['player', 'dm']:
-            profile.role = new_role
-            profile.save()
-            messages.success(request, f"Changed {profile.user.username}'s role to {profile.get_role_display()}.")
-        else:
-            messages.error(request, 'Invalid role.')
+        # Get list of roles from form (checkboxes)
+        new_roles = request.POST.getlist('roles')
+        valid_roles = [r[0] for r in UserProfile.ROLE_CHOICES]
+        new_roles = [r for r in new_roles if r in valid_roles]
+        profile.roles = new_roles
+        profile.save()
+        messages.success(request, f"Updated {profile.user.username}'s roles to: {profile.get_roles_display() or 'None'}.")
     except UserProfile.DoesNotExist:
         messages.error(request, 'User not found.')
 
