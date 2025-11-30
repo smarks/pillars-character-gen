@@ -13,4 +13,13 @@ urlpatterns = [
     path('lore/', views.handbook_section, {'section': 'lore'}, name='lore'),
     path('handbook/', views.handbook_section, {'section': 'players_handbook'}, name='handbook'),
     path('dm/', views.handbook_section, {'section': 'DM_handbook'}, name='dm'),
+    # Authentication
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('register/', views.register_view, name='register'),
+    # Character save/load
+    path('my-characters/', views.my_characters, name='my_characters'),
+    path('save-character/', views.save_character, name='save_character'),
+    path('load-character/<int:char_id>/', views.load_character, name='load_character'),
+    path('delete-character/<int:char_id>/', views.delete_character, name='delete_character'),
 ]

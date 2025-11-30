@@ -23,9 +23,30 @@
     <h1>Character Sheet</h1>
     <div>
         <button onclick="copyToClipboard()" class="btn copy-btn">Copy to Clipboard</button>
+        {% if user.is_authenticated %}
+        <button onclick="showSaveDialog()" class="btn success">Save Character</button>
+        {% endif %}
         <a href="{% url 'welcome' %}" class="btn">&larr; Home</a>
     </div>
 </div>
+
+{% if user.is_authenticated %}
+<div id="save-dialog" style="display: none;" class="section">
+    <h3>Save Character</h3>
+    <form id="save-form" method="post" action="{% url 'save_character' %}">
+        {% csrf_token %}
+        <div class="control-row">
+            <label for="char-name">Character Name:</label>
+            <input type="text" id="char-name" name="name" placeholder="Enter a name for this character" style="flex: 1; font-family: monospace; padding: 5px;">
+        </div>
+        <div class="button-group">
+            <button type="submit" class="btn success">Save</button>
+            <button type="button" onclick="hideSaveDialog()" class="btn">Cancel</button>
+        </div>
+    </form>
+    <div id="save-result" style="display: none;"></div>
+</div>
+{% endif %}
 
 <div class="markdown-output" id="character-sheet">{{ character_data.str_repr }}</div>
 
@@ -49,5 +70,45 @@ function copyToClipboard() {
         alert('Character sheet copied to clipboard!');
     });
 }
+
+function showSaveDialog() {
+    document.getElementById('save-dialog').style.display = 'block';
+    document.getElementById('char-name').focus();
+}
+
+function hideSaveDialog() {
+    document.getElementById('save-dialog').style.display = 'none';
+}
+
+{% if user.is_authenticated %}
+document.getElementById('save-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var form = this;
+    var formData = new FormData(form);
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('save-result').innerHTML = '<div class="success-box">Character saved as "' + data.name + '"!</div>';
+            document.getElementById('save-result').style.display = 'block';
+            form.style.display = 'none';
+        } else {
+            document.getElementById('save-result').innerHTML = '<div class="danger-box">Error: ' + (data.error || 'Unknown error') + '</div>';
+            document.getElementById('save-result').style.display = 'block';
+        }
+    })
+    .catch(err => {
+        document.getElementById('save-result').innerHTML = '<div class="danger-box">Error saving character.</div>';
+        document.getElementById('save-result').style.display = 'block';
+    });
+});
+{% endif %}
 </script>
 {% endblock %}

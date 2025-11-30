@@ -36,6 +36,39 @@ import os
 import markdown
 from django.shortcuts import render, redirect
 from django.conf import settings
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django import forms
+from django.contrib.auth.models import User
+from .models import UserProfile
+from django.contrib.auth.decorators import login_required
+
+
+class RegistrationForm(UserCreationForm):
+    """Custom registration form with optional contact fields."""
+    email = forms.EmailField(required=False, help_text='Optional')
+    phone = forms.CharField(max_length=20, required=False, help_text='Optional - for SMS notifications')
+    discord_handle = forms.CharField(max_length=100, required=False, help_text='Optional - e.g. username#1234')
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'password1', 'password2', 'phone', 'discord_handle')
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data.get('email', '')
+        if commit:
+            user.save()
+            UserProfile.objects.create(
+                user=user,
+                phone=self.cleaned_data.get('phone', ''),
+                discord_handle=self.cleaned_data.get('discord_handle', ''),
+            )
+        return user
+from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .models import SavedCharacter
 from pillars import generate_character
 from pillars.generator import consolidate_skills
 from pillars.attributes import (
@@ -1148,3 +1181,140 @@ def handbook_section(request, section: str):
         'content': html_content,
         'title': title,
     })
+
+
+# =============================================================================
+# Authentication Views
+# =============================================================================
+
+def register_view(request):
+    """Handle user registration."""
+    if request.user.is_authenticated:
+        return redirect('welcome')
+
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, 'Account created successfully!')
+            return redirect('welcome')
+    else:
+        form = RegistrationForm()
+
+    return render(request, 'generator/register.html', {'form': form})
+
+
+def login_view(request):
+    """Handle user login."""
+    if request.user.is_authenticated:
+        return redirect('welcome')
+
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            next_url = request.GET.get('next', 'welcome')
+            return redirect(next_url)
+    else:
+        form = AuthenticationForm()
+
+    return render(request, 'generator/login.html', {'form': form})
+
+
+def logout_view(request):
+    """Handle user logout."""
+    logout(request)
+    messages.info(request, 'You have been logged out.')
+    return redirect('welcome')
+
+
+# =============================================================================
+# Character Save/Load Views
+# =============================================================================
+
+@login_required
+@require_POST
+def save_character(request):
+    """Save the current character for the logged-in user."""
+    char_data = request.session.get('current_character')
+    if not char_data:
+        return JsonResponse({'error': 'No character to save'}, status=400)
+
+    # Get character name from the data or generate one
+    name = request.POST.get('name', '')
+    if not name:
+        # Try to extract name from provenance or use a default
+        name = f"Character {SavedCharacter.objects.filter(user=request.user).count() + 1}"
+
+    # Include experience data if present
+    save_data = dict(char_data)
+    save_data['interactive_years'] = request.session.get('interactive_years', 0)
+    save_data['interactive_skills'] = request.session.get('interactive_skills', [])
+    save_data['interactive_yearly_results'] = request.session.get('interactive_yearly_results', [])
+    save_data['interactive_aging'] = request.session.get('interactive_aging', {})
+    save_data['interactive_died'] = request.session.get('interactive_died', False)
+
+    # Create or update the saved character
+    saved_char = SavedCharacter.objects.create(
+        user=request.user,
+        name=name,
+        character_data=save_data
+    )
+
+    return JsonResponse({
+        'success': True,
+        'id': saved_char.id,
+        'name': saved_char.name
+    })
+
+
+@login_required
+def my_characters(request):
+    """List all saved characters for the logged-in user."""
+    characters = SavedCharacter.objects.filter(user=request.user)
+    return render(request, 'generator/my_characters.html', {'characters': characters})
+
+
+@login_required
+def load_character(request, char_id):
+    """Load a saved character into the session."""
+    try:
+        saved_char = SavedCharacter.objects.get(id=char_id, user=request.user)
+    except SavedCharacter.DoesNotExist:
+        messages.error(request, 'Character not found.')
+        return redirect('my_characters')
+
+    # Load character data into session
+    char_data = saved_char.character_data
+    request.session['current_character'] = {
+        k: v for k, v in char_data.items()
+        if not k.startswith('interactive_')
+    }
+
+    # Load experience data if present
+    request.session['interactive_years'] = char_data.get('interactive_years', 0)
+    request.session['interactive_skills'] = char_data.get('interactive_skills', [])
+    request.session['interactive_yearly_results'] = char_data.get('interactive_yearly_results', [])
+    request.session['interactive_aging'] = char_data.get('interactive_aging', {})
+    request.session['interactive_died'] = char_data.get('interactive_died', False)
+    request.session.modified = True
+
+    messages.success(request, f'Loaded character: {saved_char.name}')
+    return redirect('generator')
+
+
+@login_required
+@require_POST
+def delete_character(request, char_id):
+    """Delete a saved character."""
+    try:
+        saved_char = SavedCharacter.objects.get(id=char_id, user=request.user)
+        name = saved_char.name
+        saved_char.delete()
+        messages.success(request, f'Deleted character: {name}')
+    except SavedCharacter.DoesNotExist:
+        messages.error(request, 'Character not found.')
+
+    return redirect('my_characters')
