@@ -1037,20 +1037,6 @@ def build_final_str_repr(char_data, years, skills, yearly_results, aging_data, d
         # Calculate total modifier from first year result
         result_lines.append(f"Total Modifier: {yearly_results[0]['surv_mod']:+d}")
 
-        result_lines.append('')
-        result_lines.append('**Year-by-Year**')
-
-        for yr in yearly_results:
-            status = "Survived" if yr['survived'] else "DIED"
-            mod_str = f"{yr['surv_mod']:+d}"
-            line = (f"Year {yr['year']}: {yr['skill']} (+1 SP) | "
-                    f"Survival: {yr['surv_roll']}{mod_str}={yr['surv_total']} vs {yr['surv_target']}+ [{status}]")
-            if yr.get('aging'):
-                penalties = [f"{k.upper()} {v:+d}" for k, v in yr['aging'].items() if v != 0]
-                if penalties:
-                    line += f" | AGING: {', '.join(penalties)}"
-            result_lines.append(line)
-
     # Show aging penalties if any
     has_aging = any(v != 0 for v in aging_data.values())
     if has_aging:
@@ -1084,6 +1070,22 @@ def build_final_str_repr(char_data, years, skills, yearly_results, aging_data, d
         result_lines.append(f"**Skills** ({len(all_skills)})")
         for skill in consolidate_skills(all_skills):
             result_lines.append(f"- {skill}")
+
+    # Add Year-by-Year log at the bottom
+    if yearly_results:
+        result_lines.append('')
+        result_lines.append('**Year-by-Year Log**')
+
+        for yr in yearly_results:
+            status = "Survived" if yr['survived'] else "DIED"
+            mod_str = f"{yr['surv_mod']:+d}"
+            line = (f"Year {yr['year']}: {yr['skill']} (+1 SP) | "
+                    f"Survival: {yr['surv_roll']}{mod_str}={yr['surv_total']} vs {yr['surv_target']}+ [{status}]")
+            if yr.get('aging'):
+                penalties = [f"{k.upper()} {v:+d}" for k, v in yr['aging'].items() if v != 0]
+                if penalties:
+                    line += f" | AGING: {', '.join(penalties)}"
+            result_lines.append(line)
 
     return '\n'.join(result_lines)
 

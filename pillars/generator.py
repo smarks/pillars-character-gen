@@ -215,11 +215,6 @@ class Character:
                 total_str = f"+{total_mod}" if total_mod >= 0 else str(total_mod)
                 lines.append(f"Total Modifier: {total_str}")
 
-            lines.append("")
-            lines.append("**Year-by-Year**")
-            for result in pe.yearly_results:
-                lines.append(str(result))
-
             # Show cumulative aging effects if any
             if pe.aging_effects:
                 penalties = pe.aging_effects.total_penalties()
@@ -251,6 +246,13 @@ class Character:
             lines.append(f"**Skills** ({len(all_skills)})")
             for skill in consolidate_skills(all_skills):
                 lines.append(f"- {skill}")
+
+        # Year-by-Year log at the bottom
+        if self.prior_experience is not None and self.prior_experience.yearly_results:
+            lines.append("")
+            lines.append("**Year-by-Year Log**")
+            for result in self.prior_experience.yearly_results:
+                lines.append(str(result))
 
         return "\n".join(lines)
 
