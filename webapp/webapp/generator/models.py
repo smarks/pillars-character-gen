@@ -4,7 +4,14 @@ from django.contrib.auth.models import User
 
 class UserProfile(models.Model):
     """Extended user profile with optional contact fields."""
+
+    ROLE_CHOICES = [
+        ('player', 'Player'),
+        ('dm', 'Dungeon Master'),
+    ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='player')
     phone = models.CharField(max_length=20, blank=True, default='')
     discord_handle = models.CharField(max_length=100, blank=True, default='')
 

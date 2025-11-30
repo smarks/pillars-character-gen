@@ -11,12 +11,23 @@ The Pillars Character Generator uses **Django's built-in authentication** with c
 
 ## Models
 
-### UserProfile (`models.py:5-12`)
+### UserProfile (`models.py:5-19`)
 
 One-to-one extension of Django's `User` model:
 
-- Optional fields: `phone`, `discord_handle`
+- `role`: User role - either `'player'` or `'dm'` (Dungeon Master). Defaults to `'player'`
+- `phone`: Optional phone number for SMS notifications
+- `discord_handle`: Optional Discord username
 - Created automatically during registration
+
+#### Roles
+
+| Role | Value | Description |
+|------|-------|-------------|
+| Player | `'player'` | Standard user who creates and plays characters |
+| Dungeon Master | `'dm'` | Game master with potential access to DM-specific features |
+
+Access the role via `request.user.profile.role` in views or `user.profile.role` in templates.
 
 ### SavedCharacter (`models.py:15-27`)
 
@@ -38,14 +49,16 @@ Links characters to users:
 | `/save-character/` | `save_character` | Save current character (POST, AJAX) |
 | `/load-character/<id>/` | `load_character` | Load saved character into session |
 | `/delete-character/<id>/` | `delete_character` | Delete a saved character (POST) |
+| `/manage-users/` | `manage_users` | DM-only: List and manage user roles |
+| `/change-role/<id>/` | `change_user_role` | DM-only: Change a user's role (POST) |
 
 ## Views
 
 ### Registration (`views.py:1190-1205`)
 
 - Uses custom `RegistrationForm` extending `UserCreationForm`
-- Collects: username, password, optional email/phone/Discord
-- Auto-creates `UserProfile` on save
+- Collects: username, password, role selection, optional email/phone/Discord
+- Auto-creates `UserProfile` with selected role on save
 - Auto-logs in user after registration
 
 ### Login (`views.py:1208-1223`)
@@ -66,6 +79,13 @@ Uses `@login_required` decorator:
 - `my_characters` - View saved characters list
 - `load_character` - Load a character into session
 - `delete_character` - Delete a character (also uses `@require_POST`)
+
+### DM-Only Views
+
+Uses `@dm_required` decorator (requires `role == 'dm'`):
+
+- `manage_users` - View all users and their roles
+- `change_user_role` - Change any user's role (also uses `@require_POST`)
 
 ## Character Save/Load Flow
 
@@ -113,3 +133,13 @@ For production, update `settings.py` with:
 - `DEBUG = False`
 - Password validators enabled
 - HTTPS configuration
+
+## Default Accounts
+
+A default DM account is created for administration:
+
+| Username | Password | Role |
+|----------|----------|------|
+| `dm` | `foobar` | Dungeon Master |
+
+**Change the password in production!**

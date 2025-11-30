@@ -47,12 +47,13 @@ from django.contrib.auth.decorators import login_required
 class RegistrationForm(UserCreationForm):
     """Custom registration form with optional contact fields."""
     email = forms.EmailField(required=False, help_text='Optional')
+    role = forms.ChoiceField(choices=UserProfile.ROLE_CHOICES, initial='player', help_text='Select your role')
     phone = forms.CharField(max_length=20, required=False, help_text='Optional - for SMS notifications')
     discord_handle = forms.CharField(max_length=100, required=False, help_text='Optional - e.g. username#1234')
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'password1', 'password2', 'phone', 'discord_handle')
+        fields = ('username', 'email', 'password1', 'password2', 'role', 'phone', 'discord_handle')
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -61,6 +62,7 @@ class RegistrationForm(UserCreationForm):
             user.save()
             UserProfile.objects.create(
                 user=user,
+                role=self.cleaned_data.get('role', 'player'),
                 phone=self.cleaned_data.get('phone', ''),
                 discord_handle=self.cleaned_data.get('discord_handle', ''),
             )
@@ -1318,3 +1320,45 @@ def delete_character(request, char_id):
         messages.error(request, 'Character not found.')
 
     return redirect('my_characters')
+
+
+# =============================================================================
+# DM-Only Views
+# =============================================================================
+
+def dm_required(view_func):
+    """Decorator that requires user to be a DM."""
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        if not hasattr(request.user, 'profile') or request.user.profile.role != 'dm':
+            messages.error(request, 'You must be a Dungeon Master to access this page.')
+            return redirect('welcome')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+@dm_required
+def manage_users(request):
+    """DM view to manage user roles."""
+    users = UserProfile.objects.select_related('user').all()
+    return render(request, 'generator/manage_users.html', {'users': users})
+
+
+@dm_required
+@require_POST
+def change_user_role(request, user_id):
+    """Change a user's role (DM only)."""
+    try:
+        profile = UserProfile.objects.get(user_id=user_id)
+        new_role = request.POST.get('role')
+        if new_role in ['player', 'dm']:
+            profile.role = new_role
+            profile.save()
+            messages.success(request, f"Changed {profile.user.username}'s role to {profile.get_role_display()}.")
+        else:
+            messages.error(request, 'Invalid role.')
+    except UserProfile.DoesNotExist:
+        messages.error(request, 'User not found.')
+
+    return redirect('manage_users')

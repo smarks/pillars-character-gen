@@ -44,6 +44,16 @@
         {% endif %}
 
         <hr style="margin: 20px 0; border-color: #555;">
+
+        <div class="control-row">
+            <label for="id_role">Role:</label>
+            {{ form.role }}
+        </div>
+        {% if form.role.errors %}
+        <div class="danger-box">{{ form.role.errors }}</div>
+        {% endif %}
+
+        <hr style="margin: 20px 0; border-color: #555;">
         <p style="color: #888; margin-bottom: 15px;">Optional contact info (for game notifications):</p>
 
         <div class="control-row">
