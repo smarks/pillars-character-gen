@@ -318,9 +318,23 @@ def index(request):
             request.session['pending_return_to_generator'] = True
             return redirect('select_track')
         else:
-            # No character, generate one
+            # No character in session - generate one and then redirect to track selection
             character = generate_character(years=0, skip_track=True)
             store_current_character(request, character)
+            # Now redirect to track selection with the new character
+            char_data = request.session.get('current_character')
+            request.session['pending_character'] = char_data
+            request.session['pending_years'] = 0
+            request.session['pending_mode'] = 'interactive'
+            request.session['pending_str_mod'] = character.attributes.get_modifier('STR')
+            request.session['pending_dex_mod'] = character.attributes.get_modifier('DEX')
+            request.session['pending_int_mod'] = character.attributes.get_modifier('INT')
+            request.session['pending_wis_mod'] = character.attributes.get_modifier('WIS')
+            request.session['pending_social_class'] = str(character.provenance.social_class) if hasattr(character.provenance, 'social_class') else 'Commoner'
+            request.session['pending_sub_class'] = str(character.provenance.sub_class) if hasattr(character.provenance, 'sub_class') else 'Laborer'
+            request.session['pending_wealth_level'] = character.wealth.wealth_level if hasattr(character.wealth, 'wealth_level') else 'Moderate'
+            request.session['pending_return_to_generator'] = True
+            return redirect('select_track')
 
     elif action == 'finish':
         # Show finished character page
@@ -342,9 +356,15 @@ def index(request):
                 'has_experience': years > 0,
                 'died': died,
             })
-        # No character, redirect to generate
+        # No character in session - generate one and show finished page
         character = generate_character(years=0, skip_track=True)
         store_current_character(request, character)
+        char_data = request.session.get('current_character')
+        return render(request, 'generator/finished.html', {
+            'character_data': char_data,
+            'has_experience': False,
+            'died': False,
+        })
 
     else:
         # GET request or unknown action - check for existing character or generate new
