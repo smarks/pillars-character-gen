@@ -247,12 +247,9 @@ class Character:
             for skill in consolidate_skills(all_skills):
                 lines.append(f"- {skill}")
 
-        # Year-by-Year log at the bottom
-        if self.prior_experience is not None and self.prior_experience.yearly_results:
-            lines.append("")
-            lines.append("**Year-by-Year Log**")
-            for result in self.prior_experience.yearly_results:
-                lines.append(str(result))
+        # Note: Year-by-Year log is intentionally NOT included here.
+        # It is added only to the final character sheet by build_final_str_repr
+        # in the webapp views.py to avoid duplication in intermediate views.
 
         return "\n".join(lines)
 
