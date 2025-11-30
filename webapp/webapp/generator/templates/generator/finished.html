@@ -27,43 +27,12 @@
     </div>
 </div>
 
-<div class="markdown-output" id="character-sheet">{{ character_data.str_repr }}
+<div class="markdown-output" id="character-sheet">{{ character_data.str_repr }}</div>
 
-{% if character_data.skill_track %}
-**Track**
-{{ character_data.skill_track.track }} (Survivability {{ character_data.skill_track.survivability }}+)
-{% if character_data.skill_track.craft_type %}Craft Type: {{ character_data.skill_track.craft_type }}{% endif %}
-{% if character_data.skill_track.magic_school %}Magic School: {{ character_data.skill_track.magic_school }}{% endif %}
-{% endif %}
-
-{% if years > 0 %}
-**Prior Experience**
-Starting Age: 16
-Final Age: {{ years|add:16 }}
-Years Served: {{ years }}
-{% if skills %}
-Skills Gained ({{ skills|length }}):
-{% for skill in skills|consolidate_skills %}- {{ skill }}
-{% endfor %}{% endif %}
-
-{% for yr in yearly_results %}Age {{ yr.year }}: {{ yr.skill }} | Survival: {{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+ [{% if yr.survived %}OK{% else %}DIED{% endif %}]
-{% endfor %}{% endif %}
-
-{% if died %}
-**THIS CHARACTER DIED DURING PRIOR EXPERIENCE**
-{% endif %}</div>
-
-<div class="section">
-    <h3>What would you like to do?</h3>
-    <form method="post" action="{% url 'generator' %}">
-        {% csrf_token %}
-        <div class="button-group">
-            <button type="submit" name="action" value="add_experience" class="primary">Add Prior Experience</button>
-            <button type="submit" name="action" value="finish" class="success">Finish Character</button>
-            <a href="{% url 'start_over' %}" class="btn danger">Start Over</a>
-        </div>
-    </form>
-</div>
+<form method="post" action="{% url 'generator' %}">
+    {% csrf_token %}
+    {% include "generator/partials/control_section.html" %}
+</form>
 
 <script>
 function copyToClipboard() {

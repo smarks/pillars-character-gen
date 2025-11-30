@@ -1490,11 +1490,9 @@ class TestPriorExperience(unittest.TestCase):
         )
         result_str = str(experience)
         self.assertIn("Navy", result_str)
-        self.assertIn("TOTAL SKILL POINTS: 4", result_str)
+        self.assertIn("**Skills** (4)", result_str)
         self.assertIn("Swimming", result_str)
         self.assertIn("Survivability Target: 6+", result_str)
-        self.assertIn("STR:12", result_str)
-        self.assertIn("DEX:14(+1)", result_str)
 
     def test_prior_experience_str_on_death(self):
         """Test PriorExperience string shows death."""

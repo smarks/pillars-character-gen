@@ -1,0 +1,43 @@
+<div class="section">
+    <h3>What would you like to do?</h3>
+    <div class="control-row">
+        <label>Years:</label>
+        <select name="years" id="years-select">
+            <option value="1">1 year</option>
+            <option value="2">2 years</option>
+            <option value="3">3 years</option>
+            <option value="4">4 years</option>
+            <option value="5" selected>5 years</option>
+            <option value="6">6 years</option>
+            <option value="7">7 years</option>
+            <option value="8">8 years</option>
+            <option value="9">9 years</option>
+            <option value="10">10 years</option>
+        </select>
+        <span>— or —</span>
+        <label>
+            <input type="checkbox" name="interactive_mode" id="interactive-checkbox">
+            Interactive Mode (year by year)
+        </label>
+    </div>
+
+    <div class="button-group button-group-main">
+        {% if not died %}
+        <button type="submit" name="action" value="add_experience" class="primary">Add {% if has_experience %}More {% endif %}Experience</button>
+        {% endif %}
+        <button type="submit" name="action" value="finish" class="success">Finish Character</button>
+    </div>
+
+    <div class="button-group">
+        <button type="submit" name="action" value="reroll_none">Re-roll (No Focus)</button>
+        <button type="submit" name="action" value="reroll_physical">Re-roll (STR/DEX Focus)</button>
+        <button type="submit" name="action" value="reroll_mental">Re-roll (INT/WIS Focus)</button>
+    </div>
+</div>
+
+<script>
+// Disable years selector when interactive mode is checked
+document.getElementById('interactive-checkbox').addEventListener('change', function() {
+    document.getElementById('years-select').disabled = this.checked;
+});
+</script>

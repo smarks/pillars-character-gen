@@ -4,20 +4,6 @@
 {% block title %}Pillars Character Generator - Prior Experience{% endblock %}
 
 {% block extra_css %}
-.control-row {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-}
-.control-row:last-child { margin-bottom: 0; }
-.control-row label { font-weight: bold; }
-.control-row select, .control-row input[type="number"] {
-    font-family: monospace;
-    font-size: 16px;
-    padding: 5px 10px;
-}
 .radio-group {
     display: flex;
     gap: 15px;
@@ -245,30 +231,10 @@
     </div>
     {% endif %}
 
-    <div class="section">
-        <h3>What would you like to do?</h3>
-        <div class="control-row">
-            <label>Years:</label>
-            <select name="years" id="years-select">
-                <option value="1">1 year</option>
-                <option value="2">2 years</option>
-                <option value="3">3 years</option>
-                <option value="4">4 years</option>
-                <option value="5" selected>5 years</option>
-                <option value="6">6 years</option>
-                <option value="7">7 years</option>
-                <option value="8">8 years</option>
-                <option value="9">9 years</option>
-                <option value="10">10 years</option>
-            </select>
-            <span>— or —</span>
-            <label>
-                <input type="checkbox" name="interactive_mode" id="interactive-checkbox">
-                Interactive Mode (year by year)
-            </label>
-        </div>
+    {% include "generator/partials/control_section.html" %}
 
-        {% if not has_experience %}
+    {% if not has_experience %}
+    <div class="section">
         <div class="control-row">
             <label>Track Selection:</label>
             <div class="radio-group">
@@ -282,16 +248,8 @@
                 </label>
             </div>
         </div>
-        {% endif %}
-
-        <div class="button-group">
-            {% if not died %}
-            <button type="submit" name="action" value="add_experience" class="primary">Add {% if has_experience %}More {% endif %}Experience</button>
-            {% endif %}
-            <button type="submit" name="action" value="finish" class="success">{% if has_experience %}Finish Character{% else %}Finish (No Experience){% endif %}</button>
-            <a href="{% url 'start_over' %}" class="btn danger">Start Over</a>
-        </div>
     </div>
+    {% endif %}
 </form>
 
 <script>
@@ -308,11 +266,6 @@ document.querySelectorAll('input[name="track_mode"]').forEach(function(radio) {
             referenceSection.style.display = 'block';
         }
     });
-});
-
-// Disable years selector when interactive mode is checked
-document.getElementById('interactive-checkbox').addEventListener('change', function() {
-    document.getElementById('years-select').disabled = this.checked;
 });
 
 // Make clicking on track cards select the radio button

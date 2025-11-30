@@ -6,8 +6,10 @@ This module provides the generate_character function that creates
 a complete character with all attributes, skills, and prior experience.
 """
 
+import re
+from collections import Counter
 from dataclasses import dataclass
-from typing import Optional
+from typing import Dict, List, Optional
 
 from pillars.attributes import (
     generate_attributes_4d6_drop_lowest,
@@ -37,6 +39,50 @@ from pillars.attributes import (
     AgingEffects,
     TrackType,
 )
+
+
+def consolidate_skills(skills: List[str]) -> List[str]:
+    """
+    Consolidate duplicate skills and sum their bonuses.
+
+    "Cutlass +1 to hit" x 5 becomes "Cutlass +5 to hit"
+    "Swimming" x 3 becomes "Swimming +2" (base +2 more)
+    """
+    if not skills:
+        return []
+
+    # Count occurrences
+    skill_counts: Dict[str, int] = Counter(skills)
+
+    # Consolidate skills with +1 pattern
+    consolidated: Dict[tuple, int] = {}
+    for skill, count in skill_counts.items():
+        # Match patterns like "Sword +1 to hit" or "Cutlass +1 parry"
+        match = re.match(r'^(.+?)\s*\+1\s+(.+)$', skill)
+        if match:
+            base = match.group(1).strip()
+            suffix = match.group(2).strip()
+            key = (base, suffix)
+            consolidated[key] = consolidated.get(key, 0) + count
+        else:
+            # Non-bonus skill
+            key = ('_plain_', skill)
+            consolidated[key] = consolidated.get(key, 0) + count
+
+    # Build result list
+    result = []
+    for key, total in sorted(consolidated.items()):
+        if key[0] == '_plain_':
+            skill_name = key[1]
+            if total > 1:
+                result.append(f"{skill_name} +{total - 1}")
+            else:
+                result.append(skill_name)
+        else:
+            base, suffix = key
+            result.append(f"{base} +{total} {suffix}")
+
+    return result
 
 
 @dataclass
@@ -140,14 +186,61 @@ class Character:
         # This keeps the initial character display clean in the web UI
         if self.skill_track is not None:
             lines.append("")
-            lines.append(str(self.skill_track))
+            # Show track info without initial skills (we'll consolidate all skills later)
+            track_lines = [f"**Skill Track:** {self.skill_track.track.value}"]
+            track_lines.append(f"Survivability: {self.skill_track.survivability}+")
+            if self.skill_track.craft_type:
+                track_lines.append(f"Craft: {self.skill_track.craft_type.value}")
+            if self.skill_track.magic_school:
+                track_lines.append(f"Magic School: {self.skill_track.magic_school.value}")
+            lines.extend(track_lines)
 
         if self.prior_experience is not None:
-            lines.append(str(self.prior_experience))
+            pe = self.prior_experience
+            lines.append("")
+            lines.append(f"**Prior Experience**")
+            lines.append(f"Starting Age: {pe.starting_age}")
+            if pe.died:
+                lines.append(f"DIED at age {pe.death_year}!")
+            else:
+                lines.append(f"Final Age: {pe.final_age}")
+            lines.append(f"Years Served: {pe.years_served}")
+            lines.append(f"Survivability Target: {pe.survivability_target}+")
+
+            if pe.attribute_modifiers:
+                total_mod = sum(pe.attribute_modifiers.values())
+                total_str = f"+{total_mod}" if total_mod >= 0 else str(total_mod)
+                lines.append(f"Total Modifier: {total_str}")
+
+            lines.append("")
+            lines.append("**Year-by-Year**")
+            for result in pe.yearly_results:
+                lines.append(str(result))
+
+            # Show cumulative aging effects if any
+            if pe.aging_effects:
+                penalties = pe.aging_effects.total_penalties()
+                has_penalties = any(v != 0 for v in penalties.values())
+                if has_penalties:
+                    lines.append(f"\n{pe.aging_effects}")
 
             if self.died:
                 lines.append("")
                 lines.append("**THIS CHARACTER DIED DURING PRIOR EXPERIENCE!**")
+
+        # Consolidated skills section - all skills in one place
+        if self.skill_track is not None:
+            # prior_experience.all_skills already includes initial_skills
+            if self.prior_experience is not None:
+                all_skills = self.prior_experience.all_skills
+            else:
+                all_skills = list(self.skill_track.initial_skills)
+
+            if all_skills:
+                lines.append("")
+                lines.append(f"**Skills** ({len(all_skills)})")
+                for skill in consolidate_skills(all_skills):
+                    lines.append(f"- {skill}")
 
         return "\n".join(lines)
 

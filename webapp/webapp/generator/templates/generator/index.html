@@ -50,20 +50,8 @@
 </div>
 {% endif %}
 
-<div class="section">
-    <h3>What would you like to do?</h3>
-    <form method="post">
-        {% csrf_token %}
-        <div class="button-group">
-            <button type="submit" name="action" value="add_experience" class="primary">Add Prior Experience</button>
-            <button type="submit" name="action" value="finish" class="success">Finish Character</button>
-            <a href="{% url 'start_over' %}" class="btn danger">Start Over</a>
-        </div>
-        <div class="button-group">
-            <button type="submit" name="action" value="reroll_none">Re-roll (No Focus)</button>
-            <button type="submit" name="action" value="reroll_physical">Re-roll (STR/DEX Focus)</button>
-            <button type="submit" name="action" value="reroll_mental">Re-roll (INT/WIS Focus)</button>
-        </div>
-    </form>
-</div>
+<form method="post">
+    {% csrf_token %}
+    {% include "generator/partials/control_section.html" %}
+</form>
 {% endblock %}

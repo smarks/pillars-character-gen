@@ -37,6 +37,7 @@ import markdown
 from django.shortcuts import render, redirect
 from django.conf import settings
 from pillars import generate_character
+from pillars.generator import consolidate_skills
 from pillars.attributes import (
     roll_single_year,
     SkillTrack,
@@ -284,13 +285,21 @@ def index(request):
         # Show finished character page
         char_data = request.session.get('current_character')
         if char_data:
+            years = request.session.get('interactive_years', 0)
+            skills = request.session.get('interactive_skills', [])
+            yearly_results = request.session.get('interactive_yearly_results', [])
+            aging = request.session.get('interactive_aging', {})
+            died = request.session.get('interactive_died', False)
+
+            # Build complete str_repr with experience data
+            final_str_repr = build_final_str_repr(char_data, years, skills, yearly_results, aging, died)
+            char_data_with_repr = dict(char_data)
+            char_data_with_repr['str_repr'] = final_str_repr
+
             return render(request, 'generator/finished.html', {
-                'character_data': char_data,
-                'years': request.session.get('interactive_years', 0),
-                'skills': request.session.get('interactive_skills', []),
-                'yearly_results': request.session.get('interactive_yearly_results', []),
-                'aging': request.session.get('interactive_aging', {}),
-                'died': request.session.get('interactive_died', False),
+                'character_data': char_data_with_repr,
+                'has_experience': years > 0,
+                'died': died,
             })
         # No character, redirect to generate
         character = generate_character(years=0, skip_track=True)
@@ -401,12 +410,10 @@ def select_track(request):
             clear_pending_session(request)
             char_data = request.session.get('current_character')
             if char_data:
+                # Use str_repr as-is since no experience was added
                 return render(request, 'generator/finished.html', {
                     'character_data': char_data,
-                    'years': 0,
-                    'skills': [],
-                    'yearly_results': [],
-                    'aging': {},
+                    'has_experience': False,
                     'died': False,
                 })
             return redirect('generator')
@@ -793,12 +800,14 @@ def interactive(request):
             # Show the finished character sheet
             char_data = request.session.get('current_character')
             if char_data:
+                # Build complete str_repr with experience data
+                final_str_repr = build_final_str_repr(char_data, years_completed, skills, yearly_results_data, aging_data, died)
+                char_data_with_repr = dict(char_data)
+                char_data_with_repr['str_repr'] = final_str_repr
+
                 return render(request, 'generator/finished.html', {
-                    'character_data': char_data,
-                    'years': years_completed,
-                    'skills': skills,
-                    'yearly_results': yearly_results_data,
-                    'aging': aging_data,
+                    'character_data': char_data_with_repr,
+                    'has_experience': years_completed > 0,
                     'died': died,
                 })
 
@@ -937,38 +946,66 @@ def get_modifier_for_value(value):
     return ATTRIBUTE_MODIFIERS.get(value, 0)
 
 
-def build_final_character(session):
-    """Build final character string from session data."""
-    char_data = session.get('interactive_character', {})
-    years = session.get('interactive_years', 0)
-    skills = session.get('interactive_skills', [])
-    skill_points = session.get('interactive_skill_points', 0)
-    yearly_results = session.get('interactive_yearly_results', [])
-    aging_data = session.get('interactive_aging', {})
-    died = session.get('interactive_died', False)
+def build_final_str_repr(char_data, years, skills, yearly_results, aging_data, died):
+    """Build a complete str_repr for a character with prior experience."""
+    # Start with the base character info (without skill track/experience sections)
+    base_repr = char_data.get('str_repr', '')
 
-    # Build a display string - include full character info
-    lines = [char_data.get('str_repr', '')]  # Full base character info
+    # If no experience, return base repr
+    if years == 0:
+        return base_repr
 
-    lines.append("\n" + "=" * 60)
-    lines.append(f"PRIOR EXPERIENCE ({char_data['skill_track']['track']} Track)")
-    lines.append("=" * 60)
-    lines.append(f"Starting Age: 16")
+    # Remove any existing skill track or prior experience sections from base
+    # (they would have been added during interactive flow setup)
+    lines = base_repr.split('\n')
+    filtered_lines = []
+    skip_until_blank = False
+    for line in lines:
+        if '**Skill Track:**' in line or '**Prior Experience**' in line or '**Skills**' in line:
+            skip_until_blank = True
+            continue
+        if skip_until_blank:
+            if line.strip() == '' or line.startswith('**'):
+                skip_until_blank = False
+                if line.startswith('**') and '**Skill Track:**' not in line and '**Prior Experience**' not in line and '**Skills**' not in line:
+                    filtered_lines.append(line)
+            continue
+        filtered_lines.append(line)
+
+    result_lines = filtered_lines
+
+    # Add skill track info
+    if char_data.get('skill_track'):
+        track_info = char_data['skill_track']
+        result_lines.append('')
+        result_lines.append(f"**Skill Track:** {track_info['track']}")
+        result_lines.append(f"Survivability: {track_info['survivability']}+")
+        if track_info.get('craft_type'):
+            result_lines.append(f"Craft: {track_info['craft_type']}")
+        if track_info.get('magic_school'):
+            result_lines.append(f"Magic School: {track_info['magic_school']}")
+
+    # Add prior experience section
+    result_lines.append('')
+    result_lines.append('**Prior Experience**')
+    result_lines.append('Starting Age: 16')
 
     if died and yearly_results:
         death_age = yearly_results[-1]['year']
-        lines.append(f"DIED at age {death_age}!")
+        result_lines.append(f"DIED at age {death_age}!")
     else:
-        lines.append(f"Final Age: {16 + years}")
+        result_lines.append(f"Final Age: {16 + years}")
 
-    lines.append(f"Years Served: {years}")
+    result_lines.append(f"Years Served: {years}")
 
     if yearly_results:
-        lines.append(f"\nSurvivability Target: {yearly_results[0]['surv_target']}+")
-        lines.append("Survivability Roll: 3d6 + attribute modifiers")
+        result_lines.append(f"Survivability Target: {yearly_results[0]['surv_target']}+")
 
-        lines.append("\nYear-by-Year Progression:")
-        lines.append("-" * 60)
+        # Calculate total modifier from first year result
+        result_lines.append(f"Total Modifier: {yearly_results[0]['surv_mod']:+d}")
+
+        result_lines.append('')
+        result_lines.append('**Year-by-Year**')
 
         for yr in yearly_results:
             status = "Survived" if yr['survived'] else "DIED"
@@ -976,26 +1013,10 @@ def build_final_character(session):
             line = (f"Year {yr['year']}: {yr['skill']} (+1 SP) | "
                     f"Survival: {yr['surv_roll']}{mod_str}={yr['surv_total']} vs {yr['surv_target']}+ [{status}]")
             if yr.get('aging'):
-                penalties = [f"{k} {v:+d}" for k, v in yr['aging'].items() if v != 0]
+                penalties = [f"{k.upper()} {v:+d}" for k, v in yr['aging'].items() if v != 0]
                 if penalties:
                     line += f" | AGING: {', '.join(penalties)}"
-            lines.append(line)
-
-        lines.append("-" * 60)
-
-    lines.append(f"\nTOTAL SKILL POINTS: {skill_points}")
-    lines.append(f"SKILLS GAINED ({len(skills)}):")
-
-    # Group and count skills
-    skill_counts = {}
-    for skill in skills:
-        skill_counts[skill] = skill_counts.get(skill, 0) + 1
-
-    for skill, count in sorted(skill_counts.items()):
-        if count > 1:
-            lines.append(f"  - {skill} x{count}")
-        else:
-            lines.append(f"  - {skill}")
+            result_lines.append(line)
 
     # Show aging penalties if any
     has_aging = any(v != 0 for v in aging_data.values())
@@ -1006,22 +1027,24 @@ def build_final_character(session):
         if aging_data.get('int'): penalties.append(f"INT {aging_data['int']:+d}")
         if aging_data.get('wis'): penalties.append(f"WIS {aging_data['wis']:+d}")
         if aging_data.get('con'): penalties.append(f"CON {aging_data['con']:+d}")
-        lines.append(f"\nAging Penalties: {', '.join(penalties)}")
+        result_lines.append('')
+        result_lines.append(f"**Aging Penalties:** {', '.join(penalties)}")
 
     if died:
-        lines.append("\n" + "!" * 60)
-        lines.append("THIS CHARACTER DIED DURING PRIOR EXPERIENCE!")
-        lines.append("!" * 60)
+        result_lines.append('')
+        result_lines.append('**THIS CHARACTER DIED DURING PRIOR EXPERIENCE!**')
 
-    class FinalDisplay:
-        def __init__(self, text, died):
-            self.text = text
-            self.died = died
+    # Add consolidated skills section
+    initial_skills = char_data.get('skill_track', {}).get('initial_skills', [])
+    all_skills = list(initial_skills) + list(skills)
 
-        def __str__(self):
-            return self.text
+    if all_skills:
+        result_lines.append('')
+        result_lines.append(f"**Skills** ({len(all_skills)})")
+        for skill in consolidate_skills(all_skills):
+            result_lines.append(f"- {skill}")
 
-    return FinalDisplay("\n".join(lines), died)
+    return '\n'.join(result_lines)
 
 
 def clear_interactive_session(request):
