@@ -526,6 +526,115 @@ class MagicTrackUITests(TestCase):
         self.assertIn('School:', skill_str)
 
 
+class RoleTests(TestCase):
+    """Tests for user roles and permissions."""
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+        from webapp.generator.models import UserProfile
+
+        self.client = Client()
+
+        # Create test users with different roles
+        self.player_user = User.objects.create_user('player_test', password='testpass')
+        UserProfile.objects.create(user=self.player_user, roles=['player'])
+
+        self.dm_user = User.objects.create_user('dm_test', password='testpass')
+        UserProfile.objects.create(user=self.dm_user, roles=['dm'])
+
+        self.admin_user = User.objects.create_user('admin_test', password='testpass')
+        UserProfile.objects.create(user=self.admin_user, roles=['admin'])
+
+        self.admin_dm_user = User.objects.create_user('admin_dm_test', password='testpass')
+        UserProfile.objects.create(user=self.admin_dm_user, roles=['admin', 'dm'])
+
+    def test_player_role_properties(self):
+        """Test player role property methods."""
+        profile = self.player_user.profile
+        self.assertTrue(profile.is_player)
+        self.assertFalse(profile.is_dm)
+        self.assertFalse(profile.is_admin)
+
+    def test_dm_role_properties(self):
+        """Test DM role property methods."""
+        profile = self.dm_user.profile
+        self.assertFalse(profile.is_player)
+        self.assertTrue(profile.is_dm)
+        self.assertFalse(profile.is_admin)
+
+    def test_admin_role_properties(self):
+        """Test admin role property methods."""
+        profile = self.admin_user.profile
+        self.assertFalse(profile.is_player)
+        self.assertFalse(profile.is_dm)
+        self.assertTrue(profile.is_admin)
+
+    def test_multi_role_properties(self):
+        """Test user with multiple roles."""
+        profile = self.admin_dm_user.profile
+        self.assertFalse(profile.is_player)
+        self.assertTrue(profile.is_dm)
+        self.assertTrue(profile.is_admin)
+
+    def test_player_cannot_see_dm_links(self):
+        """Test that player cannot see DM links on welcome page."""
+        self.client.login(username='player_test', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertNotContains(response, 'DM Handbook')
+        self.assertNotContains(response, 'Manage Users')
+
+    def test_dm_can_see_dm_handbook_link(self):
+        """Test that DM can see DM Handbook link on welcome page."""
+        self.client.login(username='dm_test', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, 'DM Handbook')
+        self.assertNotContains(response, 'Manage Users')
+
+    def test_admin_can_see_all_links(self):
+        """Test that admin can see all links on welcome page."""
+        self.client.login(username='admin_test', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, 'DM Handbook')
+        self.assertContains(response, 'Manage Users')
+
+    def test_admin_dm_can_see_all_links(self):
+        """Test that admin+dm user can see all links on welcome page."""
+        self.client.login(username='admin_dm_test', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, 'DM Handbook')
+        self.assertContains(response, 'Manage Users')
+
+    def test_player_cannot_access_manage_users(self):
+        """Test that player cannot access manage users page."""
+        self.client.login(username='player_test', password='testpass')
+        response = self.client.get(reverse('manage_users'))
+        self.assertRedirects(response, reverse('welcome'))
+
+    def test_dm_cannot_access_manage_users(self):
+        """Test that DM cannot access manage users page."""
+        self.client.login(username='dm_test', password='testpass')
+        response = self.client.get(reverse('manage_users'))
+        self.assertRedirects(response, reverse('welcome'))
+
+    def test_admin_can_access_manage_users(self):
+        """Test that admin can access manage users page."""
+        self.client.login(username='admin_test', password='testpass')
+        response = self.client.get(reverse('manage_users'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Manage Users')
+
+    def test_unauthenticated_cannot_see_dm_links(self):
+        """Test that unauthenticated user cannot see DM links."""
+        response = self.client.get(reverse('welcome'))
+        self.assertNotContains(response, 'DM Handbook')
+        self.assertNotContains(response, 'Manage Users')
+
+    def test_unauthenticated_cannot_access_manage_users(self):
+        """Test that unauthenticated user cannot access manage users."""
+        response = self.client.get(reverse('manage_users'))
+        self.assertRedirects(response, reverse('login'))
+
+
 class ReturnToGeneratorTests(TestCase):
     """Tests for returning to generator after interactive mode."""
 
