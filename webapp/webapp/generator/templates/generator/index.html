@@ -26,27 +26,6 @@
         <span><strong>{{ years_completed|add:16 }}</strong></span>
     </div>
 
-    {% if yearly_results %}
-    <h4>Year-by-Year Results</h4>
-    <table>
-        <tr>
-            <th>Age</th>
-            <th>Skill</th>
-            <th>Survival</th>
-            <th>Result</th>
-        </tr>
-        {% for yr in yearly_results %}
-        <tr>
-            <td>{{ yr.year }}</td>
-            <td>{{ yr.skill }}</td>
-            <td>{{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+</td>
-            <td class="{% if yr.survived %}survived{% else %}died{% endif %}">
-                {% if yr.survived %}Survived{% else %}DIED{% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-    {% endif %}
 </div>
 {% endif %}
 
