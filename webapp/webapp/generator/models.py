@@ -23,14 +23,17 @@ class UserProfile(models.Model):
         """Check if user has a specific role."""
         return role in self.roles
 
+    @property
     def is_admin(self):
         """Check if user is an admin."""
         return 'admin' in self.roles
 
+    @property
     def is_dm(self):
         """Check if user is a DM."""
         return 'dm' in self.roles
 
+    @property
     def is_player(self):
         """Check if user is a player."""
         return 'player' in self.roles

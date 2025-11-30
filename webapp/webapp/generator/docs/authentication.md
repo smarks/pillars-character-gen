@@ -34,9 +34,9 @@ Users can have multiple roles (e.g., `['admin', 'dm']`).
 
 ```python
 profile.has_role('dm')      # Check for specific role
-profile.is_admin()          # Check if admin
-profile.is_dm()             # Check if DM
-profile.is_player()         # Check if player
+profile.is_admin            # Check if admin (property)
+profile.is_dm               # Check if DM (property)
+profile.is_player           # Check if player (property)
 profile.get_roles_display() # Human-readable role list
 ```
 

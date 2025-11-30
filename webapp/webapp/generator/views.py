@@ -1337,7 +1337,7 @@ def dm_required(view_func):
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('login')
-        if not hasattr(request.user, 'profile') or not (request.user.profile.is_dm() or request.user.profile.is_admin()):
+        if not hasattr(request.user, 'profile') or not (request.user.profile.is_dm or request.user.profile.is_admin):
             messages.error(request, 'You must be a Dungeon Master to access this page.')
             return redirect('welcome')
         return view_func(request, *args, **kwargs)
@@ -1349,7 +1349,7 @@ def admin_required(view_func):
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('login')
-        if not hasattr(request.user, 'profile') or not request.user.profile.is_admin():
+        if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
             messages.error(request, 'You must be an Admin to access this page.')
             return redirect('welcome')
         return view_func(request, *args, **kwargs)
