@@ -1,0 +1,31 @@
+# Pillars Character Generator - Systemd Service File
+#
+# Installation:
+#   1. Copy to /etc/systemd/system/pillars.service
+#   2. Update paths and user as needed
+#   3. Run: sudo systemctl daemon-reload
+#   4. Run: sudo systemctl enable pillars
+#   5. Run: sudo systemctl start pillars
+#
+[Unit]
+Description=Pillars Character Generator
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/pillars/webapp
+EnvironmentFile=/var/www/pillars/.env
+ExecStart=/var/www/pillars/.venv/bin/gunicorn \
+    --workers ${GUNICORN_WORKERS:-3} \
+    --bind ${GUNICORN_BIND:-127.0.0.1:8000} \
+    --access-logfile /var/log/pillars/access.log \
+    --error-logfile /var/log/pillars/error.log \
+    webapp.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

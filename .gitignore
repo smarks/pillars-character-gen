@@ -7,7 +7,12 @@ __pycache__/
 venv/
 env/
 .venv/
-.env/
+
+# Environment (secrets)
+.env
+
+# Static files (generated)
+staticfiles/
 
 # IDE
 .idea/

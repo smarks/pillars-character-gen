@@ -3,3 +3,7 @@ pytest>=7.4.0
 
 # Web app (optional - only needed for webapp/)
 django>=5.0
+markdown>=3.5
+
+# Production server
+gunicorn>=21.0
