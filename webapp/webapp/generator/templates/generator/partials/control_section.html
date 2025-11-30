@@ -21,6 +21,16 @@
         </label>
     </div>
 
+    <div id="aging-warning" class="warning-box" style="display: none;">
+        <h4>Aging Warning!</h4>
+        <p>Adding <span id="aging-years"></span> years will push your character past age 34, resulting in aging penalties:</p>
+        <ul>
+            <li>Age 35: STR -1, DEX -1</li>
+            <li>Age 39: CON -1</li>
+            <li>Age 67+: Additional STR -1, DEX -1, INT -1, WIS -1, CON -1</li>
+        </ul>
+    </div>
+
     <div class="button-group button-group-main">
         {% if not died %}
         <button type="submit" name="action" value="add_experience" class="primary">Add {% if has_experience %}More {% endif %}Experience</button>
@@ -36,8 +46,50 @@
 </div>
 
 <script>
-// Disable years selector when interactive mode is checked
-document.getElementById('interactive-checkbox').addEventListener('change', function() {
-    document.getElementById('years-select').disabled = this.checked;
-});
+(function() {
+    var yearsSelect = document.getElementById('years-select');
+    var interactiveCheckbox = document.getElementById('interactive-checkbox');
+    var agingWarning = document.getElementById('aging-warning');
+    var agingYearsSpan = document.getElementById('aging-years');
+
+    // Current age from context (16 + years_completed), default to 16 if not set
+    var currentAge = {{ current_age|default:16 }};
+
+    function updateAgingWarning() {
+        if (!agingWarning) return;
+
+        var selectedYears = parseInt(yearsSelect.value) || 0;
+        var finalAge = currentAge + selectedYears;
+
+        // Show warning if adding years would push past 34
+        if (finalAge > 34 && currentAge <= 34) {
+            agingYearsSpan.textContent = selectedYears;
+            agingWarning.style.display = 'block';
+        } else if (finalAge > 34 && currentAge > 34) {
+            // Already past 34, warn about additional aging
+            agingYearsSpan.textContent = selectedYears;
+            agingWarning.querySelector('p').textContent =
+                'Adding ' + selectedYears + ' years will result in additional aging penalties (current age: ' + currentAge + '):';
+            agingWarning.style.display = 'block';
+        } else {
+            agingWarning.style.display = 'none';
+        }
+    }
+
+    // Disable years selector when interactive mode is checked
+    interactiveCheckbox.addEventListener('change', function() {
+        yearsSelect.disabled = this.checked;
+        if (this.checked) {
+            agingWarning.style.display = 'none';
+        } else {
+            updateAgingWarning();
+        }
+    });
+
+    // Update warning when years selection changes
+    yearsSelect.addEventListener('change', updateAgingWarning);
+
+    // Initial check
+    updateAgingWarning();
+})();
 </script>

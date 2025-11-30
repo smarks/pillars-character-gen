@@ -324,6 +324,7 @@ def index(request):
     return render(request, 'generator/index.html', {
         'character': character,
         'years_completed': years_completed,
+        'current_age': 16 + years_completed,
         'skills': skills,
         'yearly_results': yearly_results,
         'has_experience': years_completed > 0,
@@ -432,6 +433,7 @@ def select_track(request):
                     return render(request, 'generator/select_track.html', {
                         'character': character,
                         'track_info': track_info,
+                        'current_age': 16,
                         'error': 'Please select a track when using manual selection',
                     })
                 try:
@@ -440,6 +442,7 @@ def select_track(request):
                     return render(request, 'generator/select_track.html', {
                         'character': character,
                         'track_info': track_info,
+                        'current_age': 16,
                         'error': 'Invalid track selected',
                     })
 
@@ -459,6 +462,7 @@ def select_track(request):
                     return render(request, 'generator/select_track.html', {
                         'character': character,
                         'track_info': track_info,
+                        'current_age': 16,
                         'acceptance_failed': True,
                         'failed_track': chosen_track.value,
                         'acceptance_check': skill_track.acceptance_check,
@@ -621,6 +625,7 @@ def select_track(request):
         'character': character,
         'track_info': track_info,
         'years_completed': years_completed,
+        'current_age': 16 + years_completed,
         'skills': skills,
         'yearly_results': yearly_results,
         'died': died,
