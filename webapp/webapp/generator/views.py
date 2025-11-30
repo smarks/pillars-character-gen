@@ -864,6 +864,7 @@ def serialize_character(character):
         'provenance_social_class': character.provenance.social_class if hasattr(character.provenance, 'social_class') else 'Commoner',
         'provenance_sub_class': character.provenance.sub_class if hasattr(character.provenance, 'sub_class') else 'Laborer',
         'location': str(character.location),
+        'location_skills': list(character.location.skills) if character.location.skills else [],
         'literacy': str(character.literacy),
         'wealth': str(character.wealth),
         'wealth_level': character.wealth.wealth_level if hasattr(character.wealth, 'wealth_level') else 'Moderate',
@@ -960,21 +961,48 @@ def build_final_str_repr(char_data, years, skills, yearly_results, aging_data, d
     if years == 0:
         return base_repr
 
-    # Remove any existing skill track or prior experience sections from base
-    # (they would have been added during interactive flow setup)
+    # Filter out sections we'll rebuild, and location skill/attribute lines
     lines = base_repr.split('\n')
     filtered_lines = []
-    skip_until_blank = False
+    skip_section = False
+    in_location = False
+
     for line in lines:
-        if '**Skill Track:**' in line or '**Prior Experience**' in line or '**Skills**' in line:
-            skip_until_blank = True
+        # Check for sections to skip entirely
+        if any(marker in line for marker in ['**Skill Track:**', '**Prior Experience**', '**Skills**', '**Year-by-Year**']):
+            skip_section = True
             continue
-        if skip_until_blank:
-            if line.strip() == '' or line.startswith('**'):
-                skip_until_blank = False
-                if line.startswith('**') and '**Skill Track:**' not in line and '**Prior Experience**' not in line and '**Skills**' not in line:
-                    filtered_lines.append(line)
+
+        # Track if we're in Location section (to filter its sub-items)
+        if line.startswith('Location:'):
+            in_location = True
+            filtered_lines.append(line)
             continue
+
+        # Skip location sub-items (Skills, Attribute Modifiers)
+        if in_location:
+            if line.startswith('  '):
+                # Skip indented location details (skills, attribute modifiers)
+                continue
+            else:
+                # No longer in location section
+                in_location = False
+
+        # Handle skipped sections
+        if skip_section:
+            # End skip on blank line or new ** section
+            if line.strip() == '':
+                skip_section = False
+                continue
+            elif line.startswith('**'):
+                skip_section = False
+                # Check if this new section should also be skipped
+                if any(marker in line for marker in ['**Skill Track:**', '**Prior Experience**', '**Skills**', '**Year-by-Year**']):
+                    skip_section = True
+                    continue
+                filtered_lines.append(line)
+            continue
+
         filtered_lines.append(line)
 
     result_lines = filtered_lines
@@ -1040,8 +1068,16 @@ def build_final_str_repr(char_data, years, skills, yearly_results, aging_data, d
         result_lines.append('**THIS CHARACTER DIED DURING PRIOR EXPERIENCE!**')
 
     # Add consolidated skills section
-    initial_skills = char_data.get('skill_track', {}).get('initial_skills', [])
-    all_skills = list(initial_skills) + list(skills)
+    all_skills = []
+
+    # Add location skills
+    location_skills = char_data.get('location_skills', [])
+    all_skills.extend(location_skills)
+
+    # Add track initial skills and prior experience skills
+    initial_skills = char_data.get('skill_track', {}).get('initial_skills', []) if char_data.get('skill_track') else []
+    all_skills.extend(initial_skills)
+    all_skills.extend(skills)
 
     if all_skills:
         result_lines.append('')

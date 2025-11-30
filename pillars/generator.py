@@ -168,6 +168,9 @@ class Character:
         Returns:
             Multi-line string with formatted character information.
         """
+        # Get just the first line of location (without skills/attribute modifiers)
+        location_line = str(self.location).split('\n')[0]
+
         lines = [
             "**Pillars Character**",
             "",
@@ -177,7 +180,7 @@ class Character:
             str(self.height),
             str(self.weight),
             str(self.provenance),
-            str(self.location),
+            location_line,
             str(self.literacy),
             str(self.wealth),
         ]
@@ -229,18 +232,25 @@ class Character:
                 lines.append("**THIS CHARACTER DIED DURING PRIOR EXPERIENCE!**")
 
         # Consolidated skills section - all skills in one place
+        all_skills = []
+
+        # Add location skills
+        if self.location.skills:
+            all_skills.extend(self.location.skills)
+
+        # Add track and prior experience skills
         if self.skill_track is not None:
             # prior_experience.all_skills already includes initial_skills
             if self.prior_experience is not None:
-                all_skills = self.prior_experience.all_skills
+                all_skills.extend(self.prior_experience.all_skills)
             else:
-                all_skills = list(self.skill_track.initial_skills)
+                all_skills.extend(self.skill_track.initial_skills)
 
-            if all_skills:
-                lines.append("")
-                lines.append(f"**Skills** ({len(all_skills)})")
-                for skill in consolidate_skills(all_skills):
-                    lines.append(f"- {skill}")
+        if all_skills:
+            lines.append("")
+            lines.append(f"**Skills** ({len(all_skills)})")
+            for skill in consolidate_skills(all_skills):
+                lines.append(f"- {skill}")
 
         return "\n".join(lines)
 
