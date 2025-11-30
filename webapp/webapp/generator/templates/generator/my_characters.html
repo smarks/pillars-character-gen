@@ -1,0 +1,52 @@
+{% extends "generator/base.html" %}
+
+{% block title %}My Characters - Pillars{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>My Saved Characters</h1>
+    <a href="{% url 'welcome' %}" class="btn">Back to Home</a>
+</div>
+
+{% if messages %}
+<div class="info-box">
+    {% for message in messages %}
+    <p>{{ message }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="section">
+    {% if characters %}
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Created</th>
+                <th>Updated</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for char in characters %}
+            <tr>
+                <td>{{ char.name }}</td>
+                <td>{{ char.created_at|date:"M d, Y H:i" }}</td>
+                <td>{{ char.updated_at|date:"M d, Y H:i" }}</td>
+                <td>
+                    <a href="{% url 'load_character' char.id %}" class="btn primary">Load</a>
+                    <form method="post" action="{% url 'delete_character' char.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn danger" onclick="return confirm('Delete this character?');">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>You haven't saved any characters yet.</p>
+    <p><a href="{% url 'generator' %}" class="btn primary">Create a Character</a></p>
+    {% endif %}
+</div>
+{% endblock %}

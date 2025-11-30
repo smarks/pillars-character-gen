@@ -1,0 +1,54 @@
+{% extends "generator/base.html" %}
+
+{% block title %}Login - Pillars{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>Login</h1>
+    <a href="{% url 'welcome' %}" class="btn">Back to Home</a>
+</div>
+
+{% if messages %}
+<div class="info-box">
+    {% for message in messages %}
+    <p>{{ message }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="section">
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="danger-box">
+            <p>Please correct the errors below.</p>
+        </div>
+        {% endif %}
+
+        <div class="control-row">
+            <label for="id_username">Username:</label>
+            {{ form.username }}
+        </div>
+        {% if form.username.errors %}
+        <div class="danger-box">{{ form.username.errors }}</div>
+        {% endif %}
+
+        <div class="control-row">
+            <label for="id_password">Password:</label>
+            {{ form.password }}
+        </div>
+        {% if form.password.errors %}
+        <div class="danger-box">{{ form.password.errors }}</div>
+        {% endif %}
+
+        <div class="button-group">
+            <button type="submit" class="primary">Login</button>
+        </div>
+    </form>
+
+    <p style="margin-top: 20px;">
+        Don't have an account? <a href="{% url 'register' %}">Register here</a>
+    </p>
+</div>
+{% endblock %}
