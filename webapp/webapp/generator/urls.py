@@ -24,6 +24,5 @@ urlpatterns = [
     path('delete-character/<int:char_id>/', views.delete_character, name='delete_character'),
     # Admin-only
     path('manage-users/', views.manage_users, name='manage_users'),
-    path('create-user/', views.create_user, name='create_user'),
     path('change-role/<int:user_id>/', views.change_user_role, name='change_user_role'),
 ]

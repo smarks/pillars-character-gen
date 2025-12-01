@@ -18,8 +18,9 @@
 
 <div class="section">
     <h2>Create New User</h2>
-    <form method="post" action="{% url 'create_user' %}" style="margin-bottom: 30px; padding: 20px; border: 2px solid #36c; background-color: #f0f8ff;">
+    <form method="post" style="margin-bottom: 30px; padding: 20px; border: 2px solid #36c; background-color: #f0f8ff;">
         {% csrf_token %}
+        <input type="hidden" name="create_user" value="1">
 
         <div class="control-row">
             <label for="id_username">Username:</label>
@@ -39,11 +40,17 @@
             <label for="id_password1">Password:</label>
             {{ create_form.password1 }}
         </div>
+        {% if create_form.password1.errors %}
+        <div class="danger-box">{{ create_form.password1.errors }}</div>
+        {% endif %}
 
         <div class="control-row">
             <label for="id_password2">Confirm Password:</label>
             {{ create_form.password2 }}
         </div>
+        {% if create_form.password2.errors %}
+        <div class="danger-box">{{ create_form.password2.errors }}</div>
+        {% endif %}
 
         <div class="control-row">
             <label>Roles:</label>

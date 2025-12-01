@@ -1435,30 +1435,25 @@ def manage_users(request):
     users = UserProfile.objects.select_related('user').all()
     role_choices = UserProfile.ROLE_CHOICES
 
-    # Create form for adding new users
-    create_form = AdminUserCreationForm()
+    # Handle user creation form submission
+    if request.method == 'POST' and 'create_user' in request.POST:
+        create_form = AdminUserCreationForm(request.POST)
+        if create_form.is_valid():
+            user = create_form.save()
+            messages.success(request, f"Successfully created user: {user.username}")
+            return redirect('manage_users')
+        else:
+            # Form has errors - will be displayed in template
+            pass
+    else:
+        # Create empty form for GET requests
+        create_form = AdminUserCreationForm()
 
     return render(request, 'generator/manage_users.html', {
         'users': users,
         'role_choices': role_choices,
         'create_form': create_form,
     })
-
-
-@admin_required
-@require_POST
-def create_user(request):
-    """Create a new user (Admin only)."""
-    form = AdminUserCreationForm(request.POST)
-    if form.is_valid():
-        user = form.save()
-        messages.success(request, f"Successfully created user: {user.username}")
-    else:
-        # Show form errors
-        for field, errors in form.errors.items():
-            for error in errors:
-                messages.error(request, f"{field}: {error}")
-    return redirect('manage_users')
 
 
 @admin_required
