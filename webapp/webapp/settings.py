@@ -41,11 +41,17 @@ ALLOWED_HOSTS = [
 
 # CSRF trusted origins for form submissions (required for Django 4.0+)
 # Format: http://domain:port or https://domain:port
+_default_csrf_origins = []
+for host in ALLOWED_HOSTS:
+    # Add common ports for each allowed host
+    for port in ["8000", "8765", "9066"]:
+        _default_csrf_origins.append(f"http://{host}:{port}")
+
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.environ.get(
         "DJANGO_CSRF_TRUSTED_ORIGINS",
-        "http://localhost:8000,http://127.0.0.1:8000"
+        ",".join(_default_csrf_origins)
     ).split(",")
     if origin.strip()
 ]
