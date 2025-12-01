@@ -80,6 +80,15 @@
         <div class="danger-box">{{ form.discord_handle.errors }}</div>
         {% endif %}
 
+        <div class="control-row">
+            <label for="id_preferred_contact">Preferred Contact:</label>
+            {{ form.preferred_contact }}
+        </div>
+        {% if form.preferred_contact.errors %}
+        <div class="danger-box">{{ form.preferred_contact.errors }}</div>
+        {% endif %}
+        <p class="help-text">{{ form.preferred_contact.help_text }}</p>
+
         <div class="button-group">
             <button type="submit" class="success">Create Account</button>
         </div>

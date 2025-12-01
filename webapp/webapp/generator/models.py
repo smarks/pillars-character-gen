@@ -11,10 +11,23 @@ class UserProfile(models.Model):
         ('admin', 'Admin'),
     ]
 
+    CONTACT_METHOD_CHOICES = [
+        ('email', 'Email'),
+        ('sms', 'SMS'),
+        ('discord', 'Discord'),
+    ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     roles = models.JSONField(default=list)  # List of role strings: ['player'], ['dm', 'admin'], etc.
     phone = models.CharField(max_length=20, blank=True, default='')
     discord_handle = models.CharField(max_length=100, blank=True, default='')
+    preferred_contact = models.CharField(
+        max_length=10,
+        choices=CONTACT_METHOD_CHOICES,
+        blank=True,
+        default='',
+        help_text='Preferred method for game notifications'
+    )
 
     def __str__(self):
         return f"Profile for {self.user.username}"
