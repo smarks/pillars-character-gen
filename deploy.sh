@@ -107,6 +107,12 @@ restart_service() {
         log_warn "Service $SERVICE_NAME not found or not running. Start manually with:"
         echo "  sudo systemctl start $SERVICE_NAME"
     fi
+
+    # Reload nginx if running (for reverse proxy)
+    if systemctl is-active --quiet "nginx" 2>/dev/null; then
+        log_info "Reloading nginx..."
+        sudo systemctl reload nginx
+    fi
 }
 
 # Check service status
