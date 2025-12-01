@@ -428,6 +428,15 @@ def index(request):
     years_completed = request.session.get('interactive_years', 0)
     skills = request.session.get('interactive_skills', [])
     yearly_results = request.session.get('interactive_yearly_results', [])
+    aging_data = request.session.get('interactive_aging', {})
+    died = request.session.get('interactive_died', False)
+
+    # Build complete str_repr if there's prior experience
+    char_data = request.session.get('current_character')
+    if years_completed > 0 and char_data:
+        final_str_repr = build_final_str_repr(char_data, years_completed, skills, yearly_results, aging_data, died)
+        # Update the character's _str_repr so {{ character }} displays correctly
+        character._str_repr = final_str_repr
 
     return render(request, 'generator/index.html', {
         'character': character,
