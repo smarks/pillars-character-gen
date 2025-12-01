@@ -80,6 +80,46 @@ class RegistrationForm(UserCreationForm):
                 preferred_contact=self.cleaned_data.get('preferred_contact', ''),
             )
         return user
+
+
+class AdminUserCreationForm(UserCreationForm):
+    """Admin form for creating users with full role access."""
+    email = forms.EmailField(required=False, help_text='Optional')
+    roles = forms.MultipleChoiceField(
+        choices=UserProfile.ROLE_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        help_text='Select one or more roles for this user'
+    )
+    phone = forms.CharField(max_length=20, required=False, help_text='Optional - for SMS notifications')
+    discord_handle = forms.CharField(max_length=100, required=False, help_text='Optional - e.g. username#1234')
+    preferred_contact = forms.ChoiceField(
+        choices=[('', 'Not specified')] + UserProfile.CONTACT_METHOD_CHOICES,
+        required=False,
+        initial='',
+        help_text='Preferred contact method'
+    )
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'password1', 'password2', 'roles', 'phone', 'discord_handle', 'preferred_contact')
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data.get('email', '')
+        if commit:
+            user.save()
+            roles = self.cleaned_data.get('roles', [])
+            UserProfile.objects.create(
+                user=user,
+                roles=list(roles),  # Store as list
+                phone=self.cleaned_data.get('phone', ''),
+                discord_handle=self.cleaned_data.get('discord_handle', ''),
+                preferred_contact=self.cleaned_data.get('preferred_contact', ''),
+            )
+        return user
+
+
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -1391,10 +1431,34 @@ def dm_handbook(request):
 
 @admin_required
 def manage_users(request):
-    """Admin view to manage user roles."""
+    """Admin view to manage user roles and create new users."""
     users = UserProfile.objects.select_related('user').all()
     role_choices = UserProfile.ROLE_CHOICES
-    return render(request, 'generator/manage_users.html', {'users': users, 'role_choices': role_choices})
+
+    # Create form for adding new users
+    create_form = AdminUserCreationForm()
+
+    return render(request, 'generator/manage_users.html', {
+        'users': users,
+        'role_choices': role_choices,
+        'create_form': create_form,
+    })
+
+
+@admin_required
+@require_POST
+def create_user(request):
+    """Create a new user (Admin only)."""
+    form = AdminUserCreationForm(request.POST)
+    if form.is_valid():
+        user = form.save()
+        messages.success(request, f"Successfully created user: {user.username}")
+    else:
+        # Show form errors
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f"{field}: {error}")
+    return redirect('manage_users')
 
 
 @admin_required

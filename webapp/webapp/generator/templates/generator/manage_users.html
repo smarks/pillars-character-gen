@@ -17,7 +17,69 @@
 {% endif %}
 
 <div class="section">
-    <p style="margin-bottom: 20px;">As an Admin, you can manage user roles below.</p>
+    <h2>Create New User</h2>
+    <form method="post" action="{% url 'create_user' %}" style="margin-bottom: 30px; padding: 20px; border: 1px solid #555; background-color: #1a1a1a;">
+        {% csrf_token %}
+
+        <div class="control-row">
+            <label for="id_username">Username:</label>
+            {{ create_form.username }}
+        </div>
+        {% if create_form.username.errors %}
+        <div class="danger-box">{{ create_form.username.errors }}</div>
+        {% endif %}
+
+        <div class="control-row">
+            <label for="id_email">Email:</label>
+            {{ create_form.email }}
+        </div>
+        <p class="help-text">{{ create_form.email.help_text }}</p>
+
+        <div class="control-row">
+            <label for="id_password1">Password:</label>
+            {{ create_form.password1 }}
+        </div>
+
+        <div class="control-row">
+            <label for="id_password2">Confirm Password:</label>
+            {{ create_form.password2 }}
+        </div>
+
+        <div class="control-row">
+            <label>Roles:</label>
+            <div style="margin-left: 20px;">
+                {{ create_form.roles }}
+            </div>
+        </div>
+        <p class="help-text">{{ create_form.roles.help_text }}</p>
+
+        <div class="control-row">
+            <label for="id_phone">Phone:</label>
+            {{ create_form.phone }}
+        </div>
+        <p class="help-text">{{ create_form.phone.help_text }}</p>
+
+        <div class="control-row">
+            <label for="id_discord_handle">Discord:</label>
+            {{ create_form.discord_handle }}
+        </div>
+        <p class="help-text">{{ create_form.discord_handle.help_text }}</p>
+
+        <div class="control-row">
+            <label for="id_preferred_contact">Preferred Contact:</label>
+            {{ create_form.preferred_contact }}
+        </div>
+        <p class="help-text">{{ create_form.preferred_contact.help_text }}</p>
+
+        <div class="button-group">
+            <button type="submit" class="success">Create User</button>
+        </div>
+    </form>
+</div>
+
+<div class="section">
+    <h2>Manage Existing Users</h2>
+    <p style="margin-bottom: 20px;">Update roles for existing users below.</p>
 
     <table>
         <thead>
