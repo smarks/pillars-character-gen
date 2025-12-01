@@ -151,5 +151,16 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = "DENY"
-    CSRF_COOKIE_SECURE = True
-    SESSION_COOKIE_SECURE = True
+
+    # Only enable secure cookies if using HTTPS
+    # Set DJANGO_USE_HTTPS=True in .env if you have SSL/TLS configured
+    USE_HTTPS = os.environ.get("DJANGO_USE_HTTPS", "False").lower() == "true"
+    if USE_HTTPS:
+        CSRF_COOKIE_SECURE = True
+        SESSION_COOKIE_SECURE = True
+    else:
+        CSRF_COOKIE_SECURE = False
+        SESSION_COOKIE_SECURE = False
+        # Allow CSRF cookies to work on HTTP for development/testing
+        CSRF_COOKIE_SAMESITE = 'Lax'
+        SESSION_COOKIE_SAMESITE = 'Lax'
