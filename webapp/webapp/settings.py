@@ -102,12 +102,34 @@ WSGI_APPLICATION = "webapp.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
+    # Parse DATABASE_URL for PostgreSQL
+    # Format: postgres://user:password@host:port/dbname
+    import re
+    match = re.match(r'postgres://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)', DATABASE_URL)
+    if match:
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": match.group(5),
+                "USER": match.group(1),
+                "PASSWORD": match.group(2),
+                "HOST": match.group(3),
+                "PORT": match.group(4),
+            }
+        }
+    else:
+        raise ValueError(f"Invalid DATABASE_URL format: {DATABASE_URL}")
+else:
+    # Default to SQLite for development
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
 
 
 # Password validation
