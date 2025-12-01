@@ -12,7 +12,7 @@ urlpatterns = [
     path('meta/', views.handbook_section, {'section': 'meta'}, name='meta'),
     path('lore/', views.handbook_section, {'section': 'lore'}, name='lore'),
     path('handbook/', views.handbook_section, {'section': 'players_handbook'}, name='handbook'),
-    path('dm/', views.handbook_section, {'section': 'DM_handbook'}, name='dm'),
+    path('dm/', views.dm_handbook, name='dm'),
     # Authentication
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),

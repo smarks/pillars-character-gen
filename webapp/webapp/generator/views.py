@@ -1376,6 +1376,12 @@ def admin_required(view_func):
     return wrapper
 
 
+@dm_required
+def dm_handbook(request):
+    """DM Handbook - requires DM or Admin role."""
+    return handbook_section(request, 'DM_handbook')
+
+
 @admin_required
 def manage_users(request):
     """Admin view to manage user roles."""

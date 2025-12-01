@@ -9,13 +9,15 @@ Requirements:
 """
 import time
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.contrib.auth.models import User
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options as ChromeOptions
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from webapp.generator.models import UserProfile
 
 
 class BrowserTestCase(StaticLiveServerTestCase):
@@ -81,6 +83,58 @@ class BrowserTestCase(StaticLiveServerTestCase):
             buttons[0].click()
             return
         raise Exception(f"Button with text '{button_text}' not found")
+
+    def login_user(self, username, password):
+        """Login a user via the browser."""
+        self.browser.get(f'{self.live_server_url}/login/')
+        self.wait_for_page_load()
+
+        # Fill in login form
+        username_field = self.browser.find_element(By.NAME, 'username')
+        password_field = self.browser.find_element(By.NAME, 'password')
+        username_field.send_keys(username)
+        password_field.send_keys(password)
+
+        # Submit form
+        login_button = self.browser.find_element(By.CSS_SELECTOR, 'button[type="submit"]')
+        login_button.click()
+
+        # Wait for redirect away from login page
+        import time
+        time.sleep(1)  # Give time for form submission and redirect
+        self.wait_for_page_load()
+
+        # Verify login succeeded - we should NOT still be on login page
+        if '/login' in self.browser.current_url:
+            # Check for error messages
+            page_source = self.browser.page_source
+            if 'Please correct the errors' in page_source:
+                raise AssertionError(f"Login failed for user '{username}': form has errors")
+            raise AssertionError(f"Login failed for user '{username}': still on login page")
+
+    def element_exists(self, by, value):
+        """Check if an element exists on the page."""
+        try:
+            self.browser.find_element(by, value)
+            return True
+        except NoSuchElementException:
+            return False
+
+    def link_exists(self, link_text):
+        """Check if a link with the given text exists."""
+        try:
+            self.browser.find_element(By.LINK_TEXT, link_text)
+            return True
+        except NoSuchElementException:
+            return False
+
+    def partial_link_exists(self, partial_text):
+        """Check if a link containing the given text exists."""
+        try:
+            self.browser.find_element(By.PARTIAL_LINK_TEXT, partial_text)
+            return True
+        except NoSuchElementException:
+            return False
 
 
 class GeneratorUITests(BrowserTestCase):
@@ -348,3 +402,188 @@ class SessionPersistenceTests(BrowserTestCase):
         # Both should be valid characters
         self.assertIn('Pillars Character', first_content)
         self.assertIn('Pillars Character', second_content)
+
+
+class RoleUITests(BrowserTestCase):
+    """UI tests for role-based access control."""
+
+    def setUp(self):
+        """Create test users with different roles before each test."""
+        super().setUp()
+        # Create test users with different roles
+        # These need to be created in setUp (not setUpClass) because
+        # TransactionTestCase flushes the database between tests
+        self.player_user = User.objects.create_user('player_ui_test', password='testpass123')
+        UserProfile.objects.create(user=self.player_user, roles=['player'])
+
+        self.dm_user = User.objects.create_user('dm_ui_test', password='testpass123')
+        UserProfile.objects.create(user=self.dm_user, roles=['dm'])
+
+        self.admin_user = User.objects.create_user('admin_ui_test', password='testpass123')
+        UserProfile.objects.create(user=self.admin_user, roles=['admin'])
+
+        self.admin_dm_user = User.objects.create_user('admin_dm_ui_test', password='testpass123')
+        UserProfile.objects.create(user=self.admin_dm_user, roles=['admin', 'dm'])
+
+    def test_unauthenticated_user_sees_no_dm_links(self):
+        """Test that unauthenticated users don't see DM or admin links."""
+        self.browser.get(f'{self.live_server_url}/')
+        self.wait_for_page_load()
+
+        # Should NOT see DM Handbook or Manage Users links
+        self.assertFalse(
+            self.partial_link_exists('DM Handbook'),
+            "Unauthenticated user should NOT see DM Handbook link"
+        )
+        self.assertFalse(
+            self.partial_link_exists('Manage Users'),
+            "Unauthenticated user should NOT see Manage Users link"
+        )
+
+    def test_player_sees_no_dm_links(self):
+        """Test that player role users don't see DM or admin links."""
+        self.login_user('player_ui_test', 'testpass123')
+
+        # Go to welcome page
+        self.browser.get(f'{self.live_server_url}/')
+        self.wait_for_page_load()
+
+        # Should NOT see DM Handbook or Manage Users links
+        self.assertFalse(
+            self.partial_link_exists('DM Handbook'),
+            "Player should NOT see DM Handbook link"
+        )
+        self.assertFalse(
+            self.partial_link_exists('Manage Users'),
+            "Player should NOT see Manage Users link"
+        )
+
+    def test_dm_sees_dm_handbook_but_not_manage_users(self):
+        """Test that DM role users see DM Handbook but not Manage Users."""
+        self.login_user('dm_ui_test', 'testpass123')
+
+        # Go to welcome page
+        self.browser.get(f'{self.live_server_url}/')
+        self.wait_for_page_load()
+
+        # Should see DM Handbook
+        self.assertTrue(
+            self.partial_link_exists('DM Handbook'),
+            "DM should see DM Handbook link"
+        )
+        # Should NOT see Manage Users
+        self.assertFalse(
+            self.partial_link_exists('Manage Users'),
+            "DM should NOT see Manage Users link"
+        )
+
+    def test_admin_sees_all_links(self):
+        """Test that admin role users see all links including Manage Users."""
+        self.login_user('admin_ui_test', 'testpass123')
+
+        # Go to welcome page
+        self.browser.get(f'{self.live_server_url}/')
+        self.wait_for_page_load()
+
+        # Should see DM Handbook
+        self.assertTrue(
+            self.partial_link_exists('DM Handbook'),
+            "Admin should see DM Handbook link"
+        )
+        # Should see Manage Users
+        self.assertTrue(
+            self.partial_link_exists('Manage Users'),
+            "Admin should see Manage Users link"
+        )
+
+    def test_admin_can_access_manage_users_page(self):
+        """Test that admin can access the manage users page."""
+        self.login_user('admin_ui_test', 'testpass123')
+
+        # Navigate to manage users
+        self.browser.get(f'{self.live_server_url}/manage-users/')
+        self.wait_for_page_load()
+
+        # Should be on the manage users page (not redirected)
+        self.assertIn('Manage Users', self.browser.page_source)
+        self.assertIn('manage-users', self.browser.current_url)
+
+    def test_player_cannot_access_manage_users_page(self):
+        """Test that player is redirected when trying to access manage users."""
+        self.login_user('player_ui_test', 'testpass123')
+
+        # Try to navigate to manage users
+        self.browser.get(f'{self.live_server_url}/manage-users/')
+        self.wait_for_page_load()
+
+        # Should be redirected to welcome page
+        self.assertNotIn('manage-users', self.browser.current_url)
+        # Should see the welcome page
+        self.assertIn('PILLARS', self.browser.page_source)
+
+    def test_dm_cannot_access_manage_users_page(self):
+        """Test that DM is redirected when trying to access manage users."""
+        self.login_user('dm_ui_test', 'testpass123')
+
+        # Try to navigate to manage users
+        self.browser.get(f'{self.live_server_url}/manage-users/')
+        self.wait_for_page_load()
+
+        # Should be redirected to welcome page
+        self.assertNotIn('manage-users', self.browser.current_url)
+        # Should see the welcome page
+        self.assertIn('PILLARS', self.browser.page_source)
+
+    def test_dm_can_access_dm_handbook(self):
+        """Test that DM can access the DM handbook."""
+        self.login_user('dm_ui_test', 'testpass123')
+
+        # Navigate to DM handbook
+        self.browser.get(f'{self.live_server_url}/dm/')
+        self.wait_for_page_load()
+
+        # Should be on the DM page (not redirected)
+        self.assertIn('/dm', self.browser.current_url)
+
+    def test_player_cannot_access_dm_handbook(self):
+        """Test that player is redirected when trying to access DM handbook."""
+        self.login_user('player_ui_test', 'testpass123')
+
+        # Try to navigate to DM handbook
+        self.browser.get(f'{self.live_server_url}/dm/')
+        self.wait_for_page_load()
+
+        # Should be redirected away from DM page
+        # Either redirected to welcome or login
+        self.assertFalse(
+            self.browser.current_url.endswith('/dm/'),
+            "Player should be redirected away from DM handbook"
+        )
+
+    def test_admin_dm_can_access_everything(self):
+        """Test that user with both admin and DM roles can access everything."""
+        self.login_user('admin_dm_ui_test', 'testpass123')
+
+        # Go to welcome page
+        self.browser.get(f'{self.live_server_url}/')
+        self.wait_for_page_load()
+
+        # Should see both links
+        self.assertTrue(
+            self.partial_link_exists('DM Handbook'),
+            "Admin+DM should see DM Handbook link"
+        )
+        self.assertTrue(
+            self.partial_link_exists('Manage Users'),
+            "Admin+DM should see Manage Users link"
+        )
+
+        # Should be able to access DM handbook
+        self.browser.get(f'{self.live_server_url}/dm/')
+        self.wait_for_page_load()
+        self.assertIn('/dm', self.browser.current_url)
+
+        # Should be able to access manage users
+        self.browser.get(f'{self.live_server_url}/manage-users/')
+        self.wait_for_page_load()
+        self.assertIn('manage-users', self.browser.current_url)
