@@ -13,15 +13,18 @@ After=network.target
 
 [Service]
 Type=simple
-User=www-data
-Group=www-data
-WorkingDirectory=/var/www/pillars/webapp
-EnvironmentFile=/var/www/pillars/.env
-ExecStart=/var/www/pillars/.venv/bin/gunicorn \
-    --workers ${GUNICORN_WORKERS:-3} \
-    --bind ${GUNICORN_BIND:-127.0.0.1:8000} \
-    --access-logfile /var/log/pillars/access.log \
-    --error-logfile /var/log/pillars/error.log \
+User=sam
+Group=sam
+WorkingDirectory=/home/sam/dev/pillars-character-gen/webapp
+EnvironmentFile=/home/sam/dev/pillars-character-gen/.env
+Environment="GUNICORN_WORKERS=3"
+Environment="GUNICORN_BIND=0.0.0.0:9066"
+Environment="PYTHONPATH=/home/sam/dev/pillars-character-gen"
+ExecStart=/home/sam/dev/pillars-character-gen/.venv/bin/gunicorn \
+    --workers $GUNICORN_WORKERS \
+    --bind $GUNICORN_BIND \
+    --access-logfile - \
+    --error-logfile - \
     webapp.wsgi:application
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=always
