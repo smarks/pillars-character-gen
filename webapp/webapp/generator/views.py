@@ -1684,6 +1684,10 @@ def add_experience_to_character(request, char_id):
             wealth_level=wealth_level,
         )
 
+        if skill_track is None or skill_track.track is None:
+            messages.error(request, 'Could not create skill track. Try selecting a different track.')
+            return redirect('character_sheet', char_id=char_id)
+
         # Save track to character data
         char_data['skill_track'] = {
             'track': skill_track.track.value,

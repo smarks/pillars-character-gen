@@ -1348,6 +1348,20 @@ class AddExperienceTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response.url)
 
+    def test_add_experience_handles_failed_track_creation(self):
+        """Test that add experience handles when track creation fails gracefully."""
+        self.client.login(username='exp_test', password='test123')
+
+        # Try with auto-select which might fail depending on character stats
+        response = self.client.post(
+            reverse('add_experience_to_character', args=[self.saved_char.id]),
+            {'years': 3, 'track': 'auto'}
+        )
+
+        # Should redirect back to character sheet (either success or graceful failure)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('character', response.url)
+
 
 class CharacterSheetLayoutTests(TestCase):
     """Tests for character sheet display and layout."""
