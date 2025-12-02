@@ -1352,13 +1352,50 @@ class AddExperienceTests(TestCase):
         """Test that add experience handles when track creation fails gracefully."""
         self.client.login(username='exp_test', password='test123')
 
-        # Try with auto-select which might fail depending on character stats
+        # Create a character with stats that won't qualify for any track with auto-select
+        # (all zero modifiers, no special qualifications)
+        char_with_bad_stats = SavedCharacter.objects.create(
+            user=self.user,
+            name='Bad Stats Character',
+            character_data={
+                'attributes': {
+                    'STR': 10, 'DEX': 10, 'INT': 10, 'WIS': 10, 'CON': 10, 'CHR': 10,
+                    'fatigue_points': 30, 'body_points': 25, 'fatigue_roll': 3, 'body_roll': 3,
+                },
+                'provenance_social_class': 'Commoner',
+                'provenance_sub_class': 'Laborer',
+                'wealth_level': 'Moderate',
+            }
+        )
+
+        # Try with auto-select - should handle gracefully even if track creation fails
         response = self.client.post(
-            reverse('add_experience_to_character', args=[self.saved_char.id]),
+            reverse('add_experience_to_character', args=[char_with_bad_stats.id]),
             {'years': 3, 'track': 'auto'}
         )
 
-        # Should redirect back to character sheet (either success or graceful failure)
+        # Should redirect back to character sheet (not crash with AttributeError)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('character', response.url)
+
+    def test_add_experience_with_none_track_does_not_crash(self):
+        """Test that add experience doesn't crash when skill_track.track is None."""
+        from unittest.mock import patch, MagicMock
+        from pillars.attributes import SkillTrack
+
+        self.client.login(username='exp_test', password='test123')
+
+        # Mock create_skill_track_for_choice to return a SkillTrack with track=None
+        mock_skill_track = MagicMock(spec=SkillTrack)
+        mock_skill_track.track = None  # This is the edge case that was crashing
+
+        with patch('webapp.generator.views.create_skill_track_for_choice', return_value=mock_skill_track):
+            response = self.client.post(
+                reverse('add_experience_to_character', args=[self.saved_char.id]),
+                {'years': 3, 'track': 'auto'}
+            )
+
+        # Should redirect with error message, not crash
         self.assertEqual(response.status_code, 302)
         self.assertIn('character', response.url)
 
