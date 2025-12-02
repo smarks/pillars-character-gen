@@ -34,7 +34,8 @@
                 <td>{{ char.created_at|date:"M d, Y H:i" }}</td>
                 <td>{{ char.updated_at|date:"M d, Y H:i" }}</td>
                 <td>
-                    <a href="{% url 'load_character' char.id %}" class="btn primary">Load</a>
+                    <a href="{% url 'character_sheet' char.id %}" class="btn primary">Edit</a>
+                    <a href="{% url 'load_character' char.id %}" class="btn">Load to Generator</a>
                     <form method="post" action="{% url 'delete_character' char.id %}" style="display: inline;">
                         {% csrf_token %}
                         <button type="submit" class="btn danger" onclick="return confirm('Delete this character?');">Delete</button>

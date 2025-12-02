@@ -1343,3 +1343,179 @@ def change_user_role(request, user_id):
         messages.error(request, 'User not found.')
 
     return redirect('manage_users')
+
+
+# =============================================================================
+# Editable Character Sheet Views
+# =============================================================================
+
+@login_required
+def character_sheet(request, char_id):
+    """Display editable character sheet."""
+    try:
+        character = SavedCharacter.objects.get(id=char_id, user=request.user)
+    except SavedCharacter.DoesNotExist:
+        messages.error(request, 'Character not found.')
+        return redirect('my_characters')
+
+    char_data = character.character_data
+
+    # Calculate attribute modifiers for display
+    from pillars.attributes import ATTRIBUTE_MODIFIERS
+    attrs = char_data.get('attributes', {})
+
+    def get_mod(val):
+        return ATTRIBUTE_MODIFIERS.get(val, 0)
+
+    # Build combined skills list
+    skills = []
+    # Location skills
+    skills.extend(char_data.get('location_skills', []))
+    # Track initial skills
+    if char_data.get('skill_track'):
+        skills.extend(char_data['skill_track'].get('initial_skills', []))
+    # Prior experience skills
+    skills.extend(char_data.get('interactive_skills', []))
+    # Manually added skills
+    skills.extend(char_data.get('manual_skills', []))
+
+    # Prior experience data
+    yearly_results = char_data.get('interactive_yearly_results', [])
+    years_served = char_data.get('interactive_years', 0)
+    died = char_data.get('interactive_died', False)
+
+    return render(request, 'generator/character_sheet.html', {
+        'character': character,
+        'char_data': char_data,
+        'skills': skills,
+        'str_mod': get_mod(attrs.get('STR', 10)),
+        'dex_mod': get_mod(attrs.get('DEX', 10)),
+        'int_mod': get_mod(attrs.get('INT', 10)),
+        'wis_mod': get_mod(attrs.get('WIS', 10)),
+        'con_mod': get_mod(attrs.get('CON', 10)),
+        'chr_mod': get_mod(attrs.get('CHR', 10)),
+        'yearly_results': yearly_results,
+        'years_served': years_served,
+        'current_age': 16 + years_served,
+        'died': died,
+    })
+
+
+@login_required
+@require_POST
+def update_character(request, char_id):
+    """API endpoint to update a single field on a character."""
+    try:
+        character = SavedCharacter.objects.get(id=char_id, user=request.user)
+    except SavedCharacter.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Character not found'}, status=404)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+    field = data.get('field')
+    value = data.get('value')
+    action = data.get('action')  # For skills: 'add', 'remove', 'edit'
+    index = data.get('index')
+
+    if not field:
+        return JsonResponse({'success': False, 'error': 'No field specified'}, status=400)
+
+    char_data = character.character_data
+
+    # Handle different field types
+    computed = {}
+
+    if field == 'name':
+        # Update the model's name field
+        character.name = value
+    elif field == 'skills':
+        # Handle skills list operations
+        manual_skills = char_data.get('manual_skills', [])
+        if action == 'add':
+            manual_skills.append(value)
+            char_data['manual_skills'] = manual_skills
+            computed['index'] = len(manual_skills) - 1
+        elif action == 'remove':
+            # Need to figure out which list the skill is in
+            # For now, just handle manual_skills removal
+            if index is not None and 0 <= index < len(manual_skills):
+                manual_skills.pop(index)
+                char_data['manual_skills'] = manual_skills
+        elif action == 'edit':
+            # Edit skill at index in manual_skills
+            if index is not None and 0 <= index < len(manual_skills):
+                manual_skills[index] = value
+                char_data['manual_skills'] = manual_skills
+    elif field.startswith('attributes.'):
+        # Handle nested attribute fields
+        attr_name = field.split('.')[1]
+        if attr_name in ['STR', 'DEX', 'INT', 'WIS', 'CON', 'CHR']:
+            char_data['attributes'][attr_name] = value
+            # Recalculate derived values
+            computed.update(recalculate_derived(char_data))
+            # Return updated modifier
+            from pillars.attributes import ATTRIBUTE_MODIFIERS
+            mod = ATTRIBUTE_MODIFIERS.get(value, 0)
+            computed[f'{attr_name.lower()}_mod'] = mod
+    elif field == 'notes':
+        char_data['notes'] = value
+    elif field in ['appearance', 'height', 'weight', 'provenance', 'location', 'literacy', 'wealth']:
+        char_data[field] = value
+    else:
+        return JsonResponse({'success': False, 'error': f'Unknown field: {field}'}, status=400)
+
+    # Save changes
+    character.character_data = char_data
+    character.save()
+
+    result = {'success': True}
+    if computed:
+        result['computed'] = computed
+    if action == 'add':
+        result['index'] = computed.get('index', 0)
+
+    return JsonResponse(result)
+
+
+def recalculate_derived(char_data):
+    """Recalculate fatigue_points and body_points based on attributes."""
+    from pillars.attributes import ATTRIBUTE_MODIFIERS
+
+    attrs = char_data.get('attributes', {})
+
+    def get_mod(attr):
+        return ATTRIBUTE_MODIFIERS.get(attrs.get(attr, 10), 0)
+
+    str_val = attrs.get('STR', 10)
+    dex_val = attrs.get('DEX', 10)
+    con_val = attrs.get('CON', 10)
+    wis_val = attrs.get('WIS', 10)
+    int_val = attrs.get('INT', 10)
+
+    str_mod = get_mod('STR')
+    dex_mod = get_mod('DEX')
+    con_mod = get_mod('CON')
+    wis_mod = get_mod('WIS')
+    int_mod = get_mod('INT')
+
+    # Use existing rolls if available, otherwise default to 3
+    fatigue_roll = attrs.get('fatigue_roll', 3)
+    body_roll = attrs.get('body_roll', 3)
+
+    # Fatigue = CON + WIS + max(DEX, STR) + 1d6 + int_mod + wis_mod
+    fatigue_points = con_val + wis_val + max(dex_val, str_val) + fatigue_roll + int_mod + wis_mod
+
+    # Body = CON + max(DEX, STR) + 1d6 + int_mod + wis_mod
+    body_points = con_val + max(dex_val, str_val) + body_roll + int_mod + wis_mod
+
+    # Update in char_data
+    char_data['attributes']['fatigue_points'] = fatigue_points
+    char_data['attributes']['body_points'] = body_points
+
+    return {
+        'fatigue_points': fatigue_points,
+        'body_points': body_points,
+    }

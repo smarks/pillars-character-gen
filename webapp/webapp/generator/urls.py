@@ -22,6 +22,9 @@ urlpatterns = [
     path('save-character/', views.save_character, name='save_character'),
     path('load-character/<int:char_id>/', views.load_character, name='load_character'),
     path('delete-character/<int:char_id>/', views.delete_character, name='delete_character'),
+    # Editable character sheet
+    path('character/<int:char_id>/', views.character_sheet, name='character_sheet'),
+    path('character/<int:char_id>/update/', views.update_character, name='update_character'),
     # Admin-only
     path('manage-users/', views.manage_users, name='manage_users'),
     path('change-role/<int:user_id>/', views.change_user_role, name='change_user_role'),

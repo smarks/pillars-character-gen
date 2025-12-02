@@ -1,0 +1,615 @@
+{% extends "generator/base.html" %}
+
+{% block title %}{{ character.name }} - Pillars{% endblock %}
+
+{% block extra_css %}
+.character-sheet {
+    max-width: 800px;
+}
+.sheet-section {
+    margin-bottom: 30px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    background: #fafafa;
+}
+.sheet-section h2 {
+    margin-top: 0;
+    border-bottom: 1px solid #999;
+    padding-bottom: 10px;
+}
+.field-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+.field-row label {
+    width: 120px;
+    font-weight: bold;
+}
+.field-row input[type="text"],
+.field-row input[type="number"] {
+    font-family: monospace;
+    font-size: 14px;
+    padding: 5px 8px;
+    border: 1px solid #ccc;
+    background: #fff;
+}
+.field-row input[type="number"] {
+    width: 60px;
+}
+.field-row input[type="text"] {
+    flex: 1;
+    max-width: 300px;
+}
+.field-row .computed {
+    color: #666;
+    font-style: italic;
+}
+.field-row .modifier {
+    color: #666;
+    font-size: 0.9em;
+    margin-left: 5px;
+}
+
+/* Attribute grid */
+.attributes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+.attr-box {
+    border: 1px solid #ddd;
+    padding: 10px;
+    background: #fff;
+    text-align: center;
+}
+.attr-box label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.attr-box input {
+    width: 50px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+}
+.attr-box .modifier {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.85em;
+}
+
+/* Derived stats */
+.derived-stats {
+    display: flex;
+    gap: 30px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #ccc;
+}
+.derived-stat {
+    text-align: center;
+}
+.derived-stat label {
+    display: block;
+    font-weight: bold;
+}
+.derived-stat .value {
+    font-size: 20px;
+    color: #333;
+}
+
+/* Skills list */
+.skills-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.skill-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.skill-item input {
+    flex: 1;
+    font-family: monospace;
+    font-size: 14px;
+    padding: 5px 8px;
+    border: 1px solid #ccc;
+}
+.skill-item .btn-remove {
+    padding: 2px 8px;
+    font-size: 14px;
+    cursor: pointer;
+    background: #c44;
+    color: white;
+    border: none;
+}
+.skill-item .btn-remove:hover {
+    background: #b33;
+}
+.add-skill-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+.add-skill-row input {
+    flex: 1;
+    font-family: monospace;
+    font-size: 14px;
+    padding: 5px 8px;
+    border: 1px solid #ccc;
+}
+.add-skill-row .btn-add {
+    padding: 5px 15px;
+    background: #4a4;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+.add-skill-row .btn-add:hover {
+    background: #3a3;
+}
+
+/* Notes textarea */
+.notes-area {
+    width: 100%;
+    min-height: 100px;
+    font-family: monospace;
+    font-size: 14px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    resize: vertical;
+}
+
+/* Prior experience log */
+.experience-log {
+    font-size: 0.9em;
+    background: #fff;
+    padding: 10px;
+    border: 1px solid #ddd;
+    max-height: 300px;
+    overflow-y: auto;
+}
+.experience-log .year-entry {
+    padding: 5px 0;
+    border-bottom: 1px dotted #ddd;
+}
+.experience-log .year-entry:last-child {
+    border-bottom: none;
+}
+.experience-log .died {
+    color: #c44;
+    font-weight: bold;
+}
+
+/* Save indicator */
+.save-indicator {
+    position: fixed;
+    top: 60px;
+    right: 20px;
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-size: 14px;
+    display: none;
+    z-index: 1000;
+}
+.save-indicator.saving {
+    display: block;
+    background: #ffc;
+    border: 1px solid #cc9;
+    color: #663;
+}
+.save-indicator.saved {
+    display: block;
+    background: #cfc;
+    border: 1px solid #9c9;
+    color: #363;
+}
+.save-indicator.error {
+    display: block;
+    background: #fcc;
+    border: 1px solid #c99;
+    color: #633;
+}
+
+/* Field status */
+input.saving, textarea.saving {
+    background: #ffc !important;
+}
+input.saved, textarea.saved {
+    background: #cfc !important;
+}
+input.error, textarea.error {
+    background: #fcc !important;
+}
+{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>
+        <input type="text" id="char-name" data-field="name" value="{{ character.name }}"
+               placeholder="Character Name" style="font-size: 1.5em; font-weight: bold; border: none; background: transparent; width: 100%;">
+    </h1>
+    <a href="{% url 'my_characters' %}" class="btn">&larr; My Characters</a>
+</div>
+
+<div class="save-indicator" id="save-indicator">Saving...</div>
+
+<div class="character-sheet">
+    <!-- Attributes Section -->
+    <div class="sheet-section">
+        <h2>Attributes</h2>
+        <div class="attributes-grid">
+            <div class="attr-box">
+                <label>STR</label>
+                <input type="number" data-field="attributes.STR" value="{{ char_data.attributes.STR }}" min="3" max="18">
+                <span class="modifier" data-computed="str_mod">({{ str_mod|default:"0" }})</span>
+            </div>
+            <div class="attr-box">
+                <label>DEX</label>
+                <input type="number" data-field="attributes.DEX" value="{{ char_data.attributes.DEX }}" min="3" max="18">
+                <span class="modifier" data-computed="dex_mod">({{ dex_mod|default:"0" }})</span>
+            </div>
+            <div class="attr-box">
+                <label>INT</label>
+                <input type="number" data-field="attributes.INT" value="{{ char_data.attributes.INT }}" min="3" max="18">
+                <span class="modifier" data-computed="int_mod">({{ int_mod|default:"0" }})</span>
+            </div>
+            <div class="attr-box">
+                <label>WIS</label>
+                <input type="number" data-field="attributes.WIS" value="{{ char_data.attributes.WIS }}" min="3" max="18">
+                <span class="modifier" data-computed="wis_mod">({{ wis_mod|default:"0" }})</span>
+            </div>
+            <div class="attr-box">
+                <label>CON</label>
+                <input type="number" data-field="attributes.CON" value="{{ char_data.attributes.CON }}" min="3" max="18">
+                <span class="modifier" data-computed="con_mod">({{ con_mod|default:"0" }})</span>
+            </div>
+            <div class="attr-box">
+                <label>CHR</label>
+                <input type="number" data-field="attributes.CHR" value="{{ char_data.attributes.CHR }}" min="3" max="18">
+                <span class="modifier" data-computed="chr_mod">({{ chr_mod|default:"0" }})</span>
+            </div>
+        </div>
+        <div class="derived-stats">
+            <div class="derived-stat">
+                <label>Fatigue Points</label>
+                <span class="value" data-computed="fatigue_points">{{ char_data.attributes.fatigue_points }}</span>
+            </div>
+            <div class="derived-stat">
+                <label>Body Points</label>
+                <span class="value" data-computed="body_points">{{ char_data.attributes.body_points }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biographical Section -->
+    <div class="sheet-section">
+        <h2>Biographical</h2>
+        <div class="field-row">
+            <label>Appearance:</label>
+            <input type="text" data-field="appearance" value="{{ char_data.appearance }}">
+        </div>
+        <div class="field-row">
+            <label>Height:</label>
+            <input type="text" data-field="height" value="{{ char_data.height }}">
+        </div>
+        <div class="field-row">
+            <label>Weight:</label>
+            <input type="text" data-field="weight" value="{{ char_data.weight }}">
+        </div>
+    </div>
+
+    <!-- Background Section -->
+    <div class="sheet-section">
+        <h2>Background</h2>
+        <div class="field-row">
+            <label>Provenance:</label>
+            <input type="text" data-field="provenance" value="{{ char_data.provenance }}">
+        </div>
+        <div class="field-row">
+            <label>Location:</label>
+            <input type="text" data-field="location" value="{{ char_data.location }}">
+        </div>
+        <div class="field-row">
+            <label>Literacy:</label>
+            <input type="text" data-field="literacy" value="{{ char_data.literacy }}">
+        </div>
+        <div class="field-row">
+            <label>Wealth:</label>
+            <input type="text" data-field="wealth" value="{{ char_data.wealth }}">
+        </div>
+    </div>
+
+    <!-- Skills Section -->
+    <div class="sheet-section">
+        <h2>Skills</h2>
+        <ul class="skills-list" id="skills-list">
+            {% for skill in skills %}
+            <li class="skill-item">
+                <input type="text" data-field="skills" data-index="{{ forloop.counter0 }}" value="{{ skill }}">
+                <button type="button" class="btn-remove" onclick="removeSkill({{ forloop.counter0 }})">&times;</button>
+            </li>
+            {% empty %}
+            <li class="skill-item" id="no-skills-msg"><em>No skills yet</em></li>
+            {% endfor %}
+        </ul>
+        <div class="add-skill-row">
+            <input type="text" id="new-skill-input" placeholder="New skill (e.g., Sword +1 to hit)">
+            <button type="button" class="btn-add" onclick="addSkill()">+ Add Skill</button>
+        </div>
+    </div>
+
+    {% if char_data.skill_track %}
+    <!-- Skill Track Section -->
+    <div class="sheet-section">
+        <h2>Skill Track</h2>
+        <div class="field-row">
+            <label>Track:</label>
+            <span>{{ char_data.skill_track.track }}</span>
+        </div>
+        <div class="field-row">
+            <label>Survivability:</label>
+            <span>{{ char_data.skill_track.survivability }}+</span>
+        </div>
+        {% if char_data.skill_track.craft_type %}
+        <div class="field-row">
+            <label>Craft:</label>
+            <span>{{ char_data.skill_track.craft_type }}</span>
+        </div>
+        {% endif %}
+        {% if char_data.skill_track.magic_school %}
+        <div class="field-row">
+            <label>Magic School:</label>
+            <span>{{ char_data.skill_track.magic_school }}</span>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if yearly_results %}
+    <!-- Prior Experience Section -->
+    <div class="sheet-section">
+        <h2>Prior Experience</h2>
+        <div class="field-row">
+            <label>Starting Age:</label>
+            <span>16</span>
+        </div>
+        <div class="field-row">
+            <label>Current Age:</label>
+            <span>{{ current_age }}</span>
+        </div>
+        <div class="field-row">
+            <label>Years Served:</label>
+            <span>{{ years_served }}</span>
+        </div>
+        {% if died %}
+        <div class="field-row">
+            <span class="died">DIED DURING PRIOR EXPERIENCE</span>
+        </div>
+        {% endif %}
+        <h3>Year-by-Year Log</h3>
+        <div class="experience-log">
+            {% for yr in yearly_results %}
+            <div class="year-entry {% if not yr.survived %}died{% endif %}">
+                <strong>Year {{ yr.year }}:</strong> {{ yr.skill }} |
+                Survival: {{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+
+                [{% if yr.survived %}Survived{% else %}DIED{% endif %}]
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Notes Section -->
+    <div class="sheet-section">
+        <h2>Notes</h2>
+        <textarea class="notes-area" data-field="notes" placeholder="Character backstory, notes, etc...">{{ char_data.notes|default:"" }}</textarea>
+    </div>
+</div>
+
+<script>
+const CHARACTER_ID = {{ character.id }};
+const CSRF_TOKEN = '{{ csrf_token }}';
+const UPDATE_URL = '{% url "update_character" character.id %}';
+
+let saveTimeout = null;
+const SAVE_DELAY = 300; // ms debounce
+
+// Initialize all editable fields
+document.addEventListener('DOMContentLoaded', function() {
+    // Regular input fields
+    document.querySelectorAll('input[data-field], textarea[data-field]').forEach(function(input) {
+        input.addEventListener('input', function() {
+            debounceSave(this);
+        });
+        input.addEventListener('blur', function() {
+            // Save immediately on blur
+            if (saveTimeout) {
+                clearTimeout(saveTimeout);
+                saveTimeout = null;
+            }
+            saveField(this);
+        });
+    });
+});
+
+function debounceSave(element) {
+    element.classList.add('saving');
+    element.classList.remove('saved', 'error');
+
+    if (saveTimeout) {
+        clearTimeout(saveTimeout);
+    }
+    saveTimeout = setTimeout(function() {
+        saveField(element);
+    }, SAVE_DELAY);
+}
+
+function saveField(element) {
+    const field = element.dataset.field;
+    const index = element.dataset.index;
+    let value = element.value;
+
+    // For number inputs, parse as int
+    if (element.type === 'number') {
+        value = parseInt(value, 10);
+    }
+
+    const indicator = document.getElementById('save-indicator');
+    indicator.textContent = 'Saving...';
+    indicator.className = 'save-indicator saving';
+
+    const data = { field: field, value: value };
+    if (index !== undefined) {
+        data.action = 'edit';
+        data.index = parseInt(index, 10);
+    }
+
+    fetch(UPDATE_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRF_TOKEN,
+        },
+        body: JSON.stringify(data),
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            element.classList.remove('saving');
+            element.classList.add('saved');
+            indicator.textContent = 'Saved';
+            indicator.className = 'save-indicator saved';
+
+            // Update computed fields if returned
+            if (result.computed) {
+                for (const [key, val] of Object.entries(result.computed)) {
+                    const el = document.querySelector('[data-computed="' + key + '"]');
+                    if (el) {
+                        if (key.endsWith('_mod')) {
+                            el.textContent = '(' + (val >= 0 ? '+' : '') + val + ')';
+                        } else {
+                            el.textContent = val;
+                        }
+                    }
+                }
+            }
+
+            // Clear saved indicator after 2 seconds
+            setTimeout(function() {
+                element.classList.remove('saved');
+                indicator.className = 'save-indicator';
+            }, 2000);
+        } else {
+            element.classList.remove('saving');
+            element.classList.add('error');
+            indicator.textContent = 'Error: ' + (result.error || 'Save failed');
+            indicator.className = 'save-indicator error';
+        }
+    })
+    .catch(error => {
+        element.classList.remove('saving');
+        element.classList.add('error');
+        indicator.textContent = 'Error: ' + error.message;
+        indicator.className = 'save-indicator error';
+    });
+}
+
+function addSkill() {
+    const input = document.getElementById('new-skill-input');
+    const skill = input.value.trim();
+    if (!skill) return;
+
+    const indicator = document.getElementById('save-indicator');
+    indicator.textContent = 'Adding skill...';
+    indicator.className = 'save-indicator saving';
+
+    fetch(UPDATE_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRF_TOKEN,
+        },
+        body: JSON.stringify({ field: 'skills', action: 'add', value: skill }),
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            // Remove "no skills" message if present
+            const noSkillsMsg = document.getElementById('no-skills-msg');
+            if (noSkillsMsg) noSkillsMsg.remove();
+
+            // Add new skill to list
+            const list = document.getElementById('skills-list');
+            const newIndex = result.index;
+            const li = document.createElement('li');
+            li.className = 'skill-item';
+            li.innerHTML = '<input type="text" data-field="skills" data-index="' + newIndex + '" value="' + escapeHtml(skill) + '">' +
+                           '<button type="button" class="btn-remove" onclick="removeSkill(' + newIndex + ')">&times;</button>';
+            list.appendChild(li);
+
+            // Attach event listeners to new input
+            const newInput = li.querySelector('input');
+            newInput.addEventListener('input', function() { debounceSave(this); });
+            newInput.addEventListener('blur', function() { if (saveTimeout) { clearTimeout(saveTimeout); } saveField(this); });
+
+            // Clear input
+            input.value = '';
+
+            indicator.textContent = 'Skill added';
+            indicator.className = 'save-indicator saved';
+            setTimeout(function() { indicator.className = 'save-indicator'; }, 2000);
+        } else {
+            indicator.textContent = 'Error: ' + (result.error || 'Failed to add skill');
+            indicator.className = 'save-indicator error';
+        }
+    })
+    .catch(error => {
+        indicator.textContent = 'Error: ' + error.message;
+        indicator.className = 'save-indicator error';
+    });
+}
+
+function removeSkill(index) {
+    if (!confirm('Remove this skill?')) return;
+
+    const indicator = document.getElementById('save-indicator');
+    indicator.textContent = 'Removing skill...';
+    indicator.className = 'save-indicator saving';
+
+    fetch(UPDATE_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRF_TOKEN,
+        },
+        body: JSON.stringify({ field: 'skills', action: 'remove', index: index }),
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            // Reload page to refresh skill indices
+            location.reload();
+        } else {
+            indicator.textContent = 'Error: ' + (result.error || 'Failed to remove skill');
+            indicator.className = 'save-indicator error';
+        }
+    })
+    .catch(error => {
+        indicator.textContent = 'Error: ' + error.message;
+        indicator.className = 'save-indicator error';
+    });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}
