@@ -1059,3 +1059,89 @@ class RecalculateDerivedTests(TestCase):
         # Body = CON + max(DEX, STR) + body_roll + int_mod + wis_mod
         # = 10 + 8 + 3 + (-3) + (-1) = 17
         self.assertEqual(result['body_points'], 17)
+
+
+class AttributeFormatTests(TestCase):
+    """Tests for the extended attribute format (beyond 18)."""
+
+    def test_get_attribute_modifier_standard_values(self):
+        """Test modifier calculation for standard 1-18 values."""
+        from webapp.generator.views import get_attribute_modifier
+
+        # Standard values from ATTRIBUTE_MODIFIERS
+        # {3: -5, 4: -4, 5: -3, 6: -2, 7: -1, 8-13: 0, 14: 1, 15: 2, 16: 3, 17: 4, 18: 5}
+        self.assertEqual(get_attribute_modifier(3), -5)
+        self.assertEqual(get_attribute_modifier(6), -2)
+        self.assertEqual(get_attribute_modifier(10), 0)
+        self.assertEqual(get_attribute_modifier(14), 1)
+        self.assertEqual(get_attribute_modifier(18), 5)
+
+    def test_get_attribute_modifier_decimal_notation(self):
+        """Test modifier calculation for decimal notation (18.XX, 19.XX, etc)."""
+        from webapp.generator.views import get_attribute_modifier
+
+        # 18.XX should have +5 modifier (same as 18)
+        self.assertEqual(get_attribute_modifier("18.10"), 5)
+        self.assertEqual(get_attribute_modifier("18.50"), 5)
+        self.assertEqual(get_attribute_modifier("18.100"), 5)
+
+        # 19.XX should have +6 modifier
+        self.assertEqual(get_attribute_modifier("19.10"), 6)
+        self.assertEqual(get_attribute_modifier("19.100"), 6)
+
+        # 20.XX should have +7 modifier
+        self.assertEqual(get_attribute_modifier("20.50"), 7)
+
+        # Higher values
+        self.assertEqual(get_attribute_modifier("24.10"), 11)
+
+    def test_get_attribute_base_value(self):
+        """Test extracting base value from attribute."""
+        from webapp.generator.views import get_attribute_base_value
+
+        # Integer values
+        self.assertEqual(get_attribute_base_value(12), 12)
+        self.assertEqual(get_attribute_base_value(18), 18)
+
+        # Decimal notation
+        self.assertEqual(get_attribute_base_value("18.20"), 18)
+        self.assertEqual(get_attribute_base_value("19.50"), 19)
+        self.assertEqual(get_attribute_base_value("24.100"), 24)
+
+        # String integers
+        self.assertEqual(get_attribute_base_value("15"), 15)
+
+    def test_format_attribute_display(self):
+        """Test formatting attributes for display."""
+        from webapp.generator.views import format_attribute_display
+
+        self.assertEqual(format_attribute_display(12), "12")
+        self.assertEqual(format_attribute_display("18.20"), "18.20")
+        self.assertEqual(format_attribute_display("19.100"), "19.100")
+
+    def test_recalculate_with_exceptional_attributes(self):
+        """Test derived stat calculation with exceptional attributes."""
+        from webapp.generator.views import recalculate_derived
+
+        char_data = {
+            'attributes': {
+                'STR': "19.50",  # Base 19, mod +6
+                'DEX': 14,       # Mod +1
+                'INT': 10,       # Mod 0
+                'WIS': 16,       # Mod +3
+                'CON': 15,       # Mod +2
+                'CHR': 12,       # Mod 0
+                'fatigue_roll': 4,
+                'body_roll': 3,
+            }
+        }
+
+        result = recalculate_derived(char_data)
+
+        # Fatigue = CON + WIS + max(DEX, STR) + fatigue_roll + int_mod + wis_mod
+        # = 15 + 16 + 19 + 4 + 0 + 3 = 57
+        self.assertEqual(result['fatigue_points'], 57)
+
+        # Body = CON + max(DEX, STR) + body_roll + int_mod + wis_mod
+        # = 15 + 19 + 3 + 0 + 3 = 40
+        self.assertEqual(result['body_points'], 40)

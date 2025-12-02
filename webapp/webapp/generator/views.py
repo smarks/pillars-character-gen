@@ -1349,6 +1349,47 @@ def change_user_role(request, user_id):
 # Editable Character Sheet Views
 # =============================================================================
 
+def format_attribute_display(value):
+    """Format attribute value for display.
+
+    Stored as: int (1-18) or string like "18.20", "19.50", etc.
+    Display: same format, just ensure it's a string.
+    """
+    if isinstance(value, str):
+        return value
+    return str(value)
+
+
+def get_attribute_modifier(value):
+    """Get modifier for an attribute value.
+
+    For values 1-18: use standard ATTRIBUTE_MODIFIERS table.
+    For values > 18 (including decimal notation): calculate based on effective value.
+    18.10-18.100 counts as 18, 19.10-19.100 counts as 19, etc.
+    """
+    from pillars.attributes import ATTRIBUTE_MODIFIERS
+
+    if isinstance(value, int):
+        return ATTRIBUTE_MODIFIERS.get(value, 0)
+
+    if isinstance(value, str) and '.' in value:
+        # Parse decimal notation: "18.20" -> base 18
+        try:
+            base = int(value.split('.')[0])
+            # For values > 18, each whole number adds +1 to the modifier
+            # Base modifier at 18 is +5, so 19 is +6, 20 is +7, etc.
+            if base >= 18:
+                return 5 + (base - 18)
+        except ValueError:
+            pass
+
+    # Try parsing as int
+    try:
+        return ATTRIBUTE_MODIFIERS.get(int(value), 0)
+    except (ValueError, TypeError):
+        return 0
+
+
 @login_required
 def character_sheet(request, char_id):
     """Display editable character sheet."""
@@ -1359,13 +1400,7 @@ def character_sheet(request, char_id):
         return redirect('my_characters')
 
     char_data = character.character_data
-
-    # Calculate attribute modifiers for display
-    from pillars.attributes import ATTRIBUTE_MODIFIERS
     attrs = char_data.get('attributes', {})
-
-    def get_mod(val):
-        return ATTRIBUTE_MODIFIERS.get(val, 0)
 
     # Build combined skills list
     skills = []
@@ -1388,12 +1423,20 @@ def character_sheet(request, char_id):
         'character': character,
         'char_data': char_data,
         'skills': skills,
-        'str_mod': get_mod(attrs.get('STR', 10)),
-        'dex_mod': get_mod(attrs.get('DEX', 10)),
-        'int_mod': get_mod(attrs.get('INT', 10)),
-        'wis_mod': get_mod(attrs.get('WIS', 10)),
-        'con_mod': get_mod(attrs.get('CON', 10)),
-        'chr_mod': get_mod(attrs.get('CHR', 10)),
+        # Attribute display values
+        'str_display': format_attribute_display(attrs.get('STR', 10)),
+        'dex_display': format_attribute_display(attrs.get('DEX', 10)),
+        'int_display': format_attribute_display(attrs.get('INT', 10)),
+        'wis_display': format_attribute_display(attrs.get('WIS', 10)),
+        'con_display': format_attribute_display(attrs.get('CON', 10)),
+        'chr_display': format_attribute_display(attrs.get('CHR', 10)),
+        # Attribute modifiers
+        'str_mod': get_attribute_modifier(attrs.get('STR', 10)),
+        'dex_mod': get_attribute_modifier(attrs.get('DEX', 10)),
+        'int_mod': get_attribute_modifier(attrs.get('INT', 10)),
+        'wis_mod': get_attribute_modifier(attrs.get('WIS', 10)),
+        'con_mod': get_attribute_modifier(attrs.get('CON', 10)),
+        'chr_mod': get_attribute_modifier(attrs.get('CHR', 10)),
         'yearly_results': yearly_results,
         'years_served': years_served,
         'current_age': 16 + years_served,
@@ -1453,12 +1496,12 @@ def update_character(request, char_id):
         # Handle nested attribute fields
         attr_name = field.split('.')[1]
         if attr_name in ['STR', 'DEX', 'INT', 'WIS', 'CON', 'CHR']:
+            # Store value as-is (int or string like "18.20")
             char_data['attributes'][attr_name] = value
             # Recalculate derived values
             computed.update(recalculate_derived(char_data))
-            # Return updated modifier
-            from pillars.attributes import ATTRIBUTE_MODIFIERS
-            mod = ATTRIBUTE_MODIFIERS.get(value, 0)
+            # Return updated modifier using our enhanced function
+            mod = get_attribute_modifier(value)
             computed[f'{attr_name.lower()}_mod'] = mod
     elif field == 'notes':
         char_data['notes'] = value
@@ -1480,26 +1523,45 @@ def update_character(request, char_id):
     return JsonResponse(result)
 
 
+def get_attribute_base_value(value):
+    """Get the base integer value from an attribute.
+
+    For int values: return as-is.
+    For string like "18.20": return the base (18).
+    For string like "19.50": return the base (19).
+    """
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        if '.' in value:
+            try:
+                return int(value.split('.')[0])
+            except ValueError:
+                pass
+        try:
+            return int(value)
+        except ValueError:
+            pass
+    return 10  # Default
+
+
 def recalculate_derived(char_data):
     """Recalculate fatigue_points and body_points based on attributes."""
-    from pillars.attributes import ATTRIBUTE_MODIFIERS
-
     attrs = char_data.get('attributes', {})
 
-    def get_mod(attr):
-        return ATTRIBUTE_MODIFIERS.get(attrs.get(attr, 10), 0)
+    # Get base values for calculations (the integer part)
+    str_val = get_attribute_base_value(attrs.get('STR', 10))
+    dex_val = get_attribute_base_value(attrs.get('DEX', 10))
+    con_val = get_attribute_base_value(attrs.get('CON', 10))
+    wis_val = get_attribute_base_value(attrs.get('WIS', 10))
+    int_val = get_attribute_base_value(attrs.get('INT', 10))
 
-    str_val = attrs.get('STR', 10)
-    dex_val = attrs.get('DEX', 10)
-    con_val = attrs.get('CON', 10)
-    wis_val = attrs.get('WIS', 10)
-    int_val = attrs.get('INT', 10)
-
-    str_mod = get_mod('STR')
-    dex_mod = get_mod('DEX')
-    con_mod = get_mod('CON')
-    wis_mod = get_mod('WIS')
-    int_mod = get_mod('INT')
+    # Get modifiers using our enhanced function
+    str_mod = get_attribute_modifier(attrs.get('STR', 10))
+    dex_mod = get_attribute_modifier(attrs.get('DEX', 10))
+    con_mod = get_attribute_modifier(attrs.get('CON', 10))
+    wis_mod = get_attribute_modifier(attrs.get('WIS', 10))
+    int_mod = get_attribute_modifier(attrs.get('INT', 10))
 
     # Use existing rolls if available, otherwise default to 3
     fatigue_roll = attrs.get('fatigue_roll', 3)

@@ -70,10 +70,14 @@
     margin-bottom: 5px;
 }
 .attr-box input {
-    width: 50px;
+    width: 70px;
     text-align: center;
     font-size: 18px;
     font-weight: bold;
+}
+.attr-box input.invalid {
+    border-color: #c44;
+    background: #fee;
 }
 .attr-box .modifier {
     display: block;
@@ -243,35 +247,38 @@ input.error, textarea.error {
     <!-- Attributes Section -->
     <div class="sheet-section">
         <h2>Attributes</h2>
+        <p style="font-size: 0.85em; color: #666; margin-bottom: 15px;">
+            Values 1-18 are integers. Above 18, use decimal notation: 18.10, 18.20, ... 18.100 = 19
+        </p>
         <div class="attributes-grid">
             <div class="attr-box">
                 <label>STR</label>
-                <input type="number" data-field="attributes.STR" value="{{ char_data.attributes.STR }}" min="3" max="18">
+                <input type="text" data-field="attributes.STR" data-attr="true" value="{{ str_display }}">
                 <span class="modifier" data-computed="str_mod">({{ str_mod|default:"0" }})</span>
             </div>
             <div class="attr-box">
                 <label>DEX</label>
-                <input type="number" data-field="attributes.DEX" value="{{ char_data.attributes.DEX }}" min="3" max="18">
+                <input type="text" data-field="attributes.DEX" data-attr="true" value="{{ dex_display }}">
                 <span class="modifier" data-computed="dex_mod">({{ dex_mod|default:"0" }})</span>
             </div>
             <div class="attr-box">
                 <label>INT</label>
-                <input type="number" data-field="attributes.INT" value="{{ char_data.attributes.INT }}" min="3" max="18">
+                <input type="text" data-field="attributes.INT" data-attr="true" value="{{ int_display }}">
                 <span class="modifier" data-computed="int_mod">({{ int_mod|default:"0" }})</span>
             </div>
             <div class="attr-box">
                 <label>WIS</label>
-                <input type="number" data-field="attributes.WIS" value="{{ char_data.attributes.WIS }}" min="3" max="18">
+                <input type="text" data-field="attributes.WIS" data-attr="true" value="{{ wis_display }}">
                 <span class="modifier" data-computed="wis_mod">({{ wis_mod|default:"0" }})</span>
             </div>
             <div class="attr-box">
                 <label>CON</label>
-                <input type="number" data-field="attributes.CON" value="{{ char_data.attributes.CON }}" min="3" max="18">
+                <input type="text" data-field="attributes.CON" data-attr="true" value="{{ con_display }}">
                 <span class="modifier" data-computed="con_mod">({{ con_mod|default:"0" }})</span>
             </div>
             <div class="attr-box">
                 <label>CHR</label>
-                <input type="number" data-field="attributes.CHR" value="{{ char_data.attributes.CHR }}" min="3" max="18">
+                <input type="text" data-field="attributes.CHR" data-attr="true" value="{{ chr_display }}">
                 <span class="modifier" data-computed="chr_mod">({{ chr_mod|default:"0" }})</span>
             </div>
         </div>
@@ -420,11 +427,65 @@ const UPDATE_URL = '{% url "update_character" character.id %}';
 let saveTimeout = null;
 const SAVE_DELAY = 300; // ms debounce
 
+/**
+ * Parse attribute value from display format.
+ * Accepts: integers 1-18, or decimal notation like 18.10, 18.20, ... 18.100, 19.10, etc.
+ * Returns: { valid: bool, value: string (the raw value to send to server) }
+ */
+function parseAttributeValue(str) {
+    str = str.trim();
+
+    // Check for decimal notation (e.g., 18.10, 19.50, 24.100)
+    const decimalMatch = str.match(/^(\d+)\.(\d+)$/);
+    if (decimalMatch) {
+        const base = parseInt(decimalMatch[1], 10);
+        const sub = parseInt(decimalMatch[2], 10);
+        // Base must be >= 18, sub must be 10-100 in increments of 10
+        if (base >= 18 && sub >= 10 && sub <= 100 && sub % 10 === 0) {
+            return { valid: true, value: str };
+        }
+        return { valid: false, value: str };
+    }
+
+    // Check for plain integer
+    const intMatch = str.match(/^(\d+)$/);
+    if (intMatch) {
+        const val = parseInt(intMatch[1], 10);
+        if (val >= 1 && val <= 18) {
+            return { valid: true, value: val };
+        }
+        // Allow integers > 18 as shorthand (will be stored as-is)
+        if (val > 18) {
+            return { valid: true, value: val };
+        }
+        return { valid: false, value: str };
+    }
+
+    return { valid: false, value: str };
+}
+
+/**
+ * Validate attribute input and show visual feedback.
+ */
+function validateAttributeInput(element) {
+    const result = parseAttributeValue(element.value);
+    if (result.valid) {
+        element.classList.remove('invalid');
+    } else {
+        element.classList.add('invalid');
+    }
+    return result;
+}
+
 // Initialize all editable fields
 document.addEventListener('DOMContentLoaded', function() {
     // Regular input fields
     document.querySelectorAll('input[data-field], textarea[data-field]').forEach(function(input) {
         input.addEventListener('input', function() {
+            // Validate attribute inputs
+            if (this.dataset.attr === 'true') {
+                validateAttributeInput(this);
+            }
             debounceSave(this);
         });
         input.addEventListener('blur', function() {
@@ -455,9 +516,18 @@ function saveField(element) {
     const index = element.dataset.index;
     let value = element.value;
 
-    // For number inputs, parse as int
-    if (element.type === 'number') {
-        value = parseInt(value, 10);
+    // For attribute inputs, validate and parse
+    if (element.dataset.attr === 'true') {
+        const result = parseAttributeValue(value);
+        if (!result.valid) {
+            element.classList.remove('saving');
+            element.classList.add('error');
+            const indicator = document.getElementById('save-indicator');
+            indicator.textContent = 'Invalid attribute value';
+            indicator.className = 'save-indicator error';
+            return;
+        }
+        value = result.value;
     }
 
     const indicator = document.getElementById('save-indicator');
