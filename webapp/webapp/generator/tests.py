@@ -697,3 +697,365 @@ class ReturnToGeneratorTests(TestCase):
         # Should show prior experience section
         self.assertContains(response, 'Prior Experience')
         self.assertContains(response, 'Year')
+
+
+class CharacterSheetTests(TestCase):
+    """Tests for the editable character sheet."""
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+        from webapp.generator.models import UserProfile, SavedCharacter
+
+        self.client = Client()
+
+        # Create test user
+        self.user = User.objects.create_user('sheet_test', password='testpass')
+        UserProfile.objects.create(user=self.user, roles=['player'])
+
+        # Create a saved character
+        self.char_data = {
+            'attributes': {
+                'STR': 12, 'DEX': 14, 'INT': 10, 'WIS': 11, 'CON': 13, 'CHR': 9,
+                'generation_method': '4d6 drop lowest',
+                'fatigue_points': 40, 'body_points': 30,
+                'fatigue_roll': 3, 'body_roll': 4
+            },
+            'appearance': 'Average',
+            'height': '5\'10"',
+            'weight': '160 lbs',
+            'provenance': 'Commoner - Laborer',
+            'provenance_social_class': 'Commoner',
+            'provenance_sub_class': 'Laborer',
+            'location': 'Village',
+            'location_skills': ['Survival'],
+            'literacy': 'Literate',
+            'wealth': 'Moderate (100 coin)',
+            'wealth_level': 'Moderate',
+            'str_repr': 'Test character',
+            'skill_track': None,
+            'interactive_years': 0,
+            'interactive_skills': [],
+            'interactive_yearly_results': [],
+            'interactive_aging': {},
+            'interactive_died': False,
+        }
+        self.saved_char = SavedCharacter.objects.create(
+            user=self.user,
+            name='Test Character',
+            character_data=self.char_data
+        )
+
+    def test_character_sheet_requires_login(self):
+        """Test that character sheet requires authentication."""
+        response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
+        self.assertRedirects(response, f'/login/?next=/character/{self.saved_char.id}/')
+
+    def test_character_sheet_loads_for_owner(self):
+        """Test that character sheet loads for the owner."""
+        self.client.login(username='sheet_test', password='testpass')
+        response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Test Character')
+
+    def test_character_sheet_shows_attributes(self):
+        """Test that character sheet displays all attributes."""
+        self.client.login(username='sheet_test', password='testpass')
+        response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
+        self.assertContains(response, 'STR')
+        self.assertContains(response, 'DEX')
+        self.assertContains(response, 'INT')
+        self.assertContains(response, 'WIS')
+        self.assertContains(response, 'CON')
+        self.assertContains(response, 'CHR')
+
+    def test_character_sheet_shows_skills(self):
+        """Test that character sheet displays skills."""
+        self.client.login(username='sheet_test', password='testpass')
+        response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
+        self.assertContains(response, 'Survival')  # From location_skills
+
+    def test_character_sheet_404_for_nonexistent(self):
+        """Test that nonexistent character returns redirect to my_characters."""
+        self.client.login(username='sheet_test', password='testpass')
+        response = self.client.get(reverse('character_sheet', args=[99999]))
+        self.assertRedirects(response, reverse('my_characters'))
+
+    def test_character_sheet_403_for_other_user(self):
+        """Test that other user's character returns redirect."""
+        from django.contrib.auth.models import User
+        from webapp.generator.models import UserProfile
+
+        other_user = User.objects.create_user('other_test', password='testpass')
+        UserProfile.objects.create(user=other_user, roles=['player'])
+
+        self.client.login(username='other_test', password='testpass')
+        response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
+        self.assertRedirects(response, reverse('my_characters'))
+
+
+class UpdateCharacterAPITests(TestCase):
+    """Tests for the character update API endpoint."""
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+        from webapp.generator.models import UserProfile, SavedCharacter
+
+        self.client = Client()
+
+        # Create test user
+        self.user = User.objects.create_user('api_test', password='testpass')
+        UserProfile.objects.create(user=self.user, roles=['player'])
+
+        # Create a saved character
+        self.char_data = {
+            'attributes': {
+                'STR': 12, 'DEX': 14, 'INT': 10, 'WIS': 11, 'CON': 13, 'CHR': 9,
+                'generation_method': '4d6 drop lowest',
+                'fatigue_points': 40, 'body_points': 30,
+                'fatigue_roll': 3, 'body_roll': 4
+            },
+            'appearance': 'Average',
+            'height': '5\'10"',
+            'weight': '160 lbs',
+            'provenance': 'Commoner',
+            'location': 'Village',
+            'location_skills': ['Survival'],
+            'literacy': 'Literate',
+            'wealth': 'Moderate',
+            'str_repr': 'Test character',
+            'manual_skills': [],
+        }
+        self.saved_char = SavedCharacter.objects.create(
+            user=self.user,
+            name='Test Character',
+            character_data=self.char_data
+        )
+
+    def test_update_requires_login(self):
+        """Test that update API requires authentication."""
+        import json
+        response = self.client.post(
+            reverse('update_character', args=[self.saved_char.id]),
+            data=json.dumps({'field': 'name', 'value': 'New Name'}),
+            content_type='application/json'
+        )
+        self.assertRedirects(response, f'/login/?next=/character/{self.saved_char.id}/update/')
+
+    def test_update_name(self):
+        """Test updating character name."""
+        import json
+        self.client.login(username='api_test', password='testpass')
+        response = self.client.post(
+            reverse('update_character', args=[self.saved_char.id]),
+            data=json.dumps({'field': 'name', 'value': 'New Name'}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+
+        # Verify in database
+        self.saved_char.refresh_from_db()
+        self.assertEqual(self.saved_char.name, 'New Name')
+
+    def test_update_attribute(self):
+        """Test updating an attribute."""
+        import json
+        self.client.login(username='api_test', password='testpass')
+        response = self.client.post(
+            reverse('update_character', args=[self.saved_char.id]),
+            data=json.dumps({'field': 'attributes.STR', 'value': 15}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        # Should return computed values
+        self.assertIn('computed', data)
+        self.assertIn('fatigue_points', data['computed'])
+        self.assertIn('body_points', data['computed'])
+
+        # Verify in database
+        self.saved_char.refresh_from_db()
+        self.assertEqual(self.saved_char.character_data['attributes']['STR'], 15)
+
+    def test_update_biographical_field(self):
+        """Test updating a biographical field."""
+        import json
+        self.client.login(username='api_test', password='testpass')
+        response = self.client.post(
+            reverse('update_character', args=[self.saved_char.id]),
+            data=json.dumps({'field': 'appearance', 'value': 'Handsome'}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+
+        # Verify in database
+        self.saved_char.refresh_from_db()
+        self.assertEqual(self.saved_char.character_data['appearance'], 'Handsome')
+
+    def test_add_skill(self):
+        """Test adding a skill."""
+        import json
+        self.client.login(username='api_test', password='testpass')
+        response = self.client.post(
+            reverse('update_character', args=[self.saved_char.id]),
+            data=json.dumps({'field': 'skills', 'action': 'add', 'value': 'Sword +1'}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+
+        # Verify in database
+        self.saved_char.refresh_from_db()
+        self.assertIn('Sword +1', self.saved_char.character_data['manual_skills'])
+
+    def test_remove_skill(self):
+        """Test removing a skill."""
+        import json
+        # First add a skill
+        self.saved_char.character_data['manual_skills'] = ['Sword +1', 'Shield']
+        self.saved_char.save()
+
+        self.client.login(username='api_test', password='testpass')
+        response = self.client.post(
+            reverse('update_character', args=[self.saved_char.id]),
+            data=json.dumps({'field': 'skills', 'action': 'remove', 'index': 0}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+
+        # Verify in database
+        self.saved_char.refresh_from_db()
+        self.assertEqual(self.saved_char.character_data['manual_skills'], ['Shield'])
+
+    def test_edit_skill(self):
+        """Test editing a skill."""
+        import json
+        # First add a skill
+        self.saved_char.character_data['manual_skills'] = ['Sword +1']
+        self.saved_char.save()
+
+        self.client.login(username='api_test', password='testpass')
+        response = self.client.post(
+            reverse('update_character', args=[self.saved_char.id]),
+            data=json.dumps({'field': 'skills', 'action': 'edit', 'index': 0, 'value': 'Sword +3'}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+
+        # Verify in database
+        self.saved_char.refresh_from_db()
+        self.assertEqual(self.saved_char.character_data['manual_skills'], ['Sword +3'])
+
+    def test_update_notes(self):
+        """Test updating notes field."""
+        import json
+        self.client.login(username='api_test', password='testpass')
+        response = self.client.post(
+            reverse('update_character', args=[self.saved_char.id]),
+            data=json.dumps({'field': 'notes', 'value': 'Born in the mountains...'}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+
+        # Verify in database
+        self.saved_char.refresh_from_db()
+        self.assertEqual(self.saved_char.character_data['notes'], 'Born in the mountains...')
+
+    def test_update_invalid_field(self):
+        """Test updating an invalid field returns error."""
+        import json
+        self.client.login(username='api_test', password='testpass')
+        response = self.client.post(
+            reverse('update_character', args=[self.saved_char.id]),
+            data=json.dumps({'field': 'invalid_field', 'value': 'test'}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertFalse(data['success'])
+
+    def test_update_other_users_character(self):
+        """Test that updating another user's character fails."""
+        import json
+        from django.contrib.auth.models import User
+        from webapp.generator.models import UserProfile
+
+        other_user = User.objects.create_user('other_api_test', password='testpass')
+        UserProfile.objects.create(user=other_user, roles=['player'])
+
+        self.client.login(username='other_api_test', password='testpass')
+        response = self.client.post(
+            reverse('update_character', args=[self.saved_char.id]),
+            data=json.dumps({'field': 'name', 'value': 'Hacked Name'}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 404)
+
+
+class RecalculateDerivedTests(TestCase):
+    """Tests for the recalculate_derived function."""
+
+    def test_recalculate_fatigue_and_body(self):
+        """Test that fatigue and body points are correctly recalculated."""
+        from webapp.generator.views import recalculate_derived
+
+        char_data = {
+            'attributes': {
+                'STR': 14,  # +1 mod
+                'DEX': 12,  # 0 mod
+                'INT': 10,  # 0 mod
+                'WIS': 16,  # +3 mod
+                'CON': 13,  # 0 mod
+                'CHR': 9,   # 0 mod
+                'fatigue_roll': 4,
+                'body_roll': 3,
+            }
+        }
+
+        result = recalculate_derived(char_data)
+
+        # Fatigue = CON + WIS + max(DEX, STR) + fatigue_roll + int_mod + wis_mod
+        # = 13 + 16 + 14 + 4 + 0 + 3 = 50
+        self.assertEqual(result['fatigue_points'], 50)
+
+        # Body = CON + max(DEX, STR) + body_roll + int_mod + wis_mod
+        # = 13 + 14 + 3 + 0 + 3 = 33
+        self.assertEqual(result['body_points'], 33)
+
+    def test_recalculate_with_negative_modifiers(self):
+        """Test recalculation with negative attribute modifiers."""
+        from webapp.generator.views import recalculate_derived
+
+        char_data = {
+            'attributes': {
+                'STR': 6,   # -2 mod
+                'DEX': 8,   # 0 mod
+                'INT': 5,   # -3 mod
+                'WIS': 7,   # -1 mod
+                'CON': 10,  # 0 mod
+                'CHR': 9,   # 0 mod
+                'fatigue_roll': 3,
+                'body_roll': 3,
+            }
+        }
+
+        result = recalculate_derived(char_data)
+
+        # Fatigue = CON + WIS + max(DEX, STR) + fatigue_roll + int_mod + wis_mod
+        # = 10 + 7 + 8 + 3 + (-3) + (-1) = 24
+        self.assertEqual(result['fatigue_points'], 24)
+
+        # Body = CON + max(DEX, STR) + body_roll + int_mod + wis_mod
+        # = 10 + 8 + 3 + (-3) + (-1) = 17
+        self.assertEqual(result['body_points'], 17)
