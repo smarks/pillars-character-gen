@@ -1349,6 +1349,38 @@ def change_user_role(request, user_id):
 # Editable Character Sheet Views
 # =============================================================================
 
+def consolidate_skills(skills):
+    """Consolidate duplicate skills into single entries with counts.
+
+    Examples:
+        ['Tracking', 'Tracking', 'Tracking'] -> ['Tracking 3']
+        ['Sword +1', 'Sword +1'] -> ['Sword +1 (x2)']
+        ['Tracking', 'Survival', 'Tracking'] -> ['Tracking 2', 'Survival']
+    """
+    import re
+    from collections import Counter
+
+    # Count occurrences of each skill
+    skill_counts = Counter(skills)
+
+    # Build consolidated list
+    consolidated = []
+    for skill, count in skill_counts.items():
+        if count > 1:
+            # Check if skill already has a number suffix (like "Sword +1")
+            # If so, use (xN) format to avoid confusion
+            if re.search(r'\d+\s*$', skill) or '+' in skill:
+                consolidated.append(f"{skill} (x{count})")
+            else:
+                consolidated.append(f"{skill} {count}")
+        else:
+            consolidated.append(skill)
+
+    # Sort alphabetically for consistent display
+    consolidated.sort(key=lambda s: s.lower())
+    return consolidated
+
+
 def format_attribute_display(value):
     """Format attribute value for display.
 
@@ -1403,16 +1435,19 @@ def character_sheet(request, char_id):
     attrs = char_data.get('attributes', {})
 
     # Build combined skills list
-    skills = []
+    raw_skills = []
     # Location skills
-    skills.extend(char_data.get('location_skills', []))
+    raw_skills.extend(char_data.get('location_skills', []))
     # Track initial skills
     if char_data.get('skill_track'):
-        skills.extend(char_data['skill_track'].get('initial_skills', []))
+        raw_skills.extend(char_data['skill_track'].get('initial_skills', []))
     # Prior experience skills
-    skills.extend(char_data.get('interactive_skills', []))
+    raw_skills.extend(char_data.get('interactive_skills', []))
     # Manually added skills
-    skills.extend(char_data.get('manual_skills', []))
+    raw_skills.extend(char_data.get('manual_skills', []))
+
+    # Consolidate duplicate skills
+    skills = consolidate_skills(raw_skills)
 
     # Prior experience data
     yearly_results = char_data.get('interactive_yearly_results', [])

@@ -1145,3 +1145,64 @@ class AttributeFormatTests(TestCase):
         # Body = CON + max(DEX, STR) + body_roll + int_mod + wis_mod
         # = 15 + 19 + 3 + 0 + 3 = 40
         self.assertEqual(result['body_points'], 40)
+
+
+class ConsolidateSkillsTests(TestCase):
+    """Tests for skill consolidation."""
+
+    def test_consolidate_simple_duplicates(self):
+        """Test consolidating simple duplicate skills."""
+        from webapp.generator.views import consolidate_skills
+
+        skills = ['Tracking', 'Tracking', 'Tracking']
+        result = consolidate_skills(skills)
+        self.assertEqual(result, ['Tracking 3'])
+
+    def test_consolidate_mixed_skills(self):
+        """Test consolidating mixed skills with some duplicates."""
+        from webapp.generator.views import consolidate_skills
+
+        skills = ['Tracking', 'Survival', 'Tracking', 'Swimming']
+        result = consolidate_skills(skills)
+        # Should be sorted alphabetically
+        self.assertIn('Tracking 2', result)
+        self.assertIn('Survival', result)
+        self.assertIn('Swimming', result)
+        self.assertEqual(len(result), 3)
+
+    def test_consolidate_skills_with_numbers(self):
+        """Test consolidating skills that already have numbers."""
+        from webapp.generator.views import consolidate_skills
+
+        skills = ['Sword +1', 'Sword +1', 'Shield']
+        result = consolidate_skills(skills)
+        # Skills with numbers use (xN) format
+        self.assertIn('Sword +1 (x2)', result)
+        self.assertIn('Shield', result)
+
+    def test_consolidate_no_duplicates(self):
+        """Test consolidating with no duplicates."""
+        from webapp.generator.views import consolidate_skills
+
+        skills = ['Tracking', 'Survival', 'Swimming']
+        result = consolidate_skills(skills)
+        self.assertEqual(len(result), 3)
+        # All skills should appear without counts
+        self.assertIn('Tracking', result)
+        self.assertIn('Survival', result)
+        self.assertIn('Swimming', result)
+
+    def test_consolidate_empty_list(self):
+        """Test consolidating empty skill list."""
+        from webapp.generator.views import consolidate_skills
+
+        result = consolidate_skills([])
+        self.assertEqual(result, [])
+
+    def test_consolidate_sorted_alphabetically(self):
+        """Test that consolidated skills are sorted alphabetically."""
+        from webapp.generator.views import consolidate_skills
+
+        skills = ['Zebra', 'Apple', 'Mango']
+        result = consolidate_skills(skills)
+        self.assertEqual(result, ['Apple', 'Mango', 'Zebra'])
