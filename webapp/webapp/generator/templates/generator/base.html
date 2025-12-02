@@ -192,9 +192,22 @@
             padding: 5px 10px;
         }
 
+        /* Footer */
+        .site-footer {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 1px solid #ccc;
+            font-size: 0.85em;
+            color: #666;
+            text-align: center;
+        }
+        .site-footer a {
+            color: #666;
+        }
+
         /* Print styles */
         @media print {
-            .top-bar, .button-group, button, .btn, .no-print, .dice-roller { display: none; }
+            .top-bar, .button-group, button, .btn, .no-print, .dice-roller, .site-footer { display: none; }
             body { padding: 0; }
             .section { border: none; padding: 10px 0; }
         }
@@ -311,5 +324,13 @@
         document.getElementById('dice-result').textContent = result;
     }
     </script>
+
+    <footer class="site-footer">
+        Last updated: 2025-12-01 |
+        <a href="https://github.com/smarks/pillars-character-gen/commit/3beebf3f8f05b3d37815a1a2e46f9c47d6fa5f4f" target="_blank">Latest commit</a> |
+        <a href="mailto:smarks@origamisoftware.com">smarks@origamisoftware.com</a> |
+        <a href="https://opensource.org/licenses/MIT">MIT License</a> |
+        <a href="https://origamisoftware.com">Origami Software</a>
+    </footer>
 </body>
 </html>
