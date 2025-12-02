@@ -201,17 +201,24 @@ def index(request):
     if action == 'reroll_none':
         # Re-roll with no focus - skip_track for initial character
         character = generate_character(years=0, attribute_focus=None, skip_track=True)
-        store_current_character(request, character)
+        saved_id = store_current_character(request, character)
+        # Redirect logged-in users to character sheet
+        if saved_id:
+            return redirect('character_sheet', char_id=saved_id)
 
     elif action == 'reroll_physical':
         # Re-roll with physical focus (STR/DEX)
         character = generate_character(years=0, attribute_focus='physical', skip_track=True)
-        store_current_character(request, character)
+        saved_id = store_current_character(request, character)
+        if saved_id:
+            return redirect('character_sheet', char_id=saved_id)
 
     elif action == 'reroll_mental':
         # Re-roll with mental focus (INT/WIS)
         character = generate_character(years=0, attribute_focus='mental', skip_track=True)
-        store_current_character(request, character)
+        saved_id = store_current_character(request, character)
+        if saved_id:
+            return redirect('character_sheet', char_id=saved_id)
 
     elif action == 'add_experience':
         # Go to track selection first, then interactive mode
@@ -286,10 +293,16 @@ def index(request):
         if char_data and not action:
             # Return from prior experience - use existing character
             character = deserialize_character(char_data)
+            # If logged in and we have a saved ID, redirect to character sheet
+            saved_id = request.session.get('current_saved_character_id')
+            if saved_id and request.user.is_authenticated:
+                return redirect('character_sheet', char_id=saved_id)
         else:
             # Generate new character without track/experience
             character = generate_character(years=0, skip_track=True)
-            store_current_character(request, character)
+            saved_id = store_current_character(request, character)
+            if saved_id:
+                return redirect('character_sheet', char_id=saved_id)
 
     # Get prior experience info if any
     years_completed = request.session.get('interactive_years', 0)
@@ -316,8 +329,12 @@ def index(request):
 
 
 def store_current_character(request, character):
-    """Store character in session for the generator flow."""
-    request.session['current_character'] = serialize_character(character)
+    """Store character in session for the generator flow.
+
+    If user is logged in, also save to database and return the saved character ID.
+    """
+    char_data = serialize_character(character)
+    request.session['current_character'] = char_data
     # Clear any prior experience data when re-rolling
     request.session['interactive_years'] = 0
     request.session['interactive_skills'] = []
@@ -325,6 +342,21 @@ def store_current_character(request, character):
     request.session['interactive_aging'] = {'str': 0, 'dex': 0, 'int': 0, 'wis': 0, 'con': 0}
     request.session['interactive_died'] = False
     request.session.modified = True
+
+    # Auto-save to database if user is logged in
+    saved_char_id = None
+    if request.user.is_authenticated:
+        # Create a new saved character
+        char_count = SavedCharacter.objects.filter(user=request.user).count() + 1
+        saved_char = SavedCharacter.objects.create(
+            user=request.user,
+            name=f"Character {char_count}",
+            character_data=char_data
+        )
+        saved_char_id = saved_char.id
+        request.session['current_saved_character_id'] = saved_char_id
+
+    return saved_char_id
 
 
 def select_track(request):
@@ -1513,8 +1545,17 @@ def update_character(request, char_id):
         # Handle skills list operations
         manual_skills = char_data.get('manual_skills', [])
         if action == 'add':
+            # Add to manual_skills - consolidation happens at display time
             manual_skills.append(value)
             char_data['manual_skills'] = manual_skills
+            # Return all skills consolidated for display update
+            all_skills = []
+            all_skills.extend(char_data.get('location_skills', []))
+            if char_data.get('skill_track'):
+                all_skills.extend(char_data['skill_track'].get('initial_skills', []))
+            all_skills.extend(char_data.get('interactive_skills', []))
+            all_skills.extend(manual_skills)
+            computed['skills'] = consolidate_skills(all_skills)
             computed['index'] = len(manual_skills) - 1
         elif action == 'remove':
             # Need to figure out which list the skill is in
@@ -1578,6 +1619,155 @@ def get_attribute_base_value(value):
         except ValueError:
             pass
     return 10  # Default
+
+
+@login_required
+@require_POST
+def add_experience_to_character(request, char_id):
+    """Add prior experience years to a saved character."""
+    try:
+        character = SavedCharacter.objects.get(id=char_id, user=request.user)
+    except SavedCharacter.DoesNotExist:
+        messages.error(request, 'Character not found.')
+        return redirect('my_characters')
+
+    years = int(request.POST.get('years', 5))
+    track_choice = request.POST.get('track', 'auto')
+
+    char_data = character.character_data
+    attrs = char_data.get('attributes', {})
+
+    # Get attribute modifiers
+    str_mod = get_attribute_modifier(attrs.get('STR', 10))
+    dex_mod = get_attribute_modifier(attrs.get('DEX', 10))
+    int_mod = get_attribute_modifier(attrs.get('INT', 10))
+    wis_mod = get_attribute_modifier(attrs.get('WIS', 10))
+    con_mod = get_attribute_modifier(attrs.get('CON', 10))
+    total_modifier = str_mod + dex_mod + int_mod + wis_mod + con_mod
+
+    # Get or create skill track
+    if char_data.get('skill_track'):
+        # Use existing skill track
+        track_data = char_data['skill_track']
+        skill_track = SkillTrack(
+            track=TrackType(track_data['track']),
+            acceptance_check=None,
+            survivability=track_data['survivability'],
+            survivability_roll=None,
+            initial_skills=track_data['initial_skills'],
+            craft_type=CraftType(track_data['craft_type']) if track_data.get('craft_type') else None,
+            craft_rolls=None,
+            magic_school=MagicSchool(track_data['magic_school']) if track_data.get('magic_school') else None,
+            magic_school_rolls=track_data.get('magic_school_rolls'),
+        )
+    else:
+        # Create new skill track
+        social_class = char_data.get('provenance_social_class', 'Commoner')
+        sub_class = char_data.get('provenance_sub_class', 'Laborer')
+        wealth_level = char_data.get('wealth_level', 'Moderate')
+
+        chosen_track = None
+        if track_choice != 'auto':
+            try:
+                chosen_track = TrackType[track_choice]
+            except KeyError:
+                pass
+
+        skill_track = create_skill_track_for_choice(
+            chosen_track=chosen_track,
+            str_mod=str_mod,
+            dex_mod=dex_mod,
+            int_mod=int_mod,
+            wis_mod=wis_mod,
+            social_class=social_class,
+            sub_class=sub_class,
+            wealth_level=wealth_level,
+        )
+
+        # Save track to character data
+        char_data['skill_track'] = {
+            'track': skill_track.track.value,
+            'survivability': skill_track.survivability,
+            'initial_skills': list(skill_track.initial_skills),
+            'craft_type': skill_track.craft_type.value if skill_track.craft_type else None,
+            'magic_school': skill_track.magic_school.value if skill_track.magic_school else None,
+            'magic_school_rolls': skill_track.magic_school_rolls,
+        }
+
+    # Get existing experience data
+    existing_years = char_data.get('interactive_years', 0)
+    existing_skills = char_data.get('interactive_skills', [])
+    existing_yearly_results = char_data.get('interactive_yearly_results', [])
+    existing_aging = char_data.get('interactive_aging', {'str': 0, 'dex': 0, 'int': 0, 'wis': 0, 'con': 0})
+
+    # Reconstruct aging effects
+    aging_effects = AgingEffects(
+        str_penalty=existing_aging.get('str', 0),
+        dex_penalty=existing_aging.get('dex', 0),
+        int_penalty=existing_aging.get('int', 0),
+        wis_penalty=existing_aging.get('wis', 0),
+        con_penalty=existing_aging.get('con', 0),
+    )
+
+    # Roll new years
+    new_skills = []
+    new_yearly_results = []
+    died = char_data.get('interactive_died', False)
+
+    # Add initial skills if this is the first experience
+    if existing_years == 0:
+        existing_skills = list(skill_track.initial_skills)
+
+    for i in range(years):
+        if died:
+            break
+
+        year_index = existing_years + i
+        year_result = roll_single_year(
+            skill_track=skill_track,
+            year_index=year_index,
+            total_modifier=total_modifier,
+            aging_effects=aging_effects
+        )
+
+        new_skills.append(year_result.skill_gained)
+        new_yearly_results.append({
+            'year': year_result.year,
+            'skill': year_result.skill_gained,
+            'surv_roll': year_result.survivability_roll,
+            'surv_mod': year_result.survivability_modifier,
+            'surv_total': year_result.survivability_total,
+            'surv_target': year_result.survivability_target,
+            'survived': year_result.survived,
+            'aging': year_result.aging_penalties,
+        })
+
+        if not year_result.survived:
+            died = True
+
+    # Update character data
+    char_data['interactive_years'] = existing_years + len(new_yearly_results)
+    char_data['interactive_skills'] = existing_skills + new_skills
+    char_data['interactive_yearly_results'] = existing_yearly_results + new_yearly_results
+    char_data['interactive_died'] = died
+    char_data['interactive_aging'] = {
+        'str': aging_effects.str_penalty,
+        'dex': aging_effects.dex_penalty,
+        'int': aging_effects.int_penalty,
+        'wis': aging_effects.wis_penalty,
+        'con': aging_effects.con_penalty,
+    }
+
+    # Save character
+    character.character_data = char_data
+    character.save()
+
+    if died:
+        messages.warning(request, f'Character died during year {new_yearly_results[-1]["year"]}!')
+    else:
+        messages.success(request, f'Added {len(new_yearly_results)} years of experience.')
+
+    return redirect('character_sheet', char_id=char_id)
 
 
 def recalculate_derived(char_data):

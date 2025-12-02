@@ -3,6 +3,44 @@
 {% block title %}{{ character.name }} - Pillars{% endblock %}
 
 {% block extra_css %}
+/* Two-column layout */
+.character-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+.character-sidebar {
+    width: 250px;
+    flex-shrink: 0;
+}
+.character-main {
+    flex: 1;
+    max-width: 800px;
+}
+@media (max-width: 900px) {
+    .character-layout {
+        flex-direction: column;
+    }
+    .character-sidebar {
+        width: 100%;
+        order: -1;
+    }
+}
+
+/* Sidebar styling */
+.sidebar-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    background: #f9f9f9;
+}
+.sidebar-section h3 {
+    margin: 0 0 10px 0;
+    font-size: 1em;
+    border-bottom: 1px solid #999;
+    padding-bottom: 5px;
+}
+
 .character-sheet {
     max-width: 800px;
 }
@@ -110,35 +148,26 @@
     list-style: none;
     padding: 0;
     margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 .skill-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
+    display: inline-block;
 }
-.skill-item input {
-    flex: 1;
-    font-family: monospace;
-    font-size: 14px;
-    padding: 5px 8px;
-    border: 1px solid #ccc;
-}
-.skill-item .btn-remove {
-    padding: 2px 8px;
-    font-size: 14px;
-    cursor: pointer;
-    background: #c44;
+.skill-item .skill-display {
+    background: #333;
     color: white;
-    border: none;
-}
-.skill-item .btn-remove:hover {
-    background: #b33;
+    padding: 5px 12px;
+    font-size: 0.9em;
+    display: inline-block;
 }
 .add-skill-row {
     display: flex;
     gap: 10px;
-    margin-top: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #ccc;
 }
 .add-skill-row input {
     flex: 1;
@@ -238,12 +267,68 @@ input.error, textarea.error {
         <input type="text" id="char-name" data-field="name" value="{{ character.name }}"
                placeholder="Character Name" style="font-size: 1.5em; font-weight: bold; border: none; background: transparent; width: 100%;">
     </h1>
-    <a href="{% url 'my_characters' %}" class="btn">&larr; My Characters</a>
+    <div>
+        <a href="{% url 'my_characters' %}" class="btn">&larr; My Characters</a>
+        <button type="button" class="btn" onclick="exportMarkdown()">Export Markdown</button>
+    </div>
 </div>
 
 <div class="save-indicator" id="save-indicator">Saving...</div>
 
-<div class="character-sheet">
+<div class="character-layout">
+    <!-- Left Sidebar - Add Experience -->
+    <div class="character-sidebar">
+        <div class="sidebar-section">
+            <h3>Add Experience</h3>
+            <form method="post" action="{% url 'add_experience_to_character' character.id %}">
+                {% csrf_token %}
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px;">Years:</label>
+                    <select name="years" style="width: 100%; padding: 5px; font-family: monospace;">
+                        <option value="1">1 year</option>
+                        <option value="2">2 years</option>
+                        <option value="3">3 years</option>
+                        <option value="4">4 years</option>
+                        <option value="5" selected>5 years</option>
+                    </select>
+                </div>
+                {% if not char_data.skill_track %}
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px;">Track:</label>
+                    <select name="track" style="width: 100%; padding: 5px; font-family: monospace;">
+                        <option value="auto">Auto-select</option>
+                        <option value="ARMY">Army</option>
+                        <option value="NAVY">Navy</option>
+                        <option value="RANGER">Ranger</option>
+                        <option value="OFFICER">Officer</option>
+                        <option value="MAGIC">Magic</option>
+                        <option value="WORKER">Worker</option>
+                        <option value="CRAFTS">Crafts</option>
+                        <option value="MERCHANT">Merchant</option>
+                        <option value="RANDOM">Random</option>
+                    </select>
+                </div>
+                {% endif %}
+                <button type="submit" class="btn primary" style="width: 100%;">Add Experience</button>
+            </form>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>Export</h3>
+            <button type="button" class="btn" style="width: 100%;" onclick="exportMarkdown()">Copy as Markdown</button>
+        </div>
+
+        {% if died %}
+        <div class="sidebar-section" style="background: #fdd; border-color: #c44;">
+            <h3 style="color: #c44;">Character Died</h3>
+            <p style="margin: 0; font-size: 0.9em;">This character died during prior experience at age {{ current_age }}.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Main Character Sheet -->
+    <div class="character-main">
+        <div class="character-sheet">
     <!-- Attributes Section -->
     <div class="sheet-section">
         <h2>Attributes</h2>
@@ -338,15 +423,14 @@ input.error, textarea.error {
         <ul class="skills-list" id="skills-list">
             {% for skill in skills %}
             <li class="skill-item">
-                <input type="text" data-field="skills" data-index="{{ forloop.counter0 }}" value="{{ skill }}">
-                <button type="button" class="btn-remove" onclick="removeSkill({{ forloop.counter0 }})">&times;</button>
+                <span class="skill-display">{{ skill }}</span>
             </li>
             {% empty %}
             <li class="skill-item" id="no-skills-msg"><em>No skills yet</em></li>
             {% endfor %}
         </ul>
         <div class="add-skill-row">
-            <input type="text" id="new-skill-input" placeholder="New skill (e.g., Sword +1 to hit)">
+            <input type="text" id="new-skill-input" placeholder="Add skill (e.g., Tracking)" onkeypress="if(event.key==='Enter'){addSkill();return false;}">
             <button type="button" class="btn-add" onclick="addSkill()">+ Add Skill</button>
         </div>
     </div>
@@ -417,7 +501,9 @@ input.error, textarea.error {
         <h2>Notes</h2>
         <textarea class="notes-area" data-field="notes" placeholder="Character backstory, notes, etc...">{{ char_data.notes|default:"" }}</textarea>
     </div>
-</div>
+        </div><!-- end character-sheet -->
+    </div><!-- end character-main -->
+</div><!-- end character-layout -->
 
 <script>
 const CHARACTER_ID = {{ character.id }};
@@ -610,26 +696,16 @@ function addSkill() {
     .then(response => response.json())
     .then(result => {
         if (result.success) {
-            // Remove "no skills" message if present
-            const noSkillsMsg = document.getElementById('no-skills-msg');
-            if (noSkillsMsg) noSkillsMsg.remove();
-
-            // Add new skill to list
-            const list = document.getElementById('skills-list');
-            const newIndex = result.index;
-            const li = document.createElement('li');
-            li.className = 'skill-item';
-            li.innerHTML = '<input type="text" data-field="skills" data-index="' + newIndex + '" value="' + escapeHtml(skill) + '">' +
-                           '<button type="button" class="btn-remove" onclick="removeSkill(' + newIndex + ')">&times;</button>';
-            list.appendChild(li);
-
-            // Attach event listeners to new input
-            const newInput = li.querySelector('input');
-            newInput.addEventListener('input', function() { debounceSave(this); });
-            newInput.addEventListener('blur', function() { if (saveTimeout) { clearTimeout(saveTimeout); } saveField(this); });
-
             // Clear input
             input.value = '';
+
+            // If server returned consolidated skills, rebuild the entire list
+            if (result.computed && result.computed.skills) {
+                rebuildSkillsList(result.computed.skills);
+            } else {
+                // Fallback: just reload the page
+                location.reload();
+            }
 
             indicator.textContent = 'Skill added';
             indicator.className = 'save-indicator saved';
@@ -645,34 +721,25 @@ function addSkill() {
     });
 }
 
-function removeSkill(index) {
-    if (!confirm('Remove this skill?')) return;
+function rebuildSkillsList(skills) {
+    const list = document.getElementById('skills-list');
+    list.innerHTML = '';
 
-    const indicator = document.getElementById('save-indicator');
-    indicator.textContent = 'Removing skill...';
-    indicator.className = 'save-indicator saving';
+    if (skills.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'skill-item';
+        li.id = 'no-skills-msg';
+        li.innerHTML = '<em>No skills yet</em>';
+        list.appendChild(li);
+        return;
+    }
 
-    fetch(UPDATE_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': CSRF_TOKEN,
-        },
-        body: JSON.stringify({ field: 'skills', action: 'remove', index: index }),
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            // Reload page to refresh skill indices
-            location.reload();
-        } else {
-            indicator.textContent = 'Error: ' + (result.error || 'Failed to remove skill');
-            indicator.className = 'save-indicator error';
-        }
-    })
-    .catch(error => {
-        indicator.textContent = 'Error: ' + error.message;
-        indicator.className = 'save-indicator error';
+    skills.forEach(function(skill, index) {
+        const li = document.createElement('li');
+        li.className = 'skill-item';
+        // Skills are display-only since they come from consolidation
+        li.innerHTML = '<span class="skill-display">' + escapeHtml(skill) + '</span>';
+        list.appendChild(li);
     });
 }
 
@@ -680,6 +747,93 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function exportMarkdown() {
+    // Build markdown from current character data
+    const name = document.getElementById('char-name').value || 'Unnamed Character';
+
+    let md = `# ${name}\n\n`;
+
+    // Attributes
+    md += `## Attributes\n\n`;
+    md += `| Attr | Value | Mod |\n`;
+    md += `|------|-------|-----|\n`;
+
+    const attrs = ['STR', 'DEX', 'INT', 'WIS', 'CON', 'CHR'];
+    attrs.forEach(function(attr) {
+        const input = document.querySelector('[data-field="attributes.' + attr + '"]');
+        const modSpan = document.querySelector('[data-computed="' + attr.toLowerCase() + '_mod"]');
+        const val = input ? input.value : '-';
+        const mod = modSpan ? modSpan.textContent : '(0)';
+        md += `| ${attr} | ${val} | ${mod} |\n`;
+    });
+
+    const fatigue = document.querySelector('[data-computed="fatigue_points"]');
+    const body = document.querySelector('[data-computed="body_points"]');
+    md += `\n**Fatigue Points:** ${fatigue ? fatigue.textContent : '-'}\n`;
+    md += `**Body Points:** ${body ? body.textContent : '-'}\n\n`;
+
+    // Biographical
+    md += `## Biographical\n\n`;
+    const bioFields = ['appearance', 'height', 'weight'];
+    bioFields.forEach(function(field) {
+        const input = document.querySelector('[data-field="' + field + '"]');
+        if (input && input.value) {
+            md += `**${field.charAt(0).toUpperCase() + field.slice(1)}:** ${input.value}\n`;
+        }
+    });
+    md += '\n';
+
+    // Background
+    md += `## Background\n\n`;
+    const bgFields = ['provenance', 'location', 'literacy', 'wealth'];
+    bgFields.forEach(function(field) {
+        const input = document.querySelector('[data-field="' + field + '"]');
+        if (input && input.value) {
+            md += `**${field.charAt(0).toUpperCase() + field.slice(1)}:** ${input.value}\n`;
+        }
+    });
+    md += '\n';
+
+    // Skills
+    md += `## Skills\n\n`;
+    const skillItems = document.querySelectorAll('#skills-list .skill-display');
+    if (skillItems.length > 0) {
+        skillItems.forEach(function(item) {
+            md += `- ${item.textContent}\n`;
+        });
+    } else {
+        md += `_No skills_\n`;
+    }
+    md += '\n';
+
+    // Notes
+    const notes = document.querySelector('[data-field="notes"]');
+    if (notes && notes.value.trim()) {
+        md += `## Notes\n\n${notes.value}\n`;
+    }
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(md).then(function() {
+        const indicator = document.getElementById('save-indicator');
+        indicator.textContent = 'Markdown copied to clipboard!';
+        indicator.className = 'save-indicator saved';
+        setTimeout(function() { indicator.className = 'save-indicator'; }, 2000);
+    }).catch(function(err) {
+        // Fallback
+        const textarea = document.createElement('textarea');
+        textarea.value = md;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+
+        const indicator = document.getElementById('save-indicator');
+        indicator.textContent = 'Markdown copied to clipboard!';
+        indicator.className = 'save-indicator saved';
+        setTimeout(function() { indicator.className = 'save-indicator'; }, 2000);
+    });
 }
 </script>
 {% endblock %}

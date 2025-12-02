@@ -25,6 +25,7 @@ urlpatterns = [
     # Editable character sheet
     path('character/<int:char_id>/', views.character_sheet, name='character_sheet'),
     path('character/<int:char_id>/update/', views.update_character, name='update_character'),
+    path('character/<int:char_id>/add-experience/', views.add_experience_to_character, name='add_experience_to_character'),
     # Admin-only
     path('manage-users/', views.manage_users, name='manage_users'),
     path('change-role/<int:user_id>/', views.change_user_role, name='change_user_role'),

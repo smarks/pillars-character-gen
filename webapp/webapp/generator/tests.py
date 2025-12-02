@@ -1,6 +1,8 @@
 from django.test import TestCase, Client
 from django.urls import reverse
+from django.contrib.auth.models import User
 from pillars.attributes import TrackType, MagicSchool
+from webapp.generator.models import UserProfile, SavedCharacter
 
 
 class WelcomePageTests(TestCase):
@@ -584,24 +586,24 @@ class RoleTests(TestCase):
         self.assertNotContains(response, 'Manage Users')
 
     def test_dm_can_see_dm_handbook_link(self):
-        """Test that DM can see DM Handbook link on welcome page."""
+        """Test that DM can see DM link on welcome page."""
         self.client.login(username='dm_test', password='testpass')
         response = self.client.get(reverse('welcome'))
-        self.assertContains(response, 'DM Handbook')
+        self.assertContains(response, reverse('dm'))
         self.assertNotContains(response, 'Manage Users')
 
     def test_admin_can_see_all_links(self):
         """Test that admin can see all links on welcome page."""
         self.client.login(username='admin_test', password='testpass')
         response = self.client.get(reverse('welcome'))
-        self.assertContains(response, 'DM Handbook')
+        self.assertContains(response, reverse('dm'))
         self.assertContains(response, 'Manage Users')
 
     def test_admin_dm_can_see_all_links(self):
         """Test that admin+dm user can see all links on welcome page."""
         self.client.login(username='admin_dm_test', password='testpass')
         response = self.client.get(reverse('welcome'))
-        self.assertContains(response, 'DM Handbook')
+        self.assertContains(response, reverse('dm'))
         self.assertContains(response, 'Manage Users')
 
     def test_player_cannot_access_manage_users(self):
@@ -1206,3 +1208,250 @@ class ConsolidateSkillsTests(TestCase):
         skills = ['Zebra', 'Apple', 'Mango']
         result = consolidate_skills(skills)
         self.assertEqual(result, ['Apple', 'Mango', 'Zebra'])
+
+
+class AutoSaveTests(TestCase):
+    """Tests for auto-save functionality."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='autosave_test', password='test123')
+        UserProfile.objects.create(user=self.user, roles=['player'])
+
+    def test_logged_in_user_auto_saves_on_generate(self):
+        """Test that logged-in users get characters auto-saved to database."""
+        self.client.login(username='autosave_test', password='test123')
+
+        # Visit generator - should create and auto-save a character
+        response = self.client.get(reverse('generator'))
+
+        # Should redirect to character sheet
+        self.assertEqual(response.status_code, 302)
+
+        # Character should be saved in database
+        saved_chars = SavedCharacter.objects.filter(user=self.user)
+        self.assertEqual(saved_chars.count(), 1)
+
+    def test_anonymous_user_stores_in_session(self):
+        """Test that anonymous users get characters stored in session only."""
+        # Visit generator without login
+        response = self.client.get(reverse('generator'))
+
+        # Should stay on the generator page (200)
+        self.assertEqual(response.status_code, 200)
+
+        # No characters should be in database
+        self.assertEqual(SavedCharacter.objects.count(), 0)
+
+        # Session should have character data
+        self.assertIn('current_character', self.client.session)
+
+
+class AddExperienceTests(TestCase):
+    """Tests for adding experience to saved characters."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='exp_test', password='test123')
+        UserProfile.objects.create(user=self.user, roles=['player'])
+
+        # Create a saved character
+        self.saved_char = SavedCharacter.objects.create(
+            user=self.user,
+            name='Test Character',
+            character_data={
+                'attributes': {
+                    'STR': 14, 'DEX': 12, 'INT': 10, 'WIS': 10, 'CON': 12, 'CHR': 10,
+                    'fatigue_points': 30, 'body_points': 25, 'fatigue_roll': 3, 'body_roll': 3,
+                    'generation_method': 'test',
+                },
+                'appearance': 'Average',
+                'height': '5\'10"',
+                'weight': '170 lbs',
+                'provenance': 'Commoner',
+                'provenance_social_class': 'Commoner',
+                'provenance_sub_class': 'Laborer',
+                'location': 'Test Town',
+                'location_skills': ['Farming'],
+                'literacy': 'Illiterate',
+                'wealth': 'Moderate',
+                'wealth_level': 'Moderate',
+                'str_repr': 'Test character',
+            }
+        )
+
+    def test_add_experience_creates_skill_track(self):
+        """Test that adding experience creates a skill track if none exists."""
+        self.client.login(username='exp_test', password='test123')
+
+        response = self.client.post(
+            reverse('add_experience_to_character', args=[self.saved_char.id]),
+            {'years': 3, 'track': 'ARMY'}
+        )
+
+        # Should redirect to character sheet
+        self.assertRedirects(response, reverse('character_sheet', args=[self.saved_char.id]))
+
+        # Reload character
+        self.saved_char.refresh_from_db()
+        char_data = self.saved_char.character_data
+
+        # Should have skill track
+        self.assertIn('skill_track', char_data)
+        self.assertEqual(char_data['skill_track']['track'], 'Army')
+
+        # Should have years of experience
+        self.assertEqual(char_data['interactive_years'], 3)
+
+        # Should have skills from experience
+        self.assertIn('interactive_skills', char_data)
+        self.assertGreater(len(char_data['interactive_skills']), 0)
+
+    def test_add_experience_accumulates(self):
+        """Test that adding more experience accumulates with existing."""
+        self.client.login(username='exp_test', password='test123')
+
+        # Add first batch
+        self.client.post(
+            reverse('add_experience_to_character', args=[self.saved_char.id]),
+            {'years': 2, 'track': 'WORKER'}
+        )
+
+        self.saved_char.refresh_from_db()
+        first_years = self.saved_char.character_data['interactive_years']
+        first_skills = len(self.saved_char.character_data['interactive_skills'])
+
+        # Add second batch
+        self.client.post(
+            reverse('add_experience_to_character', args=[self.saved_char.id]),
+            {'years': 2}
+        )
+
+        self.saved_char.refresh_from_db()
+        second_years = self.saved_char.character_data['interactive_years']
+        second_skills = len(self.saved_char.character_data['interactive_skills'])
+
+        # Years should accumulate
+        self.assertGreater(second_years, first_years)
+
+        # Skills should accumulate
+        self.assertGreater(second_skills, first_skills)
+
+    def test_add_experience_requires_login(self):
+        """Test that adding experience requires authentication."""
+        response = self.client.post(
+            reverse('add_experience_to_character', args=[self.saved_char.id]),
+            {'years': 3}
+        )
+
+        # Should redirect to login
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+
+
+class CharacterSheetLayoutTests(TestCase):
+    """Tests for character sheet display and layout."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='layout_test', password='test123')
+        UserProfile.objects.create(user=self.user, roles=['player'])
+
+        self.saved_char = SavedCharacter.objects.create(
+            user=self.user,
+            name='Layout Test Character',
+            character_data={
+                'attributes': {
+                    'STR': 14, 'DEX': 12, 'INT': 10, 'WIS': 10, 'CON': 12, 'CHR': 10,
+                    'fatigue_points': 30, 'body_points': 25, 'fatigue_roll': 3, 'body_roll': 3,
+                    'generation_method': 'test',
+                },
+                'appearance': 'Average',
+                'height': '5\'10"',
+                'weight': '170 lbs',
+                'provenance': 'Commoner',
+                'location': 'Test Town',
+                'location_skills': ['Farming', 'Farming', 'Tracking'],
+                'literacy': 'Illiterate',
+                'wealth': 'Moderate',
+                'str_repr': 'Test character',
+            }
+        )
+
+    def test_character_sheet_has_add_experience_form(self):
+        """Test that character sheet has add experience form on left side."""
+        self.client.login(username='layout_test', password='test123')
+
+        response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Add Experience')
+        self.assertContains(response, 'character-sidebar')
+
+    def test_character_sheet_has_export_button(self):
+        """Test that character sheet has markdown export button."""
+        self.client.login(username='layout_test', password='test123')
+
+        response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Export Markdown')
+        self.assertContains(response, 'exportMarkdown')
+
+    def test_character_sheet_consolidates_skills(self):
+        """Test that character sheet shows consolidated skills."""
+        self.client.login(username='layout_test', password='test123')
+
+        response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
+
+        self.assertEqual(response.status_code, 200)
+        # "Farming" appears twice, should be consolidated
+        content = response.content.decode()
+        self.assertIn('Farming 2', content)
+        self.assertIn('Tracking', content)
+
+
+class SkillAdditionConsolidationTests(TestCase):
+    """Tests for skill addition with consolidation."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='skill_test', password='test123')
+        UserProfile.objects.create(user=self.user, roles=['player'])
+
+        self.saved_char = SavedCharacter.objects.create(
+            user=self.user,
+            name='Skill Test Character',
+            character_data={
+                'attributes': {
+                    'STR': 14, 'DEX': 12, 'INT': 10, 'WIS': 10, 'CON': 12, 'CHR': 10,
+                    'fatigue_points': 30, 'body_points': 25, 'fatigue_roll': 3, 'body_roll': 3,
+                    'generation_method': 'test',
+                },
+                'location_skills': ['Tracking'],
+                'manual_skills': [],
+                'str_repr': 'Test character',
+            }
+        )
+
+    def test_adding_skill_returns_consolidated_list(self):
+        """Test that adding a skill returns the consolidated skill list."""
+        import json
+        self.client.login(username='skill_test', password='test123')
+
+        # Add the same skill that already exists
+        response = self.client.post(
+            reverse('update_character', args=[self.saved_char.id]),
+            json.dumps({'field': 'skills', 'action': 'add', 'value': 'Tracking'}),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+
+        # Should have consolidated skills in response
+        self.assertIn('computed', data)
+        self.assertIn('skills', data['computed'])
+        # Should show "Tracking 2" since we now have 2 Tracking skills
+        self.assertIn('Tracking 2', data['computed']['skills'])
