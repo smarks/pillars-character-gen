@@ -444,7 +444,7 @@ def main():
     project_root = find_project_root()
     handbook_path = project_root / 'A Pillars Handbook.md'
     webapp_dir = project_root / 'webapp' / 'webapp' / 'generator'
-    docs_dir = webapp_dir / 'docs'
+    docs_dir = project_root / 'references'
     templates_dir = webapp_dir / 'templates' / 'generator'
 
     print(f"\nProject root: {project_root}")

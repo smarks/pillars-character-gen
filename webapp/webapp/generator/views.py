@@ -163,139 +163,6 @@ def welcome(request):
     return render(request, 'generator/welcome.html')
 
 
-def extract_section(content, start_tag, end_patterns):
-    """Extract content between tags from the handbook.
-
-    Args:
-        content: Full file content
-        start_tag: Tag to search for (e.g., '-- meta --')
-        end_patterns: List of possible end tag patterns to try
-
-    Returns:
-        Extracted content or None if not found
-    """
-    import re
-
-    # Find start tag
-    start_match = re.search(re.escape(start_tag), content, re.IGNORECASE)
-    if not start_match:
-        return None
-
-    start_pos = start_match.end()
-
-    # Try each end pattern
-    end_pos = len(content)
-    for end_pattern in end_patterns:
-        end_match = re.search(end_pattern, content[start_pos:], re.IGNORECASE)
-        if end_match:
-            end_pos = start_pos + end_match.start()
-            break
-
-    return content[start_pos:end_pos].strip()
-
-
-def get_handbook_content():
-    """Read the handbook file."""
-    handbook_path = os.path.join(settings.BASE_DIR, '..', 'A Pillars Handbook.md')
-    try:
-        with open(handbook_path, 'r', encoding='utf-8') as f:
-            return f.read()
-    except FileNotFoundError:
-        return None
-
-
-def meta(request):
-    """Display the Meta/About section."""
-    content = get_handbook_content()
-
-    if content:
-        section = extract_section(
-            content,
-            '-- meta --',
-            [r'--\s*/\s*meta\s*--', r'--\s*lore\s*--']
-        )
-        if section:
-            html_content = markdown.markdown(
-                section,
-                extensions=['tables', 'fenced_code', 'toc']
-            )
-        else:
-            html_content = "<p>Meta section not found.</p>"
-    else:
-        html_content = "<p>Handbook not found.</p>"
-
-    return render(request, 'generator/meta.html', {'content': html_content})
-
-
-def lore(request):
-    """Display the Lore/Background section."""
-    content = get_handbook_content()
-
-    if content:
-        section = extract_section(
-            content,
-            '-- lore --',
-            [r'--\s*/\s*lore\s*--', r'--\s*players_handbook\s*--']
-        )
-        if section:
-            html_content = markdown.markdown(
-                section,
-                extensions=['tables', 'fenced_code', 'toc']
-            )
-        else:
-            html_content = "<p>Lore section not found.</p>"
-    else:
-        html_content = "<p>Handbook not found.</p>"
-
-    return render(request, 'generator/lore.html', {'content': html_content})
-
-
-def handbook(request):
-    """Display the Player's Handbook."""
-    content = get_handbook_content()
-
-    if content:
-        section = extract_section(
-            content,
-            '-- players_handbook --',
-            [r'--\s*/\s*Player.handoo?k\s*--', r'--\s*DM_handbook\s*--']
-        )
-        if section:
-            html_content = markdown.markdown(
-                section,
-                extensions=['tables', 'fenced_code', 'toc']
-            )
-        else:
-            html_content = "<p>Player's Handbook section not found.</p>"
-    else:
-        html_content = "<p>Handbook not found.</p>"
-
-    return render(request, 'generator/handbook.html', {'content': html_content})
-
-
-def dm_handbook(request):
-    """Display the DM Handbook section."""
-    content = get_handbook_content()
-
-    if content:
-        section = extract_section(
-            content,
-            '-- DM_handbook --',
-            [r'--\s*/\s*DM_handbook\s*--']
-        )
-        if section:
-            html_content = markdown.markdown(
-                section,
-                extensions=['tables', 'fenced_code', 'toc']
-            )
-        else:
-            html_content = "<p>DM Handbook section not found.</p>"
-    else:
-        html_content = "<p>Handbook not found.</p>"
-
-    return render(request, 'generator/dm_handbook.html', {'content': html_content})
-
-
 def start_over(request):
     """Clear all session data and redirect to welcome page."""
     clear_interactive_session(request)
@@ -1229,13 +1096,20 @@ def clear_interactive_session(request):
             del request.session[key]
 
 def handbook_section(request, section: str):
-    """Generic view for handbook sections loaded from markdown files."""
-    import os
-    from django.conf import settings
+    """Generic view for handbook sections loaded from markdown files in references/ directory."""
+    # Path to the references directory at project root
+    references_dir = os.path.join(settings.BASE_DIR, '..', 'references')
+    section_path = os.path.join(references_dir, f'{section}.md')
 
-    # Path to the docs directory
-    docs_dir = os.path.join(os.path.dirname(__file__), 'docs')
-    section_path = os.path.join(docs_dir, f'{section}.md')
+    # Map section names to display titles
+    SECTION_TITLES = {
+        'about': 'About',
+        'lore': 'Background',
+        'players_handbook': "Player's Handbook",
+        'DM_handbook': 'DM Handbook',
+    }
+
+    title = SECTION_TITLES.get(section, section.replace('_', ' ').title())
 
     try:
         with open(section_path, 'r', encoding='utf-8') as f:
@@ -1246,20 +1120,7 @@ def handbook_section(request, section: str):
             extensions=['tables', 'fenced_code', 'toc']
         )
     except FileNotFoundError:
-        html_content = f"<p>Section '{section}' not found.</p>"
-
-    # Load section manifest for title
-    manifest_path = os.path.join(docs_dir, 'sections.json')
-    title = section.replace('_', ' ').title()
-    try:
-        with open(manifest_path, 'r', encoding='utf-8') as f:
-            manifest = json.load(f)
-            for s in manifest.get('sections', []):
-                if s.get('tag') == section:
-                    title = s.get('display_name', title)
-                    break
-    except (FileNotFoundError, json.JSONDecodeError):
-        pass
+        html_content = f"<p>Section '{section}' not found at {section_path}.</p>"
 
     return render(request, 'generator/handbook_section.html', {
         'content': html_content,
