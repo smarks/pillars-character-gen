@@ -329,8 +329,8 @@
     </script>
 
     <footer class="site-footer">
-        Last updated: 2025-12-01 |
-        <a href="https://github.com/smarks/pillars-character-gen/commit/3beebf3f8f05b3d37815a1a2e46f9c47d6fa5f4f" target="_blank">Latest commit</a> |
+        Last updated: {% if git_commit_date %}{{ git_commit_date|date:"Y-m-d H:i" }}{% else %}unknown{% endif %} |
+        {% if git_commit_hash %}<a href="{{ git_repo_url }}/commit/{{ git_commit_hash }}" target="_blank">{{ git_commit_short }}</a>{% else %}unknown{% endif %} |
         <a href="mailto:smarks@origamisoftware.com">smarks@origamisoftware.com</a> |
         <a href="https://opensource.org/licenses/MIT">MIT License</a> |
         <a href="https://origamisoftware.com">Origami Software</a>
