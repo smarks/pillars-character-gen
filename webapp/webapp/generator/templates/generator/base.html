@@ -252,6 +252,9 @@
         {% if user.is_authenticated %}
             <span class="username">{{ user.username }}</span>
             <a href="{% url 'my_characters' %}">My Characters</a>
+            {% if user.profile.is_admin %}
+                <a href="{% url 'manage_users' %}">Manage Users</a>
+            {% endif %}
             <a href="{% url 'logout' %}">Logout</a>
         {% else %}
             <a href="{% url 'login' %}">Login</a>
