@@ -328,11 +328,16 @@ input.error, textarea.error {
 {% block content %}
 <div class="top-bar">
     <h1>
+        {% if is_owner %}
         <input type="text" id="char-name" data-field="name" value="{{ character.name }}"
                placeholder="Character Name" style="font-size: 1.5em; font-weight: bold; border: none; background: transparent; width: 100%;">
+        {% else %}
+        {{ character.name }}
+        <span style="font-size: 0.5em; font-weight: normal; color: #666;">({{ character_owner.username }}'s character)</span>
+        {% endif %}
     </h1>
     <div>
-        <a href="{% url 'my_characters' %}" class="btn">&larr; My Characters</a>
+        <a href="{% url 'my_characters' %}" class="btn">&larr; {% if is_owner %}My Characters{% else %}All Characters{% endif %}</a>
         <button type="button" class="btn" onclick="exportMarkdown()">Export Markdown</button>
     </div>
 </div>

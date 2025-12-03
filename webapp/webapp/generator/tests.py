@@ -1327,6 +1327,98 @@ class TrackInfoTests(TestCase):
         self.assertContains(response, 'Army')
 
 
+class DMViewAllCharactersTests(TestCase):
+    """Tests for DM ability to view all characters."""
+
+    def setUp(self):
+        self.client = Client()
+        # Create a regular player
+        self.player = User.objects.create_user(username='player1', password='test123')
+        UserProfile.objects.create(user=self.player, roles=['player'])
+
+        # Create a DM
+        self.dm = User.objects.create_user(username='dm1', password='test123')
+        UserProfile.objects.create(user=self.dm, roles=['dm'])
+
+        # Create an admin
+        self.admin = User.objects.create_user(username='admin1', password='test123')
+        UserProfile.objects.create(user=self.admin, roles=['admin'])
+
+        # Create a character owned by the player
+        self.player_char = SavedCharacter.objects.create(
+            user=self.player,
+            name='Player Character',
+            character_data={'attributes': {'STR': 14}}
+        )
+
+    def test_player_sees_only_own_characters(self):
+        """Test that regular player only sees their own characters."""
+        self.client.login(username='player1', password='test123')
+        response = self.client.get(reverse('my_characters'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['show_owner'])
+        self.assertContains(response, 'My Saved Characters')
+
+    def test_dm_sees_all_characters_with_owner(self):
+        """Test that DM sees all characters with owner column."""
+        self.client.login(username='dm1', password='test123')
+        response = self.client.get(reverse('my_characters'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['show_owner'])
+        self.assertContains(response, 'All Characters')
+        self.assertContains(response, 'Player')  # Header column
+        self.assertContains(response, 'player1')  # Owner username
+
+    def test_admin_sees_all_characters(self):
+        """Test that admin sees all characters."""
+        self.client.login(username='admin1', password='test123')
+        response = self.client.get(reverse('my_characters'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['show_owner'])
+
+    def test_dm_can_view_other_player_character(self):
+        """Test that DM can view another player's character sheet."""
+        self.client.login(username='dm1', password='test123')
+        response = self.client.get(reverse('character_sheet', args=[self.player_char.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['is_owner'])
+        self.assertContains(response, 'Player Character')
+        self.assertContains(response, "player1's character")
+
+    def test_player_cannot_view_other_character(self):
+        """Test that regular player cannot view another player's character."""
+        other_player = User.objects.create_user(username='player2', password='test123')
+        UserProfile.objects.create(user=other_player, roles=['player'])
+
+        self.client.login(username='player2', password='test123')
+        response = self.client.get(reverse('character_sheet', args=[self.player_char.id]))
+
+        # Should redirect to my_characters with error
+        self.assertRedirects(response, reverse('my_characters'))
+
+    def test_dm_cannot_edit_other_player_character(self):
+        """Test that DM can view but not edit another player's character."""
+        import json
+        self.client.login(username='dm1', password='test123')
+
+        response = self.client.post(
+            reverse('update_character', args=[self.player_char.id]),
+            json.dumps({'field': 'name', 'value': 'Hacked Name'}),
+            content_type='application/json'
+        )
+
+        # Should get 404 since update only allows owner
+        self.assertEqual(response.status_code, 404)
+
+        # Character name should be unchanged
+        self.player_char.refresh_from_db()
+        self.assertEqual(self.player_char.name, 'Player Character')
+
+
 class AutoSaveTests(TestCase):
     """Tests for auto-save functionality."""
 

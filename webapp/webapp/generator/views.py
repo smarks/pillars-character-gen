@@ -1249,9 +1249,23 @@ def save_character(request):
 
 @login_required
 def my_characters(request):
-    """List all saved characters for the logged-in user."""
-    characters = SavedCharacter.objects.filter(user=request.user)
-    return render(request, 'generator/my_characters.html', {'characters': characters})
+    """List all saved characters for the logged-in user (or all if DM/admin)."""
+    profile = getattr(request.user, 'profile', None)
+    is_dm_or_admin = profile and (profile.is_dm or profile.is_admin) if profile else False
+
+    if is_dm_or_admin:
+        # DM/admin can see all characters
+        characters = SavedCharacter.objects.all().select_related('user').order_by('user__username', '-updated_at')
+        show_owner = True
+    else:
+        characters = SavedCharacter.objects.filter(user=request.user).order_by('-updated_at')
+        show_owner = False
+
+    return render(request, 'generator/my_characters.html', {
+        'characters': characters,
+        'show_owner': show_owner,
+        'is_dm_or_admin': is_dm_or_admin,
+    })
 
 
 @login_required
@@ -1496,11 +1510,21 @@ def get_attribute_modifier(value):
 @login_required
 def character_sheet(request, char_id):
     """Display editable character sheet."""
+    profile = getattr(request.user, 'profile', None)
+    is_dm_or_admin = profile and (profile.is_dm or profile.is_admin) if profile else False
+
     try:
-        character = SavedCharacter.objects.get(id=char_id, user=request.user)
+        if is_dm_or_admin:
+            # DM/admin can view any character
+            character = SavedCharacter.objects.select_related('user').get(id=char_id)
+        else:
+            character = SavedCharacter.objects.get(id=char_id, user=request.user)
     except SavedCharacter.DoesNotExist:
         messages.error(request, 'Character not found.')
         return redirect('my_characters')
+
+    # Check if this is the owner or a DM viewing someone else's character
+    is_owner = character.user == request.user
 
     char_data = character.character_data
     attrs = char_data.get('attributes', {})
@@ -1587,6 +1611,8 @@ def character_sheet(request, char_id):
         'current_age': 16 + years_served,
         'died': died,
         'track_info': track_info,
+        'is_owner': is_owner,
+        'character_owner': character.user,
     })
 
 
