@@ -258,6 +258,11 @@
             <a href="{% url 'welcome' %}">Home</a>
             {% if user.is_authenticated %}
                 <a href="{% url 'my_characters' %}">Characters</a>
+                <a href="{% url 'lore' %}">Lore</a>
+                <a href="{% url 'handbook' %}">Handbook</a>
+                {% if user.profile.is_dm or user.profile.is_admin %}
+                    <a href="{% url 'dm' %}">DM</a>
+                {% endif %}
             {% endif %}
         </div>
         <div class="nav-right">
