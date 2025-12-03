@@ -3,34 +3,186 @@
 
 {% block title %}Pillars Character Generator{% endblock %}
 
+{% block extra_css %}
+/* Two-column layout */
+.generator-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+.generator-sidebar {
+    width: 250px;
+    flex-shrink: 0;
+}
+.generator-main {
+    flex: 1;
+}
+@media (max-width: 900px) {
+    .generator-layout {
+        flex-direction: column;
+    }
+    .generator-sidebar {
+        width: 100%;
+        order: -1;
+    }
+}
+
+/* Sidebar styling */
+.sidebar-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    background: #f9f9f9;
+}
+.sidebar-section h3 {
+    margin: 0 0 10px 0;
+    font-size: 1em;
+    border-bottom: 1px solid #999;
+    padding-bottom: 5px;
+}
+.sidebar-section .btn {
+    width: 100%;
+    margin-bottom: 8px;
+    text-align: center;
+    box-sizing: border-box;
+}
+.sidebar-section .btn:last-child {
+    margin-bottom: 0;
+}
+{% endblock %}
+
 {% block content %}
 <div class="top-bar">
     <h1>Character Generator</h1>
     <a href="{% url 'welcome' %}" class="btn">&larr; Home</a>
 </div>
 
-<div class="section">
-    <h3>Your Character</h3>
-    <pre>{{ character }}</pre>
-</div>
-
-{% if has_experience %}
-<div class="section">
-    <h3>Prior Experience</h3>
-    <div class="info-row">
-        <span>Years Completed:</span>
-        <span><strong>{{ years_completed }}</strong></span>
-    </div>
-    <div class="info-row">
-        <span>Final Age:</span>
-        <span><strong>{{ years_completed|add:16 }}</strong></span>
-    </div>
-
-</div>
-{% endif %}
-
 <form method="post">
-    {% csrf_token %}
-    {% include "generator/partials/control_section.html" %}
+{% csrf_token %}
+<div class="generator-layout">
+    <!-- Left Sidebar - Controls -->
+    <div class="generator-sidebar">
+        {% if not died %}
+        <div class="sidebar-section">
+            <h3>Add Experience</h3>
+            <div style="margin-bottom: 10px;">
+                <label style="display: block; margin-bottom: 5px;">Years:</label>
+                <select name="years" id="years-select" style="width: 100%; padding: 5px; font-family: monospace;">
+                    <option value="1">1 year</option>
+                    <option value="2">2 years</option>
+                    <option value="3">3 years</option>
+                    <option value="4">4 years</option>
+                    <option value="5" selected>5 years</option>
+                    <option value="6">6 years</option>
+                    <option value="7">7 years</option>
+                    <option value="8">8 years</option>
+                    <option value="9">9 years</option>
+                    <option value="10">10 years</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label style="display: flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" name="interactive_mode" id="interactive-checkbox">
+                    Interactive Mode
+                </label>
+                <span style="font-size: 0.8em; color: #666;">(year by year)</span>
+            </div>
+
+            <div id="aging-warning" class="warning-box" style="display: none; margin-bottom: 10px;">
+                <strong>Aging Warning!</strong>
+                <p style="margin: 5px 0; font-size: 0.85em;">Adding <span id="aging-years"></span> years will result in aging penalties.</p>
+            </div>
+
+            <button type="submit" name="action" value="add_experience" class="btn primary">Add {% if has_experience %}More {% endif %}Experience</button>
+        </div>
+        {% endif %}
+
+        <div class="sidebar-section">
+            <h3>Finish</h3>
+            <button type="submit" name="action" value="finish" class="btn success">Finish Character</button>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>Re-roll Character</h3>
+            <button type="submit" name="action" value="reroll_none" class="btn">No Focus</button>
+            <button type="submit" name="action" value="reroll_physical" class="btn">STR/DEX Focus</button>
+            <button type="submit" name="action" value="reroll_mental" class="btn">INT/WIS Focus</button>
+        </div>
+
+        {% if died %}
+        <div class="sidebar-section" style="background: #fdd; border-color: #c44;">
+            <h3 style="color: #c44;">Character Died</h3>
+            <p style="margin: 0; font-size: 0.9em;">Died during prior experience at age {{ current_age }}.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Main Content - Character Display -->
+    <div class="generator-main">
+        <div class="section">
+            <h3>Your Character</h3>
+            <pre>{{ character }}</pre>
+        </div>
+
+        {% if has_experience %}
+        <div class="section">
+            <h3>Prior Experience</h3>
+            <div class="info-row">
+                <span>Years Completed:</span>
+                <span><strong>{{ years_completed }}</strong></span>
+            </div>
+            <div class="info-row">
+                <span>Final Age:</span>
+                <span><strong>{{ years_completed|add:16 }}</strong></span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
 </form>
+
+<script>
+(function() {
+    var yearsSelect = document.getElementById('years-select');
+    var interactiveCheckbox = document.getElementById('interactive-checkbox');
+    var agingWarning = document.getElementById('aging-warning');
+    var agingYearsSpan = document.getElementById('aging-years');
+
+    // Current age from context (16 + years_completed), default to 16 if not set
+    var currentAge = {{ current_age|default:16 }};
+
+    function updateAgingWarning() {
+        if (!agingWarning || !yearsSelect) return;
+
+        var selectedYears = parseInt(yearsSelect.value) || 0;
+        var finalAge = currentAge + selectedYears;
+
+        // Show warning if adding years would push past 34
+        if (finalAge > 34) {
+            if (agingYearsSpan) agingYearsSpan.textContent = selectedYears;
+            agingWarning.style.display = 'block';
+        } else {
+            agingWarning.style.display = 'none';
+        }
+    }
+
+    if (interactiveCheckbox && yearsSelect) {
+        // Disable years selector when interactive mode is checked
+        interactiveCheckbox.addEventListener('change', function() {
+            yearsSelect.disabled = this.checked;
+            if (this.checked) {
+                agingWarning.style.display = 'none';
+            } else {
+                updateAgingWarning();
+            }
+        });
+
+        // Update warning when years selection changes
+        yearsSelect.addEventListener('change', updateAgingWarning);
+    }
+
+    // Initial check
+    updateAgingWarning();
+})();
+</script>
 {% endblock %}
