@@ -38,10 +38,9 @@
                 <td>
                     <a href="{% url 'character_sheet' char.id %}" class="btn primary">{% if char.user == user %}Edit{% else %}View{% endif %}</a>
                     {% if char.user == user %}
-                    <a href="{% url 'load_character' char.id %}" class="btn">Load to Generator</a>
                     <form method="post" action="{% url 'delete_character' char.id %}" style="display: inline;">
                         {% csrf_token %}
-                        <button type="submit" class="btn danger" onclick="return confirm('Delete this character?');">Delete</button>
+                        <button type="submit" class="btn danger" onclick="return confirm('Are you sure you want to delete {{ char.name }}?');">Delete</button>
                     </form>
                     {% endif %}
                 </td>

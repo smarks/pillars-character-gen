@@ -94,11 +94,24 @@
 .track-name {
     font-weight: bold;
 }
+.track-requirement {
+    font-size: 0.75em;
+    color: #666;
+    margin-top: 2px;
+}
+.track-roll-info {
+    font-size: 0.75em;
+    color: #c60;
+    font-style: italic;
+    margin-top: 1px;
+}
 .track-details {
     display: flex;
     gap: 8px;
     font-size: 0.9em;
     color: #666;
+    align-self: flex-start;
+    margin-top: 3px;
 }
 .track-details .roll-note {
     color: #c60;
@@ -394,15 +407,19 @@ input.error, textarea.error {
             </div>
             <div class="track-list-compact">
                 {% for track in track_info %}
-                <div class="track-item {% if track.impossible %}impossible{% elif track.requires_roll %}roll-required{% else %}guaranteed{% endif %}"
+                <div class="track-item {% if track.impossible %}impossible{% elif track.requires_roll and not track.auto_accept %}roll-required{% else %}guaranteed{% endif %}"
                      data-track="{{ track.track_key }}"
-                     onclick="{% if not track.impossible %}selectTrack('{{ track.track_key }}'){% endif %}">
-                    <div class="track-name">{{ track.track }}</div>
+                     onclick="{% if not track.impossible %}selectTrack('{{ track.track_key }}'){% endif %}"
+                     title="{{ track.requirement }}{% if track.roll_info %} - {{ track.roll_info }}{% endif %}">
+                    <div>
+                        <div class="track-name">{{ track.track }}</div>
+                        <div class="track-requirement">{{ track.requirement }}</div>
+                        {% if track.roll_info and not track.auto_accept %}
+                        <div class="track-roll-info">{{ track.roll_info }}</div>
+                        {% endif %}
+                    </div>
                     <div class="track-details">
                         <span class="surv">{{ track.survivability }}+</span>
-                        {% if track.requires_roll and not track.auto_accept %}
-                        <span class="roll-note">roll</span>
-                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
