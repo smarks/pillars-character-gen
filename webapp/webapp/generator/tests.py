@@ -1209,6 +1209,123 @@ class ConsolidateSkillsTests(TestCase):
         result = consolidate_skills(skills)
         self.assertEqual(result, ['Apple', 'Mango', 'Zebra'])
 
+    def test_consolidate_case_insensitive(self):
+        """Test that skill consolidation is case-insensitive."""
+        from webapp.generator.views import consolidate_skills
+
+        skills = ['Weather Sense', 'weather sense', 'WEATHER SENSE']
+        result = consolidate_skills(skills)
+        self.assertEqual(len(result), 1)
+        self.assertIn('Weather Sense 3', result)
+
+    def test_consolidate_mixed_case_preserves_first(self):
+        """Test that the first occurrence's case is preserved."""
+        from webapp.generator.views import consolidate_skills
+
+        skills = ['Tracking', 'TRACKING']
+        result = consolidate_skills(skills)
+        self.assertEqual(result, ['Tracking 2'])
+
+    def test_consolidate_handles_empty_strings(self):
+        """Test that empty strings are filtered out."""
+        from webapp.generator.views import consolidate_skills
+
+        skills = ['Tracking', '', 'Survival', None, 'Tracking']
+        result = consolidate_skills(skills)
+        self.assertIn('Tracking 2', result)
+        self.assertIn('Survival', result)
+        self.assertEqual(len(result), 2)
+
+
+class NormalizeSkillTests(TestCase):
+    """Tests for skill name normalization."""
+
+    def test_normalize_simple_skill(self):
+        """Test normalization of simple skill names."""
+        from webapp.generator.views import normalize_skill_name
+
+        self.assertEqual(normalize_skill_name('tracking'), 'Tracking')
+        self.assertEqual(normalize_skill_name('WEATHER SENSE'), 'Weather Sense')
+        self.assertEqual(normalize_skill_name('weather sense'), 'Weather Sense')
+
+    def test_normalize_skill_with_modifier(self):
+        """Test that modifiers like +1 are preserved."""
+        from webapp.generator.views import normalize_skill_name
+
+        self.assertEqual(normalize_skill_name('sword +1 to hit'), 'Sword +1 to hit')
+        self.assertEqual(normalize_skill_name('SWORD +2'), 'Sword +2')
+
+    def test_normalize_strips_whitespace(self):
+        """Test that leading/trailing whitespace is stripped."""
+        from webapp.generator.views import normalize_skill_name
+
+        self.assertEqual(normalize_skill_name('  Tracking  '), 'Tracking')
+        self.assertEqual(normalize_skill_name('\tSurvival\n'), 'Survival')
+
+    def test_normalize_empty_string(self):
+        """Test that empty strings are handled."""
+        from webapp.generator.views import normalize_skill_name
+
+        self.assertEqual(normalize_skill_name(''), '')
+        self.assertIsNone(normalize_skill_name(None))
+
+
+class TrackInfoTests(TestCase):
+    """Tests for track info display on character sheet."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='trackinfo_test', password='test123')
+        UserProfile.objects.create(user=self.user, roles=['player'])
+
+        self.saved_char = SavedCharacter.objects.create(
+            user=self.user,
+            name='Track Info Test',
+            character_data={
+                'attributes': {
+                    'STR': 14, 'DEX': 12, 'INT': 10, 'WIS': 10, 'CON': 12, 'CHR': 10,
+                    'fatigue_points': 30, 'body_points': 25,
+                },
+                'provenance_social_class': 'Commoner',
+                'wealth_level': 'Moderate',
+            }
+        )
+
+    def test_character_sheet_shows_track_info_when_no_track(self):
+        """Test that character sheet shows track availability when no track selected."""
+        self.client.login(username='trackinfo_test', password='test123')
+
+        response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
+
+        self.assertEqual(response.status_code, 200)
+        # Should have track info in context
+        self.assertIn('track_info', response.context)
+        self.assertIsNotNone(response.context['track_info'])
+        # Should show the track list
+        self.assertContains(response, 'Available Tracks')
+        self.assertContains(response, 'track-item')
+
+    def test_character_sheet_hides_track_info_when_has_track(self):
+        """Test that track info is hidden when character already has a track."""
+        self.client.login(username='trackinfo_test', password='test123')
+
+        # Add a skill track
+        self.saved_char.character_data['skill_track'] = {
+            'track': 'Army',
+            'survivability': 5,
+            'initial_skills': ['Sword'],
+        }
+        self.saved_char.save()
+
+        response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
+
+        self.assertEqual(response.status_code, 200)
+        # Should not have track_info since character has a track
+        self.assertIsNone(response.context['track_info'])
+        # Should show current track instead
+        self.assertContains(response, 'Current Track')
+        self.assertContains(response, 'Army')
+
 
 class AutoSaveTests(TestCase):
     """Tests for auto-save functionality."""

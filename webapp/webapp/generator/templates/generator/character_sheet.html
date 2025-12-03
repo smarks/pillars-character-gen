@@ -41,6 +41,70 @@
     padding-bottom: 5px;
 }
 
+/* Track list in sidebar */
+.track-legend {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+.track-badge {
+    padding: 2px 6px;
+    font-size: 0.75em;
+}
+.track-badge.guaranteed { background: #4a4; color: white; }
+.track-badge.roll-required { background: #fa0; color: black; }
+.track-badge.impossible { background: #999; color: white; }
+
+.track-list-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.track-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    font-size: 0.85em;
+    cursor: pointer;
+}
+.track-item.guaranteed {
+    background: #f0fff0;
+    border-color: #4a4;
+}
+.track-item.roll-required {
+    background: #fffaf0;
+    border-color: #fa0;
+}
+.track-item.impossible {
+    background: #f4f4f4;
+    border-color: #ccc;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.track-item.selected {
+    border-color: #36c;
+    border-width: 2px;
+    background: #e8f0ff;
+}
+.track-item:hover:not(.impossible) {
+    border-color: #36c;
+}
+.track-name {
+    font-weight: bold;
+}
+.track-details {
+    display: flex;
+    gap: 8px;
+    font-size: 0.9em;
+    color: #666;
+}
+.track-details .roll-note {
+    color: #c60;
+    font-style: italic;
+}
+
 .character-sheet {
     max-width: 800px;
 }
@@ -295,23 +359,51 @@ input.error, textarea.error {
                 {% if not char_data.skill_track %}
                 <div style="margin-bottom: 10px;">
                     <label style="display: block; margin-bottom: 5px;">Track:</label>
-                    <select name="track" style="width: 100%; padding: 5px; font-family: monospace;">
+                    <select name="track" id="track-select" style="width: 100%; padding: 5px; font-family: monospace;">
                         <option value="auto">Auto-select</option>
-                        <option value="ARMY">Army</option>
-                        <option value="NAVY">Navy</option>
-                        <option value="RANGER">Ranger</option>
-                        <option value="OFFICER">Officer</option>
-                        <option value="MAGIC">Magic</option>
-                        <option value="WORKER">Worker</option>
-                        <option value="CRAFTS">Crafts</option>
-                        <option value="MERCHANT">Merchant</option>
-                        <option value="RANDOM">Random</option>
+                        {% for track in track_info %}
+                        {% if not track.impossible %}
+                        <option value="{{ track.track_key }}">{{ track.track }}</option>
+                        {% endif %}
+                        {% endfor %}
                     </select>
+                </div>
+                {% else %}
+                <div style="margin-bottom: 10px;">
+                    <p style="font-size: 0.9em; color: #666;">
+                        Current Track: <strong>{{ char_data.skill_track.track }}</strong>
+                    </p>
                 </div>
                 {% endif %}
                 <button type="submit" class="btn primary" style="width: 100%;">Add Experience</button>
             </form>
         </div>
+
+        {% if track_info %}
+        <div class="sidebar-section">
+            <h3>Available Tracks</h3>
+            <div class="track-legend" style="font-size: 0.8em; margin-bottom: 10px;">
+                <span class="track-badge guaranteed">Guaranteed</span>
+                <span class="track-badge roll-required">Roll Required</span>
+                <span class="track-badge impossible">Impossible</span>
+            </div>
+            <div class="track-list-compact">
+                {% for track in track_info %}
+                <div class="track-item {% if track.impossible %}impossible{% elif track.requires_roll %}roll-required{% else %}guaranteed{% endif %}"
+                     data-track="{{ track.track_key }}"
+                     onclick="{% if not track.impossible %}selectTrack('{{ track.track_key }}'){% endif %}">
+                    <div class="track-name">{{ track.track }}</div>
+                    <div class="track-details">
+                        <span class="surv">{{ track.survivability }}+</span>
+                        {% if track.requires_roll and not track.auto_accept %}
+                        <span class="roll-note">roll</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
 
         <div class="sidebar-section">
             <h3>Export</h3>
@@ -833,6 +925,22 @@ function exportMarkdown() {
         indicator.textContent = 'Markdown copied to clipboard!';
         indicator.className = 'save-indicator saved';
         setTimeout(function() { indicator.className = 'save-indicator'; }, 2000);
+    });
+}
+
+function selectTrack(trackKey) {
+    // Update the dropdown
+    const select = document.getElementById('track-select');
+    if (select) {
+        select.value = trackKey;
+    }
+
+    // Update visual selection on track cards
+    document.querySelectorAll('.track-item').forEach(function(item) {
+        item.classList.remove('selected');
+        if (item.dataset.track === trackKey) {
+            item.classList.add('selected');
+        }
     });
 }
 </script>

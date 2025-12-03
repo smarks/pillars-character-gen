@@ -1381,32 +1381,71 @@ def change_user_role(request, user_id):
 # Editable Character Sheet Views
 # =============================================================================
 
+def normalize_skill_name(skill):
+    """Normalize a skill name for consistent matching.
+
+    - Title case for consistent display
+    - Strip whitespace
+    - Handle common variations
+    """
+    if not skill:
+        return skill
+
+    skill = skill.strip()
+
+    # Handle skills with modifiers like "Sword +1 to hit"
+    # Keep the modifier part as-is but title case the skill name
+    import re
+    match = re.match(r'^([A-Za-z\s]+?)(\s*[+-].*)?$', skill)
+    if match:
+        name_part = match.group(1).strip().title()
+        modifier_part = match.group(2) or ''
+        return name_part + modifier_part
+
+    return skill.title()
+
+
 def consolidate_skills(skills):
     """Consolidate duplicate skills into single entries with counts.
+
+    Case-insensitive matching: 'Weather Sense' and 'Weather sense' are the same.
 
     Examples:
         ['Tracking', 'Tracking', 'Tracking'] -> ['Tracking 3']
         ['Sword +1', 'Sword +1'] -> ['Sword +1 (x2)']
         ['Tracking', 'Survival', 'Tracking'] -> ['Tracking 2', 'Survival']
+        ['Weather Sense', 'Weather sense'] -> ['Weather Sense 2']
     """
     import re
-    from collections import Counter
+    from collections import Counter, defaultdict
 
-    # Count occurrences of each skill
-    skill_counts = Counter(skills)
+    # Normalize skills and count occurrences (case-insensitive)
+    # Track the first seen version for display
+    skill_display = {}  # lowercase -> display version
+    skill_counts = defaultdict(int)
+
+    for skill in skills:
+        if not skill:
+            continue
+        normalized = normalize_skill_name(skill)
+        key = normalized.lower()
+        if key not in skill_display:
+            skill_display[key] = normalized
+        skill_counts[key] += 1
 
     # Build consolidated list
     consolidated = []
-    for skill, count in skill_counts.items():
+    for key, count in skill_counts.items():
+        display_name = skill_display[key]
         if count > 1:
             # Check if skill already has a number suffix (like "Sword +1")
             # If so, use (xN) format to avoid confusion
-            if re.search(r'\d+\s*$', skill) or '+' in skill:
-                consolidated.append(f"{skill} (x{count})")
+            if re.search(r'\d+\s*$', display_name) or '+' in display_name:
+                consolidated.append(f"{display_name} (x{count})")
             else:
-                consolidated.append(f"{skill} {count}")
+                consolidated.append(f"{display_name} {count}")
         else:
-            consolidated.append(skill)
+            consolidated.append(display_name)
 
     # Sort alphabetically for consistent display
     consolidated.sort(key=lambda s: s.lower())
@@ -1486,6 +1525,45 @@ def character_sheet(request, char_id):
     years_served = char_data.get('interactive_years', 0)
     died = char_data.get('interactive_died', False)
 
+    # Build track info for characters that don't have a track yet
+    track_info = None
+    if not char_data.get('skill_track'):
+        str_mod = get_attribute_modifier(attrs.get('STR', 10))
+        dex_mod = get_attribute_modifier(attrs.get('DEX', 10))
+        int_mod = get_attribute_modifier(attrs.get('INT', 10))
+        wis_mod = get_attribute_modifier(attrs.get('WIS', 10))
+
+        social_class = char_data.get('provenance_social_class', 'Commoner')
+        wealth_level = char_data.get('wealth_level', 'Moderate')
+
+        track_availability = get_track_availability(
+            str_mod, dex_mod, int_mod, wis_mod,
+            social_class, wealth_level
+        )
+
+        track_info = []
+        track_order = [
+            TrackType.OFFICER, TrackType.RANGER, TrackType.MAGIC, TrackType.NAVY, TrackType.ARMY,
+            TrackType.MERCHANT, TrackType.CRAFTS, TrackType.WORKER, TrackType.RANDOM
+        ]
+        for track in track_order:
+            if track in track_availability:
+                info = track_availability[track]
+                survivability = TRACK_SURVIVABILITY.get(track, '?')
+                initial_skills = TRACK_INITIAL_SKILLS.get(track, [])
+                track_info.append({
+                    'track': track.value,
+                    'track_key': track.name,
+                    'survivability': survivability if survivability else 'Variable',
+                    'initial_skills': initial_skills,
+                    'available': info['available'],
+                    'requires_roll': info['requires_roll'],
+                    'auto_accept': info['auto_accept'],
+                    'impossible': info['impossible'],
+                    'requirement': info['requirement'],
+                    'roll_info': info['roll_info'],
+                })
+
     return render(request, 'generator/character_sheet.html', {
         'character': character,
         'char_data': char_data,
@@ -1508,6 +1586,7 @@ def character_sheet(request, char_id):
         'years_served': years_served,
         'current_age': 16 + years_served,
         'died': died,
+        'track_info': track_info,
     })
 
 
@@ -1545,8 +1624,9 @@ def update_character(request, char_id):
         # Handle skills list operations
         manual_skills = char_data.get('manual_skills', [])
         if action == 'add':
-            # Add to manual_skills - consolidation happens at display time
-            manual_skills.append(value)
+            # Normalize the skill name before adding
+            normalized_skill = normalize_skill_name(value)
+            manual_skills.append(normalized_skill)
             char_data['manual_skills'] = manual_skills
             # Return all skills consolidated for display update
             all_skills = []
