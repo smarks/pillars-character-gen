@@ -135,6 +135,18 @@
                 <span>Final Age:</span>
                 <span><strong>{{ years_completed|add:16 }}</strong></span>
             </div>
+            {% if yearly_results %}
+            <h4 style="margin-top: 15px;">Year-by-Year Log</h4>
+            <div class="experience-log" style="font-size: 0.9em; background: #fff; padding: 10px; border: 1px solid #ddd; max-height: 300px; overflow-y: auto;">
+                {% for yr in yearly_results %}
+                <div class="year-entry {% if not yr.survived %}died{% endif %}" style="padding: 5px 0; border-bottom: 1px dotted #ddd;">
+                    <strong>Year {{ yr.year }}:</strong> {{ yr.skill }} |
+                    Survival: {{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+
+                    [{% if yr.survived %}<span style="color: green;">Survived</span>{% else %}<span style="color: red; font-weight: bold;">DIED</span>{% endif %}]
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
         {% endif %}
     </div>

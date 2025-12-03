@@ -794,6 +794,33 @@ class CharacterSheetTests(TestCase):
         response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
         self.assertRedirects(response, reverse('my_characters'))
 
+    def test_character_sheet_shows_yearly_results(self):
+        """Test that character sheet displays year-by-year experience log."""
+        self.client.login(username='sheet_test', password='testpass')
+
+        # Add yearly results to the character
+        self.saved_char.character_data['interactive_years'] = 3
+        self.saved_char.character_data['interactive_yearly_results'] = [
+            {'year': 16, 'skill': 'Sword', 'surv_roll': 10, 'surv_mod': 2, 'surv_total': 12, 'surv_target': 5, 'survived': True},
+            {'year': 17, 'skill': 'Shield', 'surv_roll': 8, 'surv_mod': 2, 'surv_total': 10, 'surv_target': 5, 'survived': True},
+            {'year': 18, 'skill': 'Tactics', 'surv_roll': 6, 'surv_mod': 2, 'surv_total': 8, 'surv_target': 5, 'survived': True},
+        ]
+        self.saved_char.save()
+
+        response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
+
+        self.assertEqual(response.status_code, 200)
+        # Check yearly_results is in context
+        self.assertIn('yearly_results', response.context)
+        self.assertEqual(len(response.context['yearly_results']), 3)
+        # Check that the year-by-year log section appears
+        self.assertContains(response, 'Year-by-Year Log')
+        # Check that specific year entries appear
+        self.assertContains(response, 'Year 16')
+        self.assertContains(response, 'Sword')
+        self.assertContains(response, 'Year 17')
+        self.assertContains(response, 'Shield')
+
 
 class UpdateCharacterAPITests(TestCase):
     """Tests for the character update API endpoint."""

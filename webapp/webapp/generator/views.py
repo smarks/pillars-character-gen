@@ -325,6 +325,7 @@ def index(request):
         'skills': skills,
         'yearly_results': yearly_results,
         'has_experience': years_completed > 0,
+        'died': died,
     })
 
 
