@@ -1340,8 +1340,14 @@ def manage_users(request):
     users = UserProfile.objects.select_related('user').all()
     role_choices = UserProfile.ROLE_CHOICES
 
-    # Get all characters for admin view
+    # Get all characters grouped by user
     all_characters = SavedCharacter.objects.all().select_related('user').order_by('user__username', '-updated_at')
+    characters_by_user = {}
+    for char in all_characters:
+        username = char.user.username
+        if username not in characters_by_user:
+            characters_by_user[username] = []
+        characters_by_user[username].append(char)
 
     # Handle user creation form submission
     if request.method == 'POST' and 'create_user' in request.POST:
@@ -1361,7 +1367,7 @@ def manage_users(request):
         'users': users,
         'role_choices': role_choices,
         'create_form': create_form,
-        'all_characters': all_characters,
+        'characters_by_user': characters_by_user,
     })
 
 

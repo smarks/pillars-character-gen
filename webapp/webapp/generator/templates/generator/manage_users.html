@@ -130,11 +130,12 @@
     <h2>All Characters</h2>
     <p style="margin-bottom: 20px;">View all characters created by users.</p>
 
-    {% if all_characters %}
-    <table>
+    {% if characters_by_user %}
+    {% for username, chars in characters_by_user.items %}
+    <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">{{ username }} ({{ chars|length }})</h3>
+    <table style="margin-bottom: 20px;">
         <thead>
             <tr>
-                <th>Player</th>
                 <th>Name</th>
                 <th>Created</th>
                 <th>Updated</th>
@@ -142,9 +143,8 @@
             </tr>
         </thead>
         <tbody>
-            {% for char in all_characters %}
+            {% for char in chars %}
             <tr>
-                <td>{{ char.user.username }}</td>
                 <td>{{ char.name }}</td>
                 <td>{{ char.created_at|date:"M d, Y H:i" }}</td>
                 <td>{{ char.updated_at|date:"M d, Y H:i" }}</td>
@@ -155,6 +155,7 @@
             {% endfor %}
         </tbody>
     </table>
+    {% endfor %}
     {% else %}
     <p>No characters have been created yet.</p>
     {% endif %}

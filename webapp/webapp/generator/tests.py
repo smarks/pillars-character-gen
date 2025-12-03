@@ -1363,15 +1363,17 @@ class AdminViewAllCharactersTests(TestCase):
         self.assertNotIn('show_owner', response.context)
 
     def test_admin_sees_all_characters_in_manage_users(self):
-        """Test that admin sees all characters in manage_users page."""
+        """Test that admin sees all characters grouped by user in manage_users page."""
         self.client.login(username='admin1', password='test123')
         response = self.client.get(reverse('manage_users'))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'All Characters')
-        self.assertContains(response, 'Player')  # Header column
-        self.assertContains(response, 'player1')  # Owner username
+        self.assertContains(response, 'player1')  # Username as section header
         self.assertContains(response, 'Player Character')  # Character name
+        # Should have characters_by_user in context
+        self.assertIn('characters_by_user', response.context)
+        self.assertIn('player1', response.context['characters_by_user'])
 
     def test_dm_cannot_access_manage_users(self):
         """Test that DM (non-admin) cannot access manage_users page."""
