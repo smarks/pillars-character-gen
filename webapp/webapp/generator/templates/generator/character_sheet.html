@@ -360,6 +360,31 @@ input.error, textarea.error {
 <div class="character-layout">
     <!-- Left Sidebar - Add Experience -->
     <div class="character-sidebar">
+        {% if years_served > 0 %}
+        <div class="sidebar-section">
+            <h3>Prior Experience</h3>
+            <div class="info-row">
+                <span>Current Age:</span>
+                <span><strong>{{ current_age }}</strong></span>
+            </div>
+            <div class="info-row">
+                <span>Years Served:</span>
+                <span><strong>{{ years_served }}</strong></span>
+            </div>
+            {% if char_data.skill_track %}
+            <div class="info-row">
+                <span>Track:</span>
+                <span><strong>{{ char_data.skill_track.track }}</strong></span>
+            </div>
+            <div class="info-row">
+                <span>Survivability:</span>
+                <span><strong>{{ char_data.skill_track.survivability }}+</strong></span>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if not died %}
         <div class="sidebar-section">
             <h3>Add Experience</h3>
             <form method="post" action="{% url 'add_experience_to_character' character.id %}">
@@ -386,16 +411,11 @@ input.error, textarea.error {
                         {% endfor %}
                     </select>
                 </div>
-                {% else %}
-                <div style="margin-bottom: 10px;">
-                    <p style="font-size: 0.9em; color: #666;">
-                        Current Track: <strong>{{ char_data.skill_track.track }}</strong>
-                    </p>
-                </div>
                 {% endif %}
                 <button type="submit" class="btn primary" style="width: 100%;">Add Experience</button>
             </form>
         </div>
+        {% endif %}
 
         {% if track_info %}
         <div class="sidebar-section">

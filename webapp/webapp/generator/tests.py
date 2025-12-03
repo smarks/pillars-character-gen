@@ -1309,12 +1309,13 @@ class TrackInfoTests(TestCase):
         """Test that track info is hidden when character already has a track."""
         self.client.login(username='trackinfo_test', password='test123')
 
-        # Add a skill track
+        # Add a skill track and some experience so the Prior Experience section shows
         self.saved_char.character_data['skill_track'] = {
             'track': 'Army',
             'survivability': 5,
             'initial_skills': ['Sword'],
         }
+        self.saved_char.character_data['interactive_years'] = 3
         self.saved_char.save()
 
         response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
@@ -1322,8 +1323,8 @@ class TrackInfoTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # Should not have track_info since character has a track
         self.assertIsNone(response.context['track_info'])
-        # Should show current track instead
-        self.assertContains(response, 'Current Track')
+        # Should show track in Prior Experience section
+        self.assertContains(response, 'Prior Experience')
         self.assertContains(response, 'Army')
 
 
