@@ -1249,22 +1249,11 @@ def save_character(request):
 
 @login_required
 def my_characters(request):
-    """List all saved characters for the logged-in user (or all if DM/admin)."""
-    profile = getattr(request.user, 'profile', None)
-    is_dm_or_admin = profile and (profile.is_dm or profile.is_admin) if profile else False
-
-    if is_dm_or_admin:
-        # DM/admin can see all characters
-        characters = SavedCharacter.objects.all().select_related('user').order_by('user__username', '-updated_at')
-        show_owner = True
-    else:
-        characters = SavedCharacter.objects.filter(user=request.user).order_by('-updated_at')
-        show_owner = False
+    """List saved characters for the logged-in user only."""
+    characters = SavedCharacter.objects.filter(user=request.user).order_by('-updated_at')
 
     return render(request, 'generator/my_characters.html', {
         'characters': characters,
-        'show_owner': show_owner,
-        'is_dm_or_admin': is_dm_or_admin,
     })
 
 
@@ -1347,9 +1336,12 @@ def dm_handbook(request):
 
 @admin_required
 def manage_users(request):
-    """Admin view to manage user roles and create new users."""
+    """Admin view to manage user roles, create users, and view all characters."""
     users = UserProfile.objects.select_related('user').all()
     role_choices = UserProfile.ROLE_CHOICES
+
+    # Get all characters for admin view
+    all_characters = SavedCharacter.objects.all().select_related('user').order_by('user__username', '-updated_at')
 
     # Handle user creation form submission
     if request.method == 'POST' and 'create_user' in request.POST:
@@ -1369,6 +1361,7 @@ def manage_users(request):
         'users': users,
         'role_choices': role_choices,
         'create_form': create_form,
+        'all_characters': all_characters,
     })
 
 

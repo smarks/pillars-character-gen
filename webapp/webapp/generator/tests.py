@@ -1327,8 +1327,8 @@ class TrackInfoTests(TestCase):
         self.assertContains(response, 'Army')
 
 
-class DMViewAllCharactersTests(TestCase):
-    """Tests for DM ability to view all characters."""
+class AdminViewAllCharactersTests(TestCase):
+    """Tests for admin ability to view all characters in manage_users."""
 
     def setUp(self):
         self.client = Client()
@@ -1351,37 +1351,38 @@ class DMViewAllCharactersTests(TestCase):
             character_data={'attributes': {'STR': 14}}
         )
 
-    def test_player_sees_only_own_characters(self):
-        """Test that regular player only sees their own characters."""
+    def test_player_sees_only_own_characters_in_my_characters(self):
+        """Test that my_characters only shows user's own characters."""
         self.client.login(username='player1', password='test123')
         response = self.client.get(reverse('my_characters'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(response.context['show_owner'])
         self.assertContains(response, 'My Saved Characters')
+        # Should not have show_owner in context
+        self.assertNotIn('show_owner', response.context)
 
-    def test_dm_sees_all_characters_with_owner(self):
-        """Test that DM sees all characters with owner column."""
-        self.client.login(username='dm1', password='test123')
-        response = self.client.get(reverse('my_characters'))
+    def test_admin_sees_all_characters_in_manage_users(self):
+        """Test that admin sees all characters in manage_users page."""
+        self.client.login(username='admin1', password='test123')
+        response = self.client.get(reverse('manage_users'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.context['show_owner'])
         self.assertContains(response, 'All Characters')
         self.assertContains(response, 'Player')  # Header column
         self.assertContains(response, 'player1')  # Owner username
+        self.assertContains(response, 'Player Character')  # Character name
 
-    def test_admin_sees_all_characters(self):
-        """Test that admin sees all characters."""
-        self.client.login(username='admin1', password='test123')
-        response = self.client.get(reverse('my_characters'))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.context['show_owner'])
-
-    def test_dm_can_view_other_player_character(self):
-        """Test that DM can view another player's character sheet."""
+    def test_dm_cannot_access_manage_users(self):
+        """Test that DM (non-admin) cannot access manage_users page."""
         self.client.login(username='dm1', password='test123')
+        response = self.client.get(reverse('manage_users'))
+
+        # Should redirect away since DM is not admin
+        self.assertRedirects(response, reverse('welcome'))
+
+    def test_admin_can_view_other_player_character(self):
+        """Test that admin can view another player's character sheet."""
+        self.client.login(username='admin1', password='test123')
         response = self.client.get(reverse('character_sheet', args=[self.player_char.id]))
 
         self.assertEqual(response.status_code, 200)
@@ -1400,10 +1401,10 @@ class DMViewAllCharactersTests(TestCase):
         # Should redirect to my_characters with error
         self.assertRedirects(response, reverse('my_characters'))
 
-    def test_dm_cannot_edit_other_player_character(self):
-        """Test that DM can view but not edit another player's character."""
+    def test_admin_cannot_edit_other_player_character(self):
+        """Test that admin can view but not edit another player's character."""
         import json
-        self.client.login(username='dm1', password='test123')
+        self.client.login(username='admin1', password='test123')
 
         response = self.client.post(
             reverse('update_character', args=[self.player_char.id]),
