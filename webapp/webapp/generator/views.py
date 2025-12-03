@@ -1766,10 +1766,14 @@ def add_experience_to_character(request, char_id):
     character.character_data = char_data
     character.save()
 
-    if died:
+    if died and new_yearly_results:
         messages.warning(request, f'Character died during year {new_yearly_results[-1]["year"]}!')
-    else:
+    elif died:
+        messages.warning(request, 'Character is already dead. No experience can be added.')
+    elif new_yearly_results:
         messages.success(request, f'Added {len(new_yearly_results)} years of experience.')
+    else:
+        messages.info(request, 'No experience years were added.')
 
     return redirect('character_sheet', char_id=char_id)
 

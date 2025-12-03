@@ -1400,6 +1400,74 @@ class AddExperienceTests(TestCase):
         self.assertIn('character', response.url)
 
 
+    def test_add_experience_other_users_character(self):
+        """Test that users cannot add experience to another user's character."""
+        other_user = User.objects.create_user(username='other_exp', password='test123')
+        UserProfile.objects.create(user=other_user, roles=['player'])
+
+        self.client.login(username='other_exp', password='test123')
+
+        response = self.client.post(
+            reverse('add_experience_to_character', args=[self.saved_char.id]),
+            {'years': 3, 'track': 'ARMY'}
+        )
+
+        # Should redirect to my_characters (not found for this user)
+        self.assertRedirects(response, reverse('my_characters'))
+
+    def test_add_experience_nonexistent_character(self):
+        """Test that adding experience to nonexistent character redirects gracefully."""
+        self.client.login(username='exp_test', password='test123')
+
+        response = self.client.post(
+            reverse('add_experience_to_character', args=[99999]),
+            {'years': 3, 'track': 'ARMY'}
+        )
+
+        # Should redirect to my_characters
+        self.assertRedirects(response, reverse('my_characters'))
+
+    def test_add_experience_already_dead_character(self):
+        """Test that adding experience to a dead character doesn't add more years."""
+        self.client.login(username='exp_test', password='test123')
+
+        # Mark character as dead
+        self.saved_char.character_data['interactive_died'] = True
+        self.saved_char.character_data['interactive_years'] = 5
+        self.saved_char.character_data['skill_track'] = {
+            'track': 'Army',
+            'survivability': 5,
+            'initial_skills': ['Sword'],
+        }
+        self.saved_char.save()
+
+        response = self.client.post(
+            reverse('add_experience_to_character', args=[self.saved_char.id]),
+            {'years': 3}
+        )
+
+        # Should redirect
+        self.assertEqual(response.status_code, 302)
+
+        # Years should not have increased (character was already dead)
+        self.saved_char.refresh_from_db()
+        self.assertEqual(self.saved_char.character_data['interactive_years'], 5)
+
+    def test_add_experience_with_specific_track(self):
+        """Test that specifying a track uses that track."""
+        self.client.login(username='exp_test', password='test123')
+
+        response = self.client.post(
+            reverse('add_experience_to_character', args=[self.saved_char.id]),
+            {'years': 2, 'track': 'NAVY'}
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        self.saved_char.refresh_from_db()
+        self.assertEqual(self.saved_char.character_data['skill_track']['track'], 'Navy')
+
+
 class CharacterSheetLayoutTests(TestCase):
     """Tests for character sheet display and layout."""
 
@@ -1506,3 +1574,90 @@ class SkillAdditionConsolidationTests(TestCase):
         self.assertIn('skills', data['computed'])
         # Should show "Tracking 2" since we now have 2 Tracking skills
         self.assertIn('Tracking 2', data['computed']['skills'])
+
+    def test_update_with_invalid_json(self):
+        """Test that update endpoint handles invalid JSON gracefully."""
+        self.client.login(username='skill_test', password='test123')
+
+        response = self.client.post(
+            reverse('update_character', args=[self.saved_char.id]),
+            'this is not valid json{{{',
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertFalse(data['success'])
+        self.assertIn('Invalid JSON', data['error'])
+
+    def test_update_with_missing_field(self):
+        """Test that update endpoint requires a field."""
+        import json
+        self.client.login(username='skill_test', password='test123')
+
+        response = self.client.post(
+            reverse('update_character', args=[self.saved_char.id]),
+            json.dumps({'value': 'test'}),  # No field specified
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertFalse(data['success'])
+        self.assertIn('No field', data['error'])
+
+
+class AutoSaveRerollTests(TestCase):
+    """Tests for auto-save on re-roll functionality."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='reroll_test', password='test123')
+        UserProfile.objects.create(user=self.user, roles=['player'])
+
+    def test_reroll_physical_creates_new_character(self):
+        """Test that re-rolling with physical focus creates and saves a new character."""
+        self.client.login(username='reroll_test', password='test123')
+
+        # First create a character
+        response = self.client.get(reverse('generator'))
+        self.assertEqual(response.status_code, 302)  # Redirects to character sheet
+
+        initial_count = SavedCharacter.objects.filter(user=self.user).count()
+        self.assertEqual(initial_count, 1)
+
+        # Re-roll with physical focus
+        response = self.client.post(reverse('generator'), {'action': 'reroll_physical'})
+        self.assertEqual(response.status_code, 302)
+
+        # Should have 2 characters now
+        new_count = SavedCharacter.objects.filter(user=self.user).count()
+        self.assertEqual(new_count, 2)
+
+    def test_reroll_mental_creates_new_character(self):
+        """Test that re-rolling with mental focus creates and saves a new character."""
+        self.client.login(username='reroll_test', password='test123')
+
+        # First create a character
+        self.client.get(reverse('generator'))
+
+        # Re-roll with mental focus
+        response = self.client.post(reverse('generator'), {'action': 'reroll_mental'})
+        self.assertEqual(response.status_code, 302)
+
+        # Should have 2 characters
+        self.assertEqual(SavedCharacter.objects.filter(user=self.user).count(), 2)
+
+    def test_reroll_none_creates_new_character(self):
+        """Test that re-rolling with no focus creates and saves a new character."""
+        self.client.login(username='reroll_test', password='test123')
+
+        # First create a character
+        self.client.get(reverse('generator'))
+
+        # Re-roll with no focus
+        response = self.client.post(reverse('generator'), {'action': 'reroll_none'})
+        self.assertEqual(response.status_code, 302)
+
+        # Should have 2 characters
+        self.assertEqual(SavedCharacter.objects.filter(user=self.user).count(), 2)
