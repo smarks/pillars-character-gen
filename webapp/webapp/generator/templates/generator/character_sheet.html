@@ -537,13 +537,17 @@ input.error, textarea.error {
                 {% csrf_token %}
                 <div style="margin-bottom: 10px;">
                     <label style="display: block; margin-bottom: 5px;">Years:</label>
-                    <select name="years" style="width: 100%; padding: 5px; font-family: monospace;">
+                    <select name="years" id="years-select" style="width: 100%; padding: 5px; font-family: monospace;">
                         <option value="1">1 year</option>
                         <option value="2">2 years</option>
                         <option value="3">3 years</option>
                         <option value="4">4 years</option>
                         <option value="5" selected>5 years</option>
                     </select>
+                </div>
+                <div id="aging-warning" class="warning-box" style="display: none; margin-bottom: 10px;">
+                    <strong>Aging Warning!</strong>
+                    <p style="margin: 5px 0; font-size: 0.85em;">Adding <span id="aging-years"></span> years will result in aging penalties (age <span id="final-age"></span>).</p>
                 </div>
                 {% if not char_data.skill_track %}
                 <div style="margin-bottom: 10px;">
@@ -789,6 +793,37 @@ input.error, textarea.error {
 const CHARACTER_ID = {{ character.id }};
 const CSRF_TOKEN = '{{ csrf_token }}';
 const UPDATE_URL = '{% url "update_character" character.id %}';
+const CURRENT_AGE = {{ current_age|default:16 }};
+
+// Aging warning functionality
+(function() {
+    const yearsSelect = document.getElementById('years-select');
+    const agingWarning = document.getElementById('aging-warning');
+    const agingYearsSpan = document.getElementById('aging-years');
+    const finalAgeSpan = document.getElementById('final-age');
+
+    function updateAgingWarning() {
+        if (!agingWarning || !yearsSelect) return;
+
+        const selectedYears = parseInt(yearsSelect.value) || 0;
+        const finalAge = CURRENT_AGE + selectedYears;
+
+        // Show warning if adding years would push past 34 (aging penalties start at 35)
+        if (finalAge > 34) {
+            if (agingYearsSpan) agingYearsSpan.textContent = selectedYears;
+            if (finalAgeSpan) finalAgeSpan.textContent = finalAge;
+            agingWarning.style.display = 'block';
+        } else {
+            agingWarning.style.display = 'none';
+        }
+    }
+
+    if (yearsSelect) {
+        yearsSelect.addEventListener('change', updateAgingWarning);
+        // Initial check
+        updateAgingWarning();
+    }
+})();
 
 let saveTimeout = null;
 const SAVE_DELAY = 300; // ms debounce

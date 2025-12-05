@@ -821,6 +821,21 @@ class CharacterSheetTests(TestCase):
         self.assertContains(response, 'Year 17')
         self.assertContains(response, 'Shield')
 
+    def test_character_sheet_shows_aging_warning_elements(self):
+        """Test that character sheet has aging warning UI elements."""
+        self.client.login(username='sheet_test', password='testpass')
+        response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
+
+        self.assertEqual(response.status_code, 200)
+        # Check for aging warning HTML elements
+        self.assertContains(response, 'id="aging-warning"')
+        self.assertContains(response, 'Aging Warning!')
+        self.assertContains(response, 'id="aging-years"')
+        self.assertContains(response, 'aging penalties')
+        # Check for the JavaScript that handles the warning
+        self.assertContains(response, 'updateAgingWarning')
+        self.assertContains(response, 'CURRENT_AGE')
+
 
 class UpdateCharacterAPITests(TestCase):
     """Tests for the character update API endpoint."""
