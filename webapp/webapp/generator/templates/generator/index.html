@@ -49,6 +49,38 @@
 .sidebar-section .btn:last-child {
     margin-bottom: 0;
 }
+
+/* Mobile styles for generator */
+@media screen and (max-width: 768px) {
+    .generator-layout {
+        flex-direction: column;
+    }
+    .generator-sidebar {
+        width: 100%;
+        order: -1;
+    }
+
+    .sidebar-section {
+        padding: 12px;
+        margin-bottom: 15px;
+    }
+    .sidebar-section select {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+
+    /* Experience log in generator */
+    .experience-log {
+        max-height: 200px;
+        font-size: 0.85em;
+    }
+    .year-entry {
+        padding: 6px 0;
+        font-size: 13px;
+    }
+}
 {% endblock %}
 
 {% block content %}

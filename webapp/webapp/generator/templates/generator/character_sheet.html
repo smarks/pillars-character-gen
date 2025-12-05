@@ -336,6 +336,152 @@ input.saved, textarea.saved {
 input.error, textarea.error {
     background: #fcc !important;
 }
+
+/* Mobile styles for character sheet */
+@media screen and (max-width: 768px) {
+    .character-layout {
+        flex-direction: column;
+    }
+    .character-sidebar {
+        width: 100%;
+        order: -1;
+    }
+    .character-main {
+        max-width: 100%;
+    }
+
+    .sidebar-section {
+        padding: 12px;
+        margin-bottom: 15px;
+    }
+
+    .sheet-section {
+        padding: 12px;
+        margin-bottom: 20px;
+    }
+
+    /* Attributes grid - 2 columns on mobile */
+    .attributes-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    .attr-box {
+        padding: 8px;
+    }
+    .attr-box input {
+        width: 60px;
+        font-size: 16px;
+    }
+
+    /* Derived stats - wrap */
+    .derived-stats {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    /* Field rows - stack */
+    .field-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    .field-row label {
+        width: auto;
+    }
+    .field-row input[type="text"],
+    .field-row input[type="number"] {
+        width: 100%;
+        max-width: none;
+        padding: 10px 8px;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+
+    /* Skills */
+    .skill-item .skill-display {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+    .add-skill-row {
+        flex-direction: column;
+    }
+    .add-skill-row input {
+        width: 100%;
+        padding: 10px 8px;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+    .add-skill-row .btn-add {
+        width: 100%;
+        padding: 10px;
+    }
+
+    /* Notes */
+    .notes-area {
+        font-size: 16px;
+        padding: 10px;
+    }
+
+    /* Track items */
+    .track-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        padding: 10px;
+    }
+    .track-requirement {
+        font-size: 0.7em;
+    }
+    .track-roll-info {
+        font-size: 0.7em;
+    }
+
+    /* Save indicator - adjust position */
+    .save-indicator {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        text-align: center;
+    }
+
+    /* Experience log */
+    .experience-log {
+        max-height: 200px;
+        font-size: 0.85em;
+    }
+}
+
+/* Very small screens */
+@media screen and (max-width: 480px) {
+    /* Single column attributes */
+    .attributes-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .attr-box {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        text-align: left;
+        padding: 10px;
+    }
+    .attr-box label {
+        margin-bottom: 0;
+        margin-right: 10px;
+    }
+    .attr-box input {
+        width: 70px;
+    }
+    .attr-box .modifier {
+        margin-top: 0;
+        margin-left: 10px;
+    }
+
+    .track-legend {
+        flex-direction: column;
+        gap: 3px;
+    }
+}
 {% endblock %}
 
 {% block content %}

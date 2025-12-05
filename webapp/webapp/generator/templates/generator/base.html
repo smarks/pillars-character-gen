@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Pillars{% endblock %}</title>
     <style>
         /* Base styles - minimal, clean design */
@@ -208,6 +210,212 @@
         }
         .site-footer a {
             color: #666;
+        }
+
+        /* Mobile styles */
+        @media screen and (max-width: 768px) {
+            /* Base adjustments */
+            body {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            h1 { font-size: 1.4em; }
+            h2 { font-size: 1.2em; }
+            h3 { font-size: 1.1em; }
+
+            /* Navigation - stack vertically */
+            .user-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .user-bar .nav-left,
+            .user-bar .nav-right {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .user-bar a {
+                padding: 5px 0;
+            }
+
+            /* Top bar - stack on small screens */
+            .top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .top-bar h1 {
+                font-size: 1.3em;
+            }
+
+            /* Buttons - larger touch targets */
+            button, .btn {
+                padding: 12px 16px;
+                font-size: 14px;
+                margin-right: 5px;
+                margin-bottom: 8px;
+            }
+
+            /* Sections */
+            .section {
+                padding: 12px;
+                margin: 15px 0;
+            }
+
+            /* Pre blocks - allow horizontal scroll */
+            pre {
+                padding: 12px;
+                font-size: 12px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Tables - horizontal scroll wrapper */
+            .table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -12px;
+                padding: 0 12px;
+            }
+            table {
+                min-width: 500px;
+            }
+            th, td {
+                padding: 6px;
+                font-size: 13px;
+            }
+
+            /* Navigation cards */
+            .nav-links {
+                flex-direction: column;
+                gap: 10px;
+                margin: 20px 0;
+            }
+            .nav-link {
+                padding: 15px 20px;
+                min-width: auto;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .nav-link .icon {
+                font-size: 1.5em;
+                margin-bottom: 5px;
+            }
+
+            /* Info rows */
+            .info-row {
+                flex-direction: column;
+                gap: 2px;
+                padding: 8px 0;
+            }
+
+            /* Control rows - stack labels */
+            .control-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .control-row select,
+            .control-row input[type="number"],
+            .control-row input[type="text"],
+            .control-row input[type="password"] {
+                width: 100%;
+                padding: 10px;
+                font-size: 16px; /* Prevents iOS zoom */
+                box-sizing: border-box;
+            }
+
+            /* Skills list */
+            .skills-list {
+                gap: 6px;
+            }
+            .skill-tag {
+                padding: 6px 10px;
+                font-size: 13px;
+            }
+
+            /* Dice roller */
+            .dice-roller {
+                padding: 12px;
+                margin-top: 30px;
+            }
+            .dice-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .dice-controls select {
+                width: 100%;
+                padding: 10px;
+                font-size: 16px;
+                margin-bottom: 8px;
+            }
+            .dice-controls button {
+                width: 100%;
+                margin: 4px 0;
+            }
+            .dice-result {
+                font-size: 14px;
+            }
+
+            /* Footer */
+            .site-footer {
+                font-size: 0.75em;
+                padding-top: 12px;
+                margin-top: 30px;
+                line-height: 1.6;
+            }
+
+            /* Alert boxes */
+            .info-box, .warning-box, .danger-box, .success-box {
+                padding: 12px;
+                margin: 12px 0;
+            }
+
+            /* Button row - stack */
+            .button-row {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+
+            /* Button group - full width buttons */
+            .button-group button,
+            .button-group .btn {
+                display: block;
+                width: 100%;
+                text-align: center;
+                margin-right: 0;
+            }
+        }
+
+        /* Even smaller screens */
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+
+            h1 { font-size: 1.2em; }
+
+            .section {
+                padding: 10px;
+                margin: 10px 0;
+            }
+
+            pre {
+                padding: 10px;
+                font-size: 11px;
+            }
+
+            button, .btn {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
+            th, td {
+                padding: 5px;
+                font-size: 12px;
+            }
         }
 
         /* Print styles */
