@@ -1592,6 +1592,85 @@ class AddExperienceTests(TestCase):
         # Skills should accumulate
         self.assertGreater(second_skills, first_skills)
 
+    def test_add_experience_updates_ui_correctly(self):
+        """Test that adding experience updates the character sheet UI with new data."""
+        self.client.login(username='exp_test', password='test123')
+
+        # First, verify the character sheet shows no experience
+        response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
+        self.assertEqual(response.status_code, 200)
+        # Should show years_served as 0
+        self.assertEqual(response.context['years_served'], 0)
+        self.assertEqual(response.context['current_age'], 16)
+        # Should have empty yearly_results
+        self.assertEqual(len(response.context['yearly_results']), 0)
+        # Year-by-Year Log should NOT appear (no results)
+        self.assertNotContains(response, 'Year-by-Year Log')
+
+        # Add 3 years of experience
+        add_response = self.client.post(
+            reverse('add_experience_to_character', args=[self.saved_char.id]),
+            {'years': 3, 'track': 'WORKER'},
+            follow=True  # Follow the redirect
+        )
+
+        # Should end up at character sheet
+        self.assertEqual(add_response.status_code, 200)
+
+        # Verify the UI shows updated experience data
+        # Check context variables
+        self.assertEqual(add_response.context['years_served'], 3)
+        self.assertEqual(add_response.context['current_age'], 19)  # 16 + 3
+        self.assertEqual(len(add_response.context['yearly_results']), 3)
+
+        # Check the HTML content shows the experience
+        self.assertContains(add_response, 'Year-by-Year Log')
+        self.assertContains(add_response, 'Year 16')  # First year of experience
+        self.assertContains(add_response, 'Year 17')
+        self.assertContains(add_response, 'Year 18')
+
+        # Prior Experience sidebar section should show updated values
+        self.assertContains(add_response, 'Prior Experience')
+        self.assertContains(add_response, 'Years Served')
+
+        # Should show the track that was selected
+        self.assertContains(add_response, 'Worker')
+
+    def test_add_more_experience_updates_ui(self):
+        """Test that adding more experience to existing updates UI correctly."""
+        self.client.login(username='exp_test', password='test123')
+
+        # Add initial experience
+        self.client.post(
+            reverse('add_experience_to_character', args=[self.saved_char.id]),
+            {'years': 2, 'track': 'WORKER'}
+        )
+
+        # Verify initial state
+        response1 = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
+        self.assertEqual(response1.context['years_served'], 2)
+        self.assertEqual(response1.context['current_age'], 18)
+        self.assertEqual(len(response1.context['yearly_results']), 2)
+
+        # Add more experience
+        add_response = self.client.post(
+            reverse('add_experience_to_character', args=[self.saved_char.id]),
+            {'years': 3},
+            follow=True
+        )
+
+        # Verify accumulated experience in UI
+        self.assertEqual(add_response.context['years_served'], 5)
+        self.assertEqual(add_response.context['current_age'], 21)  # 16 + 5
+        self.assertEqual(len(add_response.context['yearly_results']), 5)
+
+        # Should show all 5 years in the log
+        self.assertContains(add_response, 'Year 16')
+        self.assertContains(add_response, 'Year 17')
+        self.assertContains(add_response, 'Year 18')
+        self.assertContains(add_response, 'Year 19')
+        self.assertContains(add_response, 'Year 20')
+
     def test_add_experience_requires_login(self):
         """Test that adding experience requires authentication."""
         response = self.client.post(
