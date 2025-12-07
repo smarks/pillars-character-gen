@@ -11,11 +11,12 @@
     align-items: flex-start;
 }
 .generator-sidebar {
-    width: 250px;
+    width: 300px;
     flex-shrink: 0;
 }
 .generator-main {
     flex: 1;
+    min-width: 0;
 }
 @media (max-width: 900px) {
     .generator-layout {
@@ -29,8 +30,8 @@
 
 /* Sidebar styling */
 .sidebar-section {
-    margin-bottom: 20px;
-    padding: 15px;
+    margin-bottom: 15px;
+    padding: 12px;
     border: 1px solid #ccc;
     background: #f9f9f9;
 }
@@ -50,7 +51,207 @@
     margin-bottom: 0;
 }
 
-/* Mobile styles for generator */
+/* Focus buttons - inline row */
+.focus-buttons {
+    display: flex;
+    gap: 5px;
+}
+.focus-buttons .btn {
+    flex: 1;
+    font-size: 0.85em;
+    padding: 8px 4px;
+    margin-bottom: 0;
+}
+
+/* Track panels */
+.track-panel {
+    border: 2px solid #ccc;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    position: relative;
+    font-size: 0.9em;
+}
+.track-panel:last-child {
+    margin-bottom: 0;
+}
+.track-panel.unavailable {
+    background: #ffcccc;
+    border-color: #cc6666;
+    color: #884444;
+    cursor: not-allowed;
+}
+.track-panel.available {
+    background: #ccffcc;
+    border-color: #66cc66;
+}
+.track-panel.selected {
+    background: #90ee90;
+    border-color: #228b22;
+}
+.track-panel.requires-roll {
+    background: #ffffcc;
+    border-color: #cccc66;
+}
+.track-panel .track-name {
+    font-weight: bold;
+}
+.track-panel .track-details {
+    font-size: 0.85em;
+    color: #555;
+    margin-top: 3px;
+}
+.track-panel .track-checkbox {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+}
+.track-panel.unavailable .track-checkbox {
+    display: none;
+}
+
+/* Character sheet styling */
+.character-sheet {
+    background: #e0f4ff;
+    border: 1px solid #87ceeb;
+    padding: 15px;
+}
+.character-sheet h3 {
+    margin: 0 0 15px 0;
+    border-bottom: 1px solid #87ceeb;
+    padding-bottom: 5px;
+}
+
+/* Editable fields */
+.editable-field {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 8px;
+    gap: 10px;
+}
+.editable-field label {
+    font-weight: bold;
+    min-width: 100px;
+}
+.editable-field input,
+.editable-field textarea {
+    flex: 1;
+    padding: 4px 8px;
+    font-family: monospace;
+    border: 1px solid #87ceeb;
+    background: white;
+}
+.editable-field textarea {
+    min-height: 60px;
+    resize: vertical;
+}
+
+/* Attributes grid */
+.attributes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.attr-box {
+    text-align: center;
+    padding: 8px;
+    background: white;
+    border: 1px solid #87ceeb;
+}
+.attr-box .attr-name {
+    font-weight: bold;
+    font-size: 0.9em;
+}
+.attr-box .attr-value {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+.attr-box .attr-mod {
+    font-size: 0.85em;
+    color: #666;
+}
+
+/* Skills display */
+.skills-section {
+    margin-top: 15px;
+}
+.skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 5px;
+}
+.skill-tag {
+    background: #333;
+    color: white;
+    padding: 2px 8px;
+    font-size: 0.85em;
+}
+
+/* Details section (year-by-year log) */
+.details-section {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #87ceeb;
+}
+.details-section h4 {
+    margin: 0 0 10px 0;
+}
+.experience-log {
+    max-height: 200px;
+    overflow-y: auto;
+    background: white;
+    padding: 8px;
+    border: 1px solid #ccc;
+    font-size: 0.85em;
+}
+.year-entry {
+    padding: 3px 0;
+    border-bottom: 1px dotted #ddd;
+}
+.year-entry:last-child {
+    border-bottom: none;
+}
+
+/* Action buttons row */
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+.action-buttons .btn {
+    flex: 1;
+}
+
+/* Toggle checkbox styling */
+.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.toggle-row label {
+    font-size: 0.9em;
+}
+
+/* Warning box */
+.warning-box {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    padding: 8px;
+    margin-bottom: 10px;
+    font-size: 0.85em;
+}
+
+/* Death notice */
+.death-notice {
+    background: #fdd;
+    border-color: #c44;
+    color: #c44;
+}
+
+/* Mobile styles */
 @media screen and (max-width: 768px) {
     .generator-layout {
         flex-direction: column;
@@ -59,10 +260,9 @@
         width: 100%;
         order: -1;
     }
-
     .sidebar-section {
-        padding: 12px;
-        margin-bottom: 15px;
+        padding: 10px;
+        margin-bottom: 12px;
     }
     .sidebar-section select {
         width: 100%;
@@ -70,15 +270,18 @@
         font-size: 16px;
         box-sizing: border-box;
     }
-
-    /* Experience log in generator */
-    .experience-log {
-        max-height: 200px;
-        font-size: 0.85em;
+    .focus-buttons {
+        flex-direction: column;
     }
-    .year-entry {
-        padding: 6px 0;
-        font-size: 13px;
+    .focus-buttons .btn {
+        font-size: 1em;
+        padding: 12px;
+    }
+    .attributes-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .action-buttons {
+        flex-direction: column;
     }
 }
 {% endblock %}
@@ -89,16 +292,27 @@
     <a href="{% url 'welcome' %}" class="btn">&larr; Home</a>
 </div>
 
-<form method="post">
+<form method="post" id="generator-form">
 {% csrf_token %}
 <div class="generator-layout">
     <!-- Left Sidebar - Controls -->
     <div class="generator-sidebar">
+        <!-- Re-roll Character -->
+        <div class="sidebar-section">
+            <h3>Re-roll Character</h3>
+            <div class="focus-buttons">
+                <button type="submit" name="action" value="reroll_none" class="btn">No Focus</button>
+                <button type="submit" name="action" value="reroll_physical" class="btn">STR/DEX</button>
+                <button type="submit" name="action" value="reroll_mental" class="btn">INT/WIS</button>
+            </div>
+        </div>
+
         {% if not died %}
+        <!-- Number of Years -->
         <div class="sidebar-section">
             <h3>Add Experience</h3>
             <div style="margin-bottom: 10px;">
-                <label style="display: block; margin-bottom: 5px;">Years:</label>
+                <label style="display: block; margin-bottom: 5px;">Number of Years:</label>
                 <select name="years" id="years-select" style="width: 100%; padding: 5px; font-family: monospace;">
                     <option value="1">1 year</option>
                     <option value="2">2 years</option>
@@ -112,96 +326,182 @@
                     <option value="10">10 years</option>
                 </select>
             </div>
-            <div style="margin-bottom: 10px;">
-                <label style="display: flex; align-items: center; gap: 5px;">
-                    <input type="checkbox" name="interactive_mode" id="interactive-checkbox">
-                    Interactive Mode
-                </label>
-                <span style="font-size: 0.8em; color: #666;">(year by year)</span>
-            </div>
 
-            <div id="aging-warning" class="warning-box" style="display: none; margin-bottom: 10px;">
+            <div id="aging-warning" class="warning-box" style="display: none;">
                 <strong>Aging Warning!</strong>
-                <p style="margin: 5px 0; font-size: 0.85em;">Adding <span id="aging-years"></span> years will result in aging penalties.</p>
+                <p style="margin: 5px 0;">Adding <span id="aging-years"></span> years will result in aging penalties.</p>
             </div>
 
-            <button type="submit" name="action" value="add_experience" class="btn primary">Add {% if has_experience %}More {% endif %}Experience</button>
+            <!-- Show all tracks toggle -->
+            <div class="toggle-row">
+                <input type="checkbox" id="show-all-tracks" name="show_all_tracks" {% if show_all_tracks %}checked{% endif %}>
+                <label for="show-all-tracks">Show all tracks</label>
+            </div>
+
+            <!-- Auto Select Track toggle -->
+            <div class="toggle-row">
+                <input type="checkbox" id="auto-select-track" name="auto_select_track" checked>
+                <label for="auto-select-track">Auto Select Track</label>
+            </div>
+
+            <!-- Track panels -->
+            <div id="track-panels" style="{% if not show_all_tracks %}display: none;{% endif %}">
+                {% for track in track_info %}
+                <div class="track-panel {% if track.impossible %}unavailable{% elif track.requires_roll %}requires-roll{% elif selected_track == track.track_key %}selected{% else %}available{% endif %}"
+                     data-track="{{ track.track_key }}"
+                     title="{{ track.requirement }}">
+                    {% if not track.impossible %}
+                    <input type="radio" name="chosen_track" value="{{ track.track_key }}" class="track-checkbox"
+                           {% if selected_track == track.track_key %}checked{% endif %}>
+                    {% endif %}
+                    <div class="track-name">{{ track.track }}</div>
+                    <div class="track-details">
+                        Surv: {{ track.survivability }}+ |
+                        {% if track.impossible %}Impossible{% elif track.requires_roll %}Roll Required{% else %}Available{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <input type="hidden" name="track_mode" id="track-mode" value="auto">
+
+            <button type="submit" name="action" value="add_experience" class="btn primary" style="margin-top: 10px;">
+                Add {% if has_experience %}More {% endif %}Experience
+            </button>
         </div>
         {% endif %}
 
+        <!-- Action buttons -->
         <div class="sidebar-section">
-            <h3>Finish</h3>
             <button type="submit" name="action" value="finish" class="btn success">Finish Character</button>
-        </div>
-
-        <div class="sidebar-section">
-            <h3>Re-roll Character</h3>
-            <button type="submit" name="action" value="reroll_none" class="btn">No Focus</button>
-            <button type="submit" name="action" value="reroll_physical" class="btn">STR/DEX Focus</button>
-            <button type="submit" name="action" value="reroll_mental" class="btn">INT/WIS Focus</button>
+            <button type="button" id="copy-btn" class="btn" onclick="copyToClipboard()">Copy to Clipboard</button>
         </div>
 
         {% if died %}
-        <div class="sidebar-section" style="background: #fdd; border-color: #c44;">
+        <div class="sidebar-section death-notice">
             <h3 style="color: #c44;">Character Died</h3>
             <p style="margin: 0; font-size: 0.9em;">Died during prior experience at age {{ current_age }}.</p>
         </div>
         {% endif %}
     </div>
 
-    <!-- Main Content - Character Display -->
+    <!-- Main Content - Character Sheet -->
     <div class="generator-main">
-        <div class="section">
-            <h3>Your Character</h3>
-            <pre>{{ character }}</pre>
-        </div>
+        <div class="character-sheet">
+            <h3>Editable Characteristics</h3>
 
-        {% if has_experience %}
-        <div class="section">
-            <h3>Prior Experience</h3>
-            <div class="info-row">
-                <span>Years Completed:</span>
-                <span><strong>{{ years_completed }}</strong></span>
+            <!-- Name -->
+            <div class="editable-field">
+                <label>Name:</label>
+                <input type="text" name="char_name" id="char-name" value="{{ char_data.name|default:'' }}" placeholder="Enter character name">
             </div>
-            <div class="info-row">
-                <span>Final Age:</span>
-                <span><strong>{{ years_completed|add:16 }}</strong></span>
-            </div>
-            {% if yearly_results %}
-            <h4 style="margin-top: 15px;">Year-by-Year Log</h4>
-            <div class="experience-log" style="font-size: 0.9em; background: #fff; padding: 10px; border: 1px solid #ddd; max-height: 300px; overflow-y: auto;">
-                {% for yr in yearly_results %}
-                <div class="year-entry {% if not yr.survived %}died{% endif %}" style="padding: 5px 0; border-bottom: 1px dotted #ddd;">
-                    <strong>Year {{ yr.year }}:</strong> {{ yr.skill }} |
-                    Survival: {{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+
-                    [{% if yr.survived %}<span style="color: green;">Survived</span>{% else %}<span style="color: red; font-weight: bold;">DIED</span>{% endif %}]
+
+            <!-- Attributes -->
+            <div class="attributes-grid">
+                <div class="attr-box">
+                    <div class="attr-name">STR</div>
+                    <div class="attr-value">{{ char_data.attributes.STR }}</div>
+                    <div class="attr-mod">{% if str_mod >= 0 %}+{% endif %}{{ str_mod }}</div>
                 </div>
-                {% endfor %}
+                <div class="attr-box">
+                    <div class="attr-name">DEX</div>
+                    <div class="attr-value">{{ char_data.attributes.DEX }}</div>
+                    <div class="attr-mod">{% if dex_mod >= 0 %}+{% endif %}{{ dex_mod }}</div>
+                </div>
+                <div class="attr-box">
+                    <div class="attr-name">INT</div>
+                    <div class="attr-value">{{ char_data.attributes.INT }}</div>
+                    <div class="attr-mod">{% if int_mod >= 0 %}+{% endif %}{{ int_mod }}</div>
+                </div>
+                <div class="attr-box">
+                    <div class="attr-name">WIS</div>
+                    <div class="attr-value">{{ char_data.attributes.WIS }}</div>
+                    <div class="attr-mod">{% if wis_mod >= 0 %}+{% endif %}{{ wis_mod }}</div>
+                </div>
+                <div class="attr-box">
+                    <div class="attr-name">CON</div>
+                    <div class="attr-value">{{ char_data.attributes.CON }}</div>
+                    <div class="attr-mod">{% if con_mod >= 0 %}+{% endif %}{{ con_mod }}</div>
+                </div>
+                <div class="attr-box">
+                    <div class="attr-name">CHR</div>
+                    <div class="attr-value">{{ char_data.attributes.CHR }}</div>
+                    <div class="attr-mod">{% if chr_mod >= 0 %}+{% endif %}{{ chr_mod }}</div>
+                </div>
+            </div>
+
+            <!-- Background -->
+            <div class="editable-field">
+                <label>Background:</label>
+                <textarea name="background" id="background" placeholder="Character background...">{{ char_data.provenance|default:'' }}</textarea>
+            </div>
+
+            <!-- Wealth -->
+            <div class="editable-field">
+                <label>Wealth:</label>
+                <span style="padding: 4px 0;">{{ char_data.wealth|default:'Unknown' }}</span>
+            </div>
+
+            <!-- Skills -->
+            <div class="skills-section">
+                <strong>Skills:</strong>
+                <div class="skills-list" id="skills-list">
+                    {% for skill in skills %}
+                    <span class="skill-tag">{{ skill }}</span>
+                    {% empty %}
+                    <span style="color: #666; font-style: italic;">No skills yet - add experience to gain skills</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Details - Year-by-year log (read-only) -->
+            {% if has_experience %}
+            <div class="details-section">
+                <h4>Details (Year-by-Year Log)</h4>
+                <p style="font-size: 0.85em; color: #666; margin-bottom: 8px;">
+                    Track: {{ track_name }} | Years: {{ years_completed }} | Age: {{ current_age }}
+                </p>
+                <div class="experience-log">
+                    {% for yr in yearly_results %}
+                    <div class="year-entry">
+                        <strong>Year {{ yr.year }}:</strong> {{ yr.skill }} |
+                        Surv: {{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+
+                        {% if yr.survived %}
+                        <span style="color: green;">[Survived]</span>
+                        {% else %}
+                        <span style="color: red; font-weight: bold;">[DIED]</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
             {% endif %}
         </div>
-        {% endif %}
     </div>
 </div>
 </form>
 
+<!-- Hidden textarea for clipboard -->
+<textarea id="clipboard-content" style="position: absolute; left: -9999px;">{{ character }}</textarea>
+
 <script>
 (function() {
     var yearsSelect = document.getElementById('years-select');
-    var interactiveCheckbox = document.getElementById('interactive-checkbox');
     var agingWarning = document.getElementById('aging-warning');
     var agingYearsSpan = document.getElementById('aging-years');
+    var showAllTracksCheckbox = document.getElementById('show-all-tracks');
+    var autoSelectCheckbox = document.getElementById('auto-select-track');
+    var trackPanels = document.getElementById('track-panels');
+    var trackModeInput = document.getElementById('track-mode');
 
-    // Current age from context (16 + years_completed), default to 16 if not set
+    // Current age from context
     var currentAge = {{ current_age|default:16 }};
 
     function updateAgingWarning() {
         if (!agingWarning || !yearsSelect) return;
-
         var selectedYears = parseInt(yearsSelect.value) || 0;
         var finalAge = currentAge + selectedYears;
 
-        // Show warning if adding years would push past 34
         if (finalAge > 34) {
             if (agingYearsSpan) agingYearsSpan.textContent = selectedYears;
             agingWarning.style.display = 'block';
@@ -210,23 +510,83 @@
         }
     }
 
-    if (interactiveCheckbox && yearsSelect) {
-        // Disable years selector when interactive mode is checked
-        interactiveCheckbox.addEventListener('change', function() {
-            yearsSelect.disabled = this.checked;
-            if (this.checked) {
-                agingWarning.style.display = 'none';
-            } else {
-                updateAgingWarning();
+    // Show/hide track panels based on checkbox
+    if (showAllTracksCheckbox && trackPanels) {
+        showAllTracksCheckbox.addEventListener('change', function() {
+            trackPanels.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+
+    // Auto-select track toggle
+    if (autoSelectCheckbox && trackPanels) {
+        autoSelectCheckbox.addEventListener('change', function() {
+            var trackCheckboxes = trackPanels.querySelectorAll('input[type="radio"]');
+            trackCheckboxes.forEach(function(cb) {
+                cb.disabled = autoSelectCheckbox.checked;
+            });
+            trackModeInput.value = this.checked ? 'auto' : 'manual';
+
+            // If turning off auto-select, show track panels
+            if (!this.checked && showAllTracksCheckbox) {
+                showAllTracksCheckbox.checked = true;
+                trackPanels.style.display = 'block';
             }
         });
 
-        // Update warning when years selection changes
-        yearsSelect.addEventListener('change', updateAgingWarning);
+        // Initial state
+        if (autoSelectCheckbox.checked) {
+            var trackCheckboxes = trackPanels.querySelectorAll('input[type="radio"]');
+            trackCheckboxes.forEach(function(cb) {
+                cb.disabled = true;
+            });
+        }
     }
 
-    // Initial check
+    // Track panel click handling
+    document.querySelectorAll('.track-panel:not(.unavailable)').forEach(function(panel) {
+        panel.addEventListener('click', function() {
+            if (autoSelectCheckbox && autoSelectCheckbox.checked) return;
+
+            var radio = this.querySelector('input[type="radio"]');
+            if (radio && !radio.disabled) {
+                radio.checked = true;
+                // Update visual state
+                document.querySelectorAll('.track-panel').forEach(function(p) {
+                    p.classList.remove('selected');
+                });
+                this.classList.add('selected');
+            }
+        });
+    });
+
+    // Aging warning
+    if (yearsSelect) {
+        yearsSelect.addEventListener('change', updateAgingWarning);
+    }
     updateAgingWarning();
 })();
+
+function copyToClipboard() {
+    var content = document.getElementById('clipboard-content').value;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(content).then(function() {
+            var btn = document.getElementById('copy-btn');
+            btn.textContent = 'Copied!';
+            setTimeout(function() { btn.textContent = 'Copy to Clipboard'; }, 2000);
+        });
+    } else {
+        // Fallback
+        var textarea = document.getElementById('clipboard-content');
+        textarea.style.position = 'fixed';
+        textarea.style.left = '0';
+        textarea.select();
+        document.execCommand('copy');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        var btn = document.getElementById('copy-btn');
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = 'Copy to Clipboard'; }, 2000);
+    }
+}
 </script>
 {% endblock %}

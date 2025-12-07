@@ -137,6 +137,7 @@ from pillars.attributes import (
     CraftType,
     MagicSchool,
     get_track_availability,
+    roll_skill_track,
     create_skill_track_for_choice,
     roll_prior_experience,
     TRACK_SURVIVABILITY,
@@ -221,41 +222,160 @@ def index(request):
             return redirect('character_sheet', char_id=saved_id)
 
     elif action == 'add_experience':
-        # Go to track selection first, then interactive mode
+        # Add experience directly from the generator page
         char_data = request.session.get('current_character')
-        if char_data:
-            # Store character info for track selection
-            character = deserialize_character(char_data)
-            request.session['pending_character'] = char_data
-            request.session['pending_years'] = 0
-            request.session['pending_mode'] = 'interactive'
-            request.session['pending_str_mod'] = character.attributes.get_modifier('STR')
-            request.session['pending_dex_mod'] = character.attributes.get_modifier('DEX')
-            request.session['pending_int_mod'] = character.attributes.get_modifier('INT')
-            request.session['pending_wis_mod'] = character.attributes.get_modifier('WIS')
-            request.session['pending_social_class'] = char_data.get('provenance_social_class', 'Commoner')
-            request.session['pending_sub_class'] = char_data.get('provenance_sub_class', 'Laborer')
-            request.session['pending_wealth_level'] = char_data.get('wealth_level', 'Moderate')
-            request.session['pending_return_to_generator'] = True
-            return redirect('select_track')
-        else:
-            # No character in session - generate one and then redirect to track selection
+        if not char_data:
+            # No character in session - generate one first
             character = generate_character(years=0, skip_track=True)
             store_current_character(request, character)
-            # Now redirect to track selection with the new character
             char_data = request.session.get('current_character')
-            request.session['pending_character'] = char_data
-            request.session['pending_years'] = 0
-            request.session['pending_mode'] = 'interactive'
-            request.session['pending_str_mod'] = character.attributes.get_modifier('STR')
-            request.session['pending_dex_mod'] = character.attributes.get_modifier('DEX')
-            request.session['pending_int_mod'] = character.attributes.get_modifier('INT')
-            request.session['pending_wis_mod'] = character.attributes.get_modifier('WIS')
-            request.session['pending_social_class'] = str(character.provenance.social_class) if hasattr(character.provenance, 'social_class') else 'Commoner'
-            request.session['pending_sub_class'] = str(character.provenance.sub_class) if hasattr(character.provenance, 'sub_class') else 'Laborer'
-            request.session['pending_wealth_level'] = character.wealth.wealth_level if hasattr(character.wealth, 'wealth_level') else 'Moderate'
-            request.session['pending_return_to_generator'] = True
-            return redirect('select_track')
+
+        character = deserialize_character(char_data)
+
+        # Get form parameters
+        years = int(request.POST.get('years', 5))
+        track_mode = request.POST.get('track_mode', 'auto')
+        chosen_track_name = request.POST.get('chosen_track', '')
+
+        # Get character's attribute modifiers
+        str_mod = character.attributes.get_modifier('STR')
+        dex_mod = character.attributes.get_modifier('DEX')
+        int_mod = character.attributes.get_modifier('INT')
+        wis_mod = character.attributes.get_modifier('WIS')
+        total_modifier = sum(character.attributes.get_all_modifiers().values())
+        social_class = char_data.get('provenance_social_class', 'Commoner')
+        sub_class = char_data.get('provenance_sub_class', 'Laborer')
+        wealth_level = char_data.get('wealth_level', 'Moderate')
+
+        # Check if we already have a track from prior experience
+        if char_data.get('skill_track'):
+            # Use existing track
+            track_data = char_data['skill_track']
+            skill_track = SkillTrack(
+                track=TrackType(track_data['track']),
+                acceptance_check=None,
+                survivability=track_data['survivability'],
+                survivability_roll=None,
+                initial_skills=track_data['initial_skills'],
+                craft_type=CraftType(track_data['craft_type']) if track_data.get('craft_type') else None,
+                craft_rolls=None,
+                magic_school=MagicSchool(track_data['magic_school']) if track_data.get('magic_school') else None,
+                magic_school_rolls=track_data.get('magic_school_rolls'),
+            )
+        else:
+            # Determine track choice
+            if track_mode == 'manual' and chosen_track_name:
+                # User manually selected a track
+                try:
+                    chosen_track = TrackType[chosen_track_name]
+                except KeyError:
+                    chosen_track = TrackType.RANDOM  # Fallback
+                skill_track = create_skill_track_for_choice(
+                    chosen_track=chosen_track,
+                    str_mod=str_mod,
+                    dex_mod=dex_mod,
+                    int_mod=int_mod,
+                    wis_mod=wis_mod,
+                    social_class=social_class,
+                    sub_class=sub_class,
+                    wealth_level=wealth_level,
+                )
+            else:
+                # Auto-select track based on character stats
+                # Use roll_skill_track which handles auto-selection
+                skill_track = roll_skill_track(
+                    str_mod=str_mod,
+                    dex_mod=dex_mod,
+                    int_mod=int_mod,
+                    wis_mod=wis_mod,
+                    social_class=social_class,
+                    sub_class=sub_class,
+                    wealth_level=wealth_level,
+                )
+
+            if skill_track is None or skill_track.track is None:
+                # Track creation failed - redirect back with error
+                return redirect('generator')
+
+            # Save track to character data
+            char_data['skill_track'] = {
+                'track': skill_track.track.value,
+                'survivability': skill_track.survivability,
+                'initial_skills': list(skill_track.initial_skills),
+                'craft_type': skill_track.craft_type.value if skill_track.craft_type else None,
+                'magic_school': skill_track.magic_school.value if skill_track.magic_school else None,
+                'magic_school_rolls': skill_track.magic_school_rolls,
+            }
+
+        # Get existing experience data
+        existing_years = request.session.get('interactive_years', 0)
+        existing_skills = request.session.get('interactive_skills', [])
+        existing_yearly_results = request.session.get('interactive_yearly_results', [])
+        existing_aging = request.session.get('interactive_aging', {'str': 0, 'dex': 0, 'int': 0, 'wis': 0, 'con': 0})
+        died = request.session.get('interactive_died', False)
+
+        if died:
+            # Can't add experience to dead character
+            return redirect('generator')
+
+        # Reconstruct aging effects
+        aging_effects = AgingEffects(
+            str_penalty=existing_aging.get('str', 0),
+            dex_penalty=existing_aging.get('dex', 0),
+            int_penalty=existing_aging.get('int', 0),
+            wis_penalty=existing_aging.get('wis', 0),
+            con_penalty=existing_aging.get('con', 0),
+        )
+
+        # Add initial skills if this is the first experience
+        if existing_years == 0:
+            existing_skills = list(skill_track.initial_skills)
+
+        # Roll new years
+        new_skills = []
+        new_yearly_results = []
+        for i in range(years):
+            year_index = existing_years + i
+            year_result = roll_single_year(
+                skill_track=skill_track,
+                year_index=year_index,
+                total_modifier=total_modifier,
+                aging_effects=aging_effects
+            )
+
+            new_skills.append(year_result.skill_gained)
+            new_yearly_results.append({
+                'year': year_result.year,
+                'skill': year_result.skill_gained,
+                'surv_roll': year_result.survivability_roll,
+                'surv_mod': year_result.survivability_modifier,
+                'surv_total': year_result.survivability_total,
+                'surv_target': year_result.survivability_target,
+                'survived': year_result.survived,
+                'aging': year_result.aging_penalties,
+            })
+
+            if not year_result.survived:
+                died = True
+                break
+
+        # Update session state
+        request.session['interactive_years'] = existing_years + len(new_yearly_results)
+        request.session['interactive_skills'] = existing_skills + new_skills
+        request.session['interactive_yearly_results'] = existing_yearly_results + new_yearly_results
+        request.session['interactive_died'] = died
+        request.session['interactive_aging'] = {
+            'str': aging_effects.str_penalty,
+            'dex': aging_effects.dex_penalty,
+            'int': aging_effects.int_penalty,
+            'wis': aging_effects.wis_penalty,
+            'con': aging_effects.con_penalty,
+        }
+        request.session['interactive_track_name'] = skill_track.track.value
+        request.session['current_character'] = char_data
+        request.session.modified = True
+
+        return redirect('generator')
 
     elif action == 'finish':
         # Show finished character page
@@ -310,6 +430,7 @@ def index(request):
     yearly_results = request.session.get('interactive_yearly_results', [])
     aging_data = request.session.get('interactive_aging', {})
     died = request.session.get('interactive_died', False)
+    track_name = request.session.get('interactive_track_name', '')
 
     # Build complete str_repr if there's prior experience
     char_data = request.session.get('current_character')
@@ -318,14 +439,80 @@ def index(request):
         # Update the character's _str_repr so {{ character }} displays correctly
         character._str_repr = final_str_repr
 
+    # Build track info for the track panels
+    if char_data:
+        attrs = char_data.get('attributes', {})
+        str_mod = get_modifier_for_value(attrs.get('STR', 10))
+        dex_mod = get_modifier_for_value(attrs.get('DEX', 10))
+        int_mod = get_modifier_for_value(attrs.get('INT', 10))
+        wis_mod = get_modifier_for_value(attrs.get('WIS', 10))
+        con_mod = get_modifier_for_value(attrs.get('CON', 10))
+        chr_mod = get_modifier_for_value(attrs.get('CHR', 10))
+        social_class = char_data.get('provenance_social_class', 'Commoner')
+        wealth_level = char_data.get('wealth_level', 'Moderate')
+
+        track_availability = get_track_availability(
+            str_mod, dex_mod, int_mod, wis_mod,
+            social_class, wealth_level
+        )
+
+        track_info = []
+        track_order = [
+            TrackType.OFFICER, TrackType.RANGER, TrackType.MAGIC, TrackType.NAVY, TrackType.ARMY,
+            TrackType.MERCHANT, TrackType.CRAFTS, TrackType.WORKER, TrackType.RANDOM
+        ]
+        for track in track_order:
+            if track in track_availability:
+                info = track_availability[track]
+                survivability = TRACK_SURVIVABILITY.get(track, '?')
+                initial_skills = TRACK_INITIAL_SKILLS.get(track, [])
+                track_info.append({
+                    'track': track.value,
+                    'track_key': track.name,
+                    'survivability': survivability if survivability else 'Variable',
+                    'initial_skills': initial_skills,
+                    'available': info['available'],
+                    'requires_roll': info['requires_roll'],
+                    'auto_accept': info['auto_accept'],
+                    'impossible': info['impossible'],
+                    'requirement': info['requirement'],
+                    'roll_info': info['roll_info'],
+                })
+    else:
+        track_info = []
+        str_mod = dex_mod = int_mod = wis_mod = con_mod = chr_mod = 0
+
+    # Consolidate skills for display
+    consolidated_skills = consolidate_skills(skills) if skills else []
+
+    # Get selected track key for highlighting in UI
+    selected_track = None
+    if char_data and char_data.get('skill_track'):
+        track_value = char_data['skill_track'].get('track')
+        # Convert track value (e.g., "Ranger") to track key (e.g., "RANGER")
+        for track_type in TrackType:
+            if track_type.value == track_value:
+                selected_track = track_type.name
+                break
+
     return render(request, 'generator/index.html', {
         'character': character,
+        'char_data': char_data or {},
         'years_completed': years_completed,
         'current_age': 16 + years_completed,
-        'skills': skills,
+        'skills': consolidated_skills,
         'yearly_results': yearly_results,
         'has_experience': years_completed > 0,
         'died': died,
+        'track_name': track_name,
+        'track_info': track_info,
+        'selected_track': selected_track,
+        'str_mod': str_mod,
+        'dex_mod': dex_mod,
+        'int_mod': int_mod,
+        'wis_mod': wis_mod,
+        'con_mod': con_mod,
+        'chr_mod': chr_mod,
     })
 
 
