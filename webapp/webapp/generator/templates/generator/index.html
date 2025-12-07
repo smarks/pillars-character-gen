@@ -86,8 +86,9 @@
     border-color: #66cc66;
 }
 .track-panel.selected {
-    background: #90ee90;
+    background: #ccffcc;
     border-color: #228b22;
+    border-width: 3px;
 }
 .track-panel.requires-roll {
     background: #ffffcc;
@@ -373,7 +374,6 @@
 
         <!-- Action buttons -->
         <div class="sidebar-section">
-            <button type="submit" name="action" value="finish" class="btn success">Finish Character</button>
             <button type="button" id="copy-btn" class="btn" onclick="copyToClipboard()">Copy to Clipboard</button>
         </div>
 
@@ -396,7 +396,7 @@
                 <input type="text" name="char_name" id="char-name" value="{{ char_data.name|default:'' }}" placeholder="Enter character name">
             </div>
 
-            {% with component_id="gensheet" editable=False show_experience=has_experience %}
+            {% with component_id="gensheet" editable=True show_experience=has_experience %}
             {% include "generator/partials/character_sheet_component.html" %}
             {% endwith %}
         </div>
@@ -408,6 +408,13 @@
 <textarea id="clipboard-content" style="position: absolute; left: -9999px;">{{ character }}</textarea>
 
 <script>
+// Initialize CharacterSheet component for editing
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof CharacterSheet !== 'undefined') {
+        CharacterSheet.init('gensheet', '{% url "update_session_character" %}', '{{ csrf_token }}');
+    }
+});
+
 (function() {
     var yearsSelect = document.getElementById('years-select');
     var agingWarning = document.getElementById('aging-warning');

@@ -377,36 +377,6 @@ def index(request):
 
         return redirect('generator')
 
-    elif action == 'finish':
-        # Show finished character page
-        char_data = request.session.get('current_character')
-        if char_data:
-            years = request.session.get('interactive_years', 0)
-            skills = request.session.get('interactive_skills', [])
-            yearly_results = request.session.get('interactive_yearly_results', [])
-            aging = request.session.get('interactive_aging', {})
-            died = request.session.get('interactive_died', False)
-
-            # Build complete str_repr with experience data
-            final_str_repr = build_final_str_repr(char_data, years, skills, yearly_results, aging, died)
-            char_data_with_repr = dict(char_data)
-            char_data_with_repr['str_repr'] = final_str_repr
-
-            return render(request, 'generator/finished.html', {
-                'character_data': char_data_with_repr,
-                'has_experience': years > 0,
-                'died': died,
-            })
-        # No character in session - generate one and show finished page
-        character = generate_character(years=0, skip_track=True)
-        store_current_character(request, character)
-        char_data = request.session.get('current_character')
-        return render(request, 'generator/finished.html', {
-            'character_data': char_data,
-            'has_experience': False,
-            'died': False,
-        })
-
     else:
         # GET request or unknown action - check for existing character or generate new
         char_data = request.session.get('current_character')
@@ -478,6 +448,8 @@ def index(request):
                     'requirement': info['requirement'],
                     'roll_info': info['roll_info'],
                 })
+        # Sort tracks: impossible (red) first, requires_roll (yellow) second, available (green) last
+        track_info.sort(key=lambda t: (0 if t['impossible'] else (1 if t['requires_roll'] else 2)))
     else:
         track_info = []
         str_mod = dex_mod = int_mod = wis_mod = con_mod = chr_mod = 0
@@ -599,6 +571,8 @@ def select_track(request):
                 'requirement': info['requirement'],
                 'roll_info': info['roll_info'],
             })
+    # Sort tracks: impossible (red) first, requires_roll (yellow) second, available (green) last
+    track_info.sort(key=lambda t: (0 if t['impossible'] else (1 if t['requires_roll'] else 2)))
 
     # Reconstruct character for display
     character = deserialize_character(pending_char)
@@ -609,19 +583,6 @@ def select_track(request):
         if action == 'start_over':
             clear_pending_session(request)
             return redirect('start_over')
-
-        elif action == 'finish':
-            # Finish without experience - go to final character display
-            clear_pending_session(request)
-            char_data = request.session.get('current_character')
-            if char_data:
-                # Use str_repr as-is since no experience was added
-                return render(request, 'generator/finished.html', {
-                    'character_data': char_data,
-                    'has_experience': False,
-                    'died': False,
-                })
-            return redirect('generator')
 
         elif action == 'add_experience':
             # Get form data
@@ -1004,21 +965,6 @@ def interactive(request):
                 del request.session['interactive_return_to_generator']
             request.session.modified = True
             return redirect('generator')
-
-        elif action == 'finish':
-            # Show the finished character sheet
-            char_data = request.session.get('current_character')
-            if char_data:
-                # Build complete str_repr with experience data
-                final_str_repr = build_final_str_repr(char_data, years_completed, skills, yearly_results_data, aging_data, died)
-                char_data_with_repr = dict(char_data)
-                char_data_with_repr['str_repr'] = final_str_repr
-
-                return render(request, 'generator/finished.html', {
-                    'character_data': char_data_with_repr,
-                    'has_experience': years_completed > 0,
-                    'died': died,
-                })
 
         elif action == 'new':
             # Clear session and start over
@@ -1774,6 +1720,8 @@ def character_sheet(request, char_id):
                     'requirement': info['requirement'],
                     'roll_info': info['roll_info'],
                 })
+        # Sort tracks: impossible (red) first, requires_roll (yellow) second, available (green) last
+        track_info.sort(key=lambda t: (0 if t['impossible'] else (1 if t['requires_roll'] else 2)))
 
     return render(request, 'generator/character_sheet.html', {
         'character': character,
@@ -1888,6 +1836,82 @@ def update_character(request, char_id):
         result['computed'] = computed
     if action == 'add':
         result['index'] = computed.get('index', 0)
+
+    return JsonResponse(result)
+
+
+def update_session_character(request):
+    """API endpoint to update a single field on the session-based character."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST required'}, status=405)
+
+    char_data = request.session.get('current_character')
+    if not char_data:
+        return JsonResponse({'success': False, 'error': 'No character in session'}, status=404)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+    field = data.get('field')
+    value = data.get('value')
+    action = data.get('action')  # For skills: 'add', 'remove', 'edit'
+
+    if not field:
+        return JsonResponse({'success': False, 'error': 'No field specified'}, status=400)
+
+    computed = {}
+
+    if field == 'name':
+        char_data['name'] = value
+    elif field == 'skills':
+        # Handle skills list operations
+        manual_skills = char_data.get('manual_skills', [])
+        if action == 'add':
+            normalized_skill = normalize_skill_name(value)
+            manual_skills.append(normalized_skill)
+            char_data['manual_skills'] = manual_skills
+            # Return all skills consolidated for display update
+            all_skills = []
+            all_skills.extend(char_data.get('location_skills', []))
+            if char_data.get('skill_track'):
+                all_skills.extend(char_data['skill_track'].get('initial_skills', []))
+            all_skills.extend(request.session.get('interactive_skills', []))
+            all_skills.extend(manual_skills)
+            computed['skills'] = consolidate_skills(all_skills)
+    elif field.startswith('attributes.'):
+        attr_name = field.split('.')[1]
+        if attr_name in ['STR', 'DEX', 'INT', 'WIS', 'CON', 'CHR']:
+            char_data['attributes'][attr_name] = value
+            computed.update(recalculate_derived(char_data))
+            mod = get_attribute_modifier(value)
+            computed[f'{attr_name.lower()}_mod'] = mod
+    elif field == 'notes':
+        char_data['notes'] = value
+    elif field in ['appearance', 'height', 'weight', 'provenance', 'location', 'literacy']:
+        char_data[field] = value
+    elif field == 'wealth_level':
+        char_data['wealth_level'] = value
+        # Update display wealth too
+        wealth_map = {
+            'Destitute': 'Destitute',
+            'Poor': 'Poor',
+            'Moderate': 'Moderate',
+            'Comfortable': 'Comfortable',
+            'Rich': 'Rich',
+        }
+        char_data['wealth'] = wealth_map.get(value, value)
+    else:
+        return JsonResponse({'success': False, 'error': f'Unknown field: {field}'}, status=400)
+
+    # Save to session
+    request.session['current_character'] = char_data
+    request.session.modified = True
+
+    result = {'success': True}
+    if computed:
+        result['computed'] = computed
 
     return JsonResponse(result)
 

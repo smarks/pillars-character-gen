@@ -6,6 +6,7 @@ urlpatterns = [
     path('generator/', views.index, name='generator'),
     path('generator/', views.index, name='index'),  # Alias for backwards compatibility
     path('interactive/', views.interactive, name='interactive'),
+    path('update-session-character/', views.update_session_character, name='update_session_character'),
     path('select-track/', views.select_track, name='select_track'),
     path('start-over/', views.start_over, name='start_over'),
     # Handbook sections - loaded from references/ directory
