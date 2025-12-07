@@ -221,6 +221,21 @@ def index(request):
         if saved_id:
             return redirect('character_sheet', char_id=saved_id)
 
+    elif action == 'start_fresh':
+        # Clear all session data and start over with a new character
+        clear_pending_session(request)
+        # Also clear interactive session data
+        for key in ['interactive_years', 'interactive_skills', 'interactive_yearly_results',
+                    'interactive_aging', 'interactive_died', 'interactive_track_name',
+                    'current_character']:
+            if key in request.session:
+                del request.session[key]
+        request.session.modified = True
+        # Generate a fresh character
+        character = generate_character(years=0, skip_track=True)
+        store_current_character(request, character)
+        return redirect('generator')
+
     elif action == 'add_experience':
         # Add experience directly from the generator page
         char_data = request.session.get('current_character')
@@ -471,6 +486,7 @@ def index(request):
         'character': character,
         'char_data': char_data or {},
         'years_completed': years_completed,
+        'years_served': years_completed,  # Alias for component
         'current_age': 16 + years_completed,
         'skills': consolidated_skills,
         'yearly_results': yearly_results,
@@ -1840,6 +1856,48 @@ def update_character(request, char_id):
     return JsonResponse(result)
 
 
+def calculate_track_info(char_data):
+    """Calculate track availability info for a character without an assigned track."""
+    attrs = char_data.get('attributes', {})
+    str_mod = get_attribute_modifier(attrs.get('STR', 10))
+    dex_mod = get_attribute_modifier(attrs.get('DEX', 10))
+    int_mod = get_attribute_modifier(attrs.get('INT', 10))
+    wis_mod = get_attribute_modifier(attrs.get('WIS', 10))
+    social_class = char_data.get('provenance_social_class', 'Commoner')
+    wealth_level = char_data.get('wealth_level', 'Moderate')
+
+    track_availability = get_track_availability(
+        str_mod, dex_mod, int_mod, wis_mod,
+        social_class, wealth_level
+    )
+
+    track_info = []
+    track_order = [
+        TrackType.OFFICER, TrackType.RANGER, TrackType.MAGIC, TrackType.NAVY, TrackType.ARMY,
+        TrackType.MERCHANT, TrackType.CRAFTS, TrackType.WORKER, TrackType.RANDOM
+    ]
+    for track in track_order:
+        if track in track_availability:
+            info = track_availability[track]
+            survivability = TRACK_SURVIVABILITY.get(track, '?')
+            initial_skills = TRACK_INITIAL_SKILLS.get(track, [])
+            track_info.append({
+                'track': track.value,
+                'track_key': track.name,
+                'survivability': survivability if survivability else 'Variable',
+                'initial_skills': initial_skills,
+                'available': info['available'],
+                'requires_roll': info['requires_roll'],
+                'auto_accept': info['auto_accept'],
+                'impossible': info['impossible'],
+                'requirement': info['requirement'],
+                'roll_info': info['roll_info'],
+            })
+    # Sort tracks: impossible (red) first, requires_roll (yellow) second, available (green) last
+    track_info.sort(key=lambda t: (0 if t['impossible'] else (1 if t['requires_roll'] else 2)))
+    return track_info
+
+
 def update_session_character(request):
     """API endpoint to update a single field on the session-based character."""
     if request.method != 'POST':
@@ -1862,6 +1920,8 @@ def update_session_character(request):
         return JsonResponse({'success': False, 'error': 'No field specified'}, status=400)
 
     computed = {}
+    # Track whether we need to recalculate track availability
+    recalc_tracks = False
 
     if field == 'name':
         char_data['name'] = value
@@ -1887,6 +1947,7 @@ def update_session_character(request):
             computed.update(recalculate_derived(char_data))
             mod = get_attribute_modifier(value)
             computed[f'{attr_name.lower()}_mod'] = mod
+            recalc_tracks = True  # Attributes affect track availability
     elif field == 'notes':
         char_data['notes'] = value
     elif field in ['appearance', 'height', 'weight', 'provenance', 'location', 'literacy']:
@@ -1902,8 +1963,13 @@ def update_session_character(request):
             'Rich': 'Rich',
         }
         char_data['wealth'] = wealth_map.get(value, value)
+        recalc_tracks = True  # Wealth affects track availability (Officer requires Rich)
     else:
         return JsonResponse({'success': False, 'error': f'Unknown field: {field}'}, status=400)
+
+    # Recalculate track availability if needed and character doesn't have a track yet
+    if recalc_tracks and not char_data.get('skill_track'):
+        computed['track_info'] = calculate_track_info(char_data)
 
     # Save to session
     request.session['current_character'] = char_data

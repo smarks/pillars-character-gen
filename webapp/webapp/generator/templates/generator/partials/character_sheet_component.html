@@ -1,0 +1,865 @@
+{% comment %}
+Reusable Character Sheet Component
+
+Required context variables:
+- char_data: dict with character data (attributes, appearance, etc.)
+- skills: list of consolidated skill strings
+- editable: bool - whether fields can be edited
+- show_experience: bool - whether to show prior experience section
+- yearly_results: list of year result dicts (optional)
+- years_served: int (optional)
+- current_age: int (optional, defaults to 16)
+- died: bool (optional)
+
+Optional context variables:
+- character: SavedCharacter model instance (for saved characters)
+- component_id: unique ID prefix for this instance (default: 'cs')
+- save_url: URL for auto-save (required if editable=True)
+- csrf_token: CSRF token (required if editable=True)
+
+Attribute display variables (computed by view):
+- str_display, dex_display, etc.: formatted attribute values
+- str_mod, dex_mod, etc.: attribute modifiers
+{% endcomment %}
+
+{% load static %}
+
+<div class="character-sheet-component" id="{{ component_id|default:'cs' }}-container">
+    <!-- Attributes Section -->
+    <div class="sheet-section">
+        <h2>Attributes</h2>
+        {% if editable %}
+        <p class="section-help">Values 1-18 are integers. Above 18, use decimal notation: 18.10, 18.20, ... 18.100 = 19</p>
+        {% endif %}
+
+        <div class="attributes-grid">
+            <div class="attr-box">
+                <label>STR</label>
+                {% if editable %}
+                <input type="text" class="attr-input" data-field="attributes.STR" data-attr="true"
+                       value="{{ str_display|default:char_data.attributes.STR }}" inputmode="numeric">
+                {% else %}
+                <span class="attr-value">{{ str_display|default:char_data.attributes.STR }}</span>
+                {% endif %}
+                <span class="modifier" data-computed="str_mod">({% if str_mod >= 0 %}+{% endif %}{{ str_mod|default:"0" }})</span>
+            </div>
+            <div class="attr-box">
+                <label>DEX</label>
+                {% if editable %}
+                <input type="text" class="attr-input" data-field="attributes.DEX" data-attr="true"
+                       value="{{ dex_display|default:char_data.attributes.DEX }}" inputmode="numeric">
+                {% else %}
+                <span class="attr-value">{{ dex_display|default:char_data.attributes.DEX }}</span>
+                {% endif %}
+                <span class="modifier" data-computed="dex_mod">({% if dex_mod >= 0 %}+{% endif %}{{ dex_mod|default:"0" }})</span>
+            </div>
+            <div class="attr-box">
+                <label>INT</label>
+                {% if editable %}
+                <input type="text" class="attr-input" data-field="attributes.INT" data-attr="true"
+                       value="{{ int_display|default:char_data.attributes.INT }}" inputmode="numeric">
+                {% else %}
+                <span class="attr-value">{{ int_display|default:char_data.attributes.INT }}</span>
+                {% endif %}
+                <span class="modifier" data-computed="int_mod">({% if int_mod >= 0 %}+{% endif %}{{ int_mod|default:"0" }})</span>
+            </div>
+            <div class="attr-box">
+                <label>WIS</label>
+                {% if editable %}
+                <input type="text" class="attr-input" data-field="attributes.WIS" data-attr="true"
+                       value="{{ wis_display|default:char_data.attributes.WIS }}" inputmode="numeric">
+                {% else %}
+                <span class="attr-value">{{ wis_display|default:char_data.attributes.WIS }}</span>
+                {% endif %}
+                <span class="modifier" data-computed="wis_mod">({% if wis_mod >= 0 %}+{% endif %}{{ wis_mod|default:"0" }})</span>
+            </div>
+            <div class="attr-box">
+                <label>CON</label>
+                {% if editable %}
+                <input type="text" class="attr-input" data-field="attributes.CON" data-attr="true"
+                       value="{{ con_display|default:char_data.attributes.CON }}" inputmode="numeric">
+                {% else %}
+                <span class="attr-value">{{ con_display|default:char_data.attributes.CON }}</span>
+                {% endif %}
+                <span class="modifier" data-computed="con_mod">({% if con_mod >= 0 %}+{% endif %}{{ con_mod|default:"0" }})</span>
+            </div>
+            <div class="attr-box">
+                <label>CHR</label>
+                {% if editable %}
+                <input type="text" class="attr-input" data-field="attributes.CHR" data-attr="true"
+                       value="{{ chr_display|default:char_data.attributes.CHR }}" inputmode="numeric">
+                {% else %}
+                <span class="attr-value">{{ chr_display|default:char_data.attributes.CHR }}</span>
+                {% endif %}
+                <span class="modifier" data-computed="chr_mod">({% if chr_mod >= 0 %}+{% endif %}{{ chr_mod|default:"0" }})</span>
+            </div>
+        </div>
+
+        <div class="derived-stats">
+            <div class="derived-stat">
+                <label>Fatigue Points</label>
+                <span class="value" data-computed="fatigue_points">{{ char_data.attributes.fatigue_points }}</span>
+            </div>
+            <div class="derived-stat">
+                <label>Body Points</label>
+                <span class="value" data-computed="body_points">{{ char_data.attributes.body_points }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biographical Section -->
+    <div class="sheet-section">
+        <h2>Biographical</h2>
+        <div class="field-row">
+            <label>Appearance:</label>
+            {% if editable %}
+            <input type="text" data-field="appearance" value="{{ char_data.appearance|default:'' }}">
+            {% else %}
+            <span class="field-value">{{ char_data.appearance|default:'-' }}</span>
+            {% endif %}
+        </div>
+        <div class="field-row">
+            <label>Height:</label>
+            {% if editable %}
+            <input type="text" data-field="height" value="{{ char_data.height|default:'' }}">
+            {% else %}
+            <span class="field-value">{{ char_data.height|default:'-' }}</span>
+            {% endif %}
+        </div>
+        <div class="field-row">
+            <label>Weight:</label>
+            {% if editable %}
+            <input type="text" data-field="weight" value="{{ char_data.weight|default:'' }}">
+            {% else %}
+            <span class="field-value">{{ char_data.weight|default:'-' }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Background Section -->
+    <div class="sheet-section">
+        <h2>Background</h2>
+        <div class="field-row">
+            <label>Provenance:</label>
+            {% if editable %}
+            <input type="text" data-field="provenance" value="{{ char_data.provenance|default:'' }}">
+            {% else %}
+            <span class="field-value">{{ char_data.provenance|default:'-' }}</span>
+            {% endif %}
+        </div>
+        <div class="field-row">
+            <label>Location:</label>
+            {% if editable %}
+            <input type="text" data-field="location" value="{{ char_data.location|default:'' }}">
+            {% else %}
+            <span class="field-value">{{ char_data.location|default:'-' }}</span>
+            {% endif %}
+        </div>
+        <div class="field-row">
+            <label>Literacy:</label>
+            {% if editable %}
+            <select data-field="literacy">
+                <option value="None" {% if char_data.literacy == 'None' or not char_data.literacy %}selected{% endif %}>None</option>
+                <option value="Basic" {% if 'Basic' in char_data.literacy|default:'' %}selected{% endif %}>Basic</option>
+                <option value="Literate" {% if 'Literate' in char_data.literacy|default:'' %}selected{% endif %}>Literate</option>
+            </select>
+            {% else %}
+            <span class="field-value">{{ char_data.literacy|default:'None' }}</span>
+            {% endif %}
+        </div>
+        <div class="field-row">
+            <label>Wealth:</label>
+            {% if editable %}
+            <select data-field="wealth_level">
+                <option value="Destitute" {% if char_data.wealth_level == 'Destitute' %}selected{% endif %}>Destitute</option>
+                <option value="Poor" {% if char_data.wealth_level == 'Poor' %}selected{% endif %}>Poor</option>
+                <option value="Moderate" {% if char_data.wealth_level == 'Moderate' or not char_data.wealth_level %}selected{% endif %}>Moderate</option>
+                <option value="Comfortable" {% if char_data.wealth_level == 'Comfortable' %}selected{% endif %}>Comfortable</option>
+                <option value="Rich" {% if char_data.wealth_level == 'Rich' %}selected{% endif %}>Rich</option>
+            </select>
+            {% else %}
+            <span class="field-value">{{ char_data.wealth|default:char_data.wealth_level|default:'Moderate' }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Skills Section (separate div as requested) -->
+    <div class="sheet-section skills-section">
+        <h2>Skills</h2>
+        <ul class="skills-list" id="{{ component_id|default:'cs' }}-skills-list">
+            {% for skill in skills %}
+            <li class="skill-item">
+                <span class="skill-tag">{{ skill }}</span>
+            </li>
+            {% empty %}
+            <li class="skill-item no-skills-msg"><em>No skills yet</em></li>
+            {% endfor %}
+        </ul>
+
+        {% if editable %}
+        <div class="add-skill-row">
+            <input type="text" id="{{ component_id|default:'cs' }}-new-skill" placeholder="Add skill (e.g., Tracking)"
+                   onkeypress="if(event.key==='Enter'){CharacterSheet.addSkill('{{ component_id|default:'cs' }}');return false;}">
+            <button type="button" class="btn-add" onclick="CharacterSheet.addSkill('{{ component_id|default:'cs' }}')">+ Add</button>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if char_data.skill_track %}
+    <!-- Skill Track Section -->
+    <div class="sheet-section">
+        <h2>Skill Track</h2>
+        <div class="field-row">
+            <label>Track:</label>
+            <span class="field-value">{{ char_data.skill_track.track }}</span>
+        </div>
+        <div class="field-row">
+            <label>Survivability:</label>
+            <span class="field-value">{{ char_data.skill_track.survivability }}+</span>
+        </div>
+        {% if char_data.skill_track.craft_type %}
+        <div class="field-row">
+            <label>Craft:</label>
+            <span class="field-value">{{ char_data.skill_track.craft_type }}</span>
+        </div>
+        {% endif %}
+        {% if char_data.skill_track.magic_school %}
+        <div class="field-row">
+            <label>Magic School:</label>
+            <span class="field-value">{{ char_data.skill_track.magic_school }}</span>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if show_experience and yearly_results %}
+    <!-- Prior Experience Section -->
+    <div class="sheet-section experience-section">
+        <h2>Prior Experience</h2>
+        <div class="experience-summary">
+            <div class="field-row">
+                <label>Starting Age:</label>
+                <span class="field-value">16</span>
+            </div>
+            <div class="field-row">
+                <label>Current Age:</label>
+                <span class="field-value">{{ current_age|default:16 }}</span>
+            </div>
+            <div class="field-row">
+                <label>Years Served:</label>
+                <span class="field-value">{{ years_served|default:0 }}</span>
+            </div>
+            {% if died %}
+            <div class="field-row died-notice">
+                <span class="died-text">DIED DURING PRIOR EXPERIENCE</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <h3>Year-by-Year Log</h3>
+        <div class="experience-log">
+            {% for yr in yearly_results %}
+            <div class="year-entry {% if not yr.survived %}died{% endif %}">
+                <strong>Year {{ yr.year }}:</strong> {{ yr.skill }} |
+                Survival: {{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+
+                [{% if yr.survived %}<span class="survived">Survived</span>{% else %}<span class="died-text">DIED</span>{% endif %}]
+                {% if yr.aging %}
+                    {% for attr, penalty in yr.aging.items %}
+                        {% if penalty %}| <span class="aging-penalty">{{ attr|upper }} {{ penalty }}</span>{% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Notes Section -->
+    <div class="sheet-section">
+        <h2>Notes</h2>
+        {% if editable %}
+        <textarea class="notes-area" data-field="notes" placeholder="Character backstory, notes, etc...">{{ char_data.notes|default:"" }}</textarea>
+        {% else %}
+        <div class="notes-display">{{ char_data.notes|default:"No notes"|linebreaks }}</div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+/* Character Sheet Component Styles */
+.character-sheet-component {
+    max-width: 800px;
+}
+
+.sheet-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    background: #fafafa;
+}
+
+.sheet-section h2 {
+    margin: 0 0 15px 0;
+    font-size: 1.2em;
+    border-bottom: 1px solid #999;
+    padding-bottom: 8px;
+}
+
+.sheet-section h3 {
+    margin: 15px 0 10px 0;
+    font-size: 1em;
+}
+
+.section-help {
+    font-size: 0.85em;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+/* Attributes grid */
+.attributes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.attr-box {
+    border: 1px solid #ddd;
+    padding: 10px;
+    background: #fff;
+    text-align: center;
+}
+
+.attr-box label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.attr-box .attr-input {
+    width: 60px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 4px;
+    border: 1px solid #ccc;
+}
+
+.attr-box .attr-value {
+    display: block;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.attr-box .attr-input.invalid {
+    border-color: #c44;
+    background: #fee;
+}
+
+.attr-box .modifier {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.85em;
+    color: #666;
+}
+
+/* Derived stats */
+.derived-stats {
+    display: flex;
+    gap: 30px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #ccc;
+}
+
+.derived-stat {
+    text-align: center;
+}
+
+.derived-stat label {
+    display: block;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.derived-stat .value {
+    font-size: 20px;
+    color: #333;
+}
+
+/* Field rows */
+.field-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.field-row label {
+    width: 120px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.field-row input[type="text"],
+.field-row select {
+    flex: 1;
+    max-width: 300px;
+    padding: 6px 8px;
+    font-family: monospace;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    background: #fff;
+}
+
+.field-row .field-value {
+    padding: 4px 0;
+}
+
+/* Skills section */
+.skills-section .skills-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.skill-item {
+    display: inline-block;
+}
+
+.skill-tag {
+    background: #333;
+    color: white;
+    padding: 5px 12px;
+    font-size: 0.9em;
+    display: inline-block;
+}
+
+.skill-item.no-skills-msg {
+    color: #666;
+}
+
+.add-skill-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #ccc;
+}
+
+.add-skill-row input {
+    flex: 1;
+    padding: 8px;
+    font-family: monospace;
+    font-size: 14px;
+    border: 1px solid #ccc;
+}
+
+.add-skill-row .btn-add {
+    padding: 8px 15px;
+    background: #4a4;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.add-skill-row .btn-add:hover {
+    background: #3a3;
+}
+
+/* Experience section */
+.experience-summary {
+    margin-bottom: 15px;
+}
+
+.experience-log {
+    font-size: 0.9em;
+    background: #fff;
+    padding: 10px;
+    border: 1px solid #ddd;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.year-entry {
+    padding: 5px 0;
+    border-bottom: 1px dotted #ddd;
+}
+
+.year-entry:last-child {
+    border-bottom: none;
+}
+
+.year-entry.died {
+    background: #fee;
+}
+
+.died-notice, .died-text {
+    color: #c44;
+    font-weight: bold;
+}
+
+.survived {
+    color: #4a4;
+}
+
+.aging-penalty {
+    color: #c60;
+    font-style: italic;
+}
+
+/* Notes */
+.notes-area {
+    width: 100%;
+    min-height: 100px;
+    font-family: monospace;
+    font-size: 14px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.notes-display {
+    background: #fff;
+    padding: 10px;
+    border: 1px solid #ddd;
+    min-height: 60px;
+}
+
+/* Save status indicators */
+.attr-input.saving, input.saving, select.saving, textarea.saving {
+    background: #ffc !important;
+}
+
+.attr-input.saved, input.saved, select.saved, textarea.saved {
+    background: #cfc !important;
+}
+
+.attr-input.error, input.error, select.error, textarea.error {
+    background: #fcc !important;
+}
+
+/* Mobile responsive */
+@media screen and (max-width: 768px) {
+    .attributes-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .field-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    .field-row label {
+        width: auto;
+    }
+
+    .field-row input[type="text"],
+    .field-row select {
+        width: 100%;
+        max-width: none;
+        padding: 10px 8px;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+
+    .derived-stats {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .add-skill-row {
+        flex-direction: column;
+    }
+
+    .add-skill-row input,
+    .add-skill-row .btn-add {
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .attributes-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .attr-box {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        text-align: left;
+    }
+
+    .attr-box label {
+        margin-bottom: 0;
+        margin-right: 10px;
+    }
+
+    .attr-box .modifier {
+        margin-top: 0;
+        margin-left: 10px;
+    }
+}
+</style>
+
+{% if editable %}
+<script>
+/**
+ * CharacterSheet - Reusable character sheet editing functionality
+ */
+var CharacterSheet = (function() {
+    var saveTimeouts = {};
+    var SAVE_DELAY = 300;
+
+    /**
+     * Parse attribute value from display format.
+     */
+    function parseAttributeValue(str) {
+        str = str.trim();
+
+        // Check for decimal notation (e.g., 18.10, 19.50)
+        var decimalMatch = str.match(/^(\d+)\.(\d+)$/);
+        if (decimalMatch) {
+            var base = parseInt(decimalMatch[1], 10);
+            var sub = parseInt(decimalMatch[2], 10);
+            if (base >= 18 && sub >= 10 && sub <= 100 && sub % 10 === 0) {
+                return { valid: true, value: str };
+            }
+            return { valid: false, value: str };
+        }
+
+        // Check for plain integer
+        var intMatch = str.match(/^(\d+)$/);
+        if (intMatch) {
+            var val = parseInt(intMatch[1], 10);
+            if (val >= 1) {
+                return { valid: true, value: val };
+            }
+            return { valid: false, value: str };
+        }
+
+        return { valid: false, value: str };
+    }
+
+    function validateAttributeInput(element) {
+        var result = parseAttributeValue(element.value);
+        if (result.valid) {
+            element.classList.remove('invalid');
+        } else {
+            element.classList.add('invalid');
+        }
+        return result;
+    }
+
+    function showStatus(element, status) {
+        element.classList.remove('saving', 'saved', 'error');
+        if (status) {
+            element.classList.add(status);
+        }
+    }
+
+    function debounceSave(element, componentId) {
+        showStatus(element, 'saving');
+
+        var key = componentId + '-' + element.dataset.field;
+        if (saveTimeouts[key]) {
+            clearTimeout(saveTimeouts[key]);
+        }
+
+        saveTimeouts[key] = setTimeout(function() {
+            saveField(element, componentId);
+        }, SAVE_DELAY);
+    }
+
+    function saveField(element, componentId) {
+        var container = document.getElementById(componentId + '-container');
+        var saveUrl = container.dataset.saveUrl;
+        var csrfToken = container.dataset.csrfToken;
+
+        if (!saveUrl) {
+            console.error('No save URL configured for component:', componentId);
+            return;
+        }
+
+        var field = element.dataset.field;
+        var value = element.value;
+
+        // For attribute inputs, validate
+        if (element.dataset.attr === 'true') {
+            var result = parseAttributeValue(value);
+            if (!result.valid) {
+                showStatus(element, 'error');
+                return;
+            }
+            value = result.value;
+        }
+
+        fetch(saveUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ field: field, value: value })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(result) {
+            if (result.success) {
+                showStatus(element, 'saved');
+
+                // Update computed fields
+                if (result.computed) {
+                    for (var key in result.computed) {
+                        if (key === 'track_info') {
+                            // Track availability changed - emit event for parent page
+                            var event = new CustomEvent('trackInfoUpdated', {
+                                detail: { trackInfo: result.computed.track_info }
+                            });
+                            document.dispatchEvent(event);
+                            continue;
+                        }
+                        var el = container.querySelector('[data-computed="' + key + '"]');
+                        if (el) {
+                            if (key.endsWith('_mod')) {
+                                var mod = result.computed[key];
+                                el.textContent = '(' + (mod >= 0 ? '+' : '') + mod + ')';
+                            } else {
+                                el.textContent = result.computed[key];
+                            }
+                        }
+                    }
+                }
+
+                setTimeout(function() { showStatus(element, null); }, 2000);
+            } else {
+                showStatus(element, 'error');
+            }
+        })
+        .catch(function(error) {
+            console.error('Save error:', error);
+            showStatus(element, 'error');
+        });
+    }
+
+    function addSkill(componentId) {
+        var container = document.getElementById(componentId + '-container');
+        var input = document.getElementById(componentId + '-new-skill');
+        var skill = input.value.trim();
+
+        if (!skill) return;
+
+        var saveUrl = container.dataset.saveUrl;
+        var csrfToken = container.dataset.csrfToken;
+
+        fetch(saveUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ field: 'skills', action: 'add', value: skill })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(result) {
+            if (result.success) {
+                input.value = '';
+
+                // Rebuild skills list if returned
+                if (result.computed && result.computed.skills) {
+                    rebuildSkillsList(componentId, result.computed.skills);
+                } else {
+                    // Fallback: add to DOM directly
+                    var list = document.getElementById(componentId + '-skills-list');
+                    var noSkillsMsg = list.querySelector('.no-skills-msg');
+                    if (noSkillsMsg) noSkillsMsg.remove();
+
+                    var li = document.createElement('li');
+                    li.className = 'skill-item';
+                    li.innerHTML = '<span class="skill-tag">' + escapeHtml(skill) + '</span>';
+                    list.appendChild(li);
+                }
+            }
+        })
+        .catch(function(error) {
+            console.error('Add skill error:', error);
+        });
+    }
+
+    function rebuildSkillsList(componentId, skills) {
+        var list = document.getElementById(componentId + '-skills-list');
+        list.innerHTML = '';
+
+        if (skills.length === 0) {
+            var li = document.createElement('li');
+            li.className = 'skill-item no-skills-msg';
+            li.innerHTML = '<em>No skills yet</em>';
+            list.appendChild(li);
+            return;
+        }
+
+        skills.forEach(function(skill) {
+            var li = document.createElement('li');
+            li.className = 'skill-item';
+            li.innerHTML = '<span class="skill-tag">' + escapeHtml(skill) + '</span>';
+            list.appendChild(li);
+        });
+    }
+
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function init(componentId, saveUrl, csrfToken) {
+        var container = document.getElementById(componentId + '-container');
+        if (!container) return;
+
+        // Store config on container element
+        container.dataset.saveUrl = saveUrl;
+        container.dataset.csrfToken = csrfToken;
+
+        // Initialize all editable fields
+        container.querySelectorAll('input[data-field], select[data-field], textarea[data-field]').forEach(function(input) {
+            input.addEventListener('input', function() {
+                if (this.dataset.attr === 'true') {
+                    validateAttributeInput(this);
+                }
+                debounceSave(this, componentId);
+            });
+
+            input.addEventListener('change', function() {
+                // For selects, save immediately on change
+                if (this.tagName === 'SELECT') {
+                    saveField(this, componentId);
+                }
+            });
+
+            input.addEventListener('blur', function() {
+                // Clear timeout and save immediately
+                var key = componentId + '-' + this.dataset.field;
+                if (saveTimeouts[key]) {
+                    clearTimeout(saveTimeouts[key]);
+                    saveTimeouts[key] = null;
+                }
+                saveField(this, componentId);
+            });
+        });
+    }
+
+    return {
+        init: init,
+        addSkill: addSkill,
+        parseAttributeValue: parseAttributeValue
+    };
+})();
+</script>
+{% endif %}

@@ -290,7 +290,7 @@
 {% block content %}
 <div class="top-bar">
     <h1>Character Generator</h1>
-    <a href="{% url 'welcome' %}" class="btn">&larr; Home</a>
+    <a href="{% url 'welcome' %}" class="btn" id="home-link">&larr; Home</a>
 </div>
 
 <form method="post" id="generator-form">
@@ -413,6 +413,23 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof CharacterSheet !== 'undefined') {
         CharacterSheet.init('gensheet', '{% url "update_session_character" %}', '{{ csrf_token }}');
     }
+
+    // Home link confirmation for non-authenticated users
+    var homeLink = document.getElementById('home-link');
+    var isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+
+    if (homeLink && !isAuthenticated) {
+        homeLink.addEventListener('click', function(e) {
+            var confirmed = confirm(
+                'You are not logged in. Your character data will be lost if you leave this page.\n\n' +
+                'To save your character, log in first.\n\n' +
+                'Are you sure you want to leave?'
+            );
+            if (!confirmed) {
+                e.preventDefault();
+            }
+        });
+    }
 });
 
 (function() {
@@ -518,5 +535,71 @@ function copyToClipboard() {
         setTimeout(function() { btn.textContent = 'Copy to Clipboard'; }, 2000);
     }
 }
+
+// Listen for track info updates from character sheet component
+document.addEventListener('trackInfoUpdated', function(e) {
+    var trackInfo = e.detail.trackInfo;
+    var trackPanels = document.getElementById('track-panels');
+    var autoSelectCheckbox = document.getElementById('auto-select-track');
+
+    if (!trackPanels || !trackInfo) return;
+
+    // Rebuild track panels
+    trackPanels.innerHTML = '';
+
+    trackInfo.forEach(function(track) {
+        var panelClass = 'track-panel ';
+        if (track.impossible) {
+            panelClass += 'unavailable';
+        } else if (track.requires_roll) {
+            panelClass += 'requires-roll';
+        } else {
+            panelClass += 'available';
+        }
+
+        var panel = document.createElement('div');
+        panel.className = panelClass;
+        panel.dataset.track = track.track_key;
+        panel.title = track.requirement;
+
+        var html = '';
+        if (!track.impossible) {
+            var disabled = autoSelectCheckbox && autoSelectCheckbox.checked ? 'disabled' : '';
+            html += '<input type="radio" name="chosen_track" value="' + track.track_key + '" class="track-checkbox" ' + disabled + '>';
+        }
+        html += '<div class="track-name">' + track.track + '</div>';
+        html += '<div class="track-details">';
+        html += 'Surv: ' + track.survivability + '+ | ';
+        if (track.impossible) {
+            html += 'Impossible';
+        } else if (track.requires_roll) {
+            html += 'Roll Required';
+        } else {
+            html += 'Available';
+        }
+        html += '</div>';
+
+        panel.innerHTML = html;
+
+        // Add click handler for non-unavailable panels
+        if (!track.impossible) {
+            panel.addEventListener('click', function() {
+                if (autoSelectCheckbox && autoSelectCheckbox.checked) return;
+
+                var radio = this.querySelector('input[type="radio"]');
+                if (radio && !radio.disabled) {
+                    radio.checked = true;
+                    // Update visual state
+                    trackPanels.querySelectorAll('.track-panel').forEach(function(p) {
+                        p.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                }
+            });
+        }
+
+        trackPanels.appendChild(panel);
+    });
+});
 </script>
 {% endblock %}
