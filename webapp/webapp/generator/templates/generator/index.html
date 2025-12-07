@@ -388,7 +388,7 @@
     <!-- Main Content - Character Sheet -->
     <div class="generator-main">
         <div class="character-sheet">
-            <h3>Editable Characteristics</h3>
+            <h3>Character Preview</h3>
 
             <!-- Name -->
             <div class="editable-field">
@@ -396,86 +396,9 @@
                 <input type="text" name="char_name" id="char-name" value="{{ char_data.name|default:'' }}" placeholder="Enter character name">
             </div>
 
-            <!-- Attributes -->
-            <div class="attributes-grid">
-                <div class="attr-box">
-                    <div class="attr-name">STR</div>
-                    <div class="attr-value">{{ char_data.attributes.STR }}</div>
-                    <div class="attr-mod">{% if str_mod >= 0 %}+{% endif %}{{ str_mod }}</div>
-                </div>
-                <div class="attr-box">
-                    <div class="attr-name">DEX</div>
-                    <div class="attr-value">{{ char_data.attributes.DEX }}</div>
-                    <div class="attr-mod">{% if dex_mod >= 0 %}+{% endif %}{{ dex_mod }}</div>
-                </div>
-                <div class="attr-box">
-                    <div class="attr-name">INT</div>
-                    <div class="attr-value">{{ char_data.attributes.INT }}</div>
-                    <div class="attr-mod">{% if int_mod >= 0 %}+{% endif %}{{ int_mod }}</div>
-                </div>
-                <div class="attr-box">
-                    <div class="attr-name">WIS</div>
-                    <div class="attr-value">{{ char_data.attributes.WIS }}</div>
-                    <div class="attr-mod">{% if wis_mod >= 0 %}+{% endif %}{{ wis_mod }}</div>
-                </div>
-                <div class="attr-box">
-                    <div class="attr-name">CON</div>
-                    <div class="attr-value">{{ char_data.attributes.CON }}</div>
-                    <div class="attr-mod">{% if con_mod >= 0 %}+{% endif %}{{ con_mod }}</div>
-                </div>
-                <div class="attr-box">
-                    <div class="attr-name">CHR</div>
-                    <div class="attr-value">{{ char_data.attributes.CHR }}</div>
-                    <div class="attr-mod">{% if chr_mod >= 0 %}+{% endif %}{{ chr_mod }}</div>
-                </div>
-            </div>
-
-            <!-- Background -->
-            <div class="editable-field">
-                <label>Background:</label>
-                <textarea name="background" id="background" placeholder="Character background...">{{ char_data.provenance|default:'' }}</textarea>
-            </div>
-
-            <!-- Wealth -->
-            <div class="editable-field">
-                <label>Wealth:</label>
-                <span style="padding: 4px 0;">{{ char_data.wealth|default:'Unknown' }}</span>
-            </div>
-
-            <!-- Skills -->
-            <div class="skills-section">
-                <strong>Skills:</strong>
-                <div class="skills-list" id="skills-list">
-                    {% for skill in skills %}
-                    <span class="skill-tag">{{ skill }}</span>
-                    {% empty %}
-                    <span style="color: #666; font-style: italic;">No skills yet - add experience to gain skills</span>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- Details - Year-by-year log (read-only) -->
-            {% if has_experience %}
-            <div class="details-section">
-                <h4>Details (Year-by-Year Log)</h4>
-                <p style="font-size: 0.85em; color: #666; margin-bottom: 8px;">
-                    Track: {{ track_name }} | Years: {{ years_completed }} | Age: {{ current_age }}
-                </p>
-                <div class="experience-log">
-                    {% for yr in yearly_results %}
-                    <div class="year-entry">
-                        <strong>Year {{ yr.year }}:</strong> {{ yr.skill }} |
-                        Surv: {{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+
-                        {% if yr.survived %}
-                        <span style="color: green;">[Survived]</span>
-                        {% else %}
-                        <span style="color: red; font-weight: bold;">[DIED]</span>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
+            {% with component_id="gensheet" editable=False show_experience=has_experience %}
+            {% include "generator/partials/character_sheet_component.html" %}
+            {% endwith %}
         </div>
     </div>
 </div>

@@ -612,180 +612,9 @@ input.error, textarea.error {
 
     <!-- Main Character Sheet -->
     <div class="character-main">
-        <div class="character-sheet">
-    <!-- Attributes Section -->
-    <div class="sheet-section">
-        <h2>Attributes</h2>
-        <p style="font-size: 0.85em; color: #666; margin-bottom: 15px;">
-            Values 1-18 are integers. Above 18, use decimal notation: 18.10, 18.20, ... 18.100 = 19
-        </p>
-        <div class="attributes-grid">
-            <div class="attr-box">
-                <label>STR</label>
-                <input type="text" data-field="attributes.STR" data-attr="true" value="{{ str_display }}">
-                <span class="modifier" data-computed="str_mod">({{ str_mod|default:"0" }})</span>
-            </div>
-            <div class="attr-box">
-                <label>DEX</label>
-                <input type="text" data-field="attributes.DEX" data-attr="true" value="{{ dex_display }}">
-                <span class="modifier" data-computed="dex_mod">({{ dex_mod|default:"0" }})</span>
-            </div>
-            <div class="attr-box">
-                <label>INT</label>
-                <input type="text" data-field="attributes.INT" data-attr="true" value="{{ int_display }}">
-                <span class="modifier" data-computed="int_mod">({{ int_mod|default:"0" }})</span>
-            </div>
-            <div class="attr-box">
-                <label>WIS</label>
-                <input type="text" data-field="attributes.WIS" data-attr="true" value="{{ wis_display }}">
-                <span class="modifier" data-computed="wis_mod">({{ wis_mod|default:"0" }})</span>
-            </div>
-            <div class="attr-box">
-                <label>CON</label>
-                <input type="text" data-field="attributes.CON" data-attr="true" value="{{ con_display }}">
-                <span class="modifier" data-computed="con_mod">({{ con_mod|default:"0" }})</span>
-            </div>
-            <div class="attr-box">
-                <label>CHR</label>
-                <input type="text" data-field="attributes.CHR" data-attr="true" value="{{ chr_display }}">
-                <span class="modifier" data-computed="chr_mod">({{ chr_mod|default:"0" }})</span>
-            </div>
-        </div>
-        <div class="derived-stats">
-            <div class="derived-stat">
-                <label>Fatigue Points</label>
-                <span class="value" data-computed="fatigue_points">{{ char_data.attributes.fatigue_points }}</span>
-            </div>
-            <div class="derived-stat">
-                <label>Body Points</label>
-                <span class="value" data-computed="body_points">{{ char_data.attributes.body_points }}</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Biographical Section -->
-    <div class="sheet-section">
-        <h2>Biographical</h2>
-        <div class="field-row">
-            <label>Appearance:</label>
-            <input type="text" data-field="appearance" value="{{ char_data.appearance }}">
-        </div>
-        <div class="field-row">
-            <label>Height:</label>
-            <input type="text" data-field="height" value="{{ char_data.height }}">
-        </div>
-        <div class="field-row">
-            <label>Weight:</label>
-            <input type="text" data-field="weight" value="{{ char_data.weight }}">
-        </div>
-    </div>
-
-    <!-- Background Section -->
-    <div class="sheet-section">
-        <h2>Background</h2>
-        <div class="field-row">
-            <label>Provenance:</label>
-            <input type="text" data-field="provenance" value="{{ char_data.provenance }}">
-        </div>
-        <div class="field-row">
-            <label>Location:</label>
-            <input type="text" data-field="location" value="{{ char_data.location }}">
-        </div>
-        <div class="field-row">
-            <label>Literacy:</label>
-            <input type="text" data-field="literacy" value="{{ char_data.literacy }}">
-        </div>
-        <div class="field-row">
-            <label>Wealth:</label>
-            <input type="text" data-field="wealth" value="{{ char_data.wealth }}">
-        </div>
-    </div>
-
-    <!-- Skills Section -->
-    <div class="sheet-section">
-        <h2>Skills</h2>
-        <ul class="skills-list" id="skills-list">
-            {% for skill in skills %}
-            <li class="skill-item">
-                <span class="skill-display">{{ skill }}</span>
-            </li>
-            {% empty %}
-            <li class="skill-item" id="no-skills-msg"><em>No skills yet</em></li>
-            {% endfor %}
-        </ul>
-        <div class="add-skill-row">
-            <input type="text" id="new-skill-input" placeholder="Add skill (e.g., Tracking)" onkeypress="if(event.key==='Enter'){addSkill();return false;}">
-            <button type="button" class="btn-add" onclick="addSkill()">+ Add Skill</button>
-        </div>
-    </div>
-
-    {% if char_data.skill_track %}
-    <!-- Skill Track Section -->
-    <div class="sheet-section">
-        <h2>Skill Track</h2>
-        <div class="field-row">
-            <label>Track:</label>
-            <span>{{ char_data.skill_track.track }}</span>
-        </div>
-        <div class="field-row">
-            <label>Survivability:</label>
-            <span>{{ char_data.skill_track.survivability }}+</span>
-        </div>
-        {% if char_data.skill_track.craft_type %}
-        <div class="field-row">
-            <label>Craft:</label>
-            <span>{{ char_data.skill_track.craft_type }}</span>
-        </div>
-        {% endif %}
-        {% if char_data.skill_track.magic_school %}
-        <div class="field-row">
-            <label>Magic School:</label>
-            <span>{{ char_data.skill_track.magic_school }}</span>
-        </div>
-        {% endif %}
-    </div>
-    {% endif %}
-
-    {% if yearly_results %}
-    <!-- Prior Experience Section -->
-    <div class="sheet-section">
-        <h2>Prior Experience</h2>
-        <div class="field-row">
-            <label>Starting Age:</label>
-            <span>16</span>
-        </div>
-        <div class="field-row">
-            <label>Current Age:</label>
-            <span>{{ current_age }}</span>
-        </div>
-        <div class="field-row">
-            <label>Years Served:</label>
-            <span>{{ years_served }}</span>
-        </div>
-        {% if died %}
-        <div class="field-row">
-            <span class="died">DIED DURING PRIOR EXPERIENCE</span>
-        </div>
-        {% endif %}
-        <h3>Year-by-Year Log</h3>
-        <div class="experience-log">
-            {% for yr in yearly_results %}
-            <div class="year-entry {% if not yr.survived %}died{% endif %}">
-                <strong>Year {{ yr.year }}:</strong> {{ yr.skill }} |
-                Survival: {{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+
-                [{% if yr.survived %}Survived{% else %}DIED{% endif %}]
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Notes Section -->
-    <div class="sheet-section">
-        <h2>Notes</h2>
-        <textarea class="notes-area" data-field="notes" placeholder="Character backstory, notes, etc...">{{ char_data.notes|default:"" }}</textarea>
-    </div>
-        </div><!-- end character-sheet -->
+        {% with component_id="charsheet" editable=is_owner show_experience=True %}
+        {% include "generator/partials/character_sheet_component.html" %}
+        {% endwith %}
     </div><!-- end character-main -->
 </div><!-- end character-layout -->
 
@@ -795,20 +624,64 @@ const CSRF_TOKEN = '{{ csrf_token }}';
 const UPDATE_URL = '{% url "update_character" character.id %}';
 const CURRENT_AGE = {{ current_age|default:16 }};
 
+// Initialize the character sheet component
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize CharacterSheet component if we're the owner
+    {% if is_owner %}
+    if (typeof CharacterSheet !== 'undefined') {
+        CharacterSheet.init('charsheet', UPDATE_URL, CSRF_TOKEN);
+    }
+    {% endif %}
+
+    // Character name field (outside the component)
+    var charNameInput = document.getElementById('char-name');
+    if (charNameInput) {
+        var nameTimeout = null;
+        charNameInput.addEventListener('input', function() {
+            if (nameTimeout) clearTimeout(nameTimeout);
+            nameTimeout = setTimeout(function() {
+                saveCharacterName(charNameInput.value);
+            }, 300);
+        });
+    }
+});
+
+function saveCharacterName(name) {
+    fetch(UPDATE_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRF_TOKEN
+        },
+        body: JSON.stringify({ field: 'name', value: name })
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(result) {
+        var indicator = document.getElementById('save-indicator');
+        if (result.success) {
+            indicator.textContent = 'Saved';
+            indicator.className = 'save-indicator saved';
+            setTimeout(function() { indicator.className = 'save-indicator'; }, 2000);
+        } else {
+            indicator.textContent = 'Error saving name';
+            indicator.className = 'save-indicator error';
+        }
+    });
+}
+
 // Aging warning functionality
 (function() {
-    const yearsSelect = document.getElementById('years-select');
-    const agingWarning = document.getElementById('aging-warning');
-    const agingYearsSpan = document.getElementById('aging-years');
-    const finalAgeSpan = document.getElementById('final-age');
+    var yearsSelect = document.getElementById('years-select');
+    var agingWarning = document.getElementById('aging-warning');
+    var agingYearsSpan = document.getElementById('aging-years');
+    var finalAgeSpan = document.getElementById('final-age');
 
     function updateAgingWarning() {
         if (!agingWarning || !yearsSelect) return;
 
-        const selectedYears = parseInt(yearsSelect.value) || 0;
-        const finalAge = CURRENT_AGE + selectedYears;
+        var selectedYears = parseInt(yearsSelect.value) || 0;
+        var finalAge = CURRENT_AGE + selectedYears;
 
-        // Show warning if adding years would push past 34 (aging penalties start at 35)
         if (finalAge > 34) {
             if (agingYearsSpan) agingYearsSpan.textContent = selectedYears;
             if (finalAgeSpan) finalAgeSpan.textContent = finalAge;
@@ -820,331 +693,92 @@ const CURRENT_AGE = {{ current_age|default:16 }};
 
     if (yearsSelect) {
         yearsSelect.addEventListener('change', updateAgingWarning);
-        // Initial check
         updateAgingWarning();
     }
 })();
 
-let saveTimeout = null;
-const SAVE_DELAY = 300; // ms debounce
-
-/**
- * Parse attribute value from display format.
- * Accepts: integers 1-18, or decimal notation like 18.10, 18.20, ... 18.100, 19.10, etc.
- * Returns: { valid: bool, value: string (the raw value to send to server) }
- */
-function parseAttributeValue(str) {
-    str = str.trim();
-
-    // Check for decimal notation (e.g., 18.10, 19.50, 24.100)
-    const decimalMatch = str.match(/^(\d+)\.(\d+)$/);
-    if (decimalMatch) {
-        const base = parseInt(decimalMatch[1], 10);
-        const sub = parseInt(decimalMatch[2], 10);
-        // Base must be >= 18, sub must be 10-100 in increments of 10
-        if (base >= 18 && sub >= 10 && sub <= 100 && sub % 10 === 0) {
-            return { valid: true, value: str };
-        }
-        return { valid: false, value: str };
-    }
-
-    // Check for plain integer
-    const intMatch = str.match(/^(\d+)$/);
-    if (intMatch) {
-        const val = parseInt(intMatch[1], 10);
-        if (val >= 1 && val <= 18) {
-            return { valid: true, value: val };
-        }
-        // Allow integers > 18 as shorthand (will be stored as-is)
-        if (val > 18) {
-            return { valid: true, value: val };
-        }
-        return { valid: false, value: str };
-    }
-
-    return { valid: false, value: str };
-}
-
-/**
- * Validate attribute input and show visual feedback.
- */
-function validateAttributeInput(element) {
-    const result = parseAttributeValue(element.value);
-    if (result.valid) {
-        element.classList.remove('invalid');
-    } else {
-        element.classList.add('invalid');
-    }
-    return result;
-}
-
-// Initialize all editable fields
-document.addEventListener('DOMContentLoaded', function() {
-    // Regular input fields
-    document.querySelectorAll('input[data-field], textarea[data-field]').forEach(function(input) {
-        input.addEventListener('input', function() {
-            // Validate attribute inputs
-            if (this.dataset.attr === 'true') {
-                validateAttributeInput(this);
-            }
-            debounceSave(this);
-        });
-        input.addEventListener('blur', function() {
-            // Save immediately on blur
-            if (saveTimeout) {
-                clearTimeout(saveTimeout);
-                saveTimeout = null;
-            }
-            saveField(this);
-        });
-    });
-});
-
-function debounceSave(element) {
-    element.classList.add('saving');
-    element.classList.remove('saved', 'error');
-
-    if (saveTimeout) {
-        clearTimeout(saveTimeout);
-    }
-    saveTimeout = setTimeout(function() {
-        saveField(element);
-    }, SAVE_DELAY);
-}
-
-function saveField(element) {
-    const field = element.dataset.field;
-    const index = element.dataset.index;
-    let value = element.value;
-
-    // For attribute inputs, validate and parse
-    if (element.dataset.attr === 'true') {
-        const result = parseAttributeValue(value);
-        if (!result.valid) {
-            element.classList.remove('saving');
-            element.classList.add('error');
-            const indicator = document.getElementById('save-indicator');
-            indicator.textContent = 'Invalid attribute value';
-            indicator.className = 'save-indicator error';
-            return;
-        }
-        value = result.value;
-    }
-
-    const indicator = document.getElementById('save-indicator');
-    indicator.textContent = 'Saving...';
-    indicator.className = 'save-indicator saving';
-
-    const data = { field: field, value: value };
-    if (index !== undefined) {
-        data.action = 'edit';
-        data.index = parseInt(index, 10);
-    }
-
-    fetch(UPDATE_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': CSRF_TOKEN,
-        },
-        body: JSON.stringify(data),
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            element.classList.remove('saving');
-            element.classList.add('saved');
-            indicator.textContent = 'Saved';
-            indicator.className = 'save-indicator saved';
-
-            // Update computed fields if returned
-            if (result.computed) {
-                for (const [key, val] of Object.entries(result.computed)) {
-                    const el = document.querySelector('[data-computed="' + key + '"]');
-                    if (el) {
-                        if (key.endsWith('_mod')) {
-                            el.textContent = '(' + (val >= 0 ? '+' : '') + val + ')';
-                        } else {
-                            el.textContent = val;
-                        }
-                    }
-                }
-            }
-
-            // Clear saved indicator after 2 seconds
-            setTimeout(function() {
-                element.classList.remove('saved');
-                indicator.className = 'save-indicator';
-            }, 2000);
-        } else {
-            element.classList.remove('saving');
-            element.classList.add('error');
-            indicator.textContent = 'Error: ' + (result.error || 'Save failed');
-            indicator.className = 'save-indicator error';
-        }
-    })
-    .catch(error => {
-        element.classList.remove('saving');
-        element.classList.add('error');
-        indicator.textContent = 'Error: ' + error.message;
-        indicator.className = 'save-indicator error';
-    });
-}
-
-function addSkill() {
-    const input = document.getElementById('new-skill-input');
-    const skill = input.value.trim();
-    if (!skill) return;
-
-    const indicator = document.getElementById('save-indicator');
-    indicator.textContent = 'Adding skill...';
-    indicator.className = 'save-indicator saving';
-
-    fetch(UPDATE_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': CSRF_TOKEN,
-        },
-        body: JSON.stringify({ field: 'skills', action: 'add', value: skill }),
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            // Clear input
-            input.value = '';
-
-            // If server returned consolidated skills, rebuild the entire list
-            if (result.computed && result.computed.skills) {
-                rebuildSkillsList(result.computed.skills);
-            } else {
-                // Fallback: just reload the page
-                location.reload();
-            }
-
-            indicator.textContent = 'Skill added';
-            indicator.className = 'save-indicator saved';
-            setTimeout(function() { indicator.className = 'save-indicator'; }, 2000);
-        } else {
-            indicator.textContent = 'Error: ' + (result.error || 'Failed to add skill');
-            indicator.className = 'save-indicator error';
-        }
-    })
-    .catch(error => {
-        indicator.textContent = 'Error: ' + error.message;
-        indicator.className = 'save-indicator error';
-    });
-}
-
-function rebuildSkillsList(skills) {
-    const list = document.getElementById('skills-list');
-    list.innerHTML = '';
-
-    if (skills.length === 0) {
-        const li = document.createElement('li');
-        li.className = 'skill-item';
-        li.id = 'no-skills-msg';
-        li.innerHTML = '<em>No skills yet</em>';
-        list.appendChild(li);
-        return;
-    }
-
-    skills.forEach(function(skill, index) {
-        const li = document.createElement('li');
-        li.className = 'skill-item';
-        // Skills are display-only since they come from consolidation
-        li.innerHTML = '<span class="skill-display">' + escapeHtml(skill) + '</span>';
-        list.appendChild(li);
-    });
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 function exportMarkdown() {
-    // Build markdown from current character data
-    const name = document.getElementById('char-name').value || 'Unnamed Character';
+    var name = document.getElementById('char-name');
+    name = name ? name.value : 'Unnamed Character';
 
-    let md = `# ${name}\n\n`;
+    var md = '# ' + name + '\n\n';
 
     // Attributes
-    md += `## Attributes\n\n`;
-    md += `| Attr | Value | Mod |\n`;
-    md += `|------|-------|-----|\n`;
+    md += '## Attributes\n\n';
+    md += '| Attr | Value | Mod |\n';
+    md += '|------|-------|-----|\n';
 
-    const attrs = ['STR', 'DEX', 'INT', 'WIS', 'CON', 'CHR'];
+    var attrs = ['STR', 'DEX', 'INT', 'WIS', 'CON', 'CHR'];
     attrs.forEach(function(attr) {
-        const input = document.querySelector('[data-field="attributes.' + attr + '"]');
-        const modSpan = document.querySelector('[data-computed="' + attr.toLowerCase() + '_mod"]');
-        const val = input ? input.value : '-';
-        const mod = modSpan ? modSpan.textContent : '(0)';
-        md += `| ${attr} | ${val} | ${mod} |\n`;
+        var input = document.querySelector('[data-field="attributes.' + attr + '"]');
+        var modSpan = document.querySelector('[data-computed="' + attr.toLowerCase() + '_mod"]');
+        var val = input ? input.value : '-';
+        var mod = modSpan ? modSpan.textContent : '(0)';
+        md += '| ' + attr + ' | ' + val + ' | ' + mod + ' |\n';
     });
 
-    const fatigue = document.querySelector('[data-computed="fatigue_points"]');
-    const body = document.querySelector('[data-computed="body_points"]');
-    md += `\n**Fatigue Points:** ${fatigue ? fatigue.textContent : '-'}\n`;
-    md += `**Body Points:** ${body ? body.textContent : '-'}\n\n`;
+    var fatigue = document.querySelector('[data-computed="fatigue_points"]');
+    var body = document.querySelector('[data-computed="body_points"]');
+    md += '\n**Fatigue Points:** ' + (fatigue ? fatigue.textContent : '-') + '\n';
+    md += '**Body Points:** ' + (body ? body.textContent : '-') + '\n\n';
 
     // Biographical
-    md += `## Biographical\n\n`;
-    const bioFields = ['appearance', 'height', 'weight'];
-    bioFields.forEach(function(field) {
-        const input = document.querySelector('[data-field="' + field + '"]');
+    md += '## Biographical\n\n';
+    ['appearance', 'height', 'weight'].forEach(function(field) {
+        var input = document.querySelector('[data-field="' + field + '"]');
         if (input && input.value) {
-            md += `**${field.charAt(0).toUpperCase() + field.slice(1)}:** ${input.value}\n`;
+            md += '**' + field.charAt(0).toUpperCase() + field.slice(1) + ':** ' + input.value + '\n';
         }
     });
     md += '\n';
 
     // Background
-    md += `## Background\n\n`;
-    const bgFields = ['provenance', 'location', 'literacy', 'wealth'];
-    bgFields.forEach(function(field) {
-        const input = document.querySelector('[data-field="' + field + '"]');
-        if (input && input.value) {
-            md += `**${field.charAt(0).toUpperCase() + field.slice(1)}:** ${input.value}\n`;
+    md += '## Background\n\n';
+    ['provenance', 'location', 'literacy', 'wealth_level'].forEach(function(field) {
+        var input = document.querySelector('[data-field="' + field + '"]');
+        if (input) {
+            var val = input.tagName === 'SELECT' ? input.options[input.selectedIndex].text : input.value;
+            if (val) {
+                var label = field.replace('_level', '').charAt(0).toUpperCase() + field.replace('_level', '').slice(1);
+                md += '**' + label + ':** ' + val + '\n';
+            }
         }
     });
     md += '\n';
 
     // Skills
-    md += `## Skills\n\n`;
-    const skillItems = document.querySelectorAll('#skills-list .skill-display');
+    md += '## Skills\n\n';
+    var skillItems = document.querySelectorAll('#charsheet-skills-list .skill-tag');
     if (skillItems.length > 0) {
         skillItems.forEach(function(item) {
-            md += `- ${item.textContent}\n`;
+            md += '- ' + item.textContent + '\n';
         });
     } else {
-        md += `_No skills_\n`;
+        md += '_No skills_\n';
     }
     md += '\n';
 
     // Notes
-    const notes = document.querySelector('[data-field="notes"]');
+    var notes = document.querySelector('[data-field="notes"]');
     if (notes && notes.value.trim()) {
-        md += `## Notes\n\n${notes.value}\n`;
+        md += '## Notes\n\n' + notes.value + '\n';
     }
 
     // Copy to clipboard
     navigator.clipboard.writeText(md).then(function() {
-        const indicator = document.getElementById('save-indicator');
+        var indicator = document.getElementById('save-indicator');
         indicator.textContent = 'Markdown copied to clipboard!';
         indicator.className = 'save-indicator saved';
         setTimeout(function() { indicator.className = 'save-indicator'; }, 2000);
-    }).catch(function(err) {
-        // Fallback
-        const textarea = document.createElement('textarea');
+    }).catch(function() {
+        var textarea = document.createElement('textarea');
         textarea.value = md;
         document.body.appendChild(textarea);
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
 
-        const indicator = document.getElementById('save-indicator');
+        var indicator = document.getElementById('save-indicator');
         indicator.textContent = 'Markdown copied to clipboard!';
         indicator.className = 'save-indicator saved';
         setTimeout(function() { indicator.className = 'save-indicator'; }, 2000);
@@ -1152,13 +786,11 @@ function exportMarkdown() {
 }
 
 function selectTrack(trackKey) {
-    // Update the dropdown
-    const select = document.getElementById('track-select');
+    var select = document.getElementById('track-select');
     if (select) {
         select.value = trackKey;
     }
 
-    // Update visual selection on track cards
     document.querySelectorAll('.track-item').forEach(function(item) {
         item.classList.remove('selected');
         if (item.dataset.track === trackKey) {
