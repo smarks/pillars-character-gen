@@ -105,24 +105,24 @@ class IndexViewTests(TestCase):
     def test_index_has_control_buttons(self):
         """Test that index page has the control buttons."""
         response = self.client.get(reverse('index'))
-        self.assertContains(response, 'Finish Character')
         self.assertContains(response, 'Add')  # Add Experience or Add More Experience
         self.assertContains(response, 'Re-roll')  # Re-roll buttons
         self.assertContains(response, 'years')  # Years selector
 
-    def test_add_experience_redirects_to_track_selection(self):
-        """Test that add experience redirects to track selection."""
+    def test_add_experience_stays_on_generator(self):
+        """Test that add experience stays on generator and adds experience."""
         # First load to get character
         self.client.get(reverse('index'))
         # Add experience
         response = self.client.post(reverse('index'), {
             'action': 'add_experience',
+            'years': 3,
+            'track_mode': 'auto',
         })
-        # Should redirect to track selection first
-        self.assertRedirects(response, reverse('select_track'))
-        # Session should have pending character
-        self.assertIn('pending_character', self.client.session)
-        self.assertTrue(self.client.session.get('pending_return_to_generator', False))
+        # Should redirect back to generator
+        self.assertRedirects(response, reverse('generator'))
+        # Session should have experience data
+        self.assertGreater(self.client.session.get('interactive_years', 0), 0)
 
     def test_finish_shows_character_sheet(self):
         """Test that finish displays the character sheet."""
@@ -252,23 +252,22 @@ class InteractiveModeMagicTests(TestCase):
     def setUp(self):
         self.client = Client()
 
-    def test_interactive_mode_works(self):
-        """Test that interactive mode works after track selection."""
+    def test_add_experience_with_manual_track_works(self):
+        """Test that adding experience with manual track selection works."""
         # First load generator to get character
         self.client.get(reverse('index'))
-        # Add experience goes to track selection first
-        self.client.post(reverse('index'), {'action': 'add_experience'})
-        # Select a track with interactive mode
-        response = self.client.post(reverse('select_track'), {
-            'chosen_track': 'WORKER',
-            'track_mode': 'manual',
-            'interactive_mode': 'on',
+        # Add experience with manual track selection
+        response = self.client.post(reverse('index'), {
             'action': 'add_experience',
+            'years': 3,
+            'track_mode': 'manual',
+            'chosen_track': 'WORKER',
         })
-        # Should redirect to interactive
-        self.assertRedirects(response, reverse('interactive'))
-        # Check we're set up for interactive
-        self.assertIn('interactive_character', self.client.session)
+        # Should redirect back to generator
+        self.assertRedirects(response, reverse('generator'))
+        # Check experience was added
+        self.assertEqual(self.client.session.get('interactive_years'), 3)
+        self.assertEqual(self.client.session.get('interactive_track_name'), 'Worker')
 
 
 class SessionSerializationTests(TestCase):
@@ -315,27 +314,24 @@ class StartOverTests(TestCase):
 
     def test_start_over_clears_session(self):
         """Test that start over clears all session data."""
-        # First create some session data by loading generator and going through flow
+        # First create some session data by loading generator and adding experience
         self.client.get(reverse('index'))
-        # Add experience goes to track selection now
-        self.client.post(reverse('index'), {'action': 'add_experience'})
-        # Select a track to get to interactive mode
-        self.client.post(reverse('select_track'), {
-            'chosen_track': 'WORKER',
-            'track_mode': 'manual',
-            'interactive_mode': 'on',
+        self.client.post(reverse('index'), {
             'action': 'add_experience',
+            'years': 3,
+            'track_mode': 'auto',
         })
 
         # Verify session has data
-        self.assertIn('interactive_character', self.client.session)
+        self.assertIn('current_character', self.client.session)
+        self.assertGreater(self.client.session.get('interactive_years', 0), 0)
 
         # Start over
         response = self.client.get(reverse('start_over'))
         self.assertRedirects(response, reverse('welcome'))
 
-        # Session should be cleared
-        self.assertNotIn('interactive_character', self.client.session)
+        # Session should be cleared of character data
+        self.assertNotIn('interactive_years', self.client.session)
 
 
 class UIFlowTests(TestCase):
@@ -359,64 +355,39 @@ class UIFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Character Sheet')
 
-    def test_full_interactive_mode_flow(self):
-        """Test complete interactive mode flow with year-by-year progression."""
-        # Step 1: Load generator and add experience
+    def test_full_experience_flow(self):
+        """Test complete experience flow on generator page."""
+        # Step 1: Load generator
         self.client.get(reverse('index'))
+
+        # Step 2: Add experience
         response = self.client.post(reverse('index'), {
             'action': 'add_experience',
-        })
-        # Should go to track selection first
-        self.assertRedirects(response, reverse('select_track'))
-
-        # Step 2: Select a track with interactive mode
-        response = self.client.post(reverse('select_track'), {
-            'chosen_track': 'WORKER',
-            'track_mode': 'manual',
-            'interactive_mode': 'on',
-            'action': 'add_experience',
-        })
-        # Should redirect to interactive mode
-        self.assertRedirects(response, reverse('interactive'))
-
-        # Step 3: Continue for first year
-        response = self.client.post(reverse('interactive'), {
-            'action': 'continue',
-        })
-        self.assertEqual(response.status_code, 200)
-        # Should show year 1 results
-        self.assertContains(response, 'Years of Experience')
-
-        # Step 4: Stop and return to generator
-        response = self.client.post(reverse('interactive'), {
-            'action': 'stop',
+            'years': 5,
+            'track_mode': 'auto',
         })
         # Should redirect back to generator
         self.assertRedirects(response, reverse('generator'))
 
-        # Step 5: Generator should show experience info
+        # Step 3: Generator should show experience info
         response = self.client.get(reverse('generator'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Prior Experience')
+        self.assertContains(response, 'Year-by-Year Log')
+        # Check session has experience
+        self.assertEqual(self.client.session.get('interactive_years'), 5)
 
-    def test_start_over_from_interactive(self):
-        """Test start over button from interactive mode."""
-        # Load generator and go through track selection to interactive mode
+    def test_start_over_clears_experience(self):
+        """Test start over button clears experience data."""
+        # Load generator and add experience
         self.client.get(reverse('index'))
-        self.client.post(reverse('index'), {'action': 'add_experience'})
-        self.client.post(reverse('select_track'), {
-            'chosen_track': 'WORKER',
-            'track_mode': 'manual',
-            'interactive_mode': 'on',
+        self.client.post(reverse('index'), {
             'action': 'add_experience',
+            'years': 3,
+            'track_mode': 'auto',
         })
 
-        # Continue a few years
-        self.client.post(reverse('interactive'), {'action': 'continue'})
-        self.client.post(reverse('interactive'), {'action': 'continue'})
-
         # Verify we have session data
-        self.assertIn('interactive_character', self.client.session)
+        self.assertIn('current_character', self.client.session)
         self.assertGreater(self.client.session.get('interactive_years', 0), 0)
 
         # Start over
@@ -424,7 +395,7 @@ class UIFlowTests(TestCase):
         self.assertRedirects(response, reverse('welcome'))
 
         # Session should be cleared
-        self.assertNotIn('interactive_character', self.client.session)
+        self.assertNotIn('interactive_years', self.client.session)
 
     def test_finish_after_experience(self):
         """Test finishing a character after adding experience."""
@@ -495,11 +466,9 @@ class AttributeFocusTests(TestCase):
         self.assertIsNotNone(char.attributes)
 
     def test_control_section_available(self):
-        """Test that control section with years and interactive mode is available."""
+        """Test that control section with years selector is available."""
         response = self.client.get(reverse('index'))
         self.assertContains(response, 'years-select')
-        self.assertContains(response, 'Interactive Mode')
-        self.assertContains(response, 'Finish Character')
 
 
 class MagicTrackUITests(TestCase):
@@ -638,67 +607,47 @@ class RoleTests(TestCase):
 
 
 class ReturnToGeneratorTests(TestCase):
-    """Tests for returning to generator after interactive mode."""
+    """Tests for experience display on generator page."""
 
     def setUp(self):
         self.client = Client()
 
-    def test_return_to_generator_after_experience(self):
-        """Test that stopping interactive mode returns to generator."""
+    def test_add_experience_returns_to_generator(self):
+        """Test that adding experience returns to generator page."""
         # Load generator
         self.client.get(reverse('index'))
 
-        # Add experience - goes to track selection
-        self.client.post(reverse('index'), {'action': 'add_experience'})
-
-        # Verify pending flag is set
-        self.assertTrue(self.client.session.get('pending_return_to_generator', False))
-
-        # Select a track to get to interactive mode
-        self.client.post(reverse('select_track'), {
-            'chosen_track': 'WORKER',
-            'track_mode': 'manual',
-            'interactive_mode': 'on',
+        # Add experience
+        response = self.client.post(reverse('index'), {
             'action': 'add_experience',
+            'years': 3,
+            'track_mode': 'auto',
         })
 
-        # Verify interactive return flag is now set
-        self.assertTrue(self.client.session.get('interactive_return_to_generator', False))
-
-        # Continue one year
-        self.client.post(reverse('interactive'), {'action': 'continue'})
-
-        # Stop - should redirect to generator
-        response = self.client.post(reverse('interactive'), {'action': 'stop'})
+        # Should redirect back to generator
         self.assertRedirects(response, reverse('generator'))
 
-        # Flag should be cleared
-        self.assertNotIn('interactive_return_to_generator', self.client.session)
+        # Session should have experience data
+        self.assertEqual(self.client.session.get('interactive_years'), 3)
 
-    def test_generator_shows_experience_after_return(self):
-        """Test that generator shows prior experience after returning."""
+    def test_generator_shows_experience_after_adding(self):
+        """Test that generator shows prior experience after adding."""
         # Load generator
         self.client.get(reverse('index'))
 
-        # Add experience - go through track selection
-        self.client.post(reverse('index'), {'action': 'add_experience'})
-        self.client.post(reverse('select_track'), {
-            'chosen_track': 'WORKER',
-            'track_mode': 'manual',
-            'interactive_mode': 'on',
+        # Add experience
+        self.client.post(reverse('index'), {
             'action': 'add_experience',
+            'years': 2,
+            'track_mode': 'auto',
         })
 
-        # Continue one year
-        self.client.post(reverse('interactive'), {'action': 'continue'})
-        self.client.post(reverse('interactive'), {'action': 'stop'})
-
-        # Load generator page
+        # Load generator page again
         response = self.client.get(reverse('generator'))
 
-        # Should show prior experience section
-        self.assertContains(response, 'Prior Experience')
-        self.assertContains(response, 'Year')
+        # Should show experience section
+        self.assertContains(response, 'Year-by-Year Log')
+        self.assertContains(response, 'Year 16')  # First year is age 16
 
 
 class CharacterSheetTests(TestCase):
@@ -1391,7 +1340,23 @@ class AdminViewAllCharactersTests(TestCase):
         self.player_char = SavedCharacter.objects.create(
             user=self.player,
             name='Player Character',
-            character_data={'attributes': {'STR': 14}}
+            character_data={
+                'attributes': {
+                    'STR': 14, 'DEX': 12, 'INT': 10, 'WIS': 10, 'CON': 12, 'CHR': 10,
+                    'fatigue_points': 30, 'body_points': 25, 'fatigue_roll': 3, 'body_roll': 3,
+                    'generation_method': 'test',
+                },
+                'appearance': 'Average',
+                'height': '5\'10"',
+                'weight': '170 lbs',
+                'provenance': 'Commoner',
+                'location': 'Test Town',
+                'location_skills': [],
+                'literacy': 'Illiterate',
+                'wealth': 'Moderate',
+                'wealth_level': 'Moderate',
+                'str_repr': "player1's character",
+            }
         )
 
     def test_player_sees_only_own_characters_in_my_characters(self):
@@ -1477,11 +1442,11 @@ class AutoSaveTests(TestCase):
         """Test that logged-in users get characters auto-saved to database."""
         self.client.login(username='autosave_test', password='test123')
 
-        # Visit generator - should create and auto-save a character
+        # Visit generator - should create and auto-save a character (stays on generator)
         response = self.client.get(reverse('generator'))
 
-        # Should redirect to character sheet
-        self.assertEqual(response.status_code, 302)
+        # Should stay on generator page
+        self.assertEqual(response.status_code, 200)
 
         # Character should be saved in database
         saved_chars = SavedCharacter.objects.filter(user=self.user)
@@ -1848,7 +1813,7 @@ class CharacterSheetLayoutTests(TestCase):
         response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Export Markdown')
+        self.assertContains(response, 'Copy as Markdown')
         self.assertContains(response, 'exportMarkdown')
 
     def test_character_sheet_consolidates_skills(self):
@@ -1953,16 +1918,16 @@ class AutoSaveRerollTests(TestCase):
         """Test that re-rolling with physical focus creates and saves a new character."""
         self.client.login(username='reroll_test', password='test123')
 
-        # First create a character
+        # First create a character (stays on generator page now)
         response = self.client.get(reverse('generator'))
-        self.assertEqual(response.status_code, 302)  # Redirects to character sheet
+        self.assertEqual(response.status_code, 200)
 
         initial_count = SavedCharacter.objects.filter(user=self.user).count()
         self.assertEqual(initial_count, 1)
 
-        # Re-roll with physical focus
+        # Re-roll with physical focus (stays on generator page)
         response = self.client.post(reverse('generator'), {'action': 'reroll_physical'})
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
 
         # Should have 2 characters now
         new_count = SavedCharacter.objects.filter(user=self.user).count()
@@ -1975,9 +1940,9 @@ class AutoSaveRerollTests(TestCase):
         # First create a character
         self.client.get(reverse('generator'))
 
-        # Re-roll with mental focus
+        # Re-roll with mental focus (stays on generator page)
         response = self.client.post(reverse('generator'), {'action': 'reroll_mental'})
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
 
         # Should have 2 characters
         self.assertEqual(SavedCharacter.objects.filter(user=self.user).count(), 2)
@@ -1989,9 +1954,9 @@ class AutoSaveRerollTests(TestCase):
         # First create a character
         self.client.get(reverse('generator'))
 
-        # Re-roll with no focus
+        # Re-roll with no focus (stays on generator page)
         response = self.client.post(reverse('generator'), {'action': 'reroll_none'})
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
 
         # Should have 2 characters
         self.assertEqual(SavedCharacter.objects.filter(user=self.user).count(), 2)
@@ -2075,19 +2040,20 @@ class SessionCharacterOnLoginTests(TestCase):
         # Verify session has character data
         self.assertIn('current_character', self.client.session)
 
-        # Now register a new user
+        # Now register a new user (include all required fields)
         response = self.client.post(reverse('register'), {
-            'username': 'newuser',
-            'email': 'new@example.com',
-            'password1': 'testpass123!',
-            'password2': 'testpass123!'
+            'username': 'newusertest',
+            'email': 'newtest@example.com',
+            'password1': 'Str0ngP@ssw0rd!',
+            'password2': 'Str0ngP@ssw0rd!',
+            'role': 'player',
         })
 
         # Should redirect to generator (since we had a character)
         self.assertRedirects(response, reverse('generator'))
 
         # Character should now be saved in database for new user
-        new_user = User.objects.get(username='newuser')
+        new_user = User.objects.get(username='newusertest')
         self.assertEqual(SavedCharacter.objects.filter(user=new_user).count(), 1)
 
 
@@ -2142,16 +2108,20 @@ class GeneratorUnifiedFlowTests(TestCase):
         # Experience should be visible
         self.assertContains(response, 'Year-by-Year Log')
 
-    def test_anonymous_and_logged_in_see_same_component(self):
-        """Test that both anonymous and logged-in users see the same UI component."""
+    def test_anonymous_and_logged_in_see_same_ui_elements(self):
+        """Test that both anonymous and logged-in users see the same UI elements."""
         # Anonymous user
         anon_response = self.client.get(reverse('generator'))
-        self.assertContains(anon_response, 'character_sheet_component')  # Component included
+        # Check for key UI elements that come from the shared component
+        self.assertContains(anon_response, 'STR')  # Attributes section
+        self.assertContains(anon_response, 'Add Experience')  # Experience button
 
         # Logged-in user
         self.client.login(username='flow_test', password='test123')
         auth_response = self.client.get(reverse('generator'))
-        self.assertContains(auth_response, 'character_sheet_component')  # Same component
+        # Should see the same UI elements
+        self.assertContains(auth_response, 'STR')
+        self.assertContains(auth_response, 'Add Experience')
 
     def test_experience_synced_to_database_for_logged_in(self):
         """Test that experience is synced to database for logged-in users."""
