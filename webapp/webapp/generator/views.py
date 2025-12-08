@@ -1353,6 +1353,42 @@ def handbook_section(request, section: str):
 # Authentication Views
 # =============================================================================
 
+def save_session_character_for_user(request, user):
+    """Save the current session character to the database for a user.
+
+    Called after login/registration to preserve any character the user
+    was working on before authenticating.
+    """
+    char_data = request.session.get('current_character')
+    if not char_data:
+        return None
+
+    # Check if we already have a saved character ID (shouldn't happen, but be safe)
+    if request.session.get('current_saved_character_id'):
+        return request.session.get('current_saved_character_id')
+
+    # Include any experience data from the session
+    if request.session.get('interactive_years', 0) > 0:
+        char_data['interactive_years'] = request.session.get('interactive_years', 0)
+        char_data['interactive_skills'] = request.session.get('interactive_skills', [])
+        char_data['interactive_yearly_results'] = request.session.get('interactive_yearly_results', [])
+        char_data['interactive_died'] = request.session.get('interactive_died', False)
+        char_data['interactive_aging'] = request.session.get('interactive_aging', {})
+
+    # Create the saved character
+    char_count = SavedCharacter.objects.filter(user=user).count() + 1
+    saved_char = SavedCharacter.objects.create(
+        user=user,
+        name=char_data.get('name') or f"Character {char_count}",
+        character_data=char_data
+    )
+    request.session['current_saved_character_id'] = saved_char.id
+    request.session['current_character'] = char_data  # Update with experience data
+    request.session.modified = True
+
+    return saved_char.id
+
+
 def register_view(request):
     """Handle user registration."""
     if request.user.is_authenticated:
@@ -1363,7 +1399,12 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
+            # Save any character the user was working on
+            saved_id = save_session_character_for_user(request, user)
             messages.success(request, 'Account created successfully!')
+            # Redirect to generator if they had a character, otherwise welcome
+            if saved_id:
+                return redirect('generator')
             return redirect('welcome')
     else:
         form = RegistrationForm()
@@ -1381,6 +1422,11 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            # Save any character the user was working on
+            saved_id = save_session_character_for_user(request, user)
+            # Redirect to generator if they had a character, otherwise to next_url
+            if saved_id:
+                return redirect('generator')
             next_url = request.GET.get('next', 'welcome')
             return redirect(next_url)
     else:
