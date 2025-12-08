@@ -390,6 +390,30 @@ def index(request):
         request.session['current_character'] = char_data
         request.session.modified = True
 
+        # Sync experience data to database for logged-in users
+        saved_id = request.session.get('current_saved_character_id')
+        if saved_id and request.user.is_authenticated:
+            try:
+                saved_char = SavedCharacter.objects.get(id=saved_id, user=request.user)
+                # Update the saved character's data with experience
+                saved_char.character_data['skill_track'] = char_data.get('skill_track')
+                saved_char.character_data['interactive_years'] = existing_years + len(new_yearly_results)
+                saved_char.character_data['interactive_skills'] = existing_skills + new_skills
+                saved_char.character_data['interactive_yearly_results'] = existing_yearly_results + new_yearly_results
+                saved_char.character_data['interactive_died'] = died
+                saved_char.character_data['interactive_aging'] = {
+                    'str': aging_effects.str_penalty,
+                    'dex': aging_effects.dex_penalty,
+                    'int': aging_effects.int_penalty,
+                    'wis': aging_effects.wis_penalty,
+                    'con': aging_effects.con_penalty,
+                }
+                saved_char.save()
+                # Redirect to character sheet for logged-in users
+                return redirect('character_sheet', char_id=saved_id)
+            except SavedCharacter.DoesNotExist:
+                pass  # Fall through to redirect to generator
+
         return redirect('generator')
 
     else:
