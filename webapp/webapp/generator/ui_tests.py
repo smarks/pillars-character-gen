@@ -587,3 +587,122 @@ class RoleUITests(BrowserTestCase):
         self.browser.get(f'{self.live_server_url}/manage-users/')
         self.wait_for_page_load()
         self.assertIn('manage-users', self.browser.current_url)
+
+
+class SessionCharacterLoginUITests(BrowserTestCase):
+    """UI tests for session character preservation on login."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # Create a test user for login tests
+        from django.contrib.auth.models import User
+        from webapp.generator.models import UserProfile
+        cls.test_user = User.objects.create_user(
+            username='session_ui_test',
+            password='testpass123'
+        )
+        UserProfile.objects.create(user=cls.test_user, roles=['player'])
+
+    def test_login_preserves_character_and_redirects_to_generator(self):
+        """Test that logging in with a session character redirects to generator."""
+        # First, create a character as anonymous user
+        self.browser.get(f'{self.live_server_url}/generator/')
+        self.wait_for_page_load()
+
+        # Verify we're on generator and see character data
+        self.assertIn('generator', self.browser.current_url)
+        page_source = self.browser.page_source
+        self.assertTrue(
+            'STR' in page_source or 'DEX' in page_source,
+            "Generator page should show character attributes"
+        )
+
+        # Now go to login
+        self.browser.get(f'{self.live_server_url}/login/')
+        self.wait_for_page_load()
+
+        # Fill in login form
+        username_field = self.browser.find_element(By.NAME, 'username')
+        password_field = self.browser.find_element(By.NAME, 'password')
+        username_field.send_keys('session_ui_test')
+        password_field.send_keys('testpass123')
+
+        # Submit form
+        login_button = self.browser.find_element(By.CSS_SELECTOR, 'button[type="submit"]')
+        login_button.click()
+
+        import time
+        time.sleep(1)  # Wait for redirect
+
+        # Should be redirected to generator (because we had a character)
+        self.assertIn('generator', self.browser.current_url)
+
+        # Character should still be visible
+        page_source = self.browser.page_source
+        self.assertTrue(
+            'STR' in page_source or 'DEX' in page_source,
+            "Generator page should still show the character after login"
+        )
+
+
+class GeneratorUnifiedFlowUITests(BrowserTestCase):
+    """UI tests for unified generator flow (same for logged-in and anonymous)."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # Create a test user
+        from django.contrib.auth.models import User
+        from webapp.generator.models import UserProfile
+        cls.test_user = User.objects.create_user(
+            username='unified_ui_test',
+            password='testpass123'
+        )
+        UserProfile.objects.create(user=cls.test_user, roles=['player'])
+
+    def test_logged_in_user_stays_on_generator(self):
+        """Test that logged-in users stay on generator page."""
+        # Login first
+        self.login_user('unified_ui_test', 'testpass123')
+
+        # Go to generator
+        self.browser.get(f'{self.live_server_url}/generator/')
+        self.wait_for_page_load()
+
+        # Should be on generator (not redirected to character sheet)
+        self.assertIn('generator', self.browser.current_url)
+        self.assertNotIn('character/', self.browser.current_url)
+
+        # Should see the generator page content
+        page_source = self.browser.page_source
+        self.assertTrue(
+            'Re-roll' in page_source or 'reroll' in page_source.lower(),
+            "Generator page should have re-roll buttons"
+        )
+
+    def test_logged_in_add_experience_shows_on_generator(self):
+        """Test that adding experience shows results on generator page."""
+        # Login first
+        self.login_user('unified_ui_test', 'testpass123')
+
+        # Go to generator
+        self.browser.get(f'{self.live_server_url}/generator/')
+        self.wait_for_page_load()
+
+        # Click Add Experience button
+        add_exp_button = self.browser.find_element(
+            By.CSS_SELECTOR, 'button[value="add_experience"]'
+        )
+        add_exp_button.click()
+        self.wait_for_page_load()
+
+        # Should still be on generator
+        self.assertIn('generator', self.browser.current_url)
+
+        # Should see experience log
+        page_source = self.browser.page_source
+        self.assertTrue(
+            'Year-by-Year' in page_source or 'Year 16' in page_source,
+            "Generator page should show experience log after adding experience"
+        )

@@ -1995,3 +1995,179 @@ class AutoSaveRerollTests(TestCase):
 
         # Should have 2 characters
         self.assertEqual(SavedCharacter.objects.filter(user=self.user).count(), 2)
+
+
+class SessionCharacterOnLoginTests(TestCase):
+    """Tests for saving session character when user logs in or registers."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='login_test', password='test123')
+        UserProfile.objects.create(user=self.user, roles=['player'])
+
+    def test_login_saves_session_character(self):
+        """Test that logging in saves any character from the session."""
+        # First, create a character as anonymous user
+        response = self.client.get(reverse('generator'))
+        self.assertEqual(response.status_code, 200)
+
+        # Verify session has character data
+        self.assertIn('current_character', self.client.session)
+
+        # Now login
+        response = self.client.post(reverse('login'), {
+            'username': 'login_test',
+            'password': 'test123'
+        })
+
+        # Should redirect to generator (since we had a character)
+        self.assertRedirects(response, reverse('generator'))
+
+        # Character should now be saved in database
+        self.assertEqual(SavedCharacter.objects.filter(user=self.user).count(), 1)
+
+        # Session should have saved character ID
+        self.assertIn('current_saved_character_id', self.client.session)
+
+    def test_login_without_character_redirects_to_welcome(self):
+        """Test that logging in without a session character goes to welcome."""
+        # Login directly without visiting generator first
+        response = self.client.post(reverse('login'), {
+            'username': 'login_test',
+            'password': 'test123'
+        })
+
+        # Should redirect to welcome
+        self.assertRedirects(response, reverse('welcome'))
+
+        # No characters should be created
+        self.assertEqual(SavedCharacter.objects.filter(user=self.user).count(), 0)
+
+    def test_login_preserves_experience_data(self):
+        """Test that logging in preserves experience data from session."""
+        # Create a character and add experience as anonymous user
+        self.client.get(reverse('generator'))
+        response = self.client.post(reverse('generator'), {
+            'action': 'add_experience',
+            'years': 3,
+            'track_mode': 'auto'
+        })
+
+        # Verify session has experience data
+        self.assertGreater(self.client.session.get('interactive_years', 0), 0)
+
+        # Now login
+        self.client.post(reverse('login'), {
+            'username': 'login_test',
+            'password': 'test123'
+        })
+
+        # Character should be saved with experience
+        saved_char = SavedCharacter.objects.get(user=self.user)
+        self.assertGreater(saved_char.character_data.get('interactive_years', 0), 0)
+        self.assertGreater(len(saved_char.character_data.get('interactive_yearly_results', [])), 0)
+
+    def test_register_saves_session_character(self):
+        """Test that registering saves any character from the session."""
+        # First, create a character as anonymous user
+        self.client.get(reverse('generator'))
+
+        # Verify session has character data
+        self.assertIn('current_character', self.client.session)
+
+        # Now register a new user
+        response = self.client.post(reverse('register'), {
+            'username': 'newuser',
+            'email': 'new@example.com',
+            'password1': 'testpass123!',
+            'password2': 'testpass123!'
+        })
+
+        # Should redirect to generator (since we had a character)
+        self.assertRedirects(response, reverse('generator'))
+
+        # Character should now be saved in database for new user
+        new_user = User.objects.get(username='newuser')
+        self.assertEqual(SavedCharacter.objects.filter(user=new_user).count(), 1)
+
+
+class GeneratorUnifiedFlowTests(TestCase):
+    """Tests for unified generator flow (same behavior for logged-in and anonymous)."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='flow_test', password='test123')
+        UserProfile.objects.create(user=self.user, roles=['player'])
+
+    def test_logged_in_user_stays_on_generator(self):
+        """Test that logged-in users stay on generator page, not redirected."""
+        self.client.login(username='flow_test', password='test123')
+
+        # Visit generator
+        response = self.client.get(reverse('generator'))
+
+        # Should stay on generator (200), not redirect (302)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'generator/index.html')
+
+    def test_logged_in_reroll_stays_on_generator(self):
+        """Test that re-rolling as logged-in user stays on generator."""
+        self.client.login(username='flow_test', password='test123')
+
+        # Re-roll
+        response = self.client.post(reverse('generator'), {'action': 'reroll_none'}, follow=True)
+
+        # Should end up on generator
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'generator/index.html')
+
+    def test_logged_in_add_experience_stays_on_generator(self):
+        """Test that adding experience as logged-in user stays on generator."""
+        self.client.login(username='flow_test', password='test123')
+
+        # First visit to create character
+        self.client.get(reverse('generator'))
+
+        # Add experience
+        response = self.client.post(reverse('generator'), {
+            'action': 'add_experience',
+            'years': 3,
+            'track_mode': 'auto'
+        }, follow=True)
+
+        # Should end up on generator
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'generator/index.html')
+
+        # Experience should be visible
+        self.assertContains(response, 'Year-by-Year Log')
+
+    def test_anonymous_and_logged_in_see_same_component(self):
+        """Test that both anonymous and logged-in users see the same UI component."""
+        # Anonymous user
+        anon_response = self.client.get(reverse('generator'))
+        self.assertContains(anon_response, 'character_sheet_component')  # Component included
+
+        # Logged-in user
+        self.client.login(username='flow_test', password='test123')
+        auth_response = self.client.get(reverse('generator'))
+        self.assertContains(auth_response, 'character_sheet_component')  # Same component
+
+    def test_experience_synced_to_database_for_logged_in(self):
+        """Test that experience is synced to database for logged-in users."""
+        self.client.login(username='flow_test', password='test123')
+
+        # Visit generator (creates saved character)
+        self.client.get(reverse('generator'))
+
+        # Add experience
+        self.client.post(reverse('generator'), {
+            'action': 'add_experience',
+            'years': 5,
+            'track_mode': 'auto'
+        })
+
+        # Verify database has experience
+        saved_char = SavedCharacter.objects.filter(user=self.user).first()
+        self.assertIsNotNone(saved_char)
+        self.assertGreater(saved_char.character_data.get('interactive_years', 0), 0)
