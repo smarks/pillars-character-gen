@@ -202,24 +202,17 @@ def index(request):
     if action == 'reroll_none':
         # Re-roll with no focus - skip_track for initial character
         character = generate_character(years=0, attribute_focus=None, skip_track=True)
-        saved_id = store_current_character(request, character)
-        # Redirect logged-in users to character sheet
-        if saved_id:
-            return redirect('character_sheet', char_id=saved_id)
+        store_current_character(request, character)
 
     elif action == 'reroll_physical':
         # Re-roll with physical focus (STR/DEX)
         character = generate_character(years=0, attribute_focus='physical', skip_track=True)
-        saved_id = store_current_character(request, character)
-        if saved_id:
-            return redirect('character_sheet', char_id=saved_id)
+        store_current_character(request, character)
 
     elif action == 'reroll_mental':
         # Re-roll with mental focus (INT/WIS)
         character = generate_character(years=0, attribute_focus='mental', skip_track=True)
-        saved_id = store_current_character(request, character)
-        if saved_id:
-            return redirect('character_sheet', char_id=saved_id)
+        store_current_character(request, character)
 
     elif action == 'start_fresh':
         # Clear all session data and start over with a new character
@@ -409,10 +402,8 @@ def index(request):
                     'con': aging_effects.con_penalty,
                 }
                 saved_char.save()
-                # Redirect to character sheet for logged-in users
-                return redirect('character_sheet', char_id=saved_id)
             except SavedCharacter.DoesNotExist:
-                pass  # Fall through to redirect to generator
+                pass
 
         return redirect('generator')
 
@@ -422,16 +413,10 @@ def index(request):
         if char_data and not action:
             # Return from prior experience - use existing character
             character = deserialize_character(char_data)
-            # If logged in and we have a saved ID, redirect to character sheet
-            saved_id = request.session.get('current_saved_character_id')
-            if saved_id and request.user.is_authenticated:
-                return redirect('character_sheet', char_id=saved_id)
         else:
             # Generate new character without track/experience
             character = generate_character(years=0, skip_track=True)
-            saved_id = store_current_character(request, character)
-            if saved_id:
-                return redirect('character_sheet', char_id=saved_id)
+            store_current_character(request, character)
 
     # Get prior experience info if any
     years_completed = request.session.get('interactive_years', 0)
