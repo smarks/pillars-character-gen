@@ -102,6 +102,12 @@
     color: #555;
     margin-top: 3px;
 }
+.track-panel .track-requirement {
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 4px;
+    font-style: italic;
+}
 .track-panel .track-checkbox {
     position: absolute;
     top: 8px;
@@ -349,8 +355,7 @@
             <div id="track-panels" style="{% if not show_all_tracks %}display: none;{% endif %}">
                 {% for track in track_info %}
                 <div class="track-panel {% if track.impossible %}unavailable{% elif track.requires_roll %}requires-roll{% elif selected_track == track.track_key %}selected{% else %}available{% endif %}"
-                     data-track="{{ track.track_key }}"
-                     title="{{ track.requirement }}">
+                     data-track="{{ track.track_key }}">
                     {% if not track.impossible %}
                     <input type="radio" name="chosen_track" value="{{ track.track_key }}" class="track-checkbox"
                            {% if selected_track == track.track_key %}checked{% endif %}>
@@ -360,6 +365,7 @@
                         Surv: {{ track.survivability }}+ |
                         {% if track.impossible %}Impossible{% elif track.requires_roll %}Roll Required{% else %}Available{% endif %}
                     </div>
+                    <div class="track-requirement">{{ track.requirement }}</div>
                 </div>
                 {% endfor %}
             </div>
@@ -412,6 +418,11 @@
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof CharacterSheet !== 'undefined') {
         CharacterSheet.init('gensheet', '{% url "update_session_character" %}', '{{ csrf_token }}');
+    }
+
+    // Initialize EncumbranceCalc for equipment tracking
+    if (typeof EncumbranceCalc !== 'undefined') {
+        EncumbranceCalc.init('gensheet');
     }
 
     // Home link confirmation for non-authenticated users
@@ -560,7 +571,6 @@ document.addEventListener('trackInfoUpdated', function(e) {
         var panel = document.createElement('div');
         panel.className = panelClass;
         panel.dataset.track = track.track_key;
-        panel.title = track.requirement;
 
         var html = '';
         if (!track.impossible) {
@@ -578,6 +588,7 @@ document.addEventListener('trackInfoUpdated', function(e) {
             html += 'Available';
         }
         html += '</div>';
+        html += '<div class="track-requirement">' + track.requirement + '</div>';
 
         panel.innerHTML = html;
 

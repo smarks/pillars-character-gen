@@ -274,6 +274,312 @@ Attribute display variables (computed by view):
     </div>
     {% endif %}
 
+    <!-- Movement & Encumbrance Section -->
+    <div class="sheet-section movement-section">
+        <h2>Movement & Encumbrance</h2>
+
+        <div class="movement-stats">
+            <div class="stat-block">
+                <label>Base MA</label>
+                <span class="stat-value" data-computed="base_ma">{{ base_ma|default:8 }}</span>
+                <span class="stat-formula">(DEX − 2, min 4)</span>
+            </div>
+            <div class="stat-block">
+                <label>Fatigue Pool</label>
+                <span class="stat-value" data-computed="fatigue_pool">{{ char_data.attributes.STR|default:10 }}</span>
+                <span class="stat-formula">(= STR)</span>
+            </div>
+        </div>
+
+        <h3>Encumbrance Thresholds (<span id="{{ component_id|default:'cs' }}-enc-str-label">STR {{ char_data.attributes.STR|default:10 }}</span>)</h3>
+        <table class="reference-table encumbrance-table" id="{{ component_id|default:'cs' }}-enc-thresholds">
+            <thead>
+                <tr>
+                    <th>Load Level</th>
+                    <th>Weight (lbs)</th>
+                    <th>MA Mod</th>
+                    <th>Restrictions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="enc-unencumbered">
+                    <td>Unencumbered</td>
+                    <td>0–<span data-threshold="unenc-max">{{ enc_unenc_max|default:10 }}</span></td>
+                    <td>0</td>
+                    <td>—</td>
+                </tr>
+                <tr class="enc-light">
+                    <td>Light</td>
+                    <td><span data-threshold="light-min">{{ enc_light_min|default:11 }}</span>–<span data-threshold="light-max">{{ enc_light_max|default:15 }}</span></td>
+                    <td>−1</td>
+                    <td>—</td>
+                </tr>
+                <tr class="enc-medium">
+                    <td>Medium</td>
+                    <td><span data-threshold="med-min">{{ enc_med_min|default:16 }}</span>–<span data-threshold="med-max">{{ enc_med_max|default:20 }}</span></td>
+                    <td>−2</td>
+                    <td>Cannot Run</td>
+                </tr>
+                <tr class="enc-heavy">
+                    <td>Heavy</td>
+                    <td><span data-threshold="heavy-min">{{ enc_heavy_min|default:21 }}</span>–<span data-threshold="heavy-max">{{ enc_heavy_max|default:25 }}</span></td>
+                    <td>−4</td>
+                    <td>Cannot Run/Jog</td>
+                </tr>
+                <tr class="enc-overloaded">
+                    <td>Overloaded</td>
+                    <td>&gt;<span data-threshold="overload-min">{{ enc_heavy_max|default:25 }}</span></td>
+                    <td>Walk only</td>
+                    <td>1 hex max</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Movement Speeds</h3>
+        <table class="reference-table" id="{{ component_id|default:'cs' }}-movement-table">
+            <thead>
+                <tr>
+                    <th>Speed</th>
+                    <th>Hexes</th>
+                    <th>Fatigue</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-speed="run">
+                    <td><strong>Run</strong></td>
+                    <td class="hex-value" data-base-multiplier="1"><span class="current-hexes">{{ base_ma|default:8 }}</span></td>
+                    <td>1/turn</td>
+                    <td>None</td>
+                </tr>
+                <tr data-speed="jog">
+                    <td><strong>Jog</strong></td>
+                    <td class="hex-value" data-base-multiplier="0.5"><span class="current-hexes">{{ jog_hexes|default:4 }}</span></td>
+                    <td>1/4 turns</td>
+                    <td>Charge, Dodge, Drop</td>
+                </tr>
+                <tr data-speed="walk">
+                    <td><strong>Walk</strong></td>
+                    <td class="hex-value">≤2</td>
+                    <td>None</td>
+                    <td>Ready Weapon</td>
+                </tr>
+                <tr data-speed="walk-slow">
+                    <td><strong>Walk (slow)</strong></td>
+                    <td class="hex-value">≤1</td>
+                    <td>None</td>
+                    <td>Cast, Missile, Disbelieve</td>
+                </tr>
+                <tr data-speed="stand">
+                    <td><strong>Stand Still</strong></td>
+                    <td class="hex-value">0</td>
+                    <td>None</td>
+                    <td>Stand Up, Pick Up</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="movement-notes">
+            <p><strong>Engaged:</strong> Can only Shift (1 hex, stay adjacent) or Stand Still.</p>
+            <p><strong>Exhausted (fatigue = ST):</strong> MA halved, −2 DX, cannot Run.</p>
+        </div>
+    </div>
+
+    <!-- Equipment & Encumbrance Section -->
+    <div class="sheet-section equipment-section" id="{{ component_id|default:'cs' }}-equipment">
+        <h2>Equipment & Encumbrance</h2>
+
+        <div class="encumbrance-status" id="{{ component_id|default:'cs' }}-enc-status">
+            <div class="enc-summary">
+                <div class="enc-stat">
+                    <label>Total Weight Carried</label>
+                    <span class="enc-value" id="{{ component_id|default:'cs' }}-total-weight">0</span>
+                    <span class="enc-unit">lbs</span>
+                </div>
+                <div class="enc-stat">
+                    <label>Pack Weight</label>
+                    <span class="enc-value" id="{{ component_id|default:'cs' }}-pack-weight">0</span>
+                    <span class="enc-unit">lbs</span>
+                </div>
+                <div class="enc-stat">
+                    <label>Load Level</label>
+                    <span class="enc-level" id="{{ component_id|default:'cs' }}-load-level">Unencumbered</span>
+                </div>
+                <div class="enc-stat">
+                    <label>MA Modifier</label>
+                    <span class="enc-mod" id="{{ component_id|default:'cs' }}-ma-mod">0</span>
+                </div>
+                <div class="enc-stat">
+                    <label>Effective MA</label>
+                    <span class="enc-value" id="{{ component_id|default:'cs' }}-effective-ma">{{ base_ma|default:8 }}</span>
+                </div>
+            </div>
+
+            <div class="pack-controls">
+                <label class="pack-toggle">
+                    <input type="checkbox" id="{{ component_id|default:'cs' }}-pack-dropped" onchange="EncumbranceCalc.togglePack('{{ component_id|default:'cs' }}')">
+                    Pack Dropped (free action at start of movement)
+                </label>
+            </div>
+        </div>
+
+        <!-- Weapons -->
+        <h3>Weapons</h3>
+        <div class="equipment-category" id="{{ component_id|default:'cs' }}-weapons">
+            <table class="equipment-table weapons-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Hit</th>
+                        <th>Crit</th>
+                        <th>Dmg</th>
+                        <th>Wt</th>
+                        <th>Value</th>
+                        <th>Eq</th>
+                        <th>Pack</th>
+                        <th>Notes</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="{{ component_id|default:'cs' }}-weapons-tbody">
+                </tbody>
+            </table>
+            <div class="add-item-row">
+                <button type="button" class="btn-add-item" onclick="EncumbranceCalc.showAddForm('{{ component_id|default:'cs' }}', 'weapon')">+ Add Weapon</button>
+            </div>
+        </div>
+
+        <!-- Armour -->
+        <h3>Armour</h3>
+        <div class="equipment-category" id="{{ component_id|default:'cs' }}-armour">
+            <table class="equipment-table armour-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Absorb</th>
+                        <th>Wt</th>
+                        <th>Value</th>
+                        <th>Eq</th>
+                        <th>Pack</th>
+                        <th>Notes</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="{{ component_id|default:'cs' }}-armour-tbody">
+                </tbody>
+            </table>
+            <div class="add-item-row">
+                <button type="button" class="btn-add-item" onclick="EncumbranceCalc.showAddForm('{{ component_id|default:'cs' }}', 'armour')">+ Add Armour</button>
+            </div>
+        </div>
+
+        <!-- Misc Equipment -->
+        <h3>Miscellaneous</h3>
+        <div class="equipment-category" id="{{ component_id|default:'cs' }}-misc">
+            <table class="equipment-table misc-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Attr Mod</th>
+                        <th>Wt</th>
+                        <th>Value</th>
+                        <th>Eq</th>
+                        <th>Pack</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="{{ component_id|default:'cs' }}-misc-tbody">
+                </tbody>
+            </table>
+            <div class="add-item-row">
+                <button type="button" class="btn-add-item" onclick="EncumbranceCalc.showAddForm('{{ component_id|default:'cs' }}', 'misc')">+ Add Item</button>
+            </div>
+        </div>
+
+        <!-- Add Item Modal/Form -->
+        <div class="add-item-modal" id="{{ component_id|default:'cs' }}-add-modal" style="display: none;">
+            <div class="modal-content">
+                <h4 id="{{ component_id|default:'cs' }}-modal-title">Add Item</h4>
+                <input type="hidden" id="{{ component_id|default:'cs' }}-item-category">
+
+                <div class="modal-fields">
+                    <div class="field-group">
+                        <label>Name</label>
+                        <input type="text" id="{{ component_id|default:'cs' }}-item-name" placeholder="Item name">
+                    </div>
+                    <div class="field-group">
+                        <label>Description</label>
+                        <input type="text" id="{{ component_id|default:'cs' }}-item-desc" placeholder="Brief description">
+                    </div>
+
+                    <!-- Weapon-specific fields -->
+                    <div class="weapon-fields" style="display: none;">
+                        <div class="field-group inline">
+                            <label>Hit Mod</label>
+                            <input type="text" id="{{ component_id|default:'cs' }}-item-hit" placeholder="+0" class="small-input">
+                        </div>
+                        <div class="field-group inline">
+                            <label>Crit Mod</label>
+                            <input type="text" id="{{ component_id|default:'cs' }}-item-crit" placeholder="+0" class="small-input">
+                        </div>
+                        <div class="field-group inline">
+                            <label>Dmg Mod</label>
+                            <input type="text" id="{{ component_id|default:'cs' }}-item-dmg" placeholder="+0" class="small-input">
+                        </div>
+                    </div>
+
+                    <!-- Armour-specific fields -->
+                    <div class="armour-fields" style="display: none;">
+                        <div class="field-group inline">
+                            <label>Damage Absorbed</label>
+                            <input type="number" id="{{ component_id|default:'cs' }}-item-absorb" placeholder="0" class="small-input" min="0">
+                        </div>
+                    </div>
+
+                    <!-- Misc-specific fields -->
+                    <div class="misc-fields" style="display: none;">
+                        <div class="field-group inline">
+                            <label>Attribute Modified</label>
+                            <input type="text" id="{{ component_id|default:'cs' }}-item-attrmod" placeholder="e.g., +1 INT" class="small-input">
+                        </div>
+                    </div>
+
+                    <!-- Common fields -->
+                    <div class="field-group inline">
+                        <label>Weight (lbs)</label>
+                        <input type="number" id="{{ component_id|default:'cs' }}-item-weight" placeholder="0" class="small-input" min="0" step="0.5">
+                    </div>
+                    <div class="field-group inline">
+                        <label>Value</label>
+                        <input type="text" id="{{ component_id|default:'cs' }}-item-value" placeholder="e.g., 10gp" class="small-input">
+                    </div>
+                    <div class="field-group inline">
+                        <label><input type="checkbox" id="{{ component_id|default:'cs' }}-item-equipped"> Equipped</label>
+                    </div>
+                    <div class="field-group inline pack-field" style="display: none;">
+                        <label><input type="checkbox" id="{{ component_id|default:'cs' }}-item-inpack"> In Pack</label>
+                    </div>
+
+                    <!-- Notes for weapon/armour -->
+                    <div class="notes-field" style="display: none;">
+                        <div class="field-group">
+                            <label>Notes</label>
+                            <input type="text" id="{{ component_id|default:'cs' }}-item-notes" placeholder="Other notes">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="button" class="btn-cancel" onclick="EncumbranceCalc.hideAddForm('{{ component_id|default:'cs' }}')">Cancel</button>
+                    <button type="button" class="btn-save" onclick="EncumbranceCalc.saveItem('{{ component_id|default:'cs' }}')">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Notes Section -->
     <div class="sheet-section">
         <h2>Notes</h2>
@@ -532,6 +838,378 @@ Attribute display variables (computed by view):
     min-height: 60px;
 }
 
+/* Movement & Encumbrance section */
+.movement-section h3 {
+    margin-top: 15px;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+    border-bottom: 1px dashed #ccc;
+    padding-bottom: 4px;
+}
+
+.movement-stats {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 15px;
+}
+
+.stat-block {
+    text-align: center;
+    padding: 10px 20px;
+    background: #fff;
+    border: 1px solid #ddd;
+}
+
+.stat-block label {
+    display: block;
+    font-weight: bold;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+}
+
+.stat-block .stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+
+.stat-block .stat-formula {
+    display: block;
+    font-size: 0.75em;
+    color: #888;
+    margin-top: 3px;
+}
+
+/* Reference tables */
+.reference-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85em;
+    margin-bottom: 15px;
+}
+
+.reference-table th,
+.reference-table td {
+    border: 1px solid #ccc;
+    padding: 6px 8px;
+    text-align: left;
+}
+
+.reference-table th {
+    background: #eee;
+    font-weight: bold;
+}
+
+.reference-table tbody tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+/* Encumbrance level colors */
+.enc-unencumbered { background: #e8f5e9 !important; }
+.enc-light { background: #fff9c4 !important; }
+.enc-medium { background: #ffe0b2 !important; }
+.enc-heavy { background: #ffccbc !important; }
+.enc-overloaded { background: #ffcdd2 !important; }
+
+.movement-notes {
+    font-size: 0.85em;
+    color: #555;
+    background: #f5f5f5;
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+.movement-notes p {
+    margin: 0 0 5px 0;
+}
+
+.movement-notes p:last-child {
+    margin-bottom: 0;
+}
+
+/* Equipment & Encumbrance section */
+.equipment-section h3 {
+    margin-top: 15px;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+    border-bottom: 1px dashed #ccc;
+    padding-bottom: 4px;
+}
+
+.encumbrance-status {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.enc-summary {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.enc-stat {
+    text-align: center;
+    padding: 8px 12px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    min-width: 70px;
+}
+
+.enc-stat label {
+    display: block;
+    font-size: 0.7em;
+    color: #666;
+    margin-bottom: 3px;
+}
+
+.enc-stat .enc-value,
+.enc-stat .enc-level,
+.enc-stat .enc-mod {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.enc-stat .enc-unit {
+    font-size: 0.8em;
+    color: #888;
+}
+
+/* Encumbrance level status colors */
+.enc-stat .enc-level.level-unencumbered { color: #2e7d32; }
+.enc-stat .enc-level.level-light { color: #f9a825; }
+.enc-stat .enc-level.level-medium { color: #ef6c00; }
+.enc-stat .enc-level.level-heavy { color: #d84315; }
+.enc-stat .enc-level.level-overloaded { color: #c62828; }
+
+.pack-controls {
+    padding-top: 10px;
+    border-top: 1px dashed #ddd;
+}
+
+.pack-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.pack-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+.pack-dropped-notice {
+    color: #1565c0;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+/* Equipment categories */
+.equipment-category {
+    margin-bottom: 15px;
+}
+
+/* Equipment tables */
+.equipment-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8em;
+    margin-bottom: 5px;
+}
+
+.equipment-table th,
+.equipment-table td {
+    border: 1px solid #ccc;
+    padding: 4px 6px;
+    text-align: left;
+}
+
+.equipment-table th {
+    background: #eee;
+    font-weight: bold;
+    font-size: 0.85em;
+}
+
+.equipment-table tbody tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.equipment-table tbody tr.in-pack-item {
+    opacity: 0.5;
+}
+
+.equipment-table tbody tr.in-pack-item td {
+    text-decoration: line-through;
+}
+
+.equipment-table tbody tr.not-equipped {
+    color: #888;
+}
+
+.equipment-table .btn-remove {
+    background: #c44;
+    color: white;
+    border: none;
+    padding: 2px 6px;
+    cursor: pointer;
+    font-size: 0.8em;
+}
+
+.equipment-table .btn-remove:hover {
+    background: #a33;
+}
+
+.equipment-table .equipped-toggle,
+.equipment-table .pack-toggle-cell {
+    text-align: center;
+}
+
+.equipment-table input[type="checkbox"] {
+    cursor: pointer;
+}
+
+/* Compact column widths */
+.weapons-table th:nth-child(3),
+.weapons-table th:nth-child(4),
+.weapons-table th:nth-child(5),
+.armour-table th:nth-child(3) {
+    width: 40px;
+    text-align: center;
+}
+
+.equipment-table th:last-child {
+    width: 30px;
+}
+
+/* Add item button */
+.add-item-row {
+    margin-top: 5px;
+}
+
+.btn-add-item {
+    padding: 4px 12px;
+    background: #4a4;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85em;
+}
+
+.btn-add-item:hover {
+    background: #3a3;
+}
+
+/* Add Item Modal */
+.add-item-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.add-item-modal .modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 4px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.add-item-modal h4 {
+    margin: 0 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.modal-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.modal-fields .field-group {
+    flex: 1 1 100%;
+}
+
+.modal-fields .field-group.inline {
+    flex: 0 0 auto;
+    min-width: 80px;
+}
+
+.modal-fields .field-group label {
+    display: block;
+    font-size: 0.85em;
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+
+.modal-fields .field-group input[type="text"],
+.modal-fields .field-group input[type="number"] {
+    width: 100%;
+    padding: 6px 8px;
+    font-family: monospace;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+.modal-fields .field-group .small-input {
+    width: 80px;
+}
+
+.modal-fields .weapon-fields,
+.modal-fields .armour-fields,
+.modal-fields .misc-fields {
+    display: flex;
+    gap: 10px;
+    flex: 1 1 100%;
+}
+
+.modal-buttons {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #ccc;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.modal-buttons .btn-cancel {
+    padding: 8px 16px;
+    background: #888;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.modal-buttons .btn-cancel:hover {
+    background: #666;
+}
+
+.modal-buttons .btn-save {
+    padding: 8px 16px;
+    background: #4a4;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.modal-buttons .btn-save:hover {
+    background: #3a3;
+}
+
 /* Save status indicators */
 .attr-input.saving, input.saving, select.saving, textarea.saving {
     background: #ffc !important;
@@ -736,6 +1414,15 @@ var CharacterSheet = (function() {
                             }
                         }
                     }
+
+                }
+
+                // Always recalculate encumbrance after any attribute save
+                // Use setTimeout to ensure DOM updates have been applied
+                if (typeof EncumbranceCalc !== 'undefined') {
+                    setTimeout(function() {
+                        EncumbranceCalc.recalculate(componentId);
+                    }, 10);
                 }
 
                 setTimeout(function() { showStatus(element, null); }, 2000);
@@ -811,6 +1498,11 @@ var CharacterSheet = (function() {
             li.innerHTML = '<span class="skill-tag">' + escapeHtml(skill) + '</span>';
             list.appendChild(li);
         });
+
+        // Recalculate encumbrance in case Porter skill was added/changed
+        if (typeof EncumbranceCalc !== 'undefined') {
+            EncumbranceCalc.recalculate(componentId);
+        }
     }
 
     function escapeHtml(text) {
@@ -859,6 +1551,499 @@ var CharacterSheet = (function() {
         init: init,
         addSkill: addSkill,
         parseAttributeValue: parseAttributeValue
+    };
+})();
+
+/**
+ * EncumbranceCalc - Equipment and encumbrance tracking with categories
+ */
+var EncumbranceCalc = (function() {
+    // Store equipment data per component: { weapons: [], armour: [], misc: [], packDropped: false }
+    var equipmentData = {};
+
+    function getDefaultData() {
+        return { weapons: [], armour: [], misc: [], packDropped: false };
+    }
+
+    function getPorterBonus(componentId) {
+        // Check for Porter skill in the skills list
+        var container = document.getElementById(componentId + '-container');
+        var skillsList = container.querySelector('.skills-list');
+        if (!skillsList) return 0;
+
+        var porterBonus = 0;
+        var skillTags = skillsList.querySelectorAll('.skill-tag');
+        skillTags.forEach(function(tag) {
+            var skillText = tag.textContent.toLowerCase();
+            // Match "Porter", "Porter 2", "Porter III", etc.
+            var match = skillText.match(/porter\s*(\d+|i{1,3}|iv|v)?/i);
+            if (match) {
+                var level = 1;
+                if (match[1]) {
+                    var levelStr = match[1].toLowerCase();
+                    if (levelStr === 'i') level = 1;
+                    else if (levelStr === 'ii') level = 2;
+                    else if (levelStr === 'iii') level = 3;
+                    else if (levelStr === 'iv') level = 4;
+                    else if (levelStr === 'v') level = 5;
+                    else level = parseInt(levelStr) || 1;
+                }
+                porterBonus = level * 10; // 10 lbs per Porter level
+            }
+        });
+        return porterBonus;
+    }
+
+    function getThresholds(componentId) {
+        var container = document.getElementById(componentId + '-container');
+        // Read STR directly from the input field (or span for non-editable)
+        var strInput = container.querySelector('[data-field="attributes.STR"]');
+        var strValue = 10;
+        if (strInput) {
+            strValue = parseInt(strInput.value) || 10;
+        } else {
+            // Fallback to fatigue_pool display if no input field
+            var fatiguePoolEl = container.querySelector('[data-computed="fatigue_pool"]');
+            if (fatiguePoolEl) {
+                strValue = parseInt(fatiguePoolEl.textContent) || 10;
+            }
+        }
+        var porterBonus = getPorterBonus(componentId);
+        var effectiveStr = strValue + porterBonus;
+
+        return {
+            str: strValue,
+            porterBonus: porterBonus,
+            effectiveStr: effectiveStr,
+            unencMax: effectiveStr,
+            lightMax: Math.floor(effectiveStr * 1.5),
+            medMax: effectiveStr * 2,
+            heavyMax: Math.floor(effectiveStr * 2.5)
+        };
+    }
+
+    function updateThresholdTable(componentId, thresholds) {
+        var container = document.getElementById(componentId + '-container');
+
+        // Update the STR label
+        var strLabel = document.getElementById(componentId + '-enc-str-label');
+        if (strLabel) {
+            var labelText = 'STR ' + thresholds.str;
+            if (thresholds.porterBonus > 0) {
+                labelText += ' + Porter ' + (thresholds.porterBonus / 10);
+            }
+            strLabel.textContent = labelText;
+        }
+
+        // Update threshold values in the table
+        var table = document.getElementById(componentId + '-enc-thresholds');
+        if (!table) return;
+
+        var updateSpan = function(attr, value) {
+            var span = table.querySelector('[data-threshold="' + attr + '"]');
+            if (span) span.textContent = value;
+        };
+
+        updateSpan('unenc-max', thresholds.unencMax);
+        updateSpan('light-min', thresholds.unencMax + 1);
+        updateSpan('light-max', thresholds.lightMax);
+        updateSpan('med-min', thresholds.lightMax + 1);
+        updateSpan('med-max', thresholds.medMax);
+        updateSpan('heavy-min', thresholds.medMax + 1);
+        updateSpan('heavy-max', thresholds.heavyMax);
+        updateSpan('overload-min', thresholds.heavyMax);
+    }
+
+    function getBaseMA(componentId) {
+        var container = document.getElementById(componentId + '-container');
+        var maEl = container.querySelector('[data-computed="base_ma"]');
+        return parseInt(maEl.textContent) || 8;
+    }
+
+    function getEncumbranceLevel(weight, thresholds) {
+        if (weight <= thresholds.unencMax) return { level: 'Unencumbered', mod: 0, canRun: true, canJog: true };
+        if (weight <= thresholds.lightMax) return { level: 'Light', mod: -1, canRun: true, canJog: true };
+        if (weight <= thresholds.medMax) return { level: 'Medium', mod: -2, canRun: false, canJog: true };
+        if (weight <= thresholds.heavyMax) return { level: 'Heavy', mod: -4, canRun: false, canJog: false };
+        return { level: 'Overloaded', mod: 0, canRun: false, canJog: false, walkOnly: true };
+    }
+
+    function getAllItems(componentId) {
+        var data = equipmentData[componentId] || getDefaultData();
+        var allItems = [];
+        ['weapons', 'armour', 'misc'].forEach(function(cat) {
+            (data[cat] || []).forEach(function(item) {
+                allItems.push(Object.assign({}, item, { category: cat }));
+            });
+        });
+        return allItems;
+    }
+
+    function calculateEncumbrance(componentId) {
+        var data = equipmentData[componentId] || getDefaultData();
+        var thresholds = getThresholds(componentId);
+        var baseMA = getBaseMA(componentId);
+
+        // Update the threshold table to reflect current STR and Porter bonus
+        updateThresholdTable(componentId, thresholds);
+
+        var totalWeight = 0;
+        var packWeight = 0;
+        var allItems = getAllItems(componentId);
+
+        allItems.forEach(function(item) {
+            if (!item.equipped) return; // Only count equipped items
+            var weight = parseFloat(item.weight) || 0;
+            if (item.inPack) {
+                packWeight += weight;
+                if (!data.packDropped) {
+                    totalWeight += weight;
+                }
+            } else {
+                totalWeight += weight;
+            }
+        });
+
+        var encLevel = getEncumbranceLevel(totalWeight, thresholds);
+        var effectiveMA = encLevel.walkOnly ? 1 : Math.max(1, baseMA + encLevel.mod);
+
+        // Update display
+        document.getElementById(componentId + '-total-weight').textContent = totalWeight.toFixed(1);
+        document.getElementById(componentId + '-pack-weight').textContent = packWeight.toFixed(1);
+
+        var levelEl = document.getElementById(componentId + '-load-level');
+        levelEl.textContent = encLevel.level;
+        levelEl.className = 'enc-level level-' + encLevel.level.toLowerCase();
+
+        var modEl = document.getElementById(componentId + '-ma-mod');
+        modEl.textContent = encLevel.walkOnly ? 'Walk only' : encLevel.mod;
+
+        document.getElementById(componentId + '-effective-ma').textContent = effectiveMA;
+
+        updateMovementHexes(componentId, effectiveMA, encLevel);
+        updatePackItemStyles(componentId, data.packDropped);
+    }
+
+    function updateMovementHexes(componentId, effectiveMA, encLevel) {
+        var container = document.getElementById(componentId + '-container');
+        var movementTable = container.querySelector('#' + componentId + '-movement-table');
+        if (!movementTable) return;
+
+        var runRow = movementTable.querySelector('tr[data-speed="run"]');
+        var jogRow = movementTable.querySelector('tr[data-speed="jog"]');
+
+        if (runRow) {
+            var runHexes = runRow.querySelector('.current-hexes');
+            if (encLevel.canRun) {
+                runHexes.textContent = effectiveMA;
+                runRow.style.opacity = '1';
+            } else {
+                runHexes.textContent = '—';
+                runRow.style.opacity = '0.5';
+            }
+        }
+
+        if (jogRow) {
+            var jogHexes = jogRow.querySelector('.current-hexes');
+            if (encLevel.canJog) {
+                jogHexes.textContent = Math.floor(effectiveMA / 2);
+                jogRow.style.opacity = '1';
+            } else {
+                jogHexes.textContent = '—';
+                jogRow.style.opacity = '0.5';
+            }
+        }
+    }
+
+    function updatePackItemStyles(componentId, packDropped) {
+        ['weapons', 'armour', 'misc'].forEach(function(cat) {
+            var tbody = document.getElementById(componentId + '-' + cat + '-tbody');
+            if (!tbody) return;
+            tbody.querySelectorAll('tr').forEach(function(row) {
+                if (row.dataset.inPack === 'true') {
+                    row.classList.toggle('in-pack-item', packDropped);
+                }
+            });
+        });
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function renderWeaponsTable(componentId) {
+        var data = equipmentData[componentId] || getDefaultData();
+        var tbody = document.getElementById(componentId + '-weapons-tbody');
+        tbody.innerHTML = '';
+
+        if (!data.weapons || data.weapons.length === 0) {
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="11" style="text-align:center;color:#888;"><em>No weapons</em></td>';
+            tbody.appendChild(tr);
+            return;
+        }
+
+        data.weapons.forEach(function(item, index) {
+            var tr = document.createElement('tr');
+            tr.dataset.index = index;
+            tr.dataset.inPack = item.inPack ? 'true' : 'false';
+            if (!item.equipped) tr.classList.add('not-equipped');
+            if (data.packDropped && item.inPack && item.equipped) tr.classList.add('in-pack-item');
+
+            var equipChecked = item.equipped ? 'checked' : '';
+            var packDisabled = item.equipped ? '' : 'disabled';
+            var packChecked = item.inPack ? 'checked' : '';
+
+            tr.innerHTML =
+                '<td>' + escapeHtml(item.name) + '</td>' +
+                '<td>' + escapeHtml(item.desc) + '</td>' +
+                '<td style="text-align:center">' + escapeHtml(item.hit) + '</td>' +
+                '<td style="text-align:center">' + escapeHtml(item.crit) + '</td>' +
+                '<td style="text-align:center">' + escapeHtml(item.dmg) + '</td>' +
+                '<td>' + (parseFloat(item.weight) || 0) + '</td>' +
+                '<td>' + escapeHtml(item.value) + '</td>' +
+                '<td class="equipped-toggle"><input type="checkbox" ' + equipChecked + ' onchange="EncumbranceCalc.toggleEquipped(\'' + componentId + '\', \'weapons\', ' + index + ')"></td>' +
+                '<td class="pack-toggle-cell"><input type="checkbox" ' + packChecked + ' ' + packDisabled + ' onchange="EncumbranceCalc.toggleInPack(\'' + componentId + '\', \'weapons\', ' + index + ')"></td>' +
+                '<td>' + escapeHtml(item.notes) + '</td>' +
+                '<td><button type="button" class="btn-remove" onclick="EncumbranceCalc.removeItem(\'' + componentId + '\', \'weapons\', ' + index + ')">×</button></td>';
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderArmourTable(componentId) {
+        var data = equipmentData[componentId] || getDefaultData();
+        var tbody = document.getElementById(componentId + '-armour-tbody');
+        tbody.innerHTML = '';
+
+        if (!data.armour || data.armour.length === 0) {
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="9" style="text-align:center;color:#888;"><em>No armour</em></td>';
+            tbody.appendChild(tr);
+            return;
+        }
+
+        data.armour.forEach(function(item, index) {
+            var tr = document.createElement('tr');
+            tr.dataset.index = index;
+            tr.dataset.inPack = item.inPack ? 'true' : 'false';
+            if (!item.equipped) tr.classList.add('not-equipped');
+            if (data.packDropped && item.inPack && item.equipped) tr.classList.add('in-pack-item');
+
+            var equipChecked = item.equipped ? 'checked' : '';
+            var packDisabled = item.equipped ? '' : 'disabled';
+            var packChecked = item.inPack ? 'checked' : '';
+
+            tr.innerHTML =
+                '<td>' + escapeHtml(item.name) + '</td>' +
+                '<td>' + escapeHtml(item.desc) + '</td>' +
+                '<td style="text-align:center">' + (item.absorb || 0) + '</td>' +
+                '<td>' + (parseFloat(item.weight) || 0) + '</td>' +
+                '<td>' + escapeHtml(item.value) + '</td>' +
+                '<td class="equipped-toggle"><input type="checkbox" ' + equipChecked + ' onchange="EncumbranceCalc.toggleEquipped(\'' + componentId + '\', \'armour\', ' + index + ')"></td>' +
+                '<td class="pack-toggle-cell"><input type="checkbox" ' + packChecked + ' ' + packDisabled + ' onchange="EncumbranceCalc.toggleInPack(\'' + componentId + '\', \'armour\', ' + index + ')"></td>' +
+                '<td>' + escapeHtml(item.notes) + '</td>' +
+                '<td><button type="button" class="btn-remove" onclick="EncumbranceCalc.removeItem(\'' + componentId + '\', \'armour\', ' + index + ')">×</button></td>';
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderMiscTable(componentId) {
+        var data = equipmentData[componentId] || getDefaultData();
+        var tbody = document.getElementById(componentId + '-misc-tbody');
+        tbody.innerHTML = '';
+
+        if (!data.misc || data.misc.length === 0) {
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="8" style="text-align:center;color:#888;"><em>No items</em></td>';
+            tbody.appendChild(tr);
+            return;
+        }
+
+        data.misc.forEach(function(item, index) {
+            var tr = document.createElement('tr');
+            tr.dataset.index = index;
+            tr.dataset.inPack = item.inPack ? 'true' : 'false';
+            if (!item.equipped) tr.classList.add('not-equipped');
+            if (data.packDropped && item.inPack && item.equipped) tr.classList.add('in-pack-item');
+
+            var equipChecked = item.equipped ? 'checked' : '';
+            var packDisabled = item.equipped ? '' : 'disabled';
+            var packChecked = item.inPack ? 'checked' : '';
+
+            tr.innerHTML =
+                '<td>' + escapeHtml(item.name) + '</td>' +
+                '<td>' + escapeHtml(item.desc) + '</td>' +
+                '<td>' + escapeHtml(item.attrMod) + '</td>' +
+                '<td>' + (parseFloat(item.weight) || 0) + '</td>' +
+                '<td>' + escapeHtml(item.value) + '</td>' +
+                '<td class="equipped-toggle"><input type="checkbox" ' + equipChecked + ' onchange="EncumbranceCalc.toggleEquipped(\'' + componentId + '\', \'misc\', ' + index + ')"></td>' +
+                '<td class="pack-toggle-cell"><input type="checkbox" ' + packChecked + ' ' + packDisabled + ' onchange="EncumbranceCalc.toggleInPack(\'' + componentId + '\', \'misc\', ' + index + ')"></td>' +
+                '<td><button type="button" class="btn-remove" onclick="EncumbranceCalc.removeItem(\'' + componentId + '\', \'misc\', ' + index + ')">×</button></td>';
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderAllTables(componentId) {
+        renderWeaponsTable(componentId);
+        renderArmourTable(componentId);
+        renderMiscTable(componentId);
+    }
+
+    function showAddForm(componentId, category) {
+        var modal = document.getElementById(componentId + '-add-modal');
+        var titleEl = document.getElementById(componentId + '-modal-title');
+        var catInput = document.getElementById(componentId + '-item-category');
+
+        // Set category
+        catInput.value = category;
+
+        // Update title
+        var titles = { weapon: 'Add Weapon', armour: 'Add Armour', misc: 'Add Item' };
+        titleEl.textContent = titles[category] || 'Add Item';
+
+        // Show/hide category-specific fields
+        var container = modal.querySelector('.modal-content');
+        container.querySelector('.weapon-fields').style.display = category === 'weapon' ? 'flex' : 'none';
+        container.querySelector('.armour-fields').style.display = category === 'armour' ? 'flex' : 'none';
+        container.querySelector('.misc-fields').style.display = category === 'misc' ? 'flex' : 'none';
+        container.querySelector('.notes-field').style.display = (category === 'weapon' || category === 'armour') ? 'block' : 'none';
+
+        // Clear all inputs
+        modal.querySelectorAll('input[type="text"], input[type="number"]').forEach(function(inp) {
+            inp.value = '';
+        });
+        modal.querySelectorAll('input[type="checkbox"]').forEach(function(inp) {
+            inp.checked = false;
+        });
+
+        // Show modal
+        modal.style.display = 'flex';
+    }
+
+    function hideAddForm(componentId) {
+        var modal = document.getElementById(componentId + '-add-modal');
+        modal.style.display = 'none';
+    }
+
+    function saveItem(componentId) {
+        var category = document.getElementById(componentId + '-item-category').value;
+        var name = document.getElementById(componentId + '-item-name').value.trim();
+        var desc = document.getElementById(componentId + '-item-desc').value.trim();
+        var weight = parseFloat(document.getElementById(componentId + '-item-weight').value) || 0;
+        var value = document.getElementById(componentId + '-item-value').value.trim();
+        var equipped = document.getElementById(componentId + '-item-equipped').checked;
+        var inPack = document.getElementById(componentId + '-item-inpack').checked;
+
+        if (!name) {
+            alert('Please enter an item name');
+            return;
+        }
+
+        if (!equipmentData[componentId]) {
+            equipmentData[componentId] = getDefaultData();
+        }
+
+        var item = {
+            name: name,
+            desc: desc,
+            weight: weight,
+            value: value,
+            equipped: equipped,
+            inPack: equipped ? inPack : false
+        };
+
+        // Add category-specific fields
+        if (category === 'weapon') {
+            item.hit = document.getElementById(componentId + '-item-hit').value.trim();
+            item.crit = document.getElementById(componentId + '-item-crit').value.trim();
+            item.dmg = document.getElementById(componentId + '-item-dmg').value.trim();
+            item.notes = document.getElementById(componentId + '-item-notes').value.trim();
+            equipmentData[componentId].weapons.push(item);
+        } else if (category === 'armour') {
+            item.absorb = parseInt(document.getElementById(componentId + '-item-absorb').value) || 0;
+            item.notes = document.getElementById(componentId + '-item-notes').value.trim();
+            equipmentData[componentId].armour.push(item);
+        } else {
+            item.attrMod = document.getElementById(componentId + '-item-attrmod').value.trim();
+            equipmentData[componentId].misc.push(item);
+        }
+
+        hideAddForm(componentId);
+        renderAllTables(componentId);
+        calculateEncumbrance(componentId);
+    }
+
+    function removeItem(componentId, category, index) {
+        if (!equipmentData[componentId]) return;
+        equipmentData[componentId][category].splice(index, 1);
+        renderAllTables(componentId);
+        calculateEncumbrance(componentId);
+    }
+
+    function toggleEquipped(componentId, category, index) {
+        if (!equipmentData[componentId]) return;
+        var item = equipmentData[componentId][category][index];
+        item.equipped = !item.equipped;
+        if (!item.equipped) item.inPack = false; // Can't be in pack if not equipped
+        renderAllTables(componentId);
+        calculateEncumbrance(componentId);
+    }
+
+    function toggleInPack(componentId, category, index) {
+        if (!equipmentData[componentId]) return;
+        var item = equipmentData[componentId][category][index];
+        item.inPack = !item.inPack;
+        renderAllTables(componentId);
+        calculateEncumbrance(componentId);
+    }
+
+    function togglePack(componentId) {
+        var checkbox = document.getElementById(componentId + '-pack-dropped');
+        if (!equipmentData[componentId]) {
+            equipmentData[componentId] = getDefaultData();
+        }
+        equipmentData[componentId].packDropped = checkbox.checked;
+        renderAllTables(componentId);
+        calculateEncumbrance(componentId);
+    }
+
+    function init(componentId) {
+        if (!equipmentData[componentId]) {
+            equipmentData[componentId] = getDefaultData();
+        }
+        renderAllTables(componentId);
+        calculateEncumbrance(componentId);
+
+        // Listen for equipped checkbox changes to enable/disable pack checkbox
+        var modal = document.getElementById(componentId + '-add-modal');
+        if (modal) {
+            var equippedCheckbox = document.getElementById(componentId + '-item-equipped');
+            var packField = modal.querySelector('.pack-field');
+            var inPackCheckbox = document.getElementById(componentId + '-item-inpack');
+
+            equippedCheckbox.addEventListener('change', function() {
+                packField.style.display = this.checked ? 'block' : 'none';
+                if (!this.checked) inPackCheckbox.checked = false;
+            });
+        }
+    }
+
+    return {
+        init: init,
+        showAddForm: showAddForm,
+        hideAddForm: hideAddForm,
+        saveItem: saveItem,
+        removeItem: removeItem,
+        toggleEquipped: toggleEquipped,
+        toggleInPack: toggleInPack,
+        togglePack: togglePack,
+        recalculate: calculateEncumbrance
     };
 })();
 </script>

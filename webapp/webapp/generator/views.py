@@ -482,6 +482,26 @@ def index(request):
                 selected_track = track_type.name
                 break
 
+    # Calculate movement and encumbrance values
+    if char_data:
+        attrs = char_data.get('attributes', {})
+        str_val = get_attribute_base_value(attrs.get('STR', 10))
+        dex_val = get_attribute_base_value(attrs.get('DEX', 10))
+    else:
+        str_val = 10
+        dex_val = 10
+
+    base_ma = max(4, dex_val - 2)
+    jog_hexes = base_ma // 2
+    # Encumbrance thresholds based on STR
+    enc_unenc_max = str_val
+    enc_light_min = str_val + 1
+    enc_light_max = int(str_val * 1.5)
+    enc_med_min = enc_light_max + 1
+    enc_med_max = str_val * 2
+    enc_heavy_min = enc_med_max + 1
+    enc_heavy_max = int(str_val * 2.5)
+
     return render(request, 'generator/index.html', {
         'character': character,
         'char_data': char_data or {},
@@ -501,6 +521,16 @@ def index(request):
         'wis_mod': wis_mod,
         'con_mod': con_mod,
         'chr_mod': chr_mod,
+        # Movement & encumbrance
+        'base_ma': base_ma,
+        'jog_hexes': jog_hexes,
+        'enc_unenc_max': enc_unenc_max,
+        'enc_light_min': enc_light_min,
+        'enc_light_max': enc_light_max,
+        'enc_med_min': enc_med_min,
+        'enc_med_max': enc_med_max,
+        'enc_heavy_min': enc_heavy_min,
+        'enc_heavy_max': enc_heavy_max,
     })
 
 
@@ -2193,7 +2223,11 @@ def recalculate_derived(char_data):
     char_data['attributes']['fatigue_points'] = fatigue_points
     char_data['attributes']['body_points'] = body_points
 
+    # STR is used for fatigue pool (maximum fatigue capacity) and encumbrance thresholds
+    str_display = attrs.get('STR', 10)
+
     return {
         'fatigue_points': fatigue_points,
         'body_points': body_points,
+        'fatigue_pool': str_val,  # Fatigue Pool = base STR value
     }
