@@ -10,10 +10,11 @@ urlpatterns = [
     path('update-session-character/', views.update_session_character, name='update_session_character'),
     path('select-track/', views.select_track, name='select_track'),
     path('start-over/', views.start_over, name='start_over'),
-    # Handbook sections - loaded from references/ directory
+    # Handbook sections - loaded from references/ or docs/ directory
     path('about/', views.handbook_section, {'section': 'about'}, name='about'),
     path('lore/', views.handbook_section, {'section': 'lore'}, name='lore'),
     path('handbook/', views.handbook_section, {'section': 'players_handbook'}, name='handbook'),
+    path('combat/', views.handbook_section, {'section': 'combat'}, name='combat'),
     path('dm/', views.dm_handbook, name='dm'),
     # Authentication
     path('login/', views.login_view, name='login'),

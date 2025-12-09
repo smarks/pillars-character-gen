@@ -1351,6 +1351,10 @@ def handbook_section(request, section: str):
             'path': os.path.join(settings.BASE_DIR, '..', 'docs', 'A Pillars Handbook.md'),
             'title': "Player's Handbook",
         },
+        'combat': {
+            'path': os.path.join(settings.BASE_DIR, '..', 'references', 'Combat_and_Movement.md'),
+            'title': 'Combat & Movement',
+        },
         'DM_handbook': {
             'path': os.path.join(settings.BASE_DIR, '..', 'references', 'private', 'DM_handbook.md'),
             'title': 'DM Handbook',

@@ -41,6 +41,10 @@
             <span class="icon">&#128214;</span>
             Player's Handbook
         </a>
+        <a href="{% url 'combat' %}" class="nav-link">
+            <span class="icon">&#9876;</span>
+            Combat & Movement
+        </a>
         {% if user.is_authenticated and user.profile.is_dm or user.is_authenticated and user.profile.is_admin %}
         <a href="{% url 'dm' %}" class="nav-link">
             <span class="icon">&#128218;</span>
