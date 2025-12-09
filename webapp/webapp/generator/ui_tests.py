@@ -148,8 +148,8 @@ class GeneratorUITests(BrowserTestCase):
         # Should see welcome page
         self.assertIn('Pillars', self.browser.title)
 
-        # Click on Character Generator link
-        generator_link = self.browser.find_element(By.LINK_TEXT, 'Character Generator')
+        # Click on Character Generator link (use partial link text since it includes icon)
+        generator_link = self.browser.find_element(By.PARTIAL_LINK_TEXT, 'Character Generator')
         generator_link.click()
         self.wait_for_page_load()
 
@@ -157,8 +157,8 @@ class GeneratorUITests(BrowserTestCase):
         self.assertIn('generator', self.browser.current_url)
         self.assertIn('Character Generator', self.browser.page_source)
 
-    def test_finish_character_button(self):
-        """Test that Finish Character button takes you to the character sheet."""
+    def test_copy_to_clipboard_button(self):
+        """Test that Copy to Clipboard button exists on the generator page."""
         # Go directly to generator
         self.browser.get(f'{self.live_server_url}/generator/')
         self.wait_for_page_load()
@@ -166,24 +166,17 @@ class GeneratorUITests(BrowserTestCase):
         # Verify we're on the generator page
         self.assertIn('Character Generator', self.browser.page_source)
 
-        # Verify a character was generated (this creates the session)
-        pre_element = self.browser.find_element(By.TAG_NAME, 'pre')
-        self.assertIn('Pillars Character', pre_element.text)
+        # Verify a character was generated (check for attributes)
+        page_source = self.browser.page_source
+        self.assertTrue('STR' in page_source or 'DEX' in page_source)
 
-        # Find and click the Finish Character button
-        finish_button = self.browser.find_element(
-            By.CSS_SELECTOR, 'button[value="finish"]'
-        )
-        finish_button.click()
-        self.wait_for_page_load()
-
-        # Should now be on the character sheet page
-        self.assertIn('Character Sheet', self.browser.page_source)
-        # Should have the copy button
-        self.assertIn('Copy to Clipboard', self.browser.page_source)
+        # Find the Copy to Clipboard button
+        copy_button = self.browser.find_element(By.ID, 'copy-btn')
+        self.assertIsNotNone(copy_button)
+        self.assertIn('Copy', copy_button.text)
 
     def test_add_experience_button(self):
-        """Test that Add Experience button takes you to track selection."""
+        """Test that Add Experience button adds experience and stays on generator."""
         # Go directly to generator
         self.browser.get(f'{self.live_server_url}/generator/')
         self.wait_for_page_load()
@@ -191,9 +184,9 @@ class GeneratorUITests(BrowserTestCase):
         # Verify we're on the generator page
         self.assertIn('Character Generator', self.browser.page_source)
 
-        # Verify a character was generated (this creates the session)
-        pre_element = self.browser.find_element(By.TAG_NAME, 'pre')
-        self.assertIn('Pillars Character', pre_element.text)
+        # Verify a character was generated (check for attributes)
+        page_source = self.browser.page_source
+        self.assertTrue('STR' in page_source or 'DEX' in page_source)
 
         # Find and click the Add Experience button
         add_exp_button = self.browser.find_element(
@@ -206,10 +199,13 @@ class GeneratorUITests(BrowserTestCase):
         time.sleep(1)
         self.wait_for_page_load()
 
-        # Should now be on the track selection page
-        self.assertIn('select-track', self.browser.current_url)
-        # Should see track options
-        self.assertIn('Track', self.browser.page_source)
+        # Should stay on generator page
+        self.assertIn('generator', self.browser.current_url)
+        # Should see experience log
+        self.assertTrue(
+            'Year-by-Year' in self.browser.page_source or 'Year 16' in self.browser.page_source,
+            "Generator should show experience log after adding experience"
+        )
 
     def test_reroll_buttons(self):
         """Test that re-roll buttons generate new characters."""
@@ -217,8 +213,9 @@ class GeneratorUITests(BrowserTestCase):
         self.browser.get(f'{self.live_server_url}/generator/')
         self.wait_for_page_load()
 
-        # Get the initial character display
-        initial_content = self.browser.find_element(By.TAG_NAME, 'pre').text
+        # Verify we're on the generator page with character attributes
+        page_source = self.browser.page_source
+        self.assertTrue('STR' in page_source)
 
         # Click Re-roll (No Focus)
         reroll_button = self.browser.find_element(
@@ -231,43 +228,36 @@ class GeneratorUITests(BrowserTestCase):
         self.assertIn('generator', self.browser.current_url)
         self.assertIn('Character Generator', self.browser.page_source)
 
-        # Character should have been regenerated (page still shows a character)
-        new_content = self.browser.find_element(By.TAG_NAME, 'pre').text
-        self.assertIn('Pillars Character', new_content)
+        # Character should have been regenerated (page still shows attributes)
+        self.assertTrue('STR' in self.browser.page_source)
 
-    def test_full_flow_finish_without_experience(self):
-        """Test complete flow: welcome -> generator -> finish."""
+    def test_full_flow_without_experience(self):
+        """Test complete flow: welcome -> generator shows character."""
         # Start at welcome
         self.browser.get(f'{self.live_server_url}/')
         self.wait_for_page_load()
 
         # Go to generator
-        generator_link = self.browser.find_element(By.LINK_TEXT, 'Character Generator')
+        generator_link = self.browser.find_element(By.PARTIAL_LINK_TEXT, 'Character Generator')
         generator_link.click()
         self.wait_for_page_load()
 
-        # Click Finish Character
-        finish_button = self.browser.find_element(
-            By.CSS_SELECTOR, 'button[value="finish"]'
-        )
-        finish_button.click()
-        self.wait_for_page_load()
-
-        # Verify we're on character sheet
-        self.assertIn('Character Sheet', self.browser.page_source)
+        # Should be on generator page
+        self.assertIn('generator', self.browser.current_url)
 
         # Should have character data displayed
-        character_sheet = self.browser.find_element(By.ID, 'character-sheet')
-        self.assertIn('Pillars Character', character_sheet.text)
+        page_source = self.browser.page_source
+        self.assertTrue('STR' in page_source)
+        self.assertTrue('Add Experience' in page_source or 'add_experience' in page_source)
 
     def test_full_flow_with_experience(self):
-        """Test complete flow: welcome -> generator -> add experience -> track selection."""
+        """Test complete flow: welcome -> generator -> add experience."""
         # Start at welcome
         self.browser.get(f'{self.live_server_url}/')
         self.wait_for_page_load()
 
         # Go to generator
-        generator_link = self.browser.find_element(By.LINK_TEXT, 'Character Generator')
+        generator_link = self.browser.find_element(By.PARTIAL_LINK_TEXT, 'Character Generator')
         generator_link.click()
         self.wait_for_page_load()
 
@@ -278,84 +268,56 @@ class GeneratorUITests(BrowserTestCase):
         add_exp_button.click()
         self.wait_for_page_load()
 
-        # Should be on track selection
-        self.assertIn('select-track', self.browser.current_url)
+        # Should stay on generator page
+        self.assertIn('generator', self.browser.current_url)
 
-        # Should see track selection options
+        # Should see experience log (Year 17 is the first year added to a 16-year-old character)
         page_source = self.browser.page_source
-        # Check for track-related content
         self.assertTrue(
-            'Worker' in page_source or 'Ranger' in page_source or 'Track' in page_source,
-            "Track selection page should show track options"
+            'Year-by-Year' in page_source or 'Year 17' in page_source or 'Prior Experience' in page_source,
+            "Generator should show experience log after adding experience"
         )
 
 
 class InteractiveFlowTests(BrowserTestCase):
-    """UI tests for the interactive prior experience flow."""
+    """UI tests for the experience flow."""
 
-    def test_interactive_mode_flow(self):
-        """Test the interactive year-by-year mode."""
+    def test_add_experience_flow(self):
+        """Test adding experience directly from the generator."""
         # Go to generator
         self.browser.get(f'{self.live_server_url}/generator/')
         self.wait_for_page_load()
 
-        # Click Add Experience
+        # Click Add Experience - this now adds experience directly
         add_exp_button = self.browser.find_element(
             By.CSS_SELECTOR, 'button[value="add_experience"]'
         )
         add_exp_button.click()
         self.wait_for_page_load()
 
-        # On track selection page, check the interactive mode checkbox
-        interactive_checkbox = self.browser.find_element(By.ID, 'interactive-checkbox')
-        if not interactive_checkbox.is_selected():
-            interactive_checkbox.click()
+        # Should stay on generator page
+        self.assertIn('generator', self.browser.current_url)
 
-        # Select a safe track (Worker has low survivability requirement)
-        # First, select manual mode
-        manual_radio = self.browser.find_element(
-            By.CSS_SELECTOR, 'input[name="track_mode"][value="manual"]'
+        # Should see experience log with year results (Year 17 is the first year for a 16yo)
+        page_source = self.browser.page_source
+        self.assertTrue(
+            'Year-by-Year' in page_source or 'Year 17' in page_source or 'Prior Experience' in page_source,
+            "Generator should show year-by-year log after adding experience"
         )
-        manual_radio.click()
 
-        # Select Worker track
-        worker_radio = self.browser.find_element(
-            By.CSS_SELECTOR, 'input[name="chosen_track"][value="WORKER"]'
-        )
-        worker_radio.click()
-
-        # Click Add Experience button on track selection
-        add_exp_submit = self.browser.find_element(
+        # Click Add Experience again to add more years
+        add_exp_button = self.browser.find_element(
             By.CSS_SELECTOR, 'button[value="add_experience"]'
         )
-        add_exp_submit.click()
+        add_exp_button.click()
         self.wait_for_page_load()
 
-        # Should be on interactive page
-        self.assertIn('interactive', self.browser.current_url)
-        self.assertIn('Interactive', self.browser.page_source)
+        # Should still be on generator and show more experience
+        self.assertIn('generator', self.browser.current_url)
 
-        # Click Continue to add a year
-        continue_button = self.browser.find_element(
-            By.CSS_SELECTOR, 'button[value="continue"]'
-        )
-        continue_button.click()
-        self.wait_for_page_load()
-
-        # Should still be on interactive page with year results
-        self.assertIn('interactive', self.browser.current_url)
-        # Should show year 17 in the results
-        self.assertIn('17', self.browser.page_source)
-
-        # Now click Finish Character
-        finish_button = self.browser.find_element(
-            By.CSS_SELECTOR, 'button[value="finish"]'
-        )
-        finish_button.click()
-        self.wait_for_page_load()
-
-        # Should be on character sheet
-        self.assertIn('Character Sheet', self.browser.page_source)
+        # Character is ready - verify character data is still visible
+        page_source = self.browser.page_source
+        self.assertTrue('STR' in page_source, "Character attributes should be visible")
 
 
 class SessionPersistenceTests(BrowserTestCase):
@@ -367,16 +329,20 @@ class SessionPersistenceTests(BrowserTestCase):
         self.browser.get(f'{self.live_server_url}/generator/')
         self.wait_for_page_load()
 
-        # Get the character content
-        initial_content = self.browser.find_element(By.TAG_NAME, 'pre').text
+        # Get the character name from the page
+        page_source = self.browser.page_source
+        # Find the character name element
+        name_element = self.browser.find_element(By.CSS_SELECTOR, '.character-name, h2, h3')
+        initial_name = name_element.text
 
         # Refresh the page
         self.browser.refresh()
         self.wait_for_page_load()
 
         # Character should be the same (not regenerated)
-        refreshed_content = self.browser.find_element(By.TAG_NAME, 'pre').text
-        self.assertEqual(initial_content, refreshed_content)
+        name_element = self.browser.find_element(By.CSS_SELECTOR, '.character-name, h2, h3')
+        refreshed_name = name_element.text
+        self.assertEqual(initial_name, refreshed_name)
 
     def test_new_character_on_welcome_return(self):
         """Test that going back to welcome clears the character."""
@@ -384,24 +350,23 @@ class SessionPersistenceTests(BrowserTestCase):
         self.browser.get(f'{self.live_server_url}/generator/')
         self.wait_for_page_load()
 
-        # Get the character content
-        first_content = self.browser.find_element(By.TAG_NAME, 'pre').text
+        # Verify we're on generator with character data
+        self.assertIn('generator', self.browser.current_url)
+        self.assertTrue('STR' in self.browser.page_source)
 
         # Go back to welcome
         self.browser.get(f'{self.live_server_url}/')
         self.wait_for_page_load()
 
         # Go to generator again
-        generator_link = self.browser.find_element(By.LINK_TEXT, 'Character Generator')
+        generator_link = self.browser.find_element(By.PARTIAL_LINK_TEXT, 'Character Generator')
         generator_link.click()
         self.wait_for_page_load()
 
-        # Should have a new character (different from before)
-        second_content = self.browser.find_element(By.TAG_NAME, 'pre').text
-
-        # Both should be valid characters
-        self.assertIn('Pillars Character', first_content)
-        self.assertIn('Pillars Character', second_content)
+        # Should have a new character generated
+        self.assertIn('generator', self.browser.current_url)
+        # Both visits should show valid character data (STR attribute)
+        self.assertTrue('STR' in self.browser.page_source)
 
 
 class RoleUITests(BrowserTestCase):
@@ -458,18 +423,18 @@ class RoleUITests(BrowserTestCase):
             "Player should NOT see Manage Users link"
         )
 
-    def test_dm_sees_dm_handbook_but_not_manage_users(self):
-        """Test that DM role users see DM Handbook but not Manage Users."""
+    def test_dm_sees_dm_link_but_not_manage_users(self):
+        """Test that DM role users see DM link but not Manage Users."""
         self.login_user('dm_ui_test', 'testpass123')
 
         # Go to welcome page
         self.browser.get(f'{self.live_server_url}/')
         self.wait_for_page_load()
 
-        # Should see DM Handbook
+        # Should see DM link (the link text is just "DM" not "DM Handbook")
         self.assertTrue(
-            self.partial_link_exists('DM Handbook'),
-            "DM should see DM Handbook link"
+            self.element_exists(By.CSS_SELECTOR, 'a[href*="/dm"]'),
+            "DM should see DM link"
         )
         # Should NOT see Manage Users
         self.assertFalse(
@@ -485,10 +450,10 @@ class RoleUITests(BrowserTestCase):
         self.browser.get(f'{self.live_server_url}/')
         self.wait_for_page_load()
 
-        # Should see DM Handbook
+        # Should see DM link (the link text is just "DM" not "DM Handbook")
         self.assertTrue(
-            self.partial_link_exists('DM Handbook'),
-            "Admin should see DM Handbook link"
+            self.element_exists(By.CSS_SELECTOR, 'a[href*="/dm"]'),
+            "Admin should see DM link"
         )
         # Should see Manage Users
         self.assertTrue(
@@ -568,10 +533,10 @@ class RoleUITests(BrowserTestCase):
         self.browser.get(f'{self.live_server_url}/')
         self.wait_for_page_load()
 
-        # Should see both links
+        # Should see both links (DM link text is just "DM" not "DM Handbook")
         self.assertTrue(
-            self.partial_link_exists('DM Handbook'),
-            "Admin+DM should see DM Handbook link"
+            self.element_exists(By.CSS_SELECTOR, 'a[href*="/dm"]'),
+            "Admin+DM should see DM link"
         )
         self.assertTrue(
             self.partial_link_exists('Manage Users'),
@@ -649,17 +614,17 @@ class SessionCharacterLoginUITests(BrowserTestCase):
 class GeneratorUnifiedFlowUITests(BrowserTestCase):
     """UI tests for unified generator flow (same for logged-in and anonymous)."""
 
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        # Create a test user
+    def setUp(self):
+        """Create test users before each test."""
+        super().setUp()
+        # Create a test user for this test
         from django.contrib.auth.models import User
         from webapp.generator.models import UserProfile
-        cls.test_user = User.objects.create_user(
+        self.test_user = User.objects.create_user(
             username='unified_ui_test',
             password='testpass123'
         )
-        UserProfile.objects.create(user=cls.test_user, roles=['player'])
+        UserProfile.objects.create(user=self.test_user, roles=['player'])
 
     def test_logged_in_user_stays_on_generator(self):
         """Test that logged-in users stay on generator page."""

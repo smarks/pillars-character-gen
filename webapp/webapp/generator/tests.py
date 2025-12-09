@@ -265,8 +265,12 @@ class InteractiveModeMagicTests(TestCase):
         })
         # Should redirect back to generator
         self.assertRedirects(response, reverse('generator'))
-        # Check experience was added
-        self.assertEqual(self.client.session.get('interactive_years'), 3)
+        # Check experience was added (at least 1 year - character may die before completing all 3)
+        years_added = self.client.session.get('interactive_years')
+        self.assertIsNotNone(years_added)
+        self.assertGreaterEqual(years_added, 1)
+        self.assertLessEqual(years_added, 3)
+        # Track name should be set
         self.assertEqual(self.client.session.get('interactive_track_name'), 'Worker')
 
 
