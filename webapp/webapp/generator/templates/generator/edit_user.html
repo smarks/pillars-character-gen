@@ -1,0 +1,135 @@
+{% extends "generator/base.html" %}
+
+{% block title %}Edit User - {{ edit_user.username }} - Pillars{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>Edit User: {{ edit_user.username }}</h1>
+    <a href="{% url 'manage_users' %}" class="btn">Back to Manage Users</a>
+</div>
+
+{% if messages %}
+<div class="info-box">
+    {% for message in messages %}
+    <p class="{{ message.tags }}">{{ message }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="section">
+    <form method="post">
+        {% csrf_token %}
+
+        <h3>Account Details</h3>
+
+        <div class="control-row">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" value="{{ edit_user.username }}" required
+                   style="font-family: monospace; padding: 8px; width: 300px;">
+        </div>
+
+        <div class="control-row">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" value="{{ edit_user.email|default:'' }}"
+                   style="font-family: monospace; padding: 8px; width: 300px;">
+        </div>
+
+        <div class="control-row">
+            <label for="new_password">New Password:</label>
+            <input type="password" id="new_password" name="new_password"
+                   style="font-family: monospace; padding: 8px; width: 300px;">
+        </div>
+        <p class="help-text">Leave blank to keep current password.</p>
+
+        <h3 style="margin-top: 30px;">Roles</h3>
+
+        <div class="control-row">
+            <label>Roles:</label>
+            <div style="margin-left: 20px;">
+                {% for role_value, role_label in role_choices %}
+                <label style="display: block; margin-bottom: 8px;">
+                    <input type="checkbox" name="roles" value="{{ role_value }}"
+                        {% if role_value in profile.roles %}checked{% endif %}>
+                    {{ role_label }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <h3 style="margin-top: 30px;">Contact Information</h3>
+
+        <div class="control-row">
+            <label for="phone">Phone:</label>
+            <input type="text" id="phone" name="phone" value="{{ profile.phone|default:'' }}"
+                   style="font-family: monospace; padding: 8px; width: 300px;">
+        </div>
+
+        <div class="control-row">
+            <label for="discord_handle">Discord:</label>
+            <input type="text" id="discord_handle" name="discord_handle" value="{{ profile.discord_handle|default:'' }}"
+                   style="font-family: monospace; padding: 8px; width: 300px;">
+        </div>
+
+        <div class="control-row">
+            <label for="preferred_contact">Preferred Contact:</label>
+            <select id="preferred_contact" name="preferred_contact" style="padding: 8px;">
+                <option value="email" {% if profile.preferred_contact == 'email' %}selected{% endif %}>Email</option>
+                <option value="phone" {% if profile.preferred_contact == 'phone' %}selected{% endif %}>Phone</option>
+                <option value="discord" {% if profile.preferred_contact == 'discord' %}selected{% endif %}>Discord</option>
+            </select>
+        </div>
+
+        <div class="button-group" style="margin-top: 30px;">
+            <button type="submit" class="success">Save Changes</button>
+            <a href="{% url 'manage_users' %}" class="btn">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<div class="section">
+    <h3>User's Characters ({{ edit_user.savedcharacter_set.count }})</h3>
+    {% if edit_user.savedcharacter_set.exists %}
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Created</th>
+                <th>Updated</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for char in edit_user.savedcharacter_set.all %}
+            <tr>
+                <td>{{ char.name }}</td>
+                <td>{{ char.created_at|date:"M d, Y H:i" }}</td>
+                <td>{{ char.updated_at|date:"M d, Y H:i" }}</td>
+                <td>
+                    <a href="{% url 'character_sheet' char.id %}" class="btn primary">View</a>
+                    <form method="post" action="{% url 'admin_delete_character' char.id %}" style="display: inline;"
+                          onsubmit="return confirm('Are you sure you want to delete &quot;{{ char.name }}&quot;? This cannot be undone.');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>This user has no saved characters.</p>
+    {% endif %}
+</div>
+
+{% if edit_user.id != request.user.id %}
+<div class="section" style="border-color: #c44;">
+    <h3 style="color: #c44;">Danger Zone</h3>
+    <p>Deleting this user will permanently remove their account and ALL their characters.</p>
+    <form method="post" action="{% url 'delete_user' edit_user.id %}"
+          onsubmit="return confirm('Are you sure you want to delete user {{ edit_user.username }} and ALL their characters? This cannot be undone.');">
+        {% csrf_token %}
+        <button type="submit" class="btn danger">Delete User and All Characters</button>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

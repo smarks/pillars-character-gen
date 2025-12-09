@@ -30,4 +30,7 @@ urlpatterns = [
     # Admin-only
     path('manage-users/', views.manage_users, name='manage_users'),
     path('change-role/<int:user_id>/', views.change_user_role, name='change_user_role'),
+    path('edit-user/<int:user_id>/', views.edit_user, name='edit_user'),
+    path('delete-user/<int:user_id>/', views.delete_user, name='delete_user'),
+    path('admin-delete-character/<int:char_id>/', views.admin_delete_character, name='admin_delete_character'),
 ]

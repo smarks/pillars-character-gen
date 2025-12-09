@@ -377,8 +377,11 @@ class UIFlowTests(TestCase):
         response = self.client.get(reverse('generator'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Year-by-Year Log')
-        # Check session has experience
-        self.assertEqual(self.client.session.get('interactive_years'), 5)
+        # Check session has experience (1-5 years - character may die before completing all)
+        years_added = self.client.session.get('interactive_years')
+        self.assertIsNotNone(years_added)
+        self.assertGreaterEqual(years_added, 1)
+        self.assertLessEqual(years_added, 5)
 
     def test_start_over_clears_experience(self):
         """Test start over button clears experience data."""

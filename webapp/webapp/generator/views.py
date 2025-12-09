@@ -1625,6 +1625,102 @@ def change_user_role(request, user_id):
     return redirect('manage_users')
 
 
+@admin_required
+def edit_user(request, user_id):
+    """Edit a user's details (Admin only)."""
+    try:
+        user = User.objects.get(id=user_id)
+        profile = UserProfile.objects.get(user=user)
+    except (User.DoesNotExist, UserProfile.DoesNotExist):
+        messages.error(request, 'User not found.')
+        return redirect('manage_users')
+
+    if request.method == 'POST':
+        # Update user fields
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        new_password = request.POST.get('new_password', '').strip()
+        roles = request.POST.getlist('roles')
+        phone = request.POST.get('phone', '').strip()
+        discord_handle = request.POST.get('discord_handle', '').strip()
+        preferred_contact = request.POST.get('preferred_contact', '').strip()
+
+        # Validate username
+        if username and username != user.username:
+            if User.objects.filter(username=username).exclude(id=user_id).exists():
+                messages.error(request, f'Username "{username}" is already taken.')
+                return redirect('edit_user', user_id=user_id)
+            user.username = username
+
+        # Update email
+        if email:
+            user.email = email
+
+        # Update password if provided
+        if new_password:
+            user.set_password(new_password)
+
+        user.save()
+
+        # Update profile
+        valid_roles = [r[0] for r in UserProfile.ROLE_CHOICES]
+        profile.roles = [r for r in roles if r in valid_roles]
+        profile.phone = phone
+        profile.discord_handle = discord_handle
+        if preferred_contact in ['email', 'phone', 'discord']:
+            profile.preferred_contact = preferred_contact
+        profile.save()
+
+        messages.success(request, f'User "{user.username}" updated successfully.')
+        return redirect('manage_users')
+
+    # GET request - show edit form
+    role_choices = UserProfile.ROLE_CHOICES
+    return render(request, 'generator/edit_user.html', {
+        'edit_user': user,
+        'profile': profile,
+        'role_choices': role_choices,
+    })
+
+
+@admin_required
+@require_POST
+def delete_user(request, user_id):
+    """Delete a user and all their characters (Admin only)."""
+    try:
+        user = User.objects.get(id=user_id)
+
+        # Don't allow deleting yourself
+        if user.id == request.user.id:
+            messages.error(request, "You cannot delete your own account.")
+            return redirect('manage_users')
+
+        username = user.username
+        # Delete user (this will cascade to profile and characters due to foreign keys)
+        user.delete()
+        messages.success(request, f'User "{username}" and all their characters have been deleted.')
+    except User.DoesNotExist:
+        messages.error(request, 'User not found.')
+
+    return redirect('manage_users')
+
+
+@admin_required
+@require_POST
+def admin_delete_character(request, char_id):
+    """Delete any character (Admin only)."""
+    try:
+        character = SavedCharacter.objects.get(id=char_id)
+        char_name = character.name
+        owner = character.user.username
+        character.delete()
+        messages.success(request, f'Character "{char_name}" (owned by {owner}) has been deleted.')
+    except SavedCharacter.DoesNotExist:
+        messages.error(request, 'Character not found.')
+
+    return redirect('manage_users')
+
+
 # =============================================================================
 # Editable Character Sheet Views
 # =============================================================================

@@ -86,7 +86,7 @@
 
 <div class="section">
     <h2>Manage Existing Users</h2>
-    <p style="margin-bottom: 20px;">Update roles for existing users below.</p>
+    <p style="margin-bottom: 20px;">Manage user accounts, roles, and permissions.</p>
 
     <table>
         <thead>
@@ -94,7 +94,8 @@
                 <th>Username</th>
                 <th>Email</th>
                 <th>Current Roles</th>
-                <th>Change Roles</th>
+                <th>Characters</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -102,24 +103,24 @@
             <tr>
                 <td>{{ profile.user.username }}</td>
                 <td>{{ profile.user.email|default:"-" }}</td>
-                <td>{{ profile.get_roles_display }}</td>
+                <td>{{ profile.get_roles_display|default:"None" }}</td>
+                <td>{{ profile.user.savedcharacter_set.count }}</td>
                 <td>
-                    <form method="post" action="{% url 'change_user_role' profile.user.id %}">
+                    <a href="{% url 'edit_user' profile.user.id %}" class="btn primary">Edit</a>
+                    {% if profile.user.id != request.user.id %}
+                    <form method="post" action="{% url 'delete_user' profile.user.id %}" style="display: inline;"
+                          onsubmit="return confirm('Are you sure you want to delete user {{ profile.user.username }} and ALL their characters? This cannot be undone.');">
                         {% csrf_token %}
-                        {% for role_value, role_label in role_choices %}
-                        <label style="margin-right: 10px;">
-                            <input type="checkbox" name="roles" value="{{ role_value }}"
-                                {% if role_value in profile.roles %}checked{% endif %}>
-                            {{ role_label }}
-                        </label>
-                        {% endfor %}
-                        <button type="submit" class="btn primary" style="margin-left: 10px;">Save</button>
+                        <button type="submit" class="btn danger">Delete</button>
                     </form>
+                    {% else %}
+                    <span class="btn disabled" title="Cannot delete yourself">Delete</span>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="4">No users found.</td>
+                <td colspan="5">No users found.</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -128,11 +129,11 @@
 
 <div class="section">
     <h2>All Characters</h2>
-    <p style="margin-bottom: 20px;">View all characters created by users.</p>
+    <p style="margin-bottom: 20px;">View and manage all characters created by users.</p>
 
     {% if characters_by_user %}
     {% for username, chars in characters_by_user.items %}
-    <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">{{ username }} ({{ chars|length }})</h3>
+    <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">{{ username }} ({{ chars|length }} character{{ chars|length|pluralize }})</h3>
     <table style="margin-bottom: 20px;">
         <thead>
             <tr>
@@ -150,6 +151,11 @@
                 <td>{{ char.updated_at|date:"M d, Y H:i" }}</td>
                 <td>
                     <a href="{% url 'character_sheet' char.id %}" class="btn primary">View</a>
+                    <form method="post" action="{% url 'admin_delete_character' char.id %}" style="display: inline;"
+                          onsubmit="return confirm('Are you sure you want to delete &quot;{{ char.name }}&quot;? This cannot be undone.');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn danger">Delete</button>
+                    </form>
                 </td>
             </tr>
             {% endfor %}
