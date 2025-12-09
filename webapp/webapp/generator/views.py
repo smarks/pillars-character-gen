@@ -1335,20 +1335,36 @@ def clear_interactive_session(request):
             del request.session[key]
 
 def handbook_section(request, section: str):
-    """Generic view for handbook sections loaded from markdown files in references/ directory."""
-    # Path to the references directory at project root
-    references_dir = os.path.join(settings.BASE_DIR, '..', 'references')
-    section_path = os.path.join(references_dir, f'{section}.md')
-
-    # Map section names to display titles
-    SECTION_TITLES = {
-        'about': 'About',
-        'lore': 'Background',
-        'players_handbook': "Player's Handbook",
-        'DM_handbook': 'DM Handbook',
+    """Generic view for handbook sections loaded from markdown files."""
+    # Map section names to file paths and display titles
+    # Most content is now in the consolidated handbook in docs/
+    SECTION_CONFIG = {
+        'about': {
+            'path': os.path.join(settings.BASE_DIR, '..', 'references', 'about.md'),
+            'title': 'About',
+        },
+        'lore': {
+            'path': os.path.join(settings.BASE_DIR, '..', 'references', 'lore.md'),
+            'title': 'Background',
+        },
+        'players_handbook': {
+            'path': os.path.join(settings.BASE_DIR, '..', 'docs', 'A Pillars Handbook.md'),
+            'title': "Player's Handbook",
+        },
+        'DM_handbook': {
+            'path': os.path.join(settings.BASE_DIR, '..', 'references', 'private', 'DM_handbook.md'),
+            'title': 'DM Handbook',
+        },
     }
 
-    title = SECTION_TITLES.get(section, section.replace('_', ' ').title())
+    config = SECTION_CONFIG.get(section)
+    if config:
+        section_path = config['path']
+        title = config['title']
+    else:
+        # Fallback for unknown sections - look in references
+        section_path = os.path.join(settings.BASE_DIR, '..', 'references', f'{section}.md')
+        title = section.replace('_', ' ').title()
 
     try:
         with open(section_path, 'r', encoding='utf-8') as f:
@@ -1359,7 +1375,7 @@ def handbook_section(request, section: str):
             extensions=['tables', 'fenced_code', 'toc']
         )
     except FileNotFoundError:
-        html_content = f"<p>Section '{section}' not found at {section_path}.</p>"
+        html_content = f"<p>Section '{section}' not found.</p>"
 
     return render(request, 'generator/handbook_section.html', {
         'content': html_content,
