@@ -33,6 +33,7 @@ Session Keys Used:
 """
 import json
 import os
+import functools
 import markdown
 from django.shortcuts import render, redirect
 from django.conf import settings
@@ -145,6 +146,71 @@ from pillars.attributes import (
 )
 
 
+# =============================================================================
+# Helper Functions
+# =============================================================================
+
+# Constants for experience years validation
+MIN_EXPERIENCE_YEARS = 1
+MAX_EXPERIENCE_YEARS = 50
+
+# Track order for display
+TRACK_DISPLAY_ORDER = [
+    TrackType.OFFICER, TrackType.RANGER, TrackType.MAGIC, TrackType.NAVY, TrackType.ARMY,
+    TrackType.MERCHANT, TrackType.CRAFTS, TrackType.WORKER, TrackType.RANDOM
+]
+
+
+def build_track_info(track_availability):
+    """Build track information list for display in templates.
+
+    Args:
+        track_availability: Dict from get_track_availability() mapping TrackType to availability info
+
+    Returns:
+        List of dicts with track display information, sorted by availability
+        (impossible first, requires_roll second, available last)
+    """
+    track_info = []
+    for track in TRACK_DISPLAY_ORDER:
+        if track in track_availability:
+            info = track_availability[track]
+            survivability = TRACK_SURVIVABILITY.get(track, '?')
+            initial_skills = TRACK_INITIAL_SKILLS.get(track, [])
+            track_info.append({
+                'track': track.value,
+                'track_key': track.name,
+                'survivability': survivability if survivability else 'Variable',
+                'initial_skills': initial_skills,
+                'available': info['available'],
+                'requires_roll': info['requires_roll'],
+                'auto_accept': info['auto_accept'],
+                'impossible': info['impossible'],
+                'requirement': info['requirement'],
+                'roll_info': info['roll_info'],
+            })
+    # Sort tracks: impossible (red) first, requires_roll (yellow) second, available (green) last
+    track_info.sort(key=lambda t: (0 if t['impossible'] else (1 if t['requires_roll'] else 2)))
+    return track_info
+
+
+def validate_experience_years(years_str, default=5):
+    """Validate and return experience years within allowed bounds.
+
+    Args:
+        years_str: String value from form input
+        default: Default value if parsing fails
+
+    Returns:
+        Integer years clamped to MIN_EXPERIENCE_YEARS..MAX_EXPERIENCE_YEARS
+    """
+    try:
+        years = int(years_str) if years_str else default
+    except (ValueError, TypeError):
+        years = default
+    return max(MIN_EXPERIENCE_YEARS, min(years, MAX_EXPERIENCE_YEARS))
+
+
 def welcome(request):
     """Welcome page with links to main sections.
 
@@ -241,7 +307,7 @@ def index(request):
         character = deserialize_character(char_data)
 
         # Get form parameters
-        years = int(request.POST.get('years', 5))
+        years = validate_experience_years(request.POST.get('years'), default=5)
         track_mode = request.POST.get('track_mode', 'auto')
         chosen_track_name = request.POST.get('chosen_track', '')
 
@@ -302,7 +368,8 @@ def index(request):
                 )
 
             if skill_track is None or skill_track.track is None:
-                # Track creation failed - redirect back with error
+                # Track creation failed - notify user and redirect back
+                messages.error(request, 'Could not create skill track. Try selecting a different track.')
                 return redirect('generator')
 
             # Save track to character data
@@ -449,31 +516,7 @@ def index(request):
             str_mod, dex_mod, int_mod, wis_mod,
             social_class, wealth_level
         )
-
-        track_info = []
-        track_order = [
-            TrackType.OFFICER, TrackType.RANGER, TrackType.MAGIC, TrackType.NAVY, TrackType.ARMY,
-            TrackType.MERCHANT, TrackType.CRAFTS, TrackType.WORKER, TrackType.RANDOM
-        ]
-        for track in track_order:
-            if track in track_availability:
-                info = track_availability[track]
-                survivability = TRACK_SURVIVABILITY.get(track, '?')
-                initial_skills = TRACK_INITIAL_SKILLS.get(track, [])
-                track_info.append({
-                    'track': track.value,
-                    'track_key': track.name,
-                    'survivability': survivability if survivability else 'Variable',
-                    'initial_skills': initial_skills,
-                    'available': info['available'],
-                    'requires_roll': info['requires_roll'],
-                    'auto_accept': info['auto_accept'],
-                    'impossible': info['impossible'],
-                    'requirement': info['requirement'],
-                    'roll_info': info['roll_info'],
-                })
-        # Sort tracks: impossible (red) first, requires_roll (yellow) second, available (green) last
-        track_info.sort(key=lambda t: (0 if t['impossible'] else (1 if t['requires_roll'] else 2)))
+        track_info = build_track_info(track_availability)
     else:
         track_info = []
         str_mod = dex_mod = int_mod = wis_mod = con_mod = chr_mod = 0
@@ -602,32 +645,7 @@ def select_track(request):
         str_mod, dex_mod, int_mod, wis_mod,
         social_class, wealth_level
     )
-
-    # Build track info list for template
-    track_info = []
-    track_order = [
-        TrackType.OFFICER, TrackType.RANGER, TrackType.MAGIC, TrackType.NAVY, TrackType.ARMY,
-        TrackType.MERCHANT, TrackType.CRAFTS, TrackType.WORKER, TrackType.RANDOM
-    ]
-    for track in track_order:
-        if track in track_availability:
-            info = track_availability[track]
-            survivability = TRACK_SURVIVABILITY.get(track, '?')
-            initial_skills = TRACK_INITIAL_SKILLS.get(track, [])
-            track_info.append({
-                'track': track.value,
-                'track_key': track.name,
-                'survivability': survivability if survivability else 'Variable',
-                'initial_skills': initial_skills,
-                'available': info['available'],
-                'requires_roll': info['requires_roll'],
-                'auto_accept': info['auto_accept'],
-                'impossible': info['impossible'],
-                'requirement': info['requirement'],
-                'roll_info': info['roll_info'],
-            })
-    # Sort tracks: impossible (red) first, requires_roll (yellow) second, available (green) last
-    track_info.sort(key=lambda t: (0 if t['impossible'] else (1 if t['requires_roll'] else 2)))
+    track_info = build_track_info(track_availability)
 
     # Reconstruct character for display
     character = deserialize_character(pending_char)
@@ -643,7 +661,7 @@ def select_track(request):
             # Get form data
             interactive_mode = request.POST.get('interactive_mode') == 'on'
             track_mode = request.POST.get('track_mode', 'auto')
-            years = int(request.POST.get('years', 5)) if not interactive_mode else 0
+            years = validate_experience_years(request.POST.get('years'), default=5) if not interactive_mode else 0
             chosen_track_name = request.POST.get('chosen_track', '')
 
             # Determine the track to use
@@ -927,7 +945,7 @@ def interactive(request):
     # Check if we have an active interactive session
     char_data = request.session.get('interactive_character')
     if not char_data:
-        return redirect('index')
+        return redirect('generator')
 
     years_completed = request.session.get('interactive_years', 0)
     skills = request.session.get('interactive_skills', [])
@@ -1024,7 +1042,7 @@ def interactive(request):
         elif action == 'new':
             # Clear session and start over
             clear_interactive_session(request)
-            return redirect('index')
+            return redirect('generator')
 
     return render(request, 'generator/interactive.html', {
         'character': character,
@@ -1541,6 +1559,7 @@ def delete_character(request, char_id):
 
 def dm_required(view_func):
     """Decorator that requires user to be a DM or Admin."""
+    @functools.wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('login')
@@ -1553,6 +1572,7 @@ def dm_required(view_func):
 
 def admin_required(view_func):
     """Decorator that requires user to be an Admin."""
+    @functools.wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('login')
@@ -1894,31 +1914,7 @@ def character_sheet(request, char_id):
             str_mod, dex_mod, int_mod, wis_mod,
             social_class, wealth_level
         )
-
-        track_info = []
-        track_order = [
-            TrackType.OFFICER, TrackType.RANGER, TrackType.MAGIC, TrackType.NAVY, TrackType.ARMY,
-            TrackType.MERCHANT, TrackType.CRAFTS, TrackType.WORKER, TrackType.RANDOM
-        ]
-        for track in track_order:
-            if track in track_availability:
-                info = track_availability[track]
-                survivability = TRACK_SURVIVABILITY.get(track, '?')
-                initial_skills = TRACK_INITIAL_SKILLS.get(track, [])
-                track_info.append({
-                    'track': track.value,
-                    'track_key': track.name,
-                    'survivability': survivability if survivability else 'Variable',
-                    'initial_skills': initial_skills,
-                    'available': info['available'],
-                    'requires_roll': info['requires_roll'],
-                    'auto_accept': info['auto_accept'],
-                    'impossible': info['impossible'],
-                    'requirement': info['requirement'],
-                    'roll_info': info['roll_info'],
-                })
-        # Sort tracks: impossible (red) first, requires_roll (yellow) second, available (green) last
-        track_info.sort(key=lambda t: (0 if t['impossible'] else (1 if t['requires_roll'] else 2)))
+        track_info = build_track_info(track_availability)
 
     return render(request, 'generator/character_sheet.html', {
         'character': character,
@@ -2051,32 +2047,7 @@ def calculate_track_info(char_data):
         str_mod, dex_mod, int_mod, wis_mod,
         social_class, wealth_level
     )
-
-    track_info = []
-    track_order = [
-        TrackType.OFFICER, TrackType.RANGER, TrackType.MAGIC, TrackType.NAVY, TrackType.ARMY,
-        TrackType.MERCHANT, TrackType.CRAFTS, TrackType.WORKER, TrackType.RANDOM
-    ]
-    for track in track_order:
-        if track in track_availability:
-            info = track_availability[track]
-            survivability = TRACK_SURVIVABILITY.get(track, '?')
-            initial_skills = TRACK_INITIAL_SKILLS.get(track, [])
-            track_info.append({
-                'track': track.value,
-                'track_key': track.name,
-                'survivability': survivability if survivability else 'Variable',
-                'initial_skills': initial_skills,
-                'available': info['available'],
-                'requires_roll': info['requires_roll'],
-                'auto_accept': info['auto_accept'],
-                'impossible': info['impossible'],
-                'requirement': info['requirement'],
-                'roll_info': info['roll_info'],
-            })
-    # Sort tracks: impossible (red) first, requires_roll (yellow) second, available (green) last
-    track_info.sort(key=lambda t: (0 if t['impossible'] else (1 if t['requires_roll'] else 2)))
-    return track_info
+    return build_track_info(track_availability)
 
 
 def update_session_character(request):
@@ -2195,7 +2166,7 @@ def add_experience_to_character(request, char_id):
         messages.error(request, 'Character not found.')
         return redirect('my_characters')
 
-    years = int(request.POST.get('years', 5))
+    years = validate_experience_years(request.POST.get('years'), default=5)
     track_choice = request.POST.get('track', 'auto')
 
     char_data = character.character_data

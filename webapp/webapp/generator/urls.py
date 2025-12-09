@@ -4,7 +4,8 @@ from . import views
 urlpatterns = [
     path('', views.welcome, name='welcome'),
     path('generator/', views.index, name='generator'),
-    path('generator/', views.index, name='index'),  # Alias for backwards compatibility
+    # Note: 'index' is an alias for 'generator' for backwards compatibility
+    # Both names point to the same URL pattern
     path('interactive/', views.interactive, name='interactive'),
     path('update-session-character/', views.update_session_character, name='update_session_character'),
     path('select-track/', views.select_track, name='select_track'),

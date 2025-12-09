@@ -86,7 +86,7 @@ class IndexViewTests(TestCase):
 
     def test_index_page_loads_with_character(self):
         """Test that the index page loads with auto-generated character."""
-        response = self.client.get(reverse('index'))
+        response = self.client.get(reverse('generator'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Character Generator')
         # Character should be auto-generated and displayed
@@ -94,7 +94,7 @@ class IndexViewTests(TestCase):
 
     def test_initial_character_has_no_skill_track_or_experience(self):
         """Test that initial character does NOT show skill track or prior experience."""
-        response = self.client.get(reverse('index'))
+        response = self.client.get(reverse('generator'))
         self.assertEqual(response.status_code, 200)
         # Character should have basic info
         self.assertContains(response, 'Wealth:')
@@ -104,7 +104,7 @@ class IndexViewTests(TestCase):
 
     def test_index_has_control_buttons(self):
         """Test that index page has the control buttons."""
-        response = self.client.get(reverse('index'))
+        response = self.client.get(reverse('generator'))
         self.assertContains(response, 'Add')  # Add Experience or Add More Experience
         self.assertContains(response, 'Re-roll')  # Re-roll buttons
         self.assertContains(response, 'years')  # Years selector
@@ -112,9 +112,9 @@ class IndexViewTests(TestCase):
     def test_add_experience_stays_on_generator(self):
         """Test that add experience stays on generator and adds experience."""
         # First load to get character
-        self.client.get(reverse('index'))
+        self.client.get(reverse('generator'))
         # Add experience
-        response = self.client.post(reverse('index'), {
+        response = self.client.post(reverse('generator'), {
             'action': 'add_experience',
             'years': 3,
             'track_mode': 'auto',
@@ -127,9 +127,9 @@ class IndexViewTests(TestCase):
     def test_finish_shows_character_sheet(self):
         """Test that finish displays the character sheet."""
         # First load to get character
-        self.client.get(reverse('index'))
+        self.client.get(reverse('generator'))
         # Finish
-        response = self.client.post(reverse('index'), {
+        response = self.client.post(reverse('generator'), {
             'action': 'finish',
         })
         self.assertEqual(response.status_code, 200)
@@ -142,7 +142,7 @@ class SelectTrackViewTests(TestCase):
     def test_select_track_redirects_without_pending_character(self):
         """Test that select track redirects to index if no pending character."""
         response = self.client.get(reverse('select_track'))
-        self.assertRedirects(response, reverse('index'))
+        self.assertRedirects(response, reverse('generator'))
 
 
 class MagicTrackTests(TestCase):
@@ -255,9 +255,9 @@ class InteractiveModeMagicTests(TestCase):
     def test_add_experience_with_manual_track_works(self):
         """Test that adding experience with manual track selection works."""
         # First load generator to get character
-        self.client.get(reverse('index'))
+        self.client.get(reverse('generator'))
         # Add experience with manual track selection
-        response = self.client.post(reverse('index'), {
+        response = self.client.post(reverse('generator'), {
             'action': 'add_experience',
             'years': 3,
             'track_mode': 'manual',
@@ -319,8 +319,8 @@ class StartOverTests(TestCase):
     def test_start_over_clears_session(self):
         """Test that start over clears all session data."""
         # First create some session data by loading generator and adding experience
-        self.client.get(reverse('index'))
-        self.client.post(reverse('index'), {
+        self.client.get(reverse('generator'))
+        self.client.post(reverse('generator'), {
             'action': 'add_experience',
             'years': 3,
             'track_mode': 'auto',
@@ -347,13 +347,13 @@ class UIFlowTests(TestCase):
     def test_full_generator_flow(self):
         """Test complete character generation flow with new UI."""
         # Step 1: Load index page - character auto-generated
-        response = self.client.get(reverse('index'))
+        response = self.client.get(reverse('generator'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Character Generator')
         self.assertContains(response, 'Pillars Character')
 
         # Step 2: Finish the character
-        response = self.client.post(reverse('index'), {
+        response = self.client.post(reverse('generator'), {
             'action': 'finish',
         })
         self.assertEqual(response.status_code, 200)
@@ -362,10 +362,10 @@ class UIFlowTests(TestCase):
     def test_full_experience_flow(self):
         """Test complete experience flow on generator page."""
         # Step 1: Load generator
-        self.client.get(reverse('index'))
+        self.client.get(reverse('generator'))
 
         # Step 2: Add experience
-        response = self.client.post(reverse('index'), {
+        response = self.client.post(reverse('generator'), {
             'action': 'add_experience',
             'years': 5,
             'track_mode': 'auto',
@@ -386,8 +386,8 @@ class UIFlowTests(TestCase):
     def test_start_over_clears_experience(self):
         """Test start over button clears experience data."""
         # Load generator and add experience
-        self.client.get(reverse('index'))
-        self.client.post(reverse('index'), {
+        self.client.get(reverse('generator'))
+        self.client.post(reverse('generator'), {
             'action': 'add_experience',
             'years': 3,
             'track_mode': 'auto',
@@ -407,8 +407,8 @@ class UIFlowTests(TestCase):
     def test_finish_after_experience(self):
         """Test finishing a character after adding experience."""
         # Load generator and go through track selection
-        self.client.get(reverse('index'))
-        self.client.post(reverse('index'), {'action': 'add_experience'})
+        self.client.get(reverse('generator'))
+        self.client.post(reverse('generator'), {'action': 'add_experience'})
         self.client.post(reverse('select_track'), {
             'chosen_track': 'WORKER',
             'track_mode': 'manual',
@@ -474,7 +474,7 @@ class AttributeFocusTests(TestCase):
 
     def test_control_section_available(self):
         """Test that control section with years selector is available."""
-        response = self.client.get(reverse('index'))
+        response = self.client.get(reverse('generator'))
         self.assertContains(response, 'years-select')
 
 
@@ -622,10 +622,10 @@ class ReturnToGeneratorTests(TestCase):
     def test_add_experience_returns_to_generator(self):
         """Test that adding experience returns to generator page."""
         # Load generator
-        self.client.get(reverse('index'))
+        self.client.get(reverse('generator'))
 
         # Add experience
-        response = self.client.post(reverse('index'), {
+        response = self.client.post(reverse('generator'), {
             'action': 'add_experience',
             'years': 3,
             'track_mode': 'auto',
@@ -640,10 +640,10 @@ class ReturnToGeneratorTests(TestCase):
     def test_generator_shows_experience_after_adding(self):
         """Test that generator shows prior experience after adding."""
         # Load generator
-        self.client.get(reverse('index'))
+        self.client.get(reverse('generator'))
 
         # Add experience
-        self.client.post(reverse('index'), {
+        self.client.post(reverse('generator'), {
             'action': 'add_experience',
             'years': 2,
             'track_mode': 'auto',
@@ -2148,3 +2148,360 @@ class GeneratorUnifiedFlowTests(TestCase):
         saved_char = SavedCharacter.objects.filter(user=self.user).first()
         self.assertIsNotNone(saved_char)
         self.assertGreater(saved_char.character_data.get('interactive_years', 0), 0)
+
+
+class AdminUserManagementTests(TestCase):
+    """Tests for admin user management views."""
+
+    def setUp(self):
+        """Create test users with different roles."""
+        # Admin user
+        self.admin = User.objects.create_user(username='admin_test', password='admin123')
+        UserProfile.objects.create(user=self.admin, roles=['admin'])
+
+        # Regular player user
+        self.player = User.objects.create_user(username='player_test', password='player123', email='player@test.com')
+        UserProfile.objects.create(user=self.player, roles=['player'], phone='555-1234', discord_handle='player#1234')
+
+        # DM user
+        self.dm = User.objects.create_user(username='dm_test', password='dm123')
+        UserProfile.objects.create(user=self.dm, roles=['dm'])
+
+        # Create a character for the player
+        self.player_char = SavedCharacter.objects.create(
+            user=self.player,
+            name='Test Character',
+            character_data={
+                'name': 'Test Character',
+                'attributes': {'STR': 12, 'DEX': 14, 'INT': 10, 'WIS': 10, 'CON': 12, 'CHR': 10},
+                'provenance_social_class': 'Commoner',
+                'provenance_sub_class': 'Laborer',
+                'wealth_level': 'Moderate',
+            }
+        )
+
+        self.client = Client()
+
+    def test_manage_users_requires_admin(self):
+        """Test that manage users page requires admin role."""
+        # Anonymous user
+        response = self.client.get(reverse('manage_users'))
+        self.assertRedirects(response, reverse('login'))
+
+        # Player can't access
+        self.client.login(username='player_test', password='player123')
+        response = self.client.get(reverse('manage_users'))
+        self.assertRedirects(response, reverse('welcome'))
+
+        # DM can't access
+        self.client.login(username='dm_test', password='dm123')
+        response = self.client.get(reverse('manage_users'))
+        self.assertRedirects(response, reverse('welcome'))
+
+        # Admin can access
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.get(reverse('manage_users'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_manage_users_shows_all_users(self):
+        """Test that manage users page shows all users."""
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.get(reverse('manage_users'))
+        self.assertContains(response, 'admin_test')
+        self.assertContains(response, 'player_test')
+        self.assertContains(response, 'dm_test')
+
+    def test_manage_users_shows_characters_by_user(self):
+        """Test that manage users page shows characters grouped by user."""
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.get(reverse('manage_users'))
+        self.assertContains(response, 'Test Character')
+        self.assertContains(response, 'player_test')
+
+    def test_edit_user_requires_admin(self):
+        """Test that edit user page requires admin role."""
+        # Player can't access
+        self.client.login(username='player_test', password='player123')
+        response = self.client.get(reverse('edit_user', args=[self.dm.id]))
+        self.assertRedirects(response, reverse('welcome'))
+
+        # Admin can access
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.get(reverse('edit_user', args=[self.player.id]))
+        self.assertEqual(response.status_code, 200)
+
+    def test_edit_user_shows_user_data(self):
+        """Test that edit user page shows correct user data."""
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.get(reverse('edit_user', args=[self.player.id]))
+        self.assertContains(response, 'player_test')
+        self.assertContains(response, 'player@test.com')
+        self.assertContains(response, '555-1234')
+        self.assertContains(response, 'player#1234')
+
+    def test_edit_user_updates_username(self):
+        """Test that admin can update a user's username."""
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.post(reverse('edit_user', args=[self.player.id]), {
+            'username': 'new_player_name',
+            'email': 'player@test.com',
+            'roles': ['player'],
+            'phone': '',
+            'discord_handle': '',
+            'preferred_contact': 'email',
+        })
+        self.assertRedirects(response, reverse('manage_users'))
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.username, 'new_player_name')
+
+    def test_edit_user_updates_roles(self):
+        """Test that admin can update a user's roles."""
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.post(reverse('edit_user', args=[self.player.id]), {
+            'username': 'player_test',
+            'email': 'player@test.com',
+            'roles': ['player', 'dm'],
+            'phone': '',
+            'discord_handle': '',
+            'preferred_contact': 'email',
+        })
+        self.assertRedirects(response, reverse('manage_users'))
+        self.player.profile.refresh_from_db()
+        self.assertIn('player', self.player.profile.roles)
+        self.assertIn('dm', self.player.profile.roles)
+
+    def test_edit_user_updates_password(self):
+        """Test that admin can update a user's password."""
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.post(reverse('edit_user', args=[self.player.id]), {
+            'username': 'player_test',
+            'email': 'player@test.com',
+            'new_password': 'newpassword456',
+            'roles': ['player'],
+            'phone': '',
+            'discord_handle': '',
+            'preferred_contact': 'email',
+        })
+        self.assertRedirects(response, reverse('manage_users'))
+        # Verify new password works
+        self.client.logout()
+        self.assertTrue(self.client.login(username='player_test', password='newpassword456'))
+
+    def test_edit_user_prevents_duplicate_username(self):
+        """Test that editing to a duplicate username is prevented."""
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.post(reverse('edit_user', args=[self.player.id]), {
+            'username': 'dm_test',  # Already taken
+            'email': 'player@test.com',
+            'roles': ['player'],
+            'phone': '',
+            'discord_handle': '',
+            'preferred_contact': 'email',
+        })
+        # Should redirect back to edit page with error
+        self.assertRedirects(response, reverse('edit_user', args=[self.player.id]))
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.username, 'player_test')  # Unchanged
+
+    def test_edit_user_not_found(self):
+        """Test edit user with non-existent user ID."""
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.get(reverse('edit_user', args=[99999]))
+        self.assertRedirects(response, reverse('manage_users'))
+
+    def test_delete_user_requires_admin(self):
+        """Test that delete user requires admin role."""
+        self.client.login(username='player_test', password='player123')
+        response = self.client.post(reverse('delete_user', args=[self.dm.id]))
+        self.assertRedirects(response, reverse('welcome'))
+
+        # Verify user not deleted
+        self.assertTrue(User.objects.filter(id=self.dm.id).exists())
+
+    def test_delete_user_success(self):
+        """Test that admin can delete a user."""
+        self.client.login(username='admin_test', password='admin123')
+        player_id = self.player.id
+        response = self.client.post(reverse('delete_user', args=[player_id]))
+        self.assertRedirects(response, reverse('manage_users'))
+        # Verify user deleted
+        self.assertFalse(User.objects.filter(id=player_id).exists())
+
+    def test_delete_user_cascades_to_characters(self):
+        """Test that deleting a user also deletes their characters."""
+        self.client.login(username='admin_test', password='admin123')
+        char_id = self.player_char.id
+        player_id = self.player.id
+        response = self.client.post(reverse('delete_user', args=[player_id]))
+        self.assertRedirects(response, reverse('manage_users'))
+        # Verify character also deleted
+        self.assertFalse(SavedCharacter.objects.filter(id=char_id).exists())
+
+    def test_delete_user_cannot_delete_self(self):
+        """Test that admin cannot delete their own account."""
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.post(reverse('delete_user', args=[self.admin.id]))
+        self.assertRedirects(response, reverse('manage_users'))
+        # Verify admin still exists
+        self.assertTrue(User.objects.filter(id=self.admin.id).exists())
+
+    def test_delete_user_not_found(self):
+        """Test delete user with non-existent user ID."""
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.post(reverse('delete_user', args=[99999]))
+        self.assertRedirects(response, reverse('manage_users'))
+
+
+class AdminDeleteCharacterTests(TestCase):
+    """Tests for admin character deletion."""
+
+    def setUp(self):
+        """Create test users and characters."""
+        self.admin = User.objects.create_user(username='admin_test', password='admin123')
+        UserProfile.objects.create(user=self.admin, roles=['admin'])
+
+        self.player = User.objects.create_user(username='player_test', password='player123')
+        UserProfile.objects.create(user=self.player, roles=['player'])
+
+        self.player_char = SavedCharacter.objects.create(
+            user=self.player,
+            name='Player Character',
+            character_data={
+                'name': 'Player Character',
+                'attributes': {'STR': 12, 'DEX': 14, 'INT': 10, 'WIS': 10, 'CON': 12, 'CHR': 10},
+            }
+        )
+
+        self.client = Client()
+
+    def test_admin_delete_character_requires_admin(self):
+        """Test that admin delete character requires admin role."""
+        self.client.login(username='player_test', password='player123')
+        response = self.client.post(reverse('admin_delete_character', args=[self.player_char.id]))
+        self.assertRedirects(response, reverse('welcome'))
+        # Verify character not deleted
+        self.assertTrue(SavedCharacter.objects.filter(id=self.player_char.id).exists())
+
+    def test_admin_delete_character_success(self):
+        """Test that admin can delete any character."""
+        self.client.login(username='admin_test', password='admin123')
+        char_id = self.player_char.id
+        response = self.client.post(reverse('admin_delete_character', args=[char_id]))
+        self.assertRedirects(response, reverse('manage_users'))
+        # Verify character deleted
+        self.assertFalse(SavedCharacter.objects.filter(id=char_id).exists())
+
+    def test_admin_delete_character_not_found(self):
+        """Test admin delete character with non-existent character ID."""
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.post(reverse('admin_delete_character', args=[99999]))
+        self.assertRedirects(response, reverse('manage_users'))
+
+
+class ChangeUserRoleTests(TestCase):
+    """Tests for change user role functionality."""
+
+    def setUp(self):
+        """Create test users."""
+        self.admin = User.objects.create_user(username='admin_test', password='admin123')
+        UserProfile.objects.create(user=self.admin, roles=['admin'])
+
+        self.player = User.objects.create_user(username='player_test', password='player123')
+        UserProfile.objects.create(user=self.player, roles=['player'])
+
+        self.client = Client()
+
+    def test_change_role_requires_admin(self):
+        """Test that changing roles requires admin."""
+        self.client.login(username='player_test', password='player123')
+        response = self.client.post(reverse('change_user_role', args=[self.player.id]), {
+            'roles': ['admin'],
+        })
+        self.assertRedirects(response, reverse('welcome'))
+        # Verify role not changed
+        self.player.profile.refresh_from_db()
+        self.assertNotIn('admin', self.player.profile.roles)
+
+    def test_change_role_success(self):
+        """Test that admin can change user roles."""
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.post(reverse('change_user_role', args=[self.player.id]), {
+            'roles': ['player', 'dm'],
+        })
+        self.assertRedirects(response, reverse('manage_users'))
+        self.player.profile.refresh_from_db()
+        self.assertIn('player', self.player.profile.roles)
+        self.assertIn('dm', self.player.profile.roles)
+
+    def test_change_role_removes_roles(self):
+        """Test that admin can remove all roles."""
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.post(reverse('change_user_role', args=[self.player.id]), {
+            # No roles selected
+        })
+        self.assertRedirects(response, reverse('manage_users'))
+        self.player.profile.refresh_from_db()
+        self.assertEqual(self.player.profile.roles, [])
+
+    def test_change_role_invalid_user(self):
+        """Test change role with invalid user ID."""
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.post(reverse('change_user_role', args=[99999]), {
+            'roles': ['player'],
+        })
+        self.assertRedirects(response, reverse('manage_users'))
+
+    def test_change_role_ignores_invalid_roles(self):
+        """Test that invalid role values are filtered out."""
+        self.client.login(username='admin_test', password='admin123')
+        response = self.client.post(reverse('change_user_role', args=[self.player.id]), {
+            'roles': ['player', 'superuser', 'root'],  # Invalid roles
+        })
+        self.assertRedirects(response, reverse('manage_users'))
+        self.player.profile.refresh_from_db()
+        self.assertEqual(self.player.profile.roles, ['player'])
+
+
+class InputValidationTests(TestCase):
+    """Tests for input validation."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_experience_years_validation_negative(self):
+        """Test that negative years are clamped to minimum."""
+        self.client.get(reverse('generator'))
+        response = self.client.post(reverse('generator'), {
+            'action': 'add_experience',
+            'years': -5,
+            'track_mode': 'auto',
+        })
+        # Should not crash and should add at least 1 year
+        self.assertRedirects(response, reverse('generator'))
+        years = self.client.session.get('interactive_years', 0)
+        self.assertGreaterEqual(years, 1)
+
+    def test_experience_years_validation_too_large(self):
+        """Test that extremely large years are clamped to maximum."""
+        self.client.get(reverse('generator'))
+        response = self.client.post(reverse('generator'), {
+            'action': 'add_experience',
+            'years': 1000,
+            'track_mode': 'auto',
+        })
+        # Should not crash
+        self.assertRedirects(response, reverse('generator'))
+        # Years should be clamped to max (50)
+        years = self.client.session.get('interactive_years', 0)
+        self.assertLessEqual(years, 50)
+
+    def test_experience_years_validation_non_numeric(self):
+        """Test that non-numeric years use default value."""
+        self.client.get(reverse('generator'))
+        response = self.client.post(reverse('generator'), {
+            'action': 'add_experience',
+            'years': 'abc',
+            'track_mode': 'auto',
+        })
+        # Should not crash and use default
+        self.assertRedirects(response, reverse('generator'))
