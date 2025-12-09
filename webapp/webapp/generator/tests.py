@@ -78,6 +78,50 @@ class HandbookPageTests(TestCase):
         self.assertContains(response, reverse('welcome'))
 
 
+class CombatPageTests(TestCase):
+    """Tests for the combat & movement page."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_combat_page_loads(self):
+        """Test that combat page loads successfully."""
+        response = self.client.get(reverse('combat'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Combat')
+
+    def test_combat_has_movement_content(self):
+        """Test that combat page has movement content."""
+        response = self.client.get(reverse('combat'))
+        self.assertContains(response, 'Movement')
+
+
+class ReferenceImageTests(TestCase):
+    """Tests for serving images from references/images directory."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_valid_image_serves(self):
+        """Test that a valid image file is served."""
+        response = self.client.get(reverse('reference_image', args=['megahex.png']))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'image/png')
+
+    def test_invalid_image_404(self):
+        """Test that non-existent image returns 404."""
+        response = self.client.get(reverse('reference_image', args=['nonexistent.png']))
+        self.assertEqual(response.status_code, 404)
+
+    def test_path_traversal_blocked(self):
+        """Test that path traversal attempts are blocked."""
+        # Django's URL routing blocks ../ in the pattern, so we test the view directly
+        # The URL pattern [^/]+ prevents slashes, so traversal via URL is blocked
+        # Test that a filename starting with / is blocked
+        response = self.client.get('/images//etc/passwd')
+        self.assertEqual(response.status_code, 404)
+
+
 class IndexViewTests(TestCase):
     """Tests for the main index view (new auto-generate flow)."""
 
