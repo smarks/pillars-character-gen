@@ -122,7 +122,7 @@ class AdminUserCreationForm(UserCreationForm):
 
 
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse, Http404
 from django.views.decorators.http import require_POST
 from .models import SavedCharacter
 from pillars import generate_character
@@ -1385,6 +1385,22 @@ def handbook_section(request, section: str):
         'content': html_content,
         'title': title,
     })
+
+
+def serve_reference_image(request, filename):
+    """Serve images from the references/images directory."""
+    import mimetypes
+    image_path = os.path.join(settings.REFERENCES_IMAGES_DIR, filename)
+
+    # Security: prevent directory traversal
+    if '..' in filename or filename.startswith('/'):
+        raise Http404("Invalid filename")
+
+    if not os.path.exists(image_path):
+        raise Http404("Image not found")
+
+    content_type, _ = mimetypes.guess_type(image_path)
+    return FileResponse(open(image_path, 'rb'), content_type=content_type)
 
 
 # =============================================================================

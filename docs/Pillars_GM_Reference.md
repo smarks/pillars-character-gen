@@ -5,7 +5,7 @@
 *Quick Reference Tables & Scenario Seeds*
 
 A Fantasy Role-Playing Game
-by Spencer Marks with Stan Hickman
+by Spencer Marks  
 
 ---
 
@@ -968,5 +968,4 @@ The strongest hooks combine multiple methods:
 You don't need every hook to be strong in all factors - variety is good. But knowing where a hook sits helps you adjust if players seem disengaged.
 
 ---
-
-*Pillars GM Reference — A Fantasy Role-Playing Game by Spencer Marks with Stan Hickman*
+ 

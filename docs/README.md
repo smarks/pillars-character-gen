@@ -1,16 +1,7 @@
 # Pillars RPG Player's Aide including Character Generator
 
 ## Project Structure
-
-```
-character_gen/
-├── dice.py                          # Core dice rolling utilities
-├── attributes.py                    # Character attribute generation
-├── test_dice.py                     # Unit tests for dice module
-├── test_attributes.py               # Unit tests for attributes module
-├── generate_character.py            # Interactive character generator
-└── README.md                        # This file
-```
+ 
 
 ## Quick Start
 
@@ -34,6 +25,7 @@ python3 -m pytest test_attributes.py -v
 ```
 
 ```run the server
+source .venv/bin/activate 
  cd webapp
   python manage.py runserver
 
@@ -44,5 +36,4 @@ python3 -m pytest test_attributes.py -v
   Make sure you activate your virtual environment first:
 
   source .venv/bin/activate
-
-year 
+ 

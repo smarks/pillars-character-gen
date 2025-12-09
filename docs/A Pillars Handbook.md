@@ -991,6 +991,368 @@ Trainer can teach up to 1/2 of their skill
 Easy 1 skill per point
 Hard skills cost square 
 
-# TODO 
-Stuff for characters to do
-Special Mages
+# Combat and Movement Guide
+
+## CORE CONCEPTS
+
+### Attributes that effect movement and combat 
+
+| Attribute       | Abbreviation | Governs |
+|-----------------|--------------|---------|
+| **Strength**    | ST           | Hit points, fatigue pool, carrying capacity |
+| **Dexterity**   | DX           | Action order, success rolls, base movement, avoiding mishaps |
+| **Intelligence** | IQ          | Number of skills/spells known, resistance to mental effects |
+| **Wisdom**      | WIS          | Number of skills/spells known, resistance to mental effects |
+
+---
+
+## THE TURN
+
+A turn represents approximately **five seconds** of action. Nothing happens simultaneously—each movement and action can affect what follows.
+
+### Turn Sequence
+
+| Phase | Name | Description |
+|-------|------|-------------|
+| 1 | **Initiative** | Each side rolls 1 die. Winner chooses to move first or second. |
+| 2 | **Renew Spells** | Pay ST to maintain continuing spells. Unrenewed spells end before movement. |
+| 3 | **First Movement** | First player moves all figures. Movement stops upon engagement. |
+| 4 | **Second Movement** | Second player moves all figures. Additional players move in initiative order. |
+| 5 | **Actions** | All figures act in adjDX order (highest first). One action per figure. |
+| 6 | **Forced Retreat** | Figures that dealt physical hits and took none may push enemies back 1 hex. |
+
+---
+
+## MOVEMENT
+
+### Hex Size
+
+A hex is approximately **4 feet (1.3 meters)** across—roughly the space one combatant controls in melee.
+A mega hex is a unit of 5 hexes 
+
+### Base Movement Allowance
+
+**MA = DX − 2** (minimum 4)
+
+| DX | Base MA |
+|----|---------|
+| 8  | 6 |
+| 9  | 7 |
+| 10 | 8 |
+| 11 | 9 |
+| 12 | 10 |
+| 13 | 11 |
+| 14 | 12 |
+
+### Encumbrance
+
+Encumbrance is based on weight carried compared to ST.
+
+| Load Level | Weight Carried | MA Modifier | Restrictions |
+|------------|----------------|-------------|--------------|
+| Unencumbered | Up to ST lbs | 0 | — |
+| Light | ST+1 to ST×1.5 lbs | −1 | — |
+| Medium | ST×1.5+1 to ST×2 lbs | −2 | Cannot Run |
+| Heavy | ST×2+1 to ST×2.5 lbs | −4 | Cannot Run or Jog |
+| Overloaded | Over ST×2.5 lbs | Walk only, 1 hex max | — |
+
+**Dropping a Pack:** Free action at the start of your movement. Recalculate encumbrance immediately. Picking up and securing a dropped pack takes one full turn (no other actions).
+
+### Movement Speeds
+
+| Speed | Distance | Fatigue Cost | Available Actions |
+|-------|----------|--------------|-------------------|
+| **Run** | Full MA | 1 per turn | None (movement only) |
+| **Jog** | Half MA | 1 per 4 turns | Charge Attack, Dodge, Drop prone |
+| **Walk** | Up to 2 hexes | None | Ready Weapon |
+| **Walk (slow)** | Up to 1 hex | None | Cast Spell, Missile Attack, Disbelieve |
+| **Stand Still** | 0 | None | Stand Up, Pick Up Weapon |
+
+**Engaged figures** can only Shift (1 hex, stay adjacent) or Stand Still. Running and Jogging require being disengaged.
+
+### Fatigue
+
+**Fatigue Pool = ST**
+
+| Activity | Fatigue Cost |
+|----------|--------------|
+| Running | 1 per turn |
+| Jogging | 1 per 4 turns |
+| Walking (combat) | None |
+| Walking (travel) | Recover 1 per hour |
+| Resting | Recover 1 per 10 minutes |
+
+**Exhaustion:** When fatigue spent equals ST, you are **exhausted**:
+
+- MA halved (round down)
+- −2 DX on all rolls
+- Cannot Run
+- Must rest to recover
+
+**Collapse:** If forced to spend fatigue beyond ST (e.g., spell casting, forced march), make a 3-dice save vs. ST or fall unconscious.
+
+### Facing
+
+Each figure faces one hex side. This determines front, side, and rear hexes.
+
+```
+        [Front] [Front] [Front]
+              \   |   /
+               \  |  /
+          [Side]--●--[Side]
+                  |
+               [Rear]
+```
+
+- **Physical attacks:** Only into your front hexes
+- **Spells:** Your hex, adjacent hexes, or any hex "in front" of you
+- **Prone/crawling figures:** All hexes count as rear (except for spell-casting direction)
+
+### Engagement
+
+| Figure Type | Engaged When... |
+|-------------|-----------------|
+| One-hex figure | In an armed enemy's front hex |
+| 3–6 hex figure | In front hexes of 2+ one-hex figures (or 1 multi-hex figure) |
+| 7-hex figure | In front hexes of 3+ one-hex figures (or 1 multi-hex figure) |
+
+- Figures **stop immediately** when they become engaged
+- Multi-hex figures can push back smaller figures (combined ST of smaller figures must be less than pusher's ST)
+
+---
+
+## ACTIONS
+
+### Movement Limits for Actions
+
+| Action | Max Movement | Speed |
+|--------|--------------|-------|
+| Movement only | Full MA | Run |
+| Charge Attack, Dodge, Drop prone | Half MA | Jog |
+| Ready New Weapon | 2 hexes | Walk |
+| Cast Spell, Missile Attack, Disbelieve | 1 hex | Walk (slow) |
+| Stand Up, Pick Up Weapon | 0 | Stand Still |
+
+### Disengaged Figure Actions
+
+| Speed | Maximum Movement | Available Actions |
+|-------|------------------|-------------------|
+| Run | Full MA | None (movement only) |
+| Jog | Up to half MA | Charge Attack (melee or spell, not missiles), Dodge, Drop prone/kneeling |
+| Walk | Up to 2 hexes | Ready New Weapon |
+| Walk (slow) | Up to 1 hex | Cast Spell, Missile Attack, Disbelieve |
+| Stand Still | 0 | Stand Up (entire turn, no other action) |
+
+### Engaged Figure Actions
+
+| Maximum Movement | Available Actions |
+|------------------|-------------------|
+| Shift 1 hex (stay adjacent) | Melee Attack, Defend, Change Weapons, Attempt HTH, Cast Spell, Disbelieve, Disengage |
+| Stand still | Last Missile Shot (must drop weapon next turn), Stand Up, Pick Up Weapon |
+
+---
+
+## ROLLING TO HIT
+
+Roll **3 dice** and try to get your **adjusted DX or less**.
+
+### Automatic Results
+
+| Roll | Result |
+|------|--------|
+| 3 | Automatic hit, **triple** damage/effect |
+| 4 | Automatic hit, **double** damage/effect |
+| 5 | Automatic hit |
+| 16 | Automatic miss |
+| 17 | Automatic miss, drop weapon |
+| 18 | Automatic miss, break weapon |
+
+### Roll to Miss
+
+When a missile passes through a hex with a friendly figure, roll to miss. Success means the missile continues past.
+
+| Roll | Result |
+|------|--------|
+| adjDX or less | Successfully missed (missile continues) |
+| 14 | Automatic hit |
+| 15–16 | Double damage hit |
+| 17–18 | Triple damage hit |
+
+---
+
+## DX ADJUSTMENTS
+
+All adjustments are cumulative.
+
+### Positional Advantage (Physical Attacks)
+
+| Situation | Adjustment |
+|-----------|------------|
+| Striking from enemy's side hex | +2 |
+| Striking from enemy's rear hex | +4 |
+| Pole-weapon vs. charging opponent (you stood still) | +2 |
+| Crossbow fired from prone | +1 |
+
+### Target Conditions
+
+| Condition | Adjustment |
+|-----------|------------|
+| Target is invisible | −6 |
+| Target is in a shadow hex | −4 |
+| Target is a one-hex figure in flight | −4 |
+| Target is a giant snake | −3 |
+| Target is a multi-hex figure in flight | −1 |
+
+### Your Conditions
+
+| Condition | Adjustment |
+|-----------|------------|
+| Two-weapon fighting | −4 on both attacks |
+| Knocked down last turn | No action except stand/crawl |
+| Exhausted | −2 |
+
+### Range Adjustments
+
+**Thrown Weapons:** −1 per hex to target
+
+**Missile Weapons:**
+
+| Range (Megahexes = 5 hexes) | Adjustment |
+|-----------------------------|------------|
+| 0–2 MH | 0 |
+| 3–4 MH | −1 |
+| 5–6 MH | −2 |
+| 7–8 MH | −3 |
+| (pattern continues) | −1 per 2 MH |
+
+---
+
+## DAMAGE AND PROTECTION
+
+### Dealing Damage
+
+After hitting, roll damage dice. Notation examples:
+
+- **2 dice** = roll 2d6
+- **1+1** = roll 1d6, add 1
+- **2−2** = roll 2d6, subtract 2
+
+### Protection
+
+Armor and natural protection subtract hits **from each attack**.
+
+### Injury Effects
+
+| Condition | Effect |
+|-----------|--------|
+| ST reduced to 1 | Unconscious |
+| ST reduced to 0 | Dead |
+| Took 5+ hits in one turn | −2 DX next turn |
+| Took 8+ hits in one turn | Fall down immediately, lose action this turn |
+
+---
+
+## SPECIAL SITUATIONS
+
+### Disengaging
+
+- Use Disengage action instead of attacking
+- Move 1 hex in any direction during your action
+- Faster enemies (higher adjDX) can still strike you
+- Slower enemies attack at penalty = difference in adjDX
+
+### Defending and Dodging
+
+| Action | Usable By | Defends Against | Effect |
+|--------|-----------|-----------------|--------|
+| Dodge | Disengaged figures | Missiles and thrown weapons only | Attacker rolls 4 dice |
+| Defend | Engaged figures | Melee and non-missile attacks only | Attacker rolls 4 dice |
+
+**4-Dice Special Results:** 4–5 auto-hit; 20+ auto-miss; 21–22 drop weapon; 23–24 break weapon
+
+### Forced Retreat
+
+If you dealt physical hits and took none:
+
+1. Push enemy back 1 hex in any direction
+2. Choose to advance into vacated hex or stand still
+3. If enemy has no hex to retreat to, they roll 3 dice vs. DX or fall
+
+### Crawling and Prone
+
+- Crawling MA = 2
+- Crawling/prone figures have all rear hexes (cannot attack)
+- Prone behind a body: missiles may hit the body instead (roll 1 die; 1–3 hits body if target prone, 1–4 if kneeling)
+
+### Flight
+
+- Half flying MA on takeoff turn
+- Cannot move on landing turn
+- Fliers don't engage ground figures unless they choose to
+- Two fliers can pass at "different heights" if both agree
+
+---
+
+## QUICK REFERENCE SUMMARY
+
+### Turn Order
+
+1. Initiative (roll off, winner picks move order)
+2. Renew Spells
+3. Movement (by side, in initiative order)
+4. Actions (by individual adjDX, highest first)
+5. Forced Retreat
+
+### Key Numbers
+
+| Situation | Roll |
+|-----------|------|
+| To hit | 3 dice ≤ adjDX |
+| Defending/Dodging target | 4 dice ≤ adjDX |
+| Saving roll | 3 dice ≤ attribute (usually DX or IQ) |
+| Auto-hit | 3, 4, or 5 |
+| Auto-miss | 16, 17, or 18 |
+
+### Movement Quick Reference
+
+| DX | Base MA | Run (Full) | Jog (Half) |
+|----|---------|------------|------------|
+| 8  | 6 | 6 hexes | 3 hexes |
+| 10 | 8 | 8 hexes | 4 hexes |
+| 12 | 10 | 10 hexes | 5 hexes |
+| 14 | 12 | 12 hexes | 6 hexes |
+
+### Encumbrance Quick Reference
+
+| Load | Weight | MA Mod | Can Run? | Can Jog? |
+|------|--------|--------|----------|----------|
+| Unencumbered | ≤ ST | 0 | Yes | Yes |
+| Light | ≤ ST×1.5 | −1 | Yes | Yes |
+| Medium | ≤ ST×2 | −2 | No | Yes |
+| Heavy | ≤ ST×2.5 | −4 | No | No |
+| Overloaded | > ST×2.5 | Walk only | No | No |
+
+### Fatigue Quick Reference
+
+| Activity | Cost |
+|----------|------|
+| Run | 1/turn |
+| Jog | 1/4 turns |
+| Walk | None |
+| Rest | Recover 1/10 min |
+| Exhausted | −2 DX, half MA, no running |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
