@@ -695,3 +695,84 @@ class GeneratorUnifiedFlowUITests(BrowserTestCase):
             has_experience_indicators,
             "Generator page should show experience log after adding experience"
         )
+
+
+class CombatPageImageTests(BrowserTestCase):
+    """UI tests for images in the Combat & Movement page."""
+
+    def test_combat_page_loads(self):
+        """Test that the combat page loads successfully."""
+        self.browser.get(f'{self.live_server_url}/combat/')
+        self.wait_for_page_load()
+
+        # Check page title/heading
+        page_source = self.browser.page_source
+        self.assertIn('Combat', page_source)
+
+    def test_megahex_image_loads(self):
+        """Test that the megahex image loads correctly in the browser."""
+        self.browser.get(f'{self.live_server_url}/combat/')
+        self.wait_for_page_load()
+
+        # Find the megahex image
+        images = self.browser.find_elements(By.TAG_NAME, 'img')
+        megahex_img = None
+        for img in images:
+            src = img.get_attribute('src')
+            if 'megahex' in src:
+                megahex_img = img
+                break
+
+        self.assertIsNotNone(megahex_img, "Megahex image should be present on the page")
+
+        # Verify the image actually loaded (naturalWidth > 0 means it loaded)
+        natural_width = self.browser.execute_script(
+            "return arguments[0].naturalWidth;", megahex_img
+        )
+        self.assertGreater(
+            natural_width, 0,
+            "Megahex image should load successfully (naturalWidth > 0)"
+        )
+
+    def test_facing_image_loads(self):
+        """Test that the facing diagram image loads correctly in the browser."""
+        self.browser.get(f'{self.live_server_url}/combat/')
+        self.wait_for_page_load()
+
+        # Find the facing image
+        images = self.browser.find_elements(By.TAG_NAME, 'img')
+        facing_img = None
+        for img in images:
+            src = img.get_attribute('src')
+            if 'facing' in src:
+                facing_img = img
+                break
+
+        self.assertIsNotNone(facing_img, "Facing diagram image should be present on the page")
+
+        # Verify the image actually loaded (naturalWidth > 0 means it loaded)
+        natural_width = self.browser.execute_script(
+            "return arguments[0].naturalWidth;", facing_img
+        )
+        self.assertGreater(
+            natural_width, 0,
+            "Facing diagram image should load successfully (naturalWidth > 0)"
+        )
+
+    def test_all_images_load(self):
+        """Test that all images on the combat page load successfully."""
+        self.browser.get(f'{self.live_server_url}/combat/')
+        self.wait_for_page_load()
+
+        images = self.browser.find_elements(By.TAG_NAME, 'img')
+        self.assertGreater(len(images), 0, "Combat page should have at least one image")
+
+        for img in images:
+            src = img.get_attribute('src')
+            natural_width = self.browser.execute_script(
+                "return arguments[0].naturalWidth;", img
+            )
+            self.assertGreater(
+                natural_width, 0,
+                f"Image {src} should load successfully (naturalWidth > 0)"
+            )

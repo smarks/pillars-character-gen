@@ -33,6 +33,7 @@ Session Keys Used:
 """
 import json
 import os
+import re
 import functools
 import markdown
 from django.shortcuts import render, redirect
@@ -1377,6 +1378,15 @@ def handbook_section(request, section: str):
         html_content = markdown.markdown(
             content,
             extensions=['tables', 'fenced_code', 'toc']
+        )
+
+        # Rewrite relative image paths to absolute paths for the web app
+        # This allows markdown files to work both standalone and in the browser
+        # e.g., src="images/foo.png" becomes src="/images/foo.png"
+        html_content = re.sub(
+            r'src="images/',
+            'src="/images/',
+            html_content
         )
     except FileNotFoundError:
         html_content = f"<p>Section '{section}' not found.</p>"
