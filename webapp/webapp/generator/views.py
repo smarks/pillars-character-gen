@@ -231,6 +231,11 @@ def welcome(request):
     return render(request, 'generator/welcome.html')
 
 
+def dice_roller(request):
+    """Standalone dice roller page designed to be opened in a popup window."""
+    return render(request, 'generator/dice_roller.html')
+
+
 def start_over(request):
     """Clear all session data and redirect to welcome page."""
     clear_interactive_session(request)

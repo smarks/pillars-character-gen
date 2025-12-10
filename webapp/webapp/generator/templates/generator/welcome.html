@@ -18,13 +18,14 @@
     margin-bottom: 30px;
 }
 .welcome-text {
-    max-width: 700px;
+    max-width: 750px;
     margin: 0 auto 40px auto;
     text-align: left;
-    line-height: 1.6;
+    line-height: 1.7;
+    font-size: 1.1em;
 }
 .welcome-text p {
-    margin-bottom: 1em;
+    margin-bottom: 1.2em;
 }
 .welcome-text strong {
     color: #333;
@@ -82,6 +83,10 @@
         <a href="{% url 'combat' %}" class="nav-link">
             <span class="icon">&#9876;</span>
             Combat & Movement
+        </a>
+        <a href="{% url 'dice_roller' %}" class="nav-link" onclick="window.open(this.href, 'dice', 'width=420,height=400,resizable=yes'); return false;">
+            <span class="icon">&#127922;</span>
+            Dice Roller
         </a>
         {% if user.is_authenticated and user.profile.is_dm or user.is_authenticated and user.profile.is_admin %}
         <a href="{% url 'dm' %}" class="nav-link">

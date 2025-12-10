@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Roller - Pillars</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+            background: #fff;
+            color: #333;
+        }
+        h1 {
+            font-size: 1.5em;
+            margin: 0 0 20px 0;
+            text-align: center;
+        }
+        .dice-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .dice-controls select {
+            font-family: monospace;
+            font-size: 16px;
+            padding: 8px;
+            flex: 1;
+            min-width: 60px;
+        }
+        button {
+            font-family: monospace;
+            font-size: 16px;
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            background: #f4f4f4;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        button:hover {
+            background: #e4e4e4;
+        }
+        button.primary {
+            background: #36c;
+            color: white;
+            border-color: #36c;
+        }
+        button.primary:hover {
+            background: #25b;
+        }
+        .dice-result {
+            font-size: 18px;
+            padding: 15px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            min-height: 24px;
+            text-align: center;
+            margin-top: 15px;
+        }
+        .button-group {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dice Roller</h1>
+
+    <div class="dice-controls">
+        <select id="dice-count">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+        </select>
+        <select id="dice-size">
+            <option value="4">d4</option>
+            <option value="6" selected>d6</option>
+            <option value="8">d8</option>
+            <option value="10">d10</option>
+            <option value="12">d12</option>
+            <option value="20">d20</option>
+        </select>
+    </div>
+
+    <button type="button" class="primary" onclick="rollDice()">Roll</button>
+
+    <div class="button-group">
+        <button type="button" onclick="rollPercentile()">Roll d100</button>
+        <button type="button" onclick="rollDemonDie()">Demon Die (d6)</button>
+    </div>
+
+    <div class="dice-result" id="dice-result">-</div>
+
+    <script>
+    function rollDice() {
+        var count = parseInt(document.getElementById('dice-count').value);
+        var size = parseInt(document.getElementById('dice-size').value);
+        var rolls = [];
+        var total = 0;
+        for (var i = 0; i < count; i++) {
+            var roll = Math.floor(Math.random() * size) + 1;
+            rolls.push(roll);
+            total += roll;
+        }
+        var result = count + 'd' + size + ': [' + rolls.join(', ') + '] = ' + total;
+        document.getElementById('dice-result').textContent = result;
+    }
+
+    function rollPercentile() {
+        var tens = Math.floor(Math.random() * 10) * 10;
+        var ones = Math.floor(Math.random() * 10);
+        var result = tens + ones;
+        if (result === 0) result = 100;
+        document.getElementById('dice-result').textContent = 'd100: ' + result + ' (tens: ' + tens + ', ones: ' + ones + ')';
+    }
+
+    function rollDemonDie() {
+        var roll = Math.floor(Math.random() * 6) + 1;
+        var result = 'd6 Demon Die: ' + roll;
+        if (roll === 1) {
+            result += ' - DEMON! Roll again and subtract.';
+        } else if (roll === 6) {
+            result += ' - EXPLODE! Roll again and add.';
+        }
+        document.getElementById('dice-result').textContent = result;
+    }
+    </script>
+</body>
+</html>
