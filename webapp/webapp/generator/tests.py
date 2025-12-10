@@ -121,6 +121,15 @@ class ReferenceImageTests(TestCase):
         response = self.client.get('/images//etc/passwd')
         self.assertEqual(response.status_code, 404)
 
+    def test_combat_page_renders_image(self):
+        """Test that the combat page contains an img tag with correct absolute path."""
+        response = self.client.get(reverse('combat'))
+        self.assertEqual(response.status_code, 200)
+        # The markdown ![Mega hex](/images/megahex.png) should render as an img tag
+        # Note: must use absolute path /images/ to match the URL route
+        self.assertContains(response, '<img')
+        self.assertContains(response, '/images/megahex.png')
+
 
 class IndexViewTests(TestCase):
     """Tests for the main index view (new auto-generate flow)."""
