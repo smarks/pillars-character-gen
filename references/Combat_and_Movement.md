@@ -38,7 +38,7 @@ A turn represents approximately **five seconds** of action. Nothing happens simu
 A hex is approximately **4 feet (1.3 meters)** across—roughly the space one combatant controls in melee.
 A mega hex is five adjunct hexes
 
-![Mega hex](images/megahex.png)
+![Mega hex](/images/megahex.png)
 ### Base Movement Allowance
 
 **MA = DX − 2** (minimum 4)
