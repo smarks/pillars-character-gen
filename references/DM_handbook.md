@@ -49,7 +49,7 @@ If your character already has a skill and rolls the same skill, they get a +1 to
 *Quick Reference Tables & Scenario Seeds*
 
 A Fantasy Role-Playing Game
-by Spencer Marks with Stan Hickman
+by Spencer Marks with Stan Heckman
 
 ---
 
@@ -1013,4 +1013,4 @@ You don't need every hook to be strong in all factors - variety is good. But kno
 
 ---
 
-*Pillars GM Reference — A Fantasy Role-Playing Game by Spencer Marks with Stan Hickman*
+*Pillars GM Reference — A Fantasy Role-Playing Game by Spencer Marks with Stan Heckman*

@@ -16,7 +16,7 @@ Now it is easy to play D&D without any homebrew elements at all. This is not tha
 
 **Development**
 
-Pillars is being developed primarily by Spencer Marks, with Stan Hickman helping quite a bit especially with the math bits. It's my hope that additional play testers will help further its development. Think old school D&D.
+Pillars is being developed primarily by Spencer Marks, with Stan Heckman helping quite a bit especially with the math bits. It's my hope that additional play testers will help further its development. Think old school D&D.
 
 
 
