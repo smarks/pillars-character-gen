@@ -1,14 +1,16 @@
-"""Context processors for the generator app."""
+"""Context processors for the generator app.
+
+Git info is loaded once at module import time (server startup) and cached
+for the lifetime of the process. This avoids subprocess calls on every request.
+"""
 
 import subprocess
 from datetime import datetime
-from functools import lru_cache
 from pathlib import Path
 
 
-@lru_cache(maxsize=1)
-def _get_git_info():
-    """Get git commit hash and date. Cached for performance."""
+def _load_git_info():
+    """Load git commit hash and date. Called once at module import."""
     try:
         # Get the project root (where .git is)
         project_root = Path(__file__).resolve().parent.parent.parent.parent
@@ -43,13 +45,20 @@ def _get_git_info():
         return None, None
 
 
-def git_info(request):
-    """Add git commit info to template context."""
-    commit_hash, commit_date = _get_git_info()
+# Load git info once at startup
+_GIT_COMMIT_HASH, _GIT_COMMIT_DATE = _load_git_info()
+_GIT_COMMIT_SHORT = _GIT_COMMIT_HASH[:7] if _GIT_COMMIT_HASH else None
+_GIT_REPO_URL = 'https://github.com/smarks/pillars-character-gen'
 
+
+def git_info(request):
+    """Add git commit info to template context.
+
+    Values are loaded once at server startup and reused for all requests.
+    """
     return {
-        'git_commit_hash': commit_hash,
-        'git_commit_short': commit_hash[:7] if commit_hash else None,
-        'git_commit_date': commit_date,
-        'git_repo_url': 'https://github.com/smarks/pillars-character-gen',
+        'git_commit_hash': _GIT_COMMIT_HASH,
+        'git_commit_short': _GIT_COMMIT_SHORT,
+        'git_commit_date': _GIT_COMMIT_DATE,
+        'git_repo_url': _GIT_REPO_URL,
     }
