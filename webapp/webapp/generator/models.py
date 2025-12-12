@@ -67,6 +67,9 @@ class SavedCharacter(models.Model):
 
     class Meta:
         ordering = ['-updated_at']
+        indexes = [
+            models.Index(fields=['user', '-updated_at']),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.user.username})"
