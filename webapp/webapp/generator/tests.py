@@ -666,6 +666,54 @@ class RoleTests(TestCase):
         self.assertRedirects(response, reverse('login'))
 
 
+class DMHandbookContentTests(TestCase):
+    """Tests for DM Handbook content integrity."""
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+        from webapp.generator.models import UserProfile
+
+        self.client = Client()
+
+        # Create a DM user to access the handbook
+        self.dm_user = User.objects.create_user('dm_content_test', password='testpass')
+        UserProfile.objects.create(user=self.dm_user, roles=['dm'])
+
+    def test_dm_handbook_loads(self):
+        """Test that DM handbook page loads successfully for DM users."""
+        self.client.login(username='dm_content_test', password='testpass')
+        response = self.client.get(reverse('dm'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_dm_handbook_has_correct_structure(self):
+        """Test that DM handbook starts with proper header, not corrupted content."""
+        self.client.login(username='dm_content_test', password='testpass')
+        response = self.client.get(reverse('dm'))
+
+        # The handbook should contain the proper Game Master Reference header
+        self.assertContains(response, 'Game Master Reference')
+        self.assertContains(response, 'Quick Reference Tables')
+
+    def test_dm_handbook_has_no_corrupted_content(self):
+        """Test that DM handbook does not have corrupted content at the start."""
+        self.client.login(username='dm_content_test', password='testpass')
+        response = self.client.get(reverse('dm'))
+
+        # These are markers of the corrupted content that was incorrectly prepended
+        self.assertNotContains(response, 'Wild magic')
+        self.assertNotContains(response, 'Controlled magic')
+        self.assertNotContains(response, 'Determine Prior Experience')
+
+    def test_dm_handbook_has_scenario_seeds(self):
+        """Test that DM handbook contains the scenario seeds section."""
+        self.client.login(username='dm_content_test', password='testpass')
+        response = self.client.get(reverse('dm'))
+
+        # Verify key sections from the handbook are present
+        self.assertContains(response, 'Scenario Seeds')
+        self.assertContains(response, 'The Weregild Appraiser')
+
+
 class ReturnToGeneratorTests(TestCase):
     """Tests for experience display on generator page."""
 
