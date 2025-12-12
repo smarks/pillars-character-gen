@@ -129,11 +129,11 @@ class AttributeRoll:
 
     def __str__(self) -> str:
         """Format the roll result for display."""
-        all_rolls_str = ", ".join(map(str, self.all_rolls))
-        kept_rolls_str = ", ".join(map(str, self.kept_rolls))
-        mod_str = f"+{self.modifier}" if self.modifier >= 0 else str(self.modifier)
-        return (f"{self.attribute_name}: {self.value} (modifier: {mod_str})\n"
-                f"  Rolled: [{all_rolls_str}] → Kept: [{kept_rolls_str}]")
+        all_rolls_display = ", ".join(map(str, self.all_rolls))
+        kept_rolls_display = ", ".join(map(str, self.kept_rolls))
+        modifier_display = f"+{self.modifier}" if self.modifier >= 0 else str(self.modifier)
+        return (f"{self.attribute_name}: {self.value} (modifier: {modifier_display})\n"
+                f"  Rolled: [{all_rolls_display}] → Kept: [{kept_rolls_display}]")
 
 
 @dataclass
@@ -1267,7 +1267,7 @@ MAGIC_SPELL_PROGRESSION = {
         "Counter 5/Encase"
     ],
     MagicSchool.MENDING: [
-        "Heal", "Cure", "Web/Joining/Breaking", "Shaping"
+        "Heal", "Cure", "Web", "Joining","Breaking", "Shaping"
     ],
     MagicSchool.WEATHER: [
         "Detect Weather", "Wind/Wind Counter", "Rain/Rain Counter", "Storm/Storm Counter"
