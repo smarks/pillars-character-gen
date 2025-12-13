@@ -1385,7 +1385,7 @@ def clear_interactive_session(request):
 def handbook_section(request, section: str):
     """Generic view for handbook sections loaded from markdown files."""
     # Map section names to file paths and display titles
-    # Most content is now in the consolidated handbook in docs/
+    # All game content is in references/
     SECTION_CONFIG = {
         'about': {
             'path': os.path.join(settings.BASE_DIR, '..', 'references', 'about.md'),
@@ -1396,7 +1396,7 @@ def handbook_section(request, section: str):
             'title': 'Background',
         },
         'players_handbook': {
-            'path': os.path.join(settings.BASE_DIR, '..', 'docs', 'A Pillars Handbook.md'),
+            'path': os.path.join(settings.BASE_DIR, '..', 'references', 'A Pillars Handbook.md'),
             'title': "Player's Handbook",
         },
         'combat': {

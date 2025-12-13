@@ -11,7 +11,7 @@ urlpatterns = [
     path('select-track/', views.select_track, name='select_track'),
     path('start-over/', views.start_over, name='start_over'),
     path('dice/', views.dice_roller, name='dice_roller'),
-    # Handbook sections - loaded from references/ or docs/ directory
+    # Handbook sections - loaded from references/ directory
     path('about/', views.handbook_section, {'section': 'about'}, name='about'),
     path('lore/', views.handbook_section, {'section': 'lore'}, name='lore'),
     path('handbook/', views.handbook_section, {'section': 'players_handbook'}, name='handbook'),
