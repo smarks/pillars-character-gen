@@ -15,12 +15,12 @@ After=network.target
 Type=simple
 User=sam
 Group=sam
-WorkingDirectory=~/dev/pillars-character-gen/webapp
-EnvironmentFile=/~/dev/pillars-character-gen/.env
+WorkingDirectory=/home/sam/dev/pillars-character-gen/webapp
+EnvironmentFile=/home/sam/dev/pillars-character-gen/.env
 Environment="GUNICORN_WORKERS=3"
 Environment="GUNICORN_BIND=0.0.0.0:9066"
-Environment="PYTHONPATH=~/dev/pillars-character-gen"
-ExecStart=~/dev/pillars-character-gen/.venv/bin/gunicorn \
+Environment="PYTHONPATH=/home/sam/dev/pillars-character-gen"
+ExecStart=/home/sam/dev/pillars-character-gen/.venv/bin/gunicorn \
     --workers $GUNICORN_WORKERS \
     --bind $GUNICORN_BIND \
     --access-logfile - \
