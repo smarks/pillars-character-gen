@@ -17,6 +17,7 @@ urlpatterns = [
     path('handbook/', views.handbook_section, {'section': 'players_handbook'}, name='handbook'),
     path('combat/', views.handbook_section, {'section': 'combat'}, name='combat'),
     path('dm/', views.dm_handbook, name='dm'),
+    path('turn-sequence/', views.serve_reference_html, {'filename': 'pillars-turn-sequence-4.html'}, name='turn_sequence'),
     # Images for handbook markdown files
     path('images/<str:filename>', views.serve_reference_image, name='reference_image'),
     # Authentication
@@ -28,12 +29,16 @@ urlpatterns = [
     path('save-character/', views.save_character, name='save_character'),
     path('load-character/<int:char_id>/', views.load_character, name='load_character'),
     path('delete-character/<int:char_id>/', views.delete_character, name='delete_character'),
+    # User notes
+    path('notes/', views.user_notes, name='notes'),
+    path('save-notes/', views.save_user_notes, name='save_user_notes'),
     # Editable character sheet
     path('character/<int:char_id>/', views.character_sheet, name='character_sheet'),
     path('character/<int:char_id>/update/', views.update_character, name='update_character'),
     path('character/<int:char_id>/add-experience/', views.add_experience_to_character, name='add_experience_to_character'),
     # Admin-only
     path('manage-users/', views.manage_users, name='manage_users'),
+    path('admin-notes/', views.admin_notes, name='admin_notes'),
     path('change-role/<int:user_id>/', views.change_user_role, name='change_user_role'),
     path('edit-user/<int:user_id>/', views.edit_user, name='edit_user'),
     path('delete-user/<int:user_id>/', views.delete_user, name='delete_user'),

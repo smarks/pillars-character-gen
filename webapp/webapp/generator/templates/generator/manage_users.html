@@ -95,6 +95,7 @@
                 <th>Email</th>
                 <th>Current Roles</th>
                 <th>Characters</th>
+                <th>Notes</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -105,6 +106,7 @@
                 <td>{{ profile.user.email|default:"-" }}</td>
                 <td>{{ profile.get_roles_display|default:"None" }}</td>
                 <td>{{ profile.user.savedcharacter_set.count }}</td>
+                <td>{% if profile.user.username in notes_by_user %}<a href="#notes-{{ profile.user.username }}">View</a>{% else %}-{% endif %}</td>
                 <td>
                     <a href="{% url 'edit_user' profile.user.id %}" class="btn primary">Edit</a>
                     {% if profile.user.id != request.user.id %}
@@ -120,7 +122,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="5">No users found.</td>
+                <td colspan="6">No users found.</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -164,6 +166,23 @@
     {% endfor %}
     {% else %}
     <p>No characters have been created yet.</p>
+    {% endif %}
+</div>
+
+<div class="section">
+    <h2>User Notes</h2>
+    <p style="margin-bottom: 20px;">View notes created by users. <a href="{% url 'admin_notes' %}" class="btn primary">Browse All Notes</a></p>
+
+    {% if notes_by_user %}
+    {% for username, notes in notes_by_user.items %}
+    <div id="notes-{{ username }}" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; background: #f9f9f9;">
+        <h3 style="margin-top: 0; border-bottom: 1px solid #ccc; padding-bottom: 5px;">{{ username }}</h3>
+        <p style="font-size: 0.85em; color: #666; margin-bottom: 10px;">Last updated: {{ notes.updated_at|date:"M d, Y H:i" }}</p>
+        <pre style="white-space: pre-wrap; background: #fff; padding: 10px; border: 1px solid #eee; max-height: 300px; overflow-y: auto;">{{ notes.content|default:"(empty)" }}</pre>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p>No users have created notes yet.</p>
     {% endif %}
 </div>
 {% endblock %}

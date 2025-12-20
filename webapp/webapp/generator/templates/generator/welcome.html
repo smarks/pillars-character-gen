@@ -88,10 +88,30 @@
             <span class="icon">&#127922;</span>
             Dice Roller
         </a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'my_characters' %}" class="nav-link">
+            <span class="icon">&#128100;</span>
+            My Characters
+        </a>
+        <a href="{% url 'notes' %}" class="nav-link">
+            <span class="icon">&#128221;</span>
+            My Notes
+        </a>
+        {% endif %}
         {% if user.is_authenticated and user.profile.is_dm or user.is_authenticated and user.profile.is_admin %}
         <a href="{% url 'dm' %}" class="nav-link">
             <span class="icon">&#128218;</span>
-            DM
+            DM Handbook
+        </a>
+        {% endif %}
+        {% if user.is_authenticated and user.profile.is_admin %}
+        <a href="{% url 'manage_users' %}" class="nav-link">
+            <span class="icon">&#9881;</span>
+            Manage Users
+        </a>
+        <a href="{% url 'admin_notes' %}" class="nav-link">
+            <span class="icon">&#128269;</span>
+            Browse Notes
         </a>
         {% endif %}
     </div>

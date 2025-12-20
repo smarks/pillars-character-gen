@@ -57,6 +57,20 @@ class UserProfile(models.Model):
         return ', '.join(role_map.get(r, r) for r in self.roles) or 'None'
 
 
+class UserNotes(models.Model):
+    """Stores notes for a user. One notes document per user."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='notes')
+    content = models.TextField(blank=True, default='')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'User Notes'
+        verbose_name_plural = 'User Notes'
+
+    def __str__(self):
+        return f"Notes for {self.user.username}"
+
+
 class SavedCharacter(models.Model):
     """Stores a saved character for a user."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_characters')

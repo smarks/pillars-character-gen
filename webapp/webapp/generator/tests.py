@@ -2606,3 +2606,465 @@ class InputValidationTests(TestCase):
         })
         # Should not crash and use default
         self.assertRedirects(response, reverse('generator'))
+
+
+class UserNotesModelTests(TestCase):
+    """Tests for the UserNotes model."""
+
+    def setUp(self):
+        self.user = User.objects.create_user('testuser', password='testpass')
+
+    def test_create_user_notes(self):
+        """Test creating a UserNotes instance."""
+        from webapp.generator.models import UserNotes
+        notes = UserNotes.objects.create(user=self.user, content='Test content')
+        self.assertEqual(notes.user, self.user)
+        self.assertEqual(notes.content, 'Test content')
+        self.assertIsNotNone(notes.updated_at)
+
+    def test_user_notes_str(self):
+        """Test UserNotes string representation."""
+        from webapp.generator.models import UserNotes
+        notes = UserNotes.objects.create(user=self.user, content='Test')
+        self.assertEqual(str(notes), 'Notes for testuser')
+
+    def test_user_notes_default_content(self):
+        """Test that content defaults to empty string."""
+        from webapp.generator.models import UserNotes
+        notes = UserNotes.objects.create(user=self.user)
+        self.assertEqual(notes.content, '')
+
+    def test_user_notes_one_to_one(self):
+        """Test that each user can only have one notes entry."""
+        from webapp.generator.models import UserNotes
+        from django.db import IntegrityError
+        UserNotes.objects.create(user=self.user, content='First')
+        with self.assertRaises(IntegrityError):
+            UserNotes.objects.create(user=self.user, content='Second')
+
+    def test_user_notes_cascade_delete(self):
+        """Test that notes are deleted when user is deleted."""
+        from webapp.generator.models import UserNotes
+        UserNotes.objects.create(user=self.user, content='Test')
+        self.assertEqual(UserNotes.objects.count(), 1)
+        self.user.delete()
+        self.assertEqual(UserNotes.objects.count(), 0)
+
+    def test_user_notes_updated_at_changes(self):
+        """Test that updated_at changes when notes are modified."""
+        from webapp.generator.models import UserNotes
+        import time
+        notes = UserNotes.objects.create(user=self.user, content='Initial')
+        initial_updated = notes.updated_at
+        time.sleep(0.1)  # Small delay to ensure timestamp changes
+        notes.content = 'Updated content'
+        notes.save()
+        notes.refresh_from_db()
+        self.assertGreater(notes.updated_at, initial_updated)
+
+    def test_user_can_access_notes_via_related_name(self):
+        """Test accessing notes via user.notes related name."""
+        from webapp.generator.models import UserNotes
+        notes = UserNotes.objects.create(user=self.user, content='Via related')
+        self.assertEqual(self.user.notes.content, 'Via related')
+
+
+class UserNotesViewTests(TestCase):
+    """Tests for the user notes page view."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user('testuser', password='testpass')
+        UserProfile.objects.create(user=self.user, roles=['player'])
+
+    def test_notes_page_requires_login(self):
+        """Test that notes page requires authentication."""
+        response = self.client.get(reverse('notes'))
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('notes')}")
+
+    def test_notes_page_loads_for_authenticated_user(self):
+        """Test that notes page loads for logged-in user."""
+        self.client.login(username='testuser', password='testpass')
+        response = self.client.get(reverse('notes'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'My Notes')
+
+    def test_notes_page_creates_notes_on_first_visit(self):
+        """Test that UserNotes is created on first page visit."""
+        from webapp.generator.models import UserNotes
+        self.client.login(username='testuser', password='testpass')
+        self.assertEqual(UserNotes.objects.filter(user=self.user).count(), 0)
+        self.client.get(reverse('notes'))
+        self.assertEqual(UserNotes.objects.filter(user=self.user).count(), 1)
+
+    def test_notes_page_shows_existing_content(self):
+        """Test that existing notes content is displayed."""
+        from webapp.generator.models import UserNotes
+        UserNotes.objects.create(user=self.user, content='My existing notes')
+        self.client.login(username='testuser', password='testpass')
+        response = self.client.get(reverse('notes'))
+        self.assertContains(response, 'My existing notes')
+
+    def test_notes_page_has_textarea(self):
+        """Test that notes page has a textarea for input."""
+        self.client.login(username='testuser', password='testpass')
+        response = self.client.get(reverse('notes'))
+        self.assertContains(response, '<textarea')
+        self.assertContains(response, 'id="notes-content"')
+
+    def test_notes_page_has_back_link(self):
+        """Test that notes page has link back to home."""
+        self.client.login(username='testuser', password='testpass')
+        response = self.client.get(reverse('notes'))
+        self.assertContains(response, reverse('welcome'))
+
+    def test_notes_page_shows_last_saved_time(self):
+        """Test that notes page shows when notes were last saved."""
+        from webapp.generator.models import UserNotes
+        UserNotes.objects.create(user=self.user, content='Test')
+        self.client.login(username='testuser', password='testpass')
+        response = self.client.get(reverse('notes'))
+        self.assertContains(response, 'Last saved')
+
+
+class SaveUserNotesAPITests(TestCase):
+    """Tests for the save_user_notes API endpoint."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user('testuser', password='testpass')
+        UserProfile.objects.create(user=self.user, roles=['player'])
+        self.user2 = User.objects.create_user('testuser2', password='testpass')
+        UserProfile.objects.create(user=self.user2, roles=['player'])
+
+    def test_save_notes_requires_login(self):
+        """Test that save API requires authentication."""
+        response = self.client.post(
+            reverse('save_user_notes'),
+            data='{"content": "test"}',
+            content_type='application/json'
+        )
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('save_user_notes')}")
+
+    def test_save_notes_requires_post(self):
+        """Test that save API only accepts POST requests."""
+        self.client.login(username='testuser', password='testpass')
+        response = self.client.get(reverse('save_user_notes'))
+        self.assertEqual(response.status_code, 405)  # Method Not Allowed
+
+    def test_save_notes_creates_new_notes(self):
+        """Test that save API creates notes if they don't exist."""
+        from webapp.generator.models import UserNotes
+        self.client.login(username='testuser', password='testpass')
+        self.assertEqual(UserNotes.objects.filter(user=self.user).count(), 0)
+
+        response = self.client.post(
+            reverse('save_user_notes'),
+            data='{"content": "New notes content"}',
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertIn('updated_at', data)
+
+        notes = UserNotes.objects.get(user=self.user)
+        self.assertEqual(notes.content, 'New notes content')
+
+    def test_save_notes_updates_existing_notes(self):
+        """Test that save API updates existing notes."""
+        from webapp.generator.models import UserNotes
+        UserNotes.objects.create(user=self.user, content='Original content')
+        self.client.login(username='testuser', password='testpass')
+
+        response = self.client.post(
+            reverse('save_user_notes'),
+            data='{"content": "Updated content"}',
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        notes = UserNotes.objects.get(user=self.user)
+        self.assertEqual(notes.content, 'Updated content')
+
+    def test_save_notes_returns_updated_at(self):
+        """Test that save API returns the updated timestamp."""
+        self.client.login(username='testuser', password='testpass')
+        response = self.client.post(
+            reverse('save_user_notes'),
+            data='{"content": "test"}',
+            content_type='application/json'
+        )
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertIn('updated_at', data)
+        # Verify it's a valid ISO format timestamp
+        from datetime import datetime
+        datetime.fromisoformat(data['updated_at'].replace('Z', '+00:00'))
+
+    def test_save_notes_handles_empty_content(self):
+        """Test that save API handles empty content."""
+        self.client.login(username='testuser', password='testpass')
+        response = self.client.post(
+            reverse('save_user_notes'),
+            data='{"content": ""}',
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+
+    def test_save_notes_handles_missing_content_key(self):
+        """Test that save API handles missing content key gracefully."""
+        self.client.login(username='testuser', password='testpass')
+        response = self.client.post(
+            reverse('save_user_notes'),
+            data='{}',
+            content_type='application/json'
+        )
+        # Should succeed with empty content (defaults to '')
+        self.assertEqual(response.status_code, 200)
+
+    def test_save_notes_handles_invalid_json(self):
+        """Test that save API handles invalid JSON."""
+        self.client.login(username='testuser', password='testpass')
+        response = self.client.post(
+            reverse('save_user_notes'),
+            data='not valid json',
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertFalse(data['success'])
+        self.assertIn('error', data)
+
+    def test_save_notes_isolates_users(self):
+        """Test that users can only save their own notes."""
+        from webapp.generator.models import UserNotes
+        UserNotes.objects.create(user=self.user, content='User 1 notes')
+        UserNotes.objects.create(user=self.user2, content='User 2 notes')
+
+        # User 1 saves
+        self.client.login(username='testuser', password='testpass')
+        self.client.post(
+            reverse('save_user_notes'),
+            data='{"content": "User 1 updated"}',
+            content_type='application/json'
+        )
+
+        # Verify only user 1's notes changed
+        self.assertEqual(UserNotes.objects.get(user=self.user).content, 'User 1 updated')
+        self.assertEqual(UserNotes.objects.get(user=self.user2).content, 'User 2 notes')
+
+    def test_save_notes_handles_large_content(self):
+        """Test that save API handles large content."""
+        self.client.login(username='testuser', password='testpass')
+        large_content = 'x' * 100000  # 100KB of content
+        response = self.client.post(
+            reverse('save_user_notes'),
+            data=f'{{"content": "{large_content}"}}',
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_save_notes_handles_special_characters(self):
+        """Test that save API handles special characters and unicode."""
+        from webapp.generator.models import UserNotes
+        self.client.login(username='testuser', password='testpass')
+        special_content = 'Test with "quotes", newlines\n, tabs\t, and unicode: \u00e9\u00e8\u00ea'
+        import json
+        response = self.client.post(
+            reverse('save_user_notes'),
+            data=json.dumps({'content': special_content}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        notes = UserNotes.objects.get(user=self.user)
+        self.assertEqual(notes.content, special_content)
+
+
+class NotesNavigationTests(TestCase):
+    """Tests for Notes links in navigation."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user('testuser', password='testpass')
+        UserProfile.objects.create(user=self.user, roles=['player'])
+
+    def test_notes_link_in_nav_for_authenticated_user(self):
+        """Test that Notes link appears in top navigation for logged-in users."""
+        self.client.login(username='testuser', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, reverse('notes'))
+        self.assertContains(response, 'Notes')
+
+    def test_notes_link_not_in_nav_for_anonymous_user(self):
+        """Test that Notes link does not appear for anonymous users."""
+        response = self.client.get(reverse('welcome'))
+        self.assertNotContains(response, reverse('notes'))
+
+    def test_notes_link_on_welcome_page_for_authenticated_user(self):
+        """Test that My Notes link appears on welcome page for logged-in users."""
+        self.client.login(username='testuser', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, 'My Notes')
+
+    def test_notes_link_in_base_template_nav(self):
+        """Test that Notes link appears in base template navigation."""
+        self.client.login(username='testuser', password='testpass')
+        # Access any page to check the base template nav
+        response = self.client.get(reverse('generator'))
+        self.assertContains(response, '>Notes</a>')
+
+
+class AdminNotesViewTests(TestCase):
+    """Tests for admin viewing user notes in manage_users page."""
+
+    def setUp(self):
+        self.client = Client()
+        # Create admin user
+        self.admin = User.objects.create_user('admin', password='testpass')
+        UserProfile.objects.create(user=self.admin, roles=['admin'])
+        # Create regular user with notes
+        self.user = User.objects.create_user('testuser', password='testpass')
+        UserProfile.objects.create(user=self.user, roles=['player'])
+
+    def test_admin_can_see_user_notes_section(self):
+        """Test that admin can see User Notes section on manage_users page."""
+        from webapp.generator.models import UserNotes
+        UserNotes.objects.create(user=self.user, content='Test user notes content')
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('manage_users'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'User Notes')
+        self.assertContains(response, 'Test user notes content')
+
+    def test_admin_can_see_notes_column_in_users_table(self):
+        """Test that Notes column appears in users table."""
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('manage_users'))
+        self.assertContains(response, '<th>Notes</th>')
+
+    def test_admin_sees_view_link_for_users_with_notes(self):
+        """Test that View link appears for users who have notes."""
+        from webapp.generator.models import UserNotes
+        UserNotes.objects.create(user=self.user, content='Some notes')
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('manage_users'))
+        self.assertContains(response, f'href="#notes-{self.user.username}"')
+
+    def test_admin_sees_empty_message_when_no_notes(self):
+        """Test that appropriate message shows when no user has notes."""
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('manage_users'))
+        self.assertContains(response, 'No users have created notes yet.')
+
+    def test_admin_sees_notes_updated_at(self):
+        """Test that admin can see when notes were last updated."""
+        from webapp.generator.models import UserNotes
+        UserNotes.objects.create(user=self.user, content='Test')
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('manage_users'))
+        self.assertContains(response, 'Last updated:')
+
+
+class AdminNotesBrowserTests(TestCase):
+    """Tests for the admin notes browser page."""
+
+    def setUp(self):
+        self.client = Client()
+        # Create admin user
+        self.admin = User.objects.create_user('admin', password='testpass')
+        UserProfile.objects.create(user=self.admin, roles=['admin'])
+        # Create regular users with notes
+        self.user1 = User.objects.create_user('alice', password='testpass')
+        UserProfile.objects.create(user=self.user1, roles=['player'])
+        self.user2 = User.objects.create_user('bob', password='testpass')
+        UserProfile.objects.create(user=self.user2, roles=['player'])
+
+    def test_admin_notes_requires_admin(self):
+        """Test that admin notes page requires admin role."""
+        # Not logged in - redirects to login
+        response = self.client.get(reverse('admin_notes'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/login/', response.url)
+
+        # Logged in as regular user - redirects to welcome
+        self.client.login(username='alice', password='testpass')
+        response = self.client.get(reverse('admin_notes'))
+        self.assertRedirects(response, reverse('welcome'))
+
+    def test_admin_can_access_notes_browser(self):
+        """Test that admin can access the notes browser."""
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('admin_notes'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Browse User Notes')
+
+    def test_admin_sees_all_user_notes(self):
+        """Test that admin sees notes from all users."""
+        from webapp.generator.models import UserNotes
+        UserNotes.objects.create(user=self.user1, content='Alice notes content')
+        UserNotes.objects.create(user=self.user2, content='Bob notes content')
+
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('admin_notes'))
+        self.assertContains(response, 'Alice notes content')
+        self.assertContains(response, 'Bob notes content')
+
+    def test_admin_can_search_notes(self):
+        """Test that admin can search notes by content."""
+        from webapp.generator.models import UserNotes
+        UserNotes.objects.create(user=self.user1, content='Secret dragon quest')
+        UserNotes.objects.create(user=self.user2, content='Shopping list')
+
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('admin_notes'), {'q': 'dragon'})
+        self.assertContains(response, 'Secret dragon quest')
+        self.assertNotContains(response, 'Shopping list')
+
+    def test_admin_can_filter_by_user(self):
+        """Test that admin can filter notes by username."""
+        from webapp.generator.models import UserNotes
+        UserNotes.objects.create(user=self.user1, content='Alice notes')
+        UserNotes.objects.create(user=self.user2, content='Bob notes')
+
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('admin_notes'), {'user': 'alice'})
+        self.assertContains(response, 'Alice notes')
+        self.assertNotContains(response, 'Bob notes')
+
+    def test_admin_sees_results_count(self):
+        """Test that admin sees count of notes found."""
+        from webapp.generator.models import UserNotes
+        UserNotes.objects.create(user=self.user1, content='Note 1')
+        UserNotes.objects.create(user=self.user2, content='Note 2')
+
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('admin_notes'))
+        self.assertContains(response, '2 notes found')
+
+    def test_admin_sees_user_dropdown(self):
+        """Test that admin sees user filter dropdown."""
+        from webapp.generator.models import UserNotes
+        UserNotes.objects.create(user=self.user1, content='Note')
+
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('admin_notes'))
+        self.assertContains(response, '<select name="user"')
+        self.assertContains(response, 'alice')
+
+    def test_admin_notes_link_on_welcome_page(self):
+        """Test that Browse Notes link appears on welcome page for admin."""
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, reverse('admin_notes'))
+        self.assertContains(response, 'Browse Notes')
+
+    def test_browse_notes_link_on_manage_users(self):
+        """Test that Browse All Notes button appears on manage users page."""
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('manage_users'))
+        self.assertContains(response, reverse('admin_notes'))
+        self.assertContains(response, 'Browse All Notes')

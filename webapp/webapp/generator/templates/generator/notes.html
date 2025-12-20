@@ -1,0 +1,121 @@
+{% extends "generator/base.html" %}
+
+{% block title %}My Notes - Pillars{% endblock %}
+
+{% block extra_css %}
+.notes-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+.notes-textarea {
+    width: 100%;
+    min-height: 500px;
+    padding: 15px;
+    font-family: inherit;
+    font-size: 16px;
+    line-height: 1.6;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+}
+.notes-textarea:focus {
+    outline: none;
+    border-color: #666;
+}
+.save-status {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #666;
+}
+.save-status.saving {
+    color: #f90;
+}
+.save-status.saved {
+    color: #090;
+}
+.save-status.error {
+    color: #c00;
+}
+{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>My Notes</h1>
+    <a href="{% url 'welcome' %}" class="btn">&larr; Home</a>
+</div>
+
+<div class="notes-container">
+    <textarea id="notes-content" class="notes-textarea" placeholder="Write your notes here...">{{ notes.content }}</textarea>
+    <div id="save-status" class="save-status">
+        {% if notes.updated_at %}
+        Last saved: {{ notes.updated_at|date:"M d, Y H:i" }}
+        {% else %}
+        Not saved yet
+        {% endif %}
+    </div>
+</div>
+
+<script>
+(function() {
+    const textarea = document.getElementById('notes-content');
+    const statusEl = document.getElementById('save-status');
+    let lastSavedContent = textarea.value;
+    let saveTimeout = null;
+
+    function saveNotes() {
+        const content = textarea.value;
+
+        // Don't save if content hasn't changed
+        if (content === lastSavedContent) {
+            return;
+        }
+
+        statusEl.textContent = 'Saving...';
+        statusEl.className = 'save-status saving';
+
+        fetch('{% url "save_user_notes" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({ content: content }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                lastSavedContent = content;
+                const date = new Date(data.updated_at);
+                statusEl.textContent = 'Saved at ' + date.toLocaleTimeString();
+                statusEl.className = 'save-status saved';
+            } else {
+                statusEl.textContent = 'Error: ' + (data.error || 'Unknown error');
+                statusEl.className = 'save-status error';
+            }
+        })
+        .catch(error => {
+            statusEl.textContent = 'Error: Could not save';
+            statusEl.className = 'save-status error';
+        });
+    }
+
+    // Save on blur (when focus is lost)
+    textarea.addEventListener('blur', saveNotes);
+
+    // Also save after 2 seconds of inactivity while typing
+    textarea.addEventListener('input', function() {
+        if (saveTimeout) {
+            clearTimeout(saveTimeout);
+        }
+        saveTimeout = setTimeout(saveNotes, 2000);
+    });
+
+    // Save before leaving the page
+    window.addEventListener('beforeunload', function(e) {
+        if (textarea.value !== lastSavedContent) {
+            saveNotes();
+        }
+    });
+})();
+</script>
+{% endblock %}

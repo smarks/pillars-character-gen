@@ -125,7 +125,7 @@ class AdminUserCreationForm(UserCreationForm):
 from django.contrib import messages
 from django.http import JsonResponse, FileResponse, Http404
 from django.views.decorators.http import require_POST
-from .models import SavedCharacter
+from .models import SavedCharacter, UserNotes
 from pillars import generate_character
 from pillars.attributes import (
     roll_single_year,
@@ -1444,6 +1444,20 @@ def handbook_section(request, section: str):
     })
 
 
+def serve_reference_html(request, filename):
+    """Serve standalone HTML files from the references directory."""
+    # Security: prevent directory traversal
+    if '..' in filename or filename.startswith('/'):
+        raise Http404("Invalid filename")
+
+    html_path = os.path.join(settings.BASE_DIR, '..', 'references', filename)
+
+    if not os.path.exists(html_path):
+        raise Http404("File not found")
+
+    return FileResponse(open(html_path, 'rb'), content_type='text/html')
+
+
 def serve_reference_image(request, filename):
     """Serve images from the references/images directory."""
     import mimetypes
@@ -1697,6 +1711,10 @@ def manage_users(request):
             characters_by_user[username] = []
         characters_by_user[username].append(char)
 
+    # Get all user notes
+    all_notes = UserNotes.objects.all().select_related('user').order_by('user__username')
+    notes_by_user = {note.user.username: note for note in all_notes}
+
     # Handle user creation form submission
     if request.method == 'POST' and 'create_user' in request.POST:
         create_form = AdminUserCreationForm(request.POST)
@@ -1716,6 +1734,7 @@ def manage_users(request):
         'role_choices': role_choices,
         'create_form': create_form,
         'characters_by_user': characters_by_user,
+        'notes_by_user': notes_by_user,
     })
 
 
@@ -2446,3 +2465,61 @@ def recalculate_derived(char_data):
         'body_points': body_points,
         'fatigue_pool': str_val,  # Fatigue Pool = base STR value
     }
+
+
+@login_required
+def user_notes(request):
+    """View for user's personal notes page."""
+    notes, created = UserNotes.objects.get_or_create(user=request.user)
+    return render(request, 'generator/notes.html', {
+        'notes': notes,
+    })
+
+
+@login_required
+@require_POST
+def save_user_notes(request):
+    """API endpoint to save user notes. Called on blur/focus loss."""
+    try:
+        data = json.loads(request.body)
+        content = data.get('content', '')
+
+        notes, created = UserNotes.objects.get_or_create(user=request.user)
+        notes.content = content
+        notes.save()
+
+        return JsonResponse({
+            'success': True,
+            'updated_at': notes.updated_at.isoformat(),
+        })
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@admin_required
+def admin_notes(request):
+    """Admin view to browse and search all user notes."""
+    search_query = request.GET.get('q', '').strip()
+    user_filter = request.GET.get('user', '').strip()
+
+    notes = UserNotes.objects.all().select_related('user').order_by('-updated_at')
+
+    # Filter by user
+    if user_filter:
+        notes = notes.filter(user__username__icontains=user_filter)
+
+    # Search in content
+    if search_query:
+        notes = notes.filter(content__icontains=search_query)
+
+    # Get list of users who have notes for the filter dropdown
+    users_with_notes = UserNotes.objects.values_list('user__username', flat=True).distinct().order_by('user__username')
+
+    return render(request, 'generator/admin_notes.html', {
+        'notes': notes,
+        'search_query': search_query,
+        'user_filter': user_filter,
+        'users_with_notes': users_with_notes,
+    })
