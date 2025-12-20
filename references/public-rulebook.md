@@ -3,13 +3,13 @@
 *A Fantasy Role-Playing Game*
 by Spencer Marks standing on the shoulders of Steve Jackson, Gary Gygax, Paul Gazis, the early members of MIT SGS, Ursula K. Le Guin, and, of course, J.R.R. Tolkien adn with the help of Stan Heckman.  
 
-------
+---- 
 
 # Public Rules
  
 *This section is for all players*
 
-## Lore 
+## Lore
 
 ### Places
 
@@ -27,7 +27,16 @@ To the south east lies much water and finally the **Old Emporium**. While city s
 
 ### Creating a Character
 
-You make your own character by rolling dice and using your imagination.
+# Character Generation
+
+Pillars offers several ways to generate a character. The most fun way, in my opinion, is to **roll dice** and use the tables below to flesh out your character. Alternatively, you can make your own character by rolling dice where required (not many places) and **specifying what skills** you'd like. Finally, you can use the **online character generator** to create your entire character in a web browser. This is handy for me, the GM, as I'll have immediate access to your character stats. If you opt for the more traditional methods of character generation, I'll probably ask you to register your character so I have access to their stats.
+
+You can even combine or mix and match, all three of these methods if you'd like.  The goals here are the same as the those in the game in general: 1) what's the most fun and  2) what gets you the character you want to play. 
+Some players like listening to the dice and seeing what path they take your character on, while players aren't as forgiving. _A special note to mini-maxers aka Known Optimizers - you can't try, but I wouldn't bother)._ 
+
+You can even combine or mix and match all three of these methods if you'd like. The goals, as always, are: what's the most fun, and what gets you the character you want to play. Some players like listening to the dice and seeing what path they create for them, while others aren't as forgiving.
+
+
 
 ### Attributes
 
@@ -46,7 +55,7 @@ In Pillars all characters and other living things have common attributes.
 Players can roll 3d6 to determine each attribute **OR** divide **65 points** between the six core attributes.
 
 | Attribute | Modifier |
-|-----------|----------|
+| --------- | -------- |
 | 3         | −5       |
 | 4         | −4       |
 | 5         | −3       |
@@ -98,21 +107,21 @@ Players can roll 3d6 to determine each attribute **OR** divide **65 points** bet
 
 **Height:** Choose or roll 1d6:
 
-| D6  | Hands | Imperial | Notes                                    |
-|-----|-------|----------|------------------------------------------|
-| 1   | 14    | 4'8"     | Roll again on 1: subtract 4" each time   |
-| 2   | 15    | 5'0"     |                                          |
-| 3   | 16    | 5'4"     |                                          |
-| 4   | 17    | 5'8"     |                                          |
-| 5   | 18    | 6'0"     |                                          |
-| 6   | 19    | 6'4"     | Roll again on 6: add 4" each time        |
+| D6  | Hands | Imperial | Notes                                  |
+| --- | ----- | -------- | -------------------------------------- |
+| 1   | 14    | 4'8"     | Roll again on 1: subtract 4" each time |
+| 2   | 15    | 5'0"     |                                        |
+| 3   | 16    | 5'4"     |                                        |
+| 4   | 17    | 5'8"     |                                        |
+| 5   | 18    | 6'0"     |                                        |
+| 6   | 19    | 6'4"     | Roll again on 6: add 4" each time      |
 
 **Weight:** Base weight is player's choice between 8 and 12 stones (or roll 1d6). A stone is 14 pounds.
 
 Final weight = Base weight + (STR ÷ 2) stones
 
 | D6  | Base Weight | lbs |
-|-----|-------------|-----|
+| --- | ----------- | --- |
 | 1   | 8           | 112 |
 | 2   | 9           | 126 |
 | 3   | 10          | 140 |
@@ -132,6 +141,9 @@ Fatigue tracks the depletion of physical or mental energy due to exertion, stres
 
 **Normal hits reduce Fatigue only.**
 
+Death by exhaustion. If you go negative your total amount of original fatigue points make survial saving (CON =\> 3d6) unit the character either recovers or dies. 
+
+
 #### Body Points
 
 Body points represent how many wounds a character can sustain before dying.
@@ -142,19 +154,26 @@ Body points represent how many wounds a character can sustain before dying.
 
 **Critical hits (roll of 3 or 4) reduce both Fatigue AND Body.**
 
-#### Injury Thresholds
+#### Injury Thresholds & definition of Death
 
 These apply to both Fatigue and Body (whichever is worse):
 
-| Condition                        | Effect                          |
-|----------------------------------|---------------------------------|
-| Down to ½ (but above 5)          | −1 to all rolls                 |
-| Between 0 and 5                  | −2 to all rolls                 |
-| 0                                | Unconscious                     |
-| Negative starting value          | Saving throw vs death each turn |
-| Negative 2× starting value       | Dead                            |
+| Condition                   | Effect                          |
+| --------------------------- | ------------------------------- |
+| Down to ½ (but above 5)     | −1 to all rolls                 |
+| Between 0 and 5             | −2 to all rolls                 |
+| 0                           | Unconscious                     |
+| Negative 1/2 starting value | Saving throw vs death each turn |
+| Negative 2× starting value  | Dead                            |
 
 ---
+e.g. 
+
+A character with a BODY of 30 goes unconscious when their remaining body points reach 0
+When the number of body points drops to 1/2 of the total, in this case, -15
+the character has to make surival roles (=\> CON 3D6).
+When the character's body reaches negative their total original body, in this case 30, they die.
+
 
 ## Character Background
 
@@ -189,7 +208,7 @@ Roll percentile dice or choose Merchant/Commoner. You must roll for Nobility.
 Roll percentile dice or choose:
 
 | Percentile | Location   |
-|------------|------------|
+| ---------- | ---------- |
 | 01-20      | City       |
 | 21-70      | Village    |
 | 71-99      | Rural      |
@@ -206,7 +225,7 @@ Roll percentile dice or choose:
 Roll percentile dice (or choose if you don't want to be rich):
 
 | Percentile | Level       | Starting Coin         |
-|------------|-------------|-----------------------|
+| ---------- | ----------- | --------------------- |
 | 0-15       | Subsistence | 10                    |
 | 16-70      | Moderate    | 100                   |
 | 71-95      | Merchant    | 100 + percentile dice |
@@ -226,22 +245,22 @@ For every year of prior experience:
 
 ### Aging
 
-| Term | 4  | 5  | 6  | 7  | 8  | 9  | 10 | 11 | 12 | 13 |
-|------|----|----|----|----|----|----|----|----|----|----|
-| Age  | 34 | 38 | 42 | 46 | 50 | 54 | 58 | 62 | 66 | 70 |
-| STR  | 0  | −1 | −1 | −1 | −1 | −1 | −1 | −1 | −1 | −2 |
-| DEX  | 0  | −1 | −1 | −1 | −1 | −1 | −1 | −1 | −1 | −2 |
-| INT  | 0  | 0  | 0  | 0  | 0  | 0  | 0  | 0  | 0  | −1 |
-| WIS  | 0  | 0  | 0  | 0  | 0  | 0  | 0  | 0  | 0  | −1 |
-| CON  | 0  | 0  | −1 | −1 | −1 | −1 | −1 | −1 | −1 | −2 |
+| Term | 4   | 5   | 6   | 7   | 8   | 9   | 10  | 11  | 12  | 13  |
+| ---- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Age  | 34  | 38  | 42  | 46  | 50  | 54  | 58  | 62  | 66  | 70  |
+| STR  | 0   | −1  | −1  | −1  | −1  | −1  | −1  | −1  | −1  | −2  |
+| DEX  | 0   | −1  | −1  | −1  | −1  | −1  | −1  | −1  | −1  | −2  |
+| INT  | 0   | 0   | 0   | 0   | 0   | 0   | 0   | 0   | 0   | −1  |
+| WIS  | 0   | 0   | 0   | 0   | 0   | 0   | 0   | 0   | 0   | −1  |
+| CON  | 0   | 0   | −1  | −1  | −1  | −1  | −1  | −1  | −1  | −2  |
 
 ### Survivability
 
 Roll 3d6 higher than the listed value. STR, DEX, INT, WIS modifiers apply.
 
-| Track    | Army | Rangers | Navy | Officer | Random  | Worker | Crafts | Merchant |
-|----------|------|---------|------|---------|---------|--------|--------|----------|
-| Target   | 5    | 6       | 5    | 5       | roll d8 | 4      | 3      | 3        |
+| Track  | Army | Rangers | Navy | Officer | Random  | Worker | Crafts | Merchant |
+| ------ | ---- | ------- | ---- | ------- | ------- | ------ | ------ | -------- |
+| Target | 5    | 6       | 5    | 5       | roll d8 | 4      | 3      | 3        |
 
 ### Skill Tracks
 
@@ -288,26 +307,26 @@ Roll 1d6 or choose craft type:
 
 For each year in a track, roll 1d12:
 
-| 1d12   | Army            | Rangers                      | Navy             | Officer   | Random             | Worker             | Crafts             | Merchant               |
-|--------|-----------------|------------------------------|------------------|-----------|--------------------|--------------------|--------------------|-----------------------|
-| **1**  | Sword           | Sword                        | Cutlass          | Morale    | Climbing & Running | Laborer (STR, DEX) | Smith              | Coins                 |
-| **2**  | Archery         | Archery                      | Sailing          | Morale    | Medic              | Morale             | Smith              | Literacy              |
-| **3**  | Morale          | Archery                      | Ropes & climbing | Tactics   | Stealth            | Growing            | Builder            | Persuade              |
-| **4**  | Running         | Tracking                     | Swimming         | Tactics   | −1 STR             | Wood Lore          | Arts & Crafts      | Persuade              |
-| **5**  | Literacy        | Course / Path                | Medic            | Logistics | −1 DEX             | Portage            | Potions/Herbs      | Weather, Course/Path  |
-| **6**  | Medic           | Wood lore                    | Weather          | Medic     | Persuade           | Builder            | Medic              | Ken                   |
-| **7**  | Climbing        | Medic & Herb Lore            | Literacy         | Persuade  | Potions/Herbs      | Mining             | Literacy           | Ken                   |
-| **8**  | STR             | STR                          | STR              | STR       | STR                | STR                | STR                | −1 STR                |
-| **9**  | DEX             | DEX                          | DEX              | DEX       | DEX                | DEX                | DEX                | −1 DEX                |
-| **10** | Medic           | INT                          | INT              | INT       | Crafts Skill       | INT                | INT                | Talent                |
-| **11** | Ranger Skill    | Stealth, weather, wood lore  | Officer Skill    | Promotion | Jack of All Trades | Random             | Merchant Skill     | Random                |
-| **12** | Field Promotion | Talent                       | Field Promotion  | Random    | Random             | Crafts skill       | Jack of All Trades | Jack of All Trades    |
+| 1d12   | Army            | Rangers                     | Navy             | Officer   | Random             | Worker             | Crafts             | Merchant             |
+| ------ | --------------- | --------------------------- | ---------------- | --------- | ------------------ | ------------------ | ------------------ | -------------------- |
+| **1**  | Sword           | Sword                       | Cutlass          | Morale    | Climbing & Running | Laborer (STR, DEX) | Smith              | Coins                |
+| **2**  | Archery         | Archery                     | Sailing          | Morale    | Medic              | Morale             | Smith              | Literacy             |
+| **3**  | Morale          | Archery                     | Ropes & climbing | Tactics   | Stealth            | Growing            | Builder            | Persuade             |
+| **4**  | Running         | Tracking                    | Swimming         | Tactics   | −1 STR             | Wood Lore          | Arts & Crafts      | Persuade             |
+| **5**  | Literacy        | Course / Path               | Medic            | Logistics | −1 DEX             | Portage            | Potions/Herbs      | Weather, Course/Path |
+| **6**  | Medic           | Wood lore                   | Weather          | Medic     | Persuade           | Builder            | Medic              | Ken                  |
+| **7**  | Climbing        | Medic & Herb Lore           | Literacy         | Persuade  | Potions/Herbs      | Mining             | Literacy           | Ken                  |
+| **8**  | STR             | STR                         | STR              | STR       | STR                | STR                | STR                | −1 STR               |
+| **9**  | DEX             | DEX                         | DEX              | DEX       | DEX                | DEX                | DEX                | −1 DEX               |
+| **10** | Medic           | INT                         | INT              | INT       | Crafts Skill       | INT                | INT                | Talent               |
+| **11** | Ranger Skill    | Stealth, weather, wood lore | Officer Skill    | Promotion | Jack of All Trades | Random             | Merchant Skill     | Random               |
+| **12** | Field Promotion | Talent                      | Field Promotion  | Random    | Random             | Crafts skill       | Jack of All Trades | Jack of All Trades   |
 
 If you already have a skill and roll it again, you get +1 toward the next skill level.
 
 ---
 
-## Magic 
+## Magic
 
 ### Mana Pool
 
@@ -329,13 +348,13 @@ Very low and very high rolls have special effects—some fortunate, some catastr
 
 Multiple skill points in a spell grant additional abilities:
 
-| Level | Benefit                                                                 |
-|-------|-------------------------------------------------------------------------|
-| 2     | Cast without hand gestures                                              |
-| 3     | Cast without verbal incantation; protection from same spell             |
-| 4     | Reduced mana cost; halt same spell                                      |
-| 5     | Further reduced cost; reflect same spell back onto caster               |
-| 6     | Minimal cost; invert spell; reflect spell group back onto caster        |
+| Level | Benefit                                                          |
+| ----- | ---------------------------------------------------------------- |
+| 2     | Cast without hand gestures                                       |
+| 3     | Cast without verbal incantation; protection from same spell      |
+| 4     | Reduced mana cost; halt same spell                               |
+| 5     | Further reduced cost; reflect same spell back onto caster        |
+| 6     | Minimal cost; invert spell; reflect spell group back onto caster |
 
 ### Renewing Spells
 
@@ -449,62 +468,62 @@ A turn represents approximately **five seconds** of action. Nothing happens simu
 
 ### Turn Sequence
 
-| Phase | Name                 | Order                    | Description                                                    |
-|-------|----------------------|--------------------------|----------------------------------------------------------------|
-| 1     | **Initiative**       | 1d6 per side             | Winner chooses to move first or second                         |
-| 2     | **Renew Spells**     | DEX+INT+WIS (high→low)   | Pay mana to maintain continuing spells                         |
-| 3     | **Initial Movement** | Initiative order         | Move or yield; movement stops upon engagement                  |
-| 4     | **Final Movement**   | Initiative order         | Those who yielded now move                                     |
-| 5     | **Actions**          | adjDEX (high→low)        | Execute chosen action                                          |
-| 6     | **Forced Retreat**   | —                        | Those who dealt damage and took none may push enemies back     |
+| Phase | Name                 | Order                  | Description                                                |
+| ----- | -------------------- | ---------------------- | ---------------------------------------------------------- |
+| 1     | **Initiative**       | 1d6 per side           | Winner chooses to move first or second                     |
+| 2     | **Renew Spells**     | DEX+INT+WIS (high→low) | Pay mana to maintain continuing spells                     |
+| 3     | **Initial Movement** | Initiative order       | Move or yield; movement stops upon engagement              |
+| 4     | **Final Movement**   | Initiative order       | Those who yielded now move                                 |
+| 5     | **Actions**          | adjDEX (high→low)      | Execute chosen action                                      |
+| 6     | **Forced Retreat**   | —                      | Those who dealt damage and took none may push enemies back |
 
 ### Action Options
 
 #### Disengaged Figures
 
-| Option | Name              | Move       | Action                                          |
-|--------|-------------------|------------|-------------------------------------------------|
-| a      | MOVE              | Full MA    | None (movement only). Fatigue 1/turn            |
-| b      | CHARGE ATTACK     | ≤½ MA      | Melee attack or HTH                             |
-| c      | DODGE             | ≤½ MA      | +1 die to be hit (missiles/thrown/missile spells)|
-| d      | DROP              | ≤½ MA      | Go prone or kneeling                            |
-| e      | READY WEAPON      | ≤2 hex     | Re-sling current, ready new weapon/shield       |
-| f      | MISSILE ATTACK    | ≤1 hex     | Fire bow, crossbow, or thrown weapon            |
-| g      | STAND UP          | 0          | Rise from prone/kneeling (entire turn)          |
-|        | CRAWL             | 2 hex      | Move while prone (stay prone)                   |
-| h      | CAST SPELL        | ≤1 hex     | Attempt any spell                               |
-| i      | DISBELIEVE        | ≤1 hex     | See through one illusion                        |
+| Option | Name           | Move    | Action                                            |
+| ------ | -------------- | ------- | ------------------------------------------------- |
+| a      | MOVE           | Full MA | None (movement only). Fatigue 1/turn              |
+| b      | CHARGE ATTACK  | ≤½ MA   | Melee attack or HTH                               |
+| c      | DODGE          | ≤½ MA   | +1 die to be hit (missiles/thrown/missile spells) |
+| d      | DROP           | ≤½ MA   | Go prone or kneeling                              |
+| e      | READY WEAPON   | ≤2 hex  | Re-sling current, ready new weapon/shield         |
+| f      | MISSILE ATTACK | ≤1 hex  | Fire bow, crossbow, or thrown weapon              |
+| g      | STAND UP       | 0       | Rise from prone/kneeling (entire turn)            |
+|        | CRAWL          | 2 hex   | Move while prone (stay prone)                     |
+| h      | CAST SPELL     | ≤1 hex  | Attempt any spell                                 |
+| i      | DISBELIEVE     | ≤1 hex  | See through one illusion                          |
 
 #### Engaged Figures
 
-| Option | Name              | Move         | Action                                        |
-|--------|-------------------|--------------|-----------------------------------------------|
-| j      | ATTACK            | Shift/still  | Melee attack (non-missile)                    |
-| k      | DEFEND            | Shift/still  | +1 die to be hit (melee/thrown)               |
-| l      | ONE LAST SHOT     | Still        | Fire missile (if ready before engaged)        |
-| m      | CHANGE WEAPON     | Shift/still  | Drop current, ready new non-missile           |
-| n      | DISENGAGE         | Shift/still  | Move 1 hex any direction instead of attack    |
-| o      | ATTEMPT HTH       | Shift/still  | Move INTO enemy hex, bare hands/dagger        |
-| p      | STAND UP          | Still        | Rise from prone/kneeling (entire turn)        |
-| q      | PICK UP WEAPON    | Still        | Drop yours, grab from hex/adjacent            |
-| r      | CAST SPELL        | Shift/still  | Attempt any spell                             |
-| s      | DISBELIEVE        | Shift/still  | See through one illusion                      |
+| Option | Name           | Move        | Action                                     |
+| ------ | -------------- | ----------- | ------------------------------------------ |
+| j      | ATTACK         | Shift/still | Melee attack (non-missile)                 |
+| k      | DEFEND         | Shift/still | +1 die to be hit (melee/thrown)            |
+| l      | ONE LAST SHOT  | Still       | Fire missile (if ready before engaged)     |
+| m      | CHANGE WEAPON  | Shift/still | Drop current, ready new non-missile        |
+| n      | DISENGAGE      | Shift/still | Move 1 hex any direction instead of attack |
+| o      | ATTEMPT HTH    | Shift/still | Move INTO enemy hex, bare hands/dagger     |
+| p      | STAND UP       | Still       | Rise from prone/kneeling (entire turn)     |
+| q      | PICK UP WEAPON | Still       | Drop yours, grab from hex/adjacent         |
+| r      | CAST SPELL     | Shift/still | Attempt any spell                          |
+| s      | DISBELIEVE     | Shift/still | See through one illusion                   |
 
 #### Hand-to-Hand Combat
 
-| Option | Name            | Action                                          |
-|--------|-----------------|-------------------------------------------------|
-| t      | HTH ATTACK      | Bare hands or dagger. Both get +4 DEX           |
-| u      | DRAW DAGGER     | Roll 3d6 ≤ DEX to ready dagger                  |
-| v      | DISENGAGE       | Roll 4d6 ≤ DEX → stand, move to adjacent        |
-|        | CAST SPELL      | If hands free or no-gesture spell               |
+| Option | Name        | Action                                   |
+| ------ | ----------- | ---------------------------------------- |
+| t      | HTH ATTACK  | Bare hands or dagger. Both get +4 DEX    |
+| u      | DRAW DAGGER | Roll 3d6 ≤ DEX to ready dagger           |
+| v      | DISENGAGE   | Roll 4d6 ≤ DEX → stand, move to adjacent |
+|        | CAST SPELL  | If hands free or no-gesture spell        |
 
 ### Movement
 
 **Base Movement Allowance: MA = DEX − 2** (minimum 4)
 
 | DEX | Base MA |
-|-----|---------|
+| --- | ------- |
 | 8   | 6       |
 | 9   | 7       |
 | 10  | 8       |
@@ -521,25 +540,25 @@ A turn represents approximately **five seconds** of action. Nothing happens simu
 
 Based on weight carried compared to STR:
 
-| Load Level   | Weight Carried      | MA Mod | Restrictions         |
-|--------------|---------------------|--------|----------------------|
-| Unencumbered | Up to STR lbs       | 0      | —                    |
-| Light        | STR+1 to STR×1.5    | −1     | —                    |
-| Medium       | STR×1.5+1 to STR×2  | −2     | Cannot Run           |
-| Heavy        | STR×2+1 to STR×2.5  | −4     | Cannot Run or Jog    |
-| Overloaded   | Over STR×2.5        | Walk   | 1 hex max            |
+| Load Level   | Weight Carried     | MA Mod | Restrictions      |
+| ------------ | ------------------ | ------ | ----------------- |
+| Unencumbered | Up to STR lbs      | 0      | —                 |
+| Light        | STR+1 to STR×1.5   | −1     | —                 |
+| Medium       | STR×1.5+1 to STR×2 | −2     | Cannot Run        |
+| Heavy        | STR×2+1 to STR×2.5 | −4     | Cannot Run or Jog |
+| Overloaded   | Over STR×2.5       | Walk   | 1 hex max         |
 
 **Dropping a Pack:** Free action at start of movement. Picking up takes one full turn.
 
 ### Movement Speeds
 
-| Speed          | Distance   | Fatigue Cost                    | Available Actions              |
-|----------------|------------|---------------------------------|--------------------------------|
-| Run            | Full MA    | 1 per turn                      | None (movement only)           |
-| Jog            | Half MA    | None (combat) / 1 per 10 min    | Charge Attack, Dodge, Drop     |
-| Walk           | Up to 2 hex| None                            | Ready Weapon                   |
-| Walk (slow)    | Up to 1 hex| None                            | Cast Spell, Missile, Disbelieve|
-| Stand Still    | 0          | None                            | Stand Up, Pick Up Weapon       |
+| Speed       | Distance    | Fatigue Cost                 | Available Actions               |
+| ----------- | ----------- | ---------------------------- | ------------------------------- |
+| Run         | Full MA     | 1 per turn                   | None (movement only)            |
+| Jog         | Half MA     | None (combat) / 1 per 10 min | Charge Attack, Dodge, Drop      |
+| Walk        | Up to 2 hex | None                         | Ready Weapon                    |
+| Walk (slow) | Up to 1 hex | None                         | Cast Spell, Missile, Disbelieve |
+| Stand Still | 0           | None                         | Stand Up, Pick Up Weapon        |
 
 ### Facing
 
@@ -551,11 +570,11 @@ Each figure faces one hex side, determining front, side, and rear hexes.
 
 ### Engagement
 
-| Figure Type     | Engaged When...                                              |
-|-----------------|--------------------------------------------------------------|
-| One-hex figure  | In an armed enemy's front hex                                |
-| 3–6 hex figure  | In front hexes of 2+ one-hex figures (or 1 multi-hex)        |
-| 7-hex figure    | In front hexes of 3+ one-hex figures (or 1 multi-hex)        |
+| Figure Type    | Engaged When...                                       |
+| -------------- | ----------------------------------------------------- |
+| One-hex figure | In an armed enemy's front hex                         |
+| 3–6 hex figure | In front hexes of 2+ one-hex figures (or 1 multi-hex) |
+| 7-hex figure   | In front hexes of 3+ one-hex figures (or 1 multi-hex) |
 
 Figures **stop immediately** when engaged.
 
@@ -565,23 +584,23 @@ Roll **3d6 ≤ adjusted DEX** to hit.
 
 #### Automatic Results (3d6)
 
-| Roll | Result                              |
-|------|-------------------------------------|
-| 3    | Triple damage, hits Fatigue AND Body|
+| Roll | Result                                     |
+| ---- | ------------------------------------------ |
+| 3    | Triple damage, hits Fatigue AND Body       |
 | 4    | Double damage + bleeding, Fatigue AND Body |
-| 5    | Auto-hit, Fatigue only              |
-| 16   | Auto-miss                           |
-| 17   | Auto-miss, drop weapon              |
-| 18   | Auto-miss, break weapon             |
+| 5    | Auto-hit, Fatigue only                     |
+| 16   | Auto-miss                                  |
+| 17   | Auto-miss, drop weapon                     |
+| 18   | Auto-miss, break weapon                    |
 
 #### 4-Dice Results (vs Defending/Dodging)
 
-| Roll  | Result                              |
-|-------|-------------------------------------|
-| 4-5   | Auto-hit                            |
-| 20+   | Auto-miss                           |
-| 21-22 | Auto-miss, drop weapon              |
-| 23-24 | Auto-miss, break weapon             |
+| Roll  | Result                  |
+| ----- | ----------------------- |
+| 4-5   | Auto-hit                |
+| 20+   | Auto-miss               |
+| 21-22 | Auto-miss, drop weapon  |
+| 23-24 | Auto-miss, break weapon |
 
 ### DEX Adjustments
 
@@ -589,20 +608,20 @@ All adjustments are cumulative.
 
 #### Positional Advantage
 
-| Situation                              | Adjustment |
-|----------------------------------------|------------|
-| Striking from enemy's side hex         | +2         |
-| Striking from enemy's rear hex         | +4         |
-| Pole-weapon vs. charging opponent      | +2         |
-| Crossbow fired from prone              | +1         |
-| Waiting for an opening (1 turn)        | +1         |
-| Waiting for an opening (2+ turns)      | +2         |
-| HTH combat                             | +4 (both)  |
+| Situation                         | Adjustment |
+| --------------------------------- | ---------- |
+| Striking from enemy's side hex    | +2         |
+| Striking from enemy's rear hex    | +4         |
+| Pole-weapon vs. charging opponent | +2         |
+| Crossbow fired from prone         | +1         |
+| Waiting for an opening (1 turn)   | +1         |
+| Waiting for an opening (2+ turns) | +2         |
+| HTH combat                        | +4 (both)  |
 
 #### Target Conditions
 
 | Condition                              | Adjustment |
-|----------------------------------------|------------|
+| -------------------------------------- | ---------- |
 | Target is invisible                    | −6         |
 | Target is in a shadow hex              | −4         |
 | Target is a one-hex figure in flight   | −4         |
@@ -612,7 +631,7 @@ All adjustments are cumulative.
 #### Your Conditions
 
 | Condition                              | Adjustment |
-|----------------------------------------|------------|
+| -------------------------------------- | ---------- |
 | In shadow hex or firing through shadow | −6         |
 | Two-weapon fighting                    | −4 on both |
 | Sweeping blow (all 3 front hexes)      | −4         |
@@ -626,18 +645,18 @@ All adjustments are cumulative.
 
 #### Range (Missile Weapons)
 
-| Range (Megahexes) | Adjustment |
-|-------------------|------------|
-| 0–2 MH            | 0          |
-| 3–4 MH            | −1         |
-| 5–6 MH            | −2         |
-| 7–8 MH            | −3         |
-| (continues)       | −1 per 2 MH|
+| Range (Megahexes) | Adjustment  |
+| ----------------- | ----------- |
+| 0–2 MH            | 0           |
+| 3–4 MH            | −1          |
+| 5–6 MH            | −2          |
+| 7–8 MH            | −3          |
+| (continues)       | −1 per 2 MH |
 
 #### Armor and Shield
 
 | Equipment          | Adjustment |
-|--------------------|------------|
+| ------------------ | ---------- |
 | Small/spike shield | 0          |
 | Large shield       | −1         |
 | Tower shield       | −2         |
@@ -679,20 +698,20 @@ A figure may enter an enemy's hex if:
 
 **Bare-Handed Damage by STR:**
 
-| STR       | Damage | STR       | Damage |
-|-----------|--------|-----------|--------|
-| 8 or less | 1d−4   | 17–20     | 1d+1   |
-| 9–10      | 1d−3   | 21–24     | 1d+2   |
-| 11–12     | 1d−2   | 25–30     | 1d+3   |
-| 13–14     | 1d−1   | 31–40     | 2d+1   |
-| 15–16     | 1d     | 41–50     | 3d+1   |
+| STR       | Damage | STR   | Damage |
+| --------- | ------ | ----- | ------ |
+| 8 or less | 1d−4   | 17–20 | 1d+1   |
+| 9–10      | 1d−3   | 21–24 | 1d+2   |
+| 11–12     | 1d−2   | 25–30 | 1d+3   |
+| 13–14     | 1d−1   | 31–40 | 2d+1   |
+| 15–16     | 1d     | 41–50 | 3d+1   |
 
 #### Defending and Dodging
 
-| Action  | Usable By         | Defends Against              | Effect              |
-|---------|-------------------|------------------------------|---------------------|
-| Dodge   | Disengaged        | Missiles and thrown only     | Attacker rolls 4d6  |
-| Defend  | Engaged           | Melee and non-missile only   | Attacker rolls 4d6  |
+| Action | Usable By  | Defends Against            | Effect             |
+| ------ | ---------- | -------------------------- | ------------------ |
+| Dodge  | Disengaged | Missiles and thrown only   | Attacker rolls 4d6 |
+| Defend | Engaged    | Melee and non-missile only | Attacker rolls 4d6 |
 
 #### Forced Retreat
 
@@ -714,13 +733,13 @@ If you dealt physical hits and took none:
 
 - **Poverty line**: 10 gp/month (barely surviving)
 - **Decent living**: 100 gp/month (comfortable middle class)
-- **Daily survival**: ~0.3 gp/day (3 silver pieces)
-- **Comfortable daily**: ~3 gp/day
+- **Daily survival**: \~0.3 gp/day (3 silver pieces)
+- **Comfortable daily**: \~3 gp/day
 
 ### Knives and Swords
 
 | Weapon                   | Damage | STR | Cost | Wt (lbs) |
-|--------------------------|--------|-----|------|----------|
+| ------------------------ | ------ | --- | ---- | -------- |
 | Dagger††                 | 1d−1   | —   | 10   | 0.2      |
 | Rapier                   | 1d     | 9   | 40   | 1.0      |
 | Saber                    | 2d−2   | 10  | 50   | 3.0      |
@@ -734,7 +753,7 @@ If you dealt physical hits and took none:
 ### Axes/Hammers/Maces
 
 | Weapon        | Damage | STR | Cost | Wt (lbs) |
-|---------------|--------|-----|------|----------|
+| ------------- | ------ | --- | ---- | -------- |
 | Club††        | Varies | —   | 10   | 3+       |
 | Hatchet††     | 1d     | 9   | 15   | 2.0      |
 | Hammer††      | 1d+1   | 10  | 25   | 4.0      |
@@ -747,22 +766,22 @@ If you dealt physical hits and took none:
 
 ### Missile Weapons
 
-| Weapon             | Damage | STR | Cost | Wt (lbs) | Notes                          |
-|--------------------|--------|-----|------|----------|--------------------------------|
-| Thrown Rock        | 1d−4   | —   | —    | 0.5      |                                |
-| Sling†             | 1d−2   | —   | 2    | 1.0      | Including rocks                |
-| Small Bow†         | 1d−1   | 9   | 20   | 4.0      | 2 shots/turn if adjDEX 15+     |
-| Horse Bow†         | 1d     | 10  | 30   | 4.0      | 2 shots/turn if adjDEX 16+     |
-| Longbow†           | 1d+2   | 11  | 40   | 4.0      | 2 shots/turn if adjDEX 18+     |
-| Light Crossbow†    | 2d     | 12  | 50   | 6.0      | Every other turn; every if 14+ |
-| Heavy Crossbow†    | 3d     | 15  | 80   | 10.0     | Every 3rd turn; every other 16+|
-| Arrows (20)        | —      | —   | 20   | 1.0      |                                |
-| Quarrels (20)      | —      | —   | 20   | 1.0      |                                |
+| Weapon          | Damage | STR | Cost | Wt (lbs) | Notes                           |
+| --------------- | ------ | --- | ---- | -------- | ------------------------------- |
+| Thrown Rock     | 1d−4   | —   | —    | 0.5      |                                 |
+| Sling†          | 1d−2   | —   | 2    | 1.0      | Including rocks                 |
+| Small Bow†      | 1d−1   | 9   | 20   | 4.0      | 2 shots/turn if adjDEX 15+      |
+| Horse Bow†      | 1d     | 10  | 30   | 4.0      | 2 shots/turn if adjDEX 16+      |
+| Longbow†        | 1d+2   | 11  | 40   | 4.0      | 2 shots/turn if adjDEX 18+      |
+| Light Crossbow† | 2d     | 12  | 50   | 6.0      | Every other turn; every if 14+  |
+| Heavy Crossbow† | 3d     | 15  | 80   | 10.0     | Every 3rd turn; every other 16+ |
+| Arrows (20)     | —      | —   | 20   | 1.0      |                                 |
+| Quarrels (20)   | —      | —   | 20   | 1.0      |                                 |
 
 ### Pole Weapons
 
 | Weapon              | Damage | STR | Cost | Wt (lbs) | Notes               |
-|---------------------|--------|-----|------|----------|---------------------|
+| ------------------- | ------ | --- | ---- | -------- | ------------------- |
 | Javelin††           | 1d−1   | 9   | 20   | 3.0      | Too short for 2-hex |
 | Spear††             | 1d     | 11  | 40   | 6.0      | 2-2½ yards          |
 | Spear (2 hands)††,† | 1d+1   | 11  | 40   | 6.0      | 2-2½ yards          |
@@ -774,59 +793,58 @@ If you dealt physical hits and took none:
 
 ### Unusual Weapons
 
-| Weapon         | Damage       | STR | Cost  | Wt (lbs) | Notes                    |
-|----------------|--------------|-----|-------|----------|--------------------------|
-| Quarterstaff†  | 1d+2         | 11  | 20    | 5.0      |                          |
-| Net††          | 1d−3         | 10  | 40    | 2.0      |                          |
-| Cestus         | By STR       | —   | 20    | 2.0      |                          |
-| Whip           | 1d−1         | 8   | 30    | 1.0      |                          |
-| Lasso††        | Varies       | 8   | 10    | 1.0      |                          |
-| Boomerang††    | 2d−1         | 11  | 20    | 3.0      |                          |
-| Nunchaku       | 1d+1         | 9   | 35    | 4.0      |                          |
-| Torch          | 1d6 fire     | —   | 1     | 1.0      |                          |
-| Bola††         | —            | 9   | 15    | 1.0      |                          |
-
-**†† = May be thrown | † = Two-handed weapon**
+| Weapon                                         | Damage   | STR | Cost | Wt (lbs) | Notes |
+| ---------------------------------------------- | -------- | --- | ---- | -------- | ----- |
+| Quarterstaff†                                  | 1d+2     | 11  | 20   | 5.0      |       |
+| Net††                                          | 1d−3     | 10  | 40   | 2.0      |       |
+| Cestus                                         | By STR   | —   | 20   | 2.0      |       |
+| Whip                                           | 1d−1     | 8   | 30   | 1.0      |       |
+| Lasso††                                        | Varies   | 8   | 10   | 1.0      |       |
+| Boomerang††                                    | 2d−1     | 11  | 20   | 3.0      |       |
+| Nunchaku                                       | 1d+1     | 9   | 35   | 4.0      |       |
+| Torch                                          | 1d6 fire | —   | 1    | 1.0      |       |
+| Bola††                                         | —        | 9   | 15   | 1.0      |       |
+| **†† = May be thrown | † = Two-handed weapon** |          |     |      |          |       |
 
 ### Armor and Shields
 
-| Type          | Stops | DEX  | Cost  | Wt (lbs) | MA |
-|---------------|-------|------|-------|----------|-----|
-| Cloth Armor   | 1     | −1   | 50    | 14.0     | 10  |
-| Leather Armor | 2     | −2   | 100   | 16.0     | 8   |
-| Chainmail     | 3     | −3   | 200   | 30.0     | 6   |
-| Half-Plate    | 4     | −4   | 300   | 45.0     | 6   |
-| Plate Armor   | 5     | −5   | 500   | 55.0     | 6   |
-| Fine Plate    | 6     | −4   | 5,000 | 55.0     | 6   |
-| Small Shield  | 1     | 0    | 30    | 10.0     | —   |
-| Spike Shield  | 1     | 0    | 40    | 12.0     | —   |
-| Large Shield  | 2     | −1   | 50    | 20.0     | —   |
-| Tower Shield  | 3     | −2   | 70    | 35.0     | —   |
-| Main-Gauche   | 1     | −1   | 20    | 0.5      | —   |
+| Type          | Stops | DEX | Cost  | Wt (lbs) | MA  |
+| ------------- | ----- | --- | ----- | -------- | --- |
+| Cloth Armor   | 1     | −1  | 50    | 14.0     | 10  |
+| Leather Armor | 2     | −2  | 100   | 16.0     | 8   |
+| Chainmail     | 3     | −3  | 200   | 30.0     | 6   |
+| Half-Plate    | 4     | −4  | 300   | 45.0     | 6   |
+| Plate Armor   | 5     | −5  | 500   | 55.0     | 6   |
+| Fine Plate    | 6     | −4  | 5,000 | 55.0     | 6   |
+| Small Shield  | 1     | 0   | 30    | 10.0     | —   |
+| Spike Shield  | 1     | 0   | 40    | 12.0     | —   |
+| Large Shield  | 2     | −1  | 50    | 20.0     | —   |
+| Tower Shield  | 3     | −2  | 70    | 35.0     | —   |
+| Main-Gauche   | 1     | −1  | 20    | 0.5      | —   |
 
 ### Adventuring Gear
 
 #### Basics
 
-| Item              | Cost   |
-|-------------------|--------|
-| Backpack          | 2 gp   |
-| Bedroll           | 1 gp   |
-| Blanket           | 5 sp   |
-| Candle            | 1 cp   |
-| Torch             | 1 cp   |
-| Lamp              | 5 sp   |
-| Oil (flask)       | 1 sp   |
-| Tinderbox         | 5 sp   |
-| Waterskin         | 2 sp   |
-| Rations (1 day)   | 5 sp   |
-| Rope, hemp (50 ft)| 1 gp   |
-| Rope, silk (50 ft)| 10 gp  |
-| Grappling hook    | 2 gp   |
-| Hammer            | 1 gp   |
-| Piton             | 5 cp   |
-| 10 ft pole        | 2 sp   |
-| Iron spikes (10)  | 1 gp   |
+| Item               | Cost  |
+| ------------------ | ----- |
+| Backpack           | 2 gp  |
+| Bedroll            | 1 gp  |
+| Blanket            | 5 sp  |
+| Candle             | 1 cp  |
+| Torch              | 1 cp  |
+| Lamp               | 5 sp  |
+| Oil (flask)        | 1 sp  |
+| Tinderbox          | 5 sp  |
+| Waterskin          | 2 sp  |
+| Rations (1 day)    | 5 sp  |
+| Rope, hemp (50 ft) | 1 gp  |
+| Rope, silk (50 ft) | 10 gp |
+| Grappling hook     | 2 gp  |
+| Hammer             | 1 gp  |
+| Piton              | 5 cp  |
+| 10 ft pole         | 2 sp  |
+| Iron spikes (10)   | 1 gp  |
 
 #### Standard Pack
 
@@ -843,79 +861,79 @@ If you dealt physical hits and took none:
 
 #### Containers
 
-| Item    | Cost  |
-|---------|-------|
-| Barrel  | 2 gp  |
-| Basket  | 4 sp  |
-| Bottle  | 2 gp  |
-| Bucket  | 5 cp  |
-| Chest   | 5 gp  |
-| Flask   | 2 cp  |
-| Jug     | 2 cp  |
+| Item      | Cost |
+| --------- | ---- |
+| Barrel    | 2 gp |
+| Basket    | 4 sp |
+| Bottle    | 2 gp |
+| Bucket    | 5 cp |
+| Chest     | 5 gp |
+| Flask     | 2 cp |
+| Jug       | 2 cp |
 | Pot, iron | 2 gp |
-| Pouch   | 5 sp  |
-| Sack    | 1 cp  |
-| Vial    | 1 gp  |
+| Pouch     | 5 sp |
+| Sack      | 1 cp |
+| Vial      | 1 gp |
 
 #### Tools
 
-| Item              | Cost    |
-|-------------------|---------|
-| Artisan's tools   | 10-50 gp|
-| Climber's kit     | 25 gp   |
-| Healer's kit      | 25 gp   |
-| Herbalism kit     | 5 gp    |
-| Musical instrument| 5-50 gp |
-| Navigator's tools | 25 gp   |
+| Item               | Cost     |
+| ------------------ | -------- |
+| Artisan's tools    | 10-50 gp |
+| Climber's kit      | 25 gp    |
+| Healer's kit       | 25 gp    |
+| Herbalism kit      | 5 gp     |
+| Musical instrument | 5-50 gp  |
+| Navigator's tools  | 25 gp    |
 
 #### Writing & Knowledge
 
-| Item              | Cost   |
-|-------------------|--------|
-| Ink (1 oz)        | 10 gp  |
-| Ink pen           | 2 cp   |
-| Paper (sheet)     | 2 sp   |
-| Parchment (sheet) | 1 sp   |
-| Book, blank       | 25 gp  |
-| Map, local        | 5 gp   |
-| Map, regional     | 50 gp  |
-| Spellbook, blank  | 50 gp  |
+| Item              | Cost  |
+| ----------------- | ----- |
+| Ink (1 oz)        | 10 gp |
+| Ink pen           | 2 cp  |
+| Paper (sheet)     | 2 sp  |
+| Parchment (sheet) | 1 sp  |
+| Book, blank       | 25 gp |
+| Map, local        | 5 gp  |
+| Map, regional     | 50 gp |
+| Spellbook, blank  | 50 gp |
 
 #### Special Items
 
-| Item              | Cost    |
-|-------------------|---------|
-| Acid (vial)       | 25 gp   |
-| Alchemist's fire  | 50 gp   |
-| Antitoxin (vial)  | 50 gp   |
-| Holy water (flask)| 25 gp   |
-| Healing potion    | 50 gp   |
-| Lock, simple      | 10 gp   |
-| Lock, good        | 40 gp   |
-| Lock, superior    | 150 gp  |
-| Manacles          | 2 gp    |
-| Mirror, steel     | 5 gp    |
-| Spyglass          | 1,000 gp|
-| Magnifying glass  | 100 gp  |
+| Item               | Cost     |
+| ------------------ | -------- |
+| Acid (vial)        | 25 gp    |
+| Alchemist's fire   | 50 gp    |
+| Antitoxin (vial)   | 50 gp    |
+| Holy water (flask) | 25 gp    |
+| Healing potion     | 50 gp    |
+| Lock, simple       | 10 gp    |
+| Lock, good         | 40 gp    |
+| Lock, superior     | 150 gp   |
+| Manacles           | 2 gp     |
+| Mirror, steel      | 5 gp     |
+| Spyglass           | 1,000 gp |
+| Magnifying glass   | 100 gp   |
 
 #### Clothing
 
-| Item              | Cost   |
-|-------------------|--------|
-| Common clothes    | 5 sp   |
-| Traveler's clothes| 2 gp   |
-| Fine clothes      | 15 gp  |
-| Noble's outfit    | 75 gp  |
-| Cloak             | 1 gp   |
-| Winter cloak      | 5 gp   |
-| Boots             | 1 gp   |
-| Hat               | 2 sp   |
-| Gloves            | 5 sp   |
+| Item               | Cost  |
+| ------------------ | ----- |
+| Common clothes     | 5 sp  |
+| Traveler's clothes | 2 gp  |
+| Fine clothes       | 15 gp |
+| Noble's outfit     | 75 gp |
+| Cloak              | 1 gp  |
+| Winter cloak       | 5 gp  |
+| Boots              | 1 gp  |
+| Hat                | 2 sp  |
+| Gloves             | 5 sp  |
 
 #### Mounts & Vehicles
 
 | Item           | Cost   |
-|----------------|--------|
+| -------------- | ------ |
 | Donkey/mule    | 8 gp   |
 | Horse, draft   | 50 gp  |
 | Horse, riding  | 75 gp  |
@@ -929,22 +947,22 @@ If you dealt physical hits and took none:
 
 #### Lodging & Services (per day)
 
-| Service           | Cost      |
-|-------------------|-----------|
-| Poor inn          | 2 sp      |
-| Modest inn        | 1 gp      |
-| Comfortable inn   | 2 gp      |
-| Wealthy inn       | 4 gp      |
-| Poor meal         | 6 cp      |
-| Modest meal       | 3 sp      |
-| Comfortable meal  | 5 sp      |
-| Wealthy meal      | 2 gp      |
-| Ale (mug)         | 2 cp      |
-| Wine, common      | 2 sp      |
-| Wine, fine        | 10 gp     |
-| Messenger         | 2 cp/mile |
-| Coach ride        | 3 cp/mile |
-| Ship passage      | 1 sp/mile |
+| Service          | Cost      |
+| ---------------- | --------- |
+| Poor inn         | 2 sp      |
+| Modest inn       | 1 gp      |
+| Comfortable inn  | 2 gp      |
+| Wealthy inn      | 4 gp      |
+| Poor meal        | 6 cp      |
+| Modest meal      | 3 sp      |
+| Comfortable meal | 5 sp      |
+| Wealthy meal     | 2 gp      |
+| Ale (mug)        | 2 cp      |
+| Wine, common     | 2 sp      |
+| Wine, fine       | 10 gp     |
+| Messenger        | 2 cp/mile |
+| Coach ride       | 3 cp/mile |
+| Ship passage     | 1 sp/mile |
 
 ---
 

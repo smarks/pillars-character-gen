@@ -28,7 +28,7 @@ Basically, I started with _The Fantasy Trip_ system and modified it to my taste.
 
 If you've played D&D or D&D-like games (there are so many now, including Pathfinder and GURPS), most of these rules will look familiar in general, with flavor being introduced in the specifics.
 
-The core _The Fantasy Trip_ rules are available free from the publisher here: [https://thefantasytrip.game/products/core-games/the-fantasy-trip-melee-wizard-pocket-box/](https://thefantasytrip.game/products/core-games/the-fantasy-trip-melee-wizard-pocket-box/)
+The core _The Fantasy Trip_ rules are available free from the publisher here: [https://thefantasytrip.game/products/core-games/the-fantasy-trip-melee-wizard-pocket-box/][1]
 
 Note: I don't use all the rules as written and have tweaked and added others. To keep the focus on story and adventure, some mechanics remain hidden from players. Sometimes players can discover how specific mechanics work through experimentation during play.
 
@@ -59,21 +59,24 @@ Skills are rated on a numerical scale. For example, having high skill in blacksm
 Success depends on both your character's capabilities and the difficulty of what they're attempting. A skilled character attempting something reasonable has good odds of success, while anyone attempting something beyond the world's physical laws will fail regardless of their skill level.
 
 Character's start out at age 16. However, you can age your character using prior experience tables. 
+ 
+### 21st Century Gaming
+#### (experimental )
+Back in the olden days, when a character was privy to information that other characters weren't—or just up to private business of their own—GMs and players would exchange paper notes. Of course, all the other players would see the notes being exchanged and try to figure out what was going on. This kind of worked, since it gave other characters a clue that something was up and perhaps they should pay more attention to details. It models that vague feeling that something might be afoot, even if you have no idea what. I think allowing players to choose what information their characters share adds a realistic dynamic to gameplay.
 
+For Pillars, I'm going to try something that might work a little more seamlessly, but it requires you to tell the GM your preferred method of contact during gameplay. Private messaging on a Discord server would work well, but I can also support SMS or Signal—whatever people have access to while playing (a computer, tablet, or phone). If you don't have such access, it's no big deal; notes always work, and that's what I'll use.
 
 
 ## Getting Started
 
 Pillars is designed to reward creative problem-solving, strategic thinking, and character investment. Whether you want to delve into dungeons, build a merchant empire, uncover ancient mysteries, or simply survive on the streets, the game provides the framework for your story.
 
-The rules are intentionally accessible—you don't need to master hundreds of pages before your first session. Jump in, experiment, and discover what your character can become.
-
-Ready to explore the Pillars world? Let's begin your adventure.
+The rules are intentionally accessible—you don't need to master hundreds of pages before your first session. Jump in, experiment, and discover what your character can become. NO PRIOR GAMING EXPERIENCE NEEDED. 
 
 
 ## Gameplay
 
-Pillars is a sword and sorcery role-playing game whose emphasis is primarily story telling but also includes a detailed magic and combat system.
+Pillars is a sword and sorcery role-playing game whose emphasis is primarily story telling but also includes a detailed magic and combat system. The flavor is serious but hopefully tasty.  There’s a focus on realism and rational outcomes  or as much as their can be in universe were magic and the fantastic are common place. 
 
 The Pillars universe is intended to be one of exploration, problem solving, story telling and learning. Where feasible, players do _not_ know more than the characters. Of course, as players run more than one character, they will learn more about the world than any one of their characters. Typically, that's OK. When a player through interacting with a character they are running learns something general about the world, that information becomes common knowledge and can be freely shared among characters and players. However, specific knowledge about a specific thing should not be shared, and should be considered a specific character's proprietary knowledge. 
 
@@ -84,6 +87,8 @@ There's no public GM Guide or manual. Lots (most) of the mechanics are hidden fr
 Magic follows the basic mechanics of concentration and effort expenditure, but its practice is not widely observed unless you are attending the only known school of magic (which is invitation only) or have the luck (or misfortune) to be apprenticed to an existing practitioner.
 
 In Pillars some magic is known and can be readily learned by player characters. But these common magic abilities are primarily based around learning magic recipes and becoming proficient in reciting them. These magic skills are acquired by joining one of many organizations whose members are taught skills. These organizations vary widely by region. Some are schools, some could be considered cults, others guilds while some are basic student teacher 1 on 1 relationships. The central premise here, though, is this type of magic training is somewhat superficial. Learning by rote. That's because it is usually safe and effective. A deeper study of magic, learning the root principles, is also possible but far less common and far more dangerous.
+
+
 ### Roles
 
 **Games Master**
@@ -115,17 +120,15 @@ The known world, referred to commonly as the Circle of the World it has existed 
 
 A long night can be thought of as a year. The long night  is a consistent, predictable interval that occurs after the same number of short nights or simply nights. A short night equates to what we could call a day. 
 
-Approximately 12 hours of daylight from dawn to dusk and then a short night of approximately 12 hours of evening and nighttime. The notion of an hour does exist especially in cities and larger towns where there are sundial like measuring devices, but in more rural areas a days is frequently measured by first light, last light, high light (noon) and half light - afternoon. Although those that study the skies can often provide a more specific time of day even if in the absence of measur
-The primary world is called **Steven's World** by some, but simply **Earth** by most of its inhabitants. Of course, it has other names as well. The known area of the world is large and there much known about it, but also much unknown. 
+Approximately 12 hours of daylight from dawn to dusk and then a short night of approximately 12 hours of evening and nighttime. The notion of an hour does exist especially in cities and larger towns where there are sundial like measuring devices, but in more rural areas a days is frequently measured by first light, last light, high light (noon) and half light - afternoon. Although those that study the skies can often provide a more specific time of day even if in the absence of measurements. 
 
 The primary world of Pillars is _old_ layers of civilizations have come and gone leaving tracers not unlike the stratification of rock formations formed over epochs. 
 
-Most the inhabitants are aware that they are not alone and that earth is just one node in a vast cosmos. 
+Some of the inhabitants are aware or at least believe that they are not alone and that earth is just one node in a vast cosmos. 
 
 
 # Starting Out
 
-Before the great conflagration now know has the Splintering, there was the Isle of Man: a vast continent home to many tribes, ways and cultures. 
 
 When these peoples were not at war with one another, they were forming or breaking alliances and treaties. This behavior climaxed with the splintering the Isle of Man was rent asunder, the tribes and their lands were scattered and cast into the oceans. The Main land is all that remains of the former days. 
 
@@ -134,3 +137,5 @@ Now the tribes have their smaller lands, and while the bickering continues, it h
 These days, the tribes and customs have become even more diversified than when they shared the entire land. 
 
 As a new player, your character will start on the main land but there are many choices to made in the creation of your character beyond determining characteristics.
+
+[1]:	https://thefantasytrip.game/products/core-games/the-fantasy-trip-melee-wizard-pocket-box/
