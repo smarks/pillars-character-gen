@@ -129,13 +129,6 @@ Some of the inhabitants are aware or at least believe that they are not alone an
 
 # Starting Out
 
-
-When these peoples were not at war with one another, they were forming or breaking alliances and treaties. This behavior climaxed with the splintering the Isle of Man was rent asunder, the tribes and their lands were scattered and cast into the oceans. The Main land is all that remains of the former days. 
-
-Now the tribes have their smaller lands, and while the bickering continues, it has interested in a dynamic mix of trade, treaties and skirmishes, as tribes try to expand their influence or at least keep what they deem is theres. 
-
-These days, the tribes and customs have become even more diversified than when they shared the entire land. 
-
-As a new player, your character will start on the main land but there are many choices to made in the creation of your character beyond determining characteristics.
+The world of pillars is divided into five quadrants. The four reaches and the inner lands, also known as the Isles of Men. New players and characters start out in one of the many islands that comprise the Isles of Men. The northern reach is a land of dwarves and giants and cold and ice fire and extremes. Somewhat isolated and somewhat isolationist the northern tribes do trade with the wide world. The north is renowned for its metal work and craftsmanship of things, mechanical and fair. In the warmer southern reaches the lies of men our appeal to a lesser extent than in the inner lands, but there is active trading between the south and the middle ends. The western reaches of the home of the dragons, but people live in trade their as well. The western reaches are the most remote from the inner lands and other home of fabulous tales of wealth, greed, adventure in life and death heroics well the swarthy salt is primarily known for their exotic roguish behavior. The Isle of men where characters will initially start out as a land of magic trade in many opportunities as the game matures I will allow characters just that out in the remote places, but initially all characters will start out in the aisle of men somewhere, although they could originally hail from one of the reaches. Discuss all this with the GM as you're creating the character.
 
 [1]:	https://thefantasytrip.game/products/core-games/the-fantasy-trip-melee-wizard-pocket-box/
