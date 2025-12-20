@@ -4,6 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pillars: Turn Sequence</title>
+    <style>
+        .hamburger-menu {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+        }
+        .hamburger-btn {
+            background: #16213e;
+            border: 1px solid #2a3a5e;
+            cursor: pointer;
+            padding: 8px 12px;
+            font-size: 1.5em;
+            line-height: 1;
+            color: #d4a857;
+            border-radius: 4px;
+        }
+        .hamburger-btn:hover {
+            background: #1a2a4e;
+        }
+        .hamburger-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #16213e;
+            border: 1px solid #2a3a5e;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            min-width: 180px;
+            margin-top: 5px;
+            border-radius: 4px;
+        }
+        .hamburger-dropdown.open {
+            display: block;
+        }
+        .hamburger-dropdown a {
+            display: block;
+            padding: 10px 15px;
+            color: #e8e8e8;
+            text-decoration: none;
+            border-bottom: 1px solid #2a3a5e;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-size: 14px;
+        }
+        .hamburger-dropdown a:last-child {
+            border-bottom: none;
+        }
+        .hamburger-dropdown a:hover {
+            background: #1a2a4e;
+            color: #d4a857;
+        }
+    </style>
 </head>
 <body>
 

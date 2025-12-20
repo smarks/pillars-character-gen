@@ -97,7 +97,14 @@
 <div class="note-card">
     <div class="note-header">
         <h3>{{ note.user.username }}</h3>
-        <span class="note-meta">Last updated: {{ note.updated_at|date:"M d, Y H:i" }}</span>
+        <div>
+            <span class="note-meta" style="margin-right: 15px;">Last updated: {{ note.updated_at|date:"M d, Y H:i" }}</span>
+            <a href="{% url 'admin_edit_note' note.id %}" class="btn primary">Edit</a>
+            <form method="post" action="{% url 'admin_delete_note' note.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn danger" onclick="return confirm('Delete notes for {{ note.user.username }}? This cannot be undone.');">Delete</button>
+            </form>
+        </div>
     </div>
     <div class="note-content">{% if note.content %}{{ note.content }}{% else %}(empty){% endif %}</div>
 </div>

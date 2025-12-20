@@ -1,0 +1,46 @@
+{% extends "generator/base.html" %}
+
+{% block title %}Edit Notes - {{ note.user.username }} - Pillars{% endblock %}
+
+{% block extra_css %}
+.note-editor {
+    width: 100%;
+    min-height: 400px;
+    font-family: monospace;
+    font-size: 14px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    resize: vertical;
+}
+{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>Edit Notes: {{ note.user.username }}</h1>
+    <a href="{% url 'admin_notes' %}" class="btn">&larr; Back to Notes</a>
+</div>
+
+{% if messages %}
+<div class="info-box">
+    {% for message in messages %}
+    <p>{{ message }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="section">
+    <p class="note-meta" style="margin-bottom: 15px; color: #666;">
+        Last updated: {{ note.updated_at|date:"M d, Y H:i" }}
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        <textarea name="content" class="note-editor">{{ note.content }}</textarea>
+
+        <div class="button-group" style="margin-top: 15px;">
+            <button type="submit" class="btn success">Save Changes</button>
+            <a href="{% url 'admin_notes' %}" class="btn">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

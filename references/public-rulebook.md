@@ -1,15 +1,13 @@
 # PILLARS
 
 *A Fantasy Role-Playing Game*
-by Spencer Marks
+by Spencer Marks standing on the shoulders of Steve Jackson, Gary Gygax, Paul Gazis, the early members of MIT SGS, Ursula K. Le Guin, and, of course, J.R.R. Tolkien. 
 
----
+------
 
-# Player's Book
-
+# Public Rules
+ 
 *This section is for all players*
-
----
 
 ## Lore 
 

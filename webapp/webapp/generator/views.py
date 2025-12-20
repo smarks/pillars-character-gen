@@ -1449,7 +1449,7 @@ def handbook_section(request, section: str):
 
 
 def serve_reference_html(request, filename):
-    """Serve standalone HTML files from the references directory."""
+    """Serve standalone HTML files from the references directory with injected nav."""
     # Security: prevent directory traversal
     if '..' in filename or filename.startswith('/'):
         raise Http404("Invalid filename")
@@ -1461,6 +1461,56 @@ def serve_reference_html(request, filename):
 
     with open(html_path, 'r', encoding='utf-8') as f:
         content = f.read()
+
+    # Build hamburger menu based on authentication
+    menu_links = [
+        '<a href="/">Home</a>',
+        '<a href="/about/">About</a>',
+        '<a href="/rulebook/">Public Rules</a>',
+    ]
+
+    profile = getattr(request.user, 'profile', None) if request.user.is_authenticated else None
+    is_dm = profile and profile.is_dm if profile else False
+    is_admin = profile and profile.is_admin if profile else False
+
+    if is_dm or is_admin:
+        menu_links.append('<a href="/dm/">Private Rules</a>')
+
+    menu_links.append('<a href="/turn-sequence/">Turn Quick Reference</a>')
+
+    if request.user.is_authenticated:
+        menu_links.append('<a href="/my-characters/">Characters</a>')
+        menu_links.append('<a href="/notes/">Notes</a>')
+
+    if is_admin:
+        menu_links.append('<a href="/manage-users/">Manage Users</a>')
+
+    if is_dm or is_admin:
+        menu_links.append('<a href="/manage-characters/">Manage Characters</a>')
+
+    if is_admin:
+        menu_links.append('<a href="/admin-notes/">Manage Notes</a>')
+
+    hamburger_html = f'''
+    <div class="hamburger-menu">
+        <button class="hamburger-btn" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menu">&#9776;</button>
+        <div class="hamburger-dropdown">
+            {''.join(menu_links)}
+        </div>
+    </div>
+    <script>
+        document.addEventListener('click', function(e) {{
+            var menu = document.querySelector('.hamburger-menu');
+            var dropdown = document.querySelector('.hamburger-dropdown');
+            if (menu && dropdown && !menu.contains(e.target)) {{
+                dropdown.classList.remove('open');
+            }}
+        }});
+    </script>
+    '''
+
+    # Inject after <body> tag
+    content = re.sub(r'(<body[^>]*>)', r'\1' + hamburger_html, content, count=1)
 
     return HttpResponse(content, content_type='text/html')
 
@@ -2546,3 +2596,38 @@ def admin_notes(request):
         'user_filter': user_filter,
         'users_with_notes': users_with_notes,
     })
+
+
+@admin_required
+def admin_edit_note(request, note_id):
+    """Admin view to edit a user's notes."""
+    try:
+        note = UserNotes.objects.select_related('user').get(id=note_id)
+    except UserNotes.DoesNotExist:
+        messages.error(request, 'Note not found.')
+        return redirect('admin_notes')
+
+    if request.method == 'POST':
+        note.content = request.POST.get('content', '')
+        note.save()
+        messages.success(request, f"Updated notes for {note.user.username}.")
+        return redirect('admin_notes')
+
+    return render(request, 'generator/admin_edit_note.html', {
+        'note': note,
+    })
+
+
+@admin_required
+@require_POST
+def admin_delete_note(request, note_id):
+    """Admin view to delete a user's notes."""
+    try:
+        note = UserNotes.objects.select_related('user').get(id=note_id)
+        username = note.user.username
+        note.delete()
+        messages.success(request, f"Deleted notes for {username}.")
+    except UserNotes.DoesNotExist:
+        messages.error(request, 'Note not found.')
+
+    return redirect('admin_notes')
