@@ -456,21 +456,24 @@
                 <button class="hamburger-btn" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menu">&#9776;</button>
                 <div class="hamburger-dropdown">
                     <a href="{% url 'welcome' %}">Home</a>
-                    <a href="{% url 'generator' %}">Character Generator</a>
                     <a href="{% url 'about' %}">About</a>
-                    <a href="{% url 'rulebook' %}">Rulebook</a>
-                    <a href="{% url 'turn_sequence' %}">Turn Sequence</a>
-                    <a href="{% url 'dice_roller' %}" onclick="window.open(this.href, 'dice', 'width=420,height=400,resizable=yes'); return false;">Dice Roller</a>
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'my_characters' %}">My Characters</a>
-                    <a href="{% url 'notes' %}">My Notes</a>
-                    {% endif %}
+                    <a href="{% url 'rulebook' %}">Public Rules</a>
                     {% if user.is_authenticated and user.profile.is_dm or user.is_authenticated and user.profile.is_admin %}
-                    <a href="{% url 'dm' %}">DM Handbook</a>
+                    <a href="{% url 'dm' %}">Private Rules</a>
+                    {% endif %}
+                    <a href="{% url 'turn_sequence' %}">Turn Quick Reference</a>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'my_characters' %}">Characters</a>
+                    <a href="{% url 'notes' %}">Notes</a>
                     {% endif %}
                     {% if user.is_authenticated and user.profile.is_admin %}
                     <a href="{% url 'manage_users' %}">Manage Users</a>
-                    <a href="{% url 'admin_notes' %}">Browse Notes</a>
+                    {% endif %}
+                    {% if user.is_authenticated and user.profile.is_dm or user.is_authenticated and user.profile.is_admin %}
+                    <a href="{% url 'manage_characters' %}">Manage Characters</a>
+                    {% endif %}
+                    {% if user.is_authenticated and user.profile.is_admin %}
+                    <a href="{% url 'admin_notes' %}">Manage Notes</a>
                     {% endif %}
                 </div>
             </div>

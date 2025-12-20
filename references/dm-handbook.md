@@ -1,12 +1,12 @@
 
 
-# Part II: Game Master's Book
+# Game Master's Book
 
 *This section is for the Game Master only — contains secrets, mechanics, and scenario details that players should not read*
 
 ---
 
-## Chapter 7: Magic Mechanics (GM Reference)
+## Magic Mechanics (GM Reference)
 
 This chapter contains the specific mechanical details players don't see. The Player's Book describes magic in general terms; here are the exact numbers.
 
@@ -107,7 +107,7 @@ Control Roll: 3d6 ≤ INT, with penalty based on total mana invested:
 
 ---
 
-## Chapter 8: The World
+## The World
 
 ### The Splinterings
 
@@ -337,7 +337,7 @@ Independent city-states along the southeastern coast. Ancient, cosmopolitan, com
 
 ---
 
-## Chapter 9: GM Tools
+## GM Tools
 
 ### Universal NPC Tables
 
@@ -709,7 +709,7 @@ Independent city-states along the southeastern coast. Ancient, cosmopolitan, com
 
 ---
 
-## Chapter 10: Scenario Seeds
+## Scenario Seeds
 
 ### Seed 1: The Weregild Appraiser
 
@@ -912,7 +912,7 @@ Chief Brennar of Clan Stormhold died after ruling forty years without designatin
 
 ---
 
-## Chapter 11: Using These Tables
+## Using These Tables
 
 ### Running a Seed
 

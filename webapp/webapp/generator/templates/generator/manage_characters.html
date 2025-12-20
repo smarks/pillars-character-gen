@@ -1,0 +1,66 @@
+{% extends "generator/base.html" %}
+
+{% block title %}Manage Characters - Pillars{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>Manage Characters</h1>
+</div>
+
+{% if messages %}
+<div class="info-box">
+    {% for message in messages %}
+    <p>{{ message }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="section">
+    <form method="get" class="control-row">
+        <label for="player">Filter by Player:</label>
+        <select name="player" id="player" onchange="this.form.submit()">
+            <option value="">All Players</option>
+            {% for user in users_with_characters %}
+            <option value="{{ user.username }}" {% if player_filter == user.username %}selected{% endif %}>
+                {{ user.username }}
+            </option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+<div class="section">
+    {% if characters %}
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Player</th>
+                <th>Created</th>
+                <th>Updated</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for char in characters %}
+            <tr>
+                <td>{{ char.name }}</td>
+                <td>{{ char.user.username }}</td>
+                <td>{{ char.created_at|date:"M d, Y H:i" }}</td>
+                <td>{{ char.updated_at|date:"M d, Y H:i" }}</td>
+                <td>
+                    <a href="{% url 'character_sheet' char.id %}" class="btn primary">Edit</a>
+                    <form method="post" action="{% url 'admin_delete_character' char.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn danger" onclick="return confirm('Are you sure you want to delete {{ char.name }}?');">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No characters found{% if player_filter %} for {{ player_filter }}{% endif %}.</p>
+    {% endif %}
+</div>
+{% endblock %}

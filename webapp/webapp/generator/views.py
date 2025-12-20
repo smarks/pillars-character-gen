@@ -1709,15 +1709,6 @@ def manage_users(request):
     users = UserProfile.objects.select_related('user').all()
     role_choices = UserProfile.ROLE_CHOICES
 
-    # Get all characters grouped by user
-    all_characters = SavedCharacter.objects.all().select_related('user').order_by('user__username', '-updated_at')
-    characters_by_user = {}
-    for char in all_characters:
-        username = char.user.username
-        if username not in characters_by_user:
-            characters_by_user[username] = []
-        characters_by_user[username].append(char)
-
     # Get all user notes
     all_notes = UserNotes.objects.all().select_related('user').order_by('user__username')
     notes_by_user = {note.user.username: note for note in all_notes}
@@ -1740,8 +1731,33 @@ def manage_users(request):
         'users': users,
         'role_choices': role_choices,
         'create_form': create_form,
-        'characters_by_user': characters_by_user,
         'notes_by_user': notes_by_user,
+    })
+
+
+@dm_required
+def manage_characters(request):
+    """DM/Admin view to manage all characters with filtering by player."""
+    # Get filter parameter
+    player_filter = request.GET.get('player', '')
+
+    # Get all users who have characters for the dropdown
+    users_with_characters = User.objects.filter(
+        saved_characters__isnull=False
+    ).distinct().order_by('username')
+
+    # Get characters, optionally filtered by player
+    if player_filter:
+        characters = SavedCharacter.objects.filter(
+            user__username=player_filter
+        ).select_related('user').order_by('-updated_at')
+    else:
+        characters = SavedCharacter.objects.all().select_related('user').order_by('-updated_at')
+
+    return render(request, 'generator/manage_characters.html', {
+        'characters': characters,
+        'users_with_characters': users_with_characters,
+        'player_filter': player_filter,
     })
 
 
