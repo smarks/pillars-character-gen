@@ -227,7 +227,14 @@ def welcome(request):
     request.session.pop('pending_character', None)
     request.session.modified = True
 
-    return render(request, 'generator/welcome.html')
+    # Load welcome content from markdown file
+    welcome_content = ''
+    welcome_file = os.path.join(settings.BASE_DIR, '..', 'references', 'welcome.md')
+    if os.path.exists(welcome_file):
+        with open(welcome_file, 'r', encoding='utf-8') as f:
+            welcome_content = markdown.markdown(f.read())
+
+    return render(request, 'generator/welcome.html', {'welcome_content': welcome_content})
 
 
 def dice_roller(request):
