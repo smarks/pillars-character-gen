@@ -96,6 +96,31 @@ class CombatPageTests(TestCase):
         self.assertContains(response, 'Movement')
 
 
+class TurnSequencePageTests(TestCase):
+    """Tests for the turn sequence reference page."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_turn_sequence_page_loads(self):
+        """Test that turn sequence page loads successfully."""
+        response = self.client.get(reverse('turn_sequence'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/html')
+
+    def test_turn_sequence_has_content(self):
+        """Test that turn sequence page has expected content."""
+        response = self.client.get(reverse('turn_sequence'))
+        self.assertContains(response, 'Turn Sequence')
+        self.assertContains(response, 'INITIATIVE')
+
+    def test_welcome_has_turn_sequence_link(self):
+        """Test that welcome page has turn sequence link."""
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, 'turn-sequence')
+        self.assertContains(response, 'Turn Sequence')
+
+
 class ReferenceImageTests(TestCase):
     """Tests for serving images from references/images directory."""
 

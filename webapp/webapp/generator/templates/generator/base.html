@@ -415,6 +415,7 @@
                 <a href="{% url 'notes' %}">Notes</a>
                 <a href="{% url 'lore' %}">Lore</a>
                 <a href="{% url 'handbook' %}">Handbook</a>
+                <a href="{% url 'turn_sequence' %}">Turns</a>
                 {% if user.profile.is_dm or user.profile.is_admin %}
                     <a href="{% url 'dm' %}">DM</a>
                 {% endif %}
