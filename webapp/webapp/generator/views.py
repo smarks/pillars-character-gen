@@ -123,7 +123,7 @@ class AdminUserCreationForm(UserCreationForm):
 
 
 from django.contrib import messages
-from django.http import JsonResponse, FileResponse, Http404
+from django.http import JsonResponse, FileResponse, Http404, HttpResponse
 from django.views.decorators.http import require_POST
 from .models import SavedCharacter, UserNotes
 from pillars import generate_character
@@ -1403,9 +1403,13 @@ def handbook_section(request, section: str):
             'path': os.path.join(settings.BASE_DIR, '..', 'references', 'Combat_and_Movement.md'),
             'title': 'Combat & Movement',
         },
-        'DM_handbook': {
-            'path': os.path.join(settings.BASE_DIR, '..', 'references', 'DM_handbook.md'),
+        'dm_handbook': {
+            'path': os.path.join(settings.BASE_DIR, '..', 'references', 'dm-handbook.md'),
             'title': 'DM Handbook',
+        },
+        'public_rulebook': {
+            'path': os.path.join(settings.BASE_DIR, '..', 'references', 'public-rulebook.md'),
+            'title': 'Rulebook',
         },
     }
 
@@ -1455,7 +1459,10 @@ def serve_reference_html(request, filename):
     if not os.path.exists(html_path):
         raise Http404("File not found")
 
-    return FileResponse(open(html_path, 'rb'), content_type='text/html')
+    with open(html_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    return HttpResponse(content, content_type='text/html')
 
 
 def serve_reference_image(request, filename):
@@ -1693,7 +1700,7 @@ def admin_required(view_func):
 @dm_required
 def dm_handbook(request):
     """DM Handbook - requires DM or Admin role."""
-    return handbook_section(request, 'DM_handbook')
+    return handbook_section(request, 'dm_handbook')
 
 
 @admin_required

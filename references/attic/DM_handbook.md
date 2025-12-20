@@ -1,17 +1,18 @@
-# PILLARS
-
-## Game Master Reference
+# PILLARS — Game Master Reference
 
 *Quick Reference Tables & Scenario Seeds*
+*Updated for consistency with Handbook and The Weave*
 
 A Fantasy Role-Playing Game
-by Spencer Marks with Stan Heckman
+by Spencer Marks with Stan Hickman
 
 ---
 
 ## Table of Contents
 
 - [Quick Reference Cheat Sheet](#quick-reference-cheat-sheet)
+- [Combat Quick Reference](#combat-quick-reference)
+- [Magic Quick Reference](#magic-quick-reference)
 - [The Splinterings](#the-splinterings)
 - [The Navel](#the-navel)
 - [Dragon Isles](#dragon-isles)
@@ -21,17 +22,6 @@ by Spencer Marks with Stan Heckman
 - [Trade & Economics](#trade--economics)
 - [Hook Introduction](#hook-introduction)
 - [Scenario Seeds](#scenario-seeds)
-  - [1. The Weregild Appraiser](#seed-1-the-weregild-appraiser)
-  - [2. The Sealed Wing](#seed-2-the-sealed-wing)
-  - [3. The Dragon's Debt](#seed-3-the-dragons-debt)
-  - [4. The Forged Ledger](#seed-4-the-forged-ledger)
-  - [5. The Twice-Claimed Cargo](#seed-5-the-twice-claimed-cargo)
-  - [6. The Althing Murder](#seed-6-the-althing-murder)
-  - [7. The Inheritance Map](#seed-7-the-inheritance-map)
-  - [8. The Guild War](#seed-8-the-guild-war)
-  - [9. The Cursed Ship](#seed-9-the-cursed-ship)
-  - [10. The Succession Crisis](#seed-10-the-succession-crisis)
-- [Using These Tables](#using-these-tables)
 
 ---
 
@@ -39,7 +29,148 @@ by Spencer Marks with Stan Heckman
 
 Essential tables for fast improvisation during play.
 
-## Universal Core Tables
+## Core Mechanics
+
+### Attributes
+
+| Attribute | Abbr | Governs |
+|-----------|------|---------|
+| Strength | STR | Weapon requirements, damage, carrying capacity |
+| Dexterity | DEX | Action order, to-hit, movement (MA = DEX − 2) |
+| Intelligence | INT | Perception, arcane, spell casting |
+| Wisdom | WIS | Insight, judgment, spell casting, Anchor Rolls |
+| Constitution | CON | Health, endurance (add STR modifier) |
+| Charisma | CHR | Influence, leadership, morale |
+
+### Derived Pools
+
+| Pool | Formula | Governs |
+|------|---------|---------|
+| Fatigue | CON + WIS + (DEX or STR) + 1d6 | Exhaustion, normal damage |
+| Body | CON + (DEX or STR) + 1d6 | Wounds, critical damage |
+| Mana | 3d6 (secret) | Spell casting |
+
+### Injury Thresholds
+
+| Condition | Effect |
+|-----------|--------|
+| ½ Fatigue or Body | −1 to rolls |
+| 0-5 Fatigue or Body | −2 to rolls |
+| 0 Fatigue or Body | Unconscious |
+| Negative starting | Save vs death/turn |
+| Negative 2× starting | Dead |
+
+---
+
+## Combat Quick Reference
+
+### Turn Sequence
+
+| Phase | Name | Order |
+|-------|------|-------|
+| 1 | Initiative | 1d6 per side |
+| 2 | Renew Spells | DEX+INT+WIS (high→low) |
+| 3 | Initial Movement | Initiative order |
+| 4 | Final Movement | Those who yielded |
+| 5 | Actions | adjDEX (high→low) |
+| 6 | Forced Retreat | Dealt damage, took none |
+
+### Attack Rolls
+
+| Roll | Result |
+|------|--------|
+| 3 | Triple damage, hits Fatigue AND Body |
+| 4 | Double damage + bleeding, hits Fatigue AND Body |
+| 5 | Auto-hit, Fatigue only |
+| 6-15 | Normal (3d6 ≤ adjDEX), Fatigue only |
+| 16 | Auto-miss |
+| 17 | Drop weapon |
+| 18 | Break weapon |
+
+### 4-Dice Results (vs Defend/Dodge)
+
+| Roll | Result |
+|------|--------|
+| 4-5 | Auto-hit |
+| 20+ | Auto-miss |
+| 21-22 | Drop weapon |
+| 23-24 | Break weapon |
+
+### DEX Bonuses
+
+| Position | Bonus |
+|----------|-------|
+| Side hex | +2 |
+| Rear hex | +4 |
+| Pole vs charge | +2 |
+| HTH combat | +4 (both) |
+
+### Encumbrance
+
+| Load | Weight | MA Mod | Run | Jog |
+|------|--------|--------|-----|-----|
+| Unencumbered | ≤ STR | 0 | Yes | Yes |
+| Light | ≤ STR×1.5 | −1 | Yes | Yes |
+| Medium | ≤ STR×2 | −2 | No | Yes |
+| Heavy | ≤ STR×2.5 | −4 | No | No |
+| Overloaded | > STR×2.5 | Walk | No | No |
+
+---
+
+## Magic Quick Reference
+
+*See The Weave for complete rules*
+
+### Spell Casting
+
+- **Cost:** Spell level in mana
+- **Roll:** 3d6 ≤ INT or WIS (per spell)
+- **Renew:** Pay mana each turn for continuing spells
+
+### Push (Boosting)
+
+Control Roll: 3d6 ≤ INT
+
+| Total Mana | Penalty |
+|------------|---------|
+| 1-5 | −1 |
+| 6-10 | −2 |
+| 11-15 | −3 |
+| 16-20 | −4 |
+| 21+ | −5 (−1 per 5 more) |
+
+| Result | Outcome |
+|--------|---------|
+| Success | Works as intended |
+| Fail 1-3 | Minor deviation |
+| Fail 4-6 | Significant deviation |
+| Fail 7+ | RUNAWAY |
+| Natural 18 | RUNAWAY |
+
+### Runaway Progression
+
+| Round | Mana Drain | Body | Anchor |
+|-------|------------|------|--------|
+| 1 | 1d6 | — | −2 |
+| 2 | 2d6 | — | −4 |
+| 3 | 3d6 | +1d6 | −6 |
+| 4 | 4d6 | +2d6 | −8 |
+| 5 | ALL | +1d6 | −10 |
+| 6+ | — | +1d6/rnd | −10 |
+
+**Anchor Roll:** 3d6 ≤ WIS (with penalty)
+
+### Counterspell
+
+- Defender invests mana ≥ spell cost
+- Opposed INT rolls: +1 per 3 mana invested
+- Ties: caster wins
+- Loser's mana spent regardless
+- Only caster can escalate after losing
+
+---
+
+## Universal NPC Tables
 
 ### NPC Motivation
 
@@ -513,7 +644,7 @@ The world is old. Civilizations have risen and fallen. What remains?
 
 # Urban Intrigue
 
-For cities anywhere - Navel, Old Emporium, or larger Splinterings settlements.
+For cities anywhere—Navel, Old Emporium, or larger Splinterings settlements.
 
 ## Intrigue Situation
 
@@ -555,6 +686,18 @@ For cities anywhere - Navel, Old Emporium, or larger Splinterings settlements.
 # Trade & Economics
 
 For characters interested in making money through commerce.
+
+## Basic Economic Context
+
+- **Poverty line**: 10 gp/month (barely surviving)
+- **Decent living**: 100 gp/month (comfortable middle class)
+- **Daily survival**: ~0.3 gp/day (3 silver pieces)
+- **Comfortable daily**: ~3 gp/day
+
+### Currency System
+
+- 1 gold piece (gp) = 10 silver pieces (sp)
+- 1 silver piece = 10 copper pieces (cp)
 
 ## Trade Goods
 
@@ -703,7 +846,7 @@ Previous actions create new situations.
 
 # Scenario Seeds
 
-Complete adventure frameworks combining multiple tables. Each provides enough structure to run immediately but enough gaps to improvise freely.
+Complete adventure frameworks combining multiple tables.
 
 ## Seed 1: The Weregild Appraiser
 
@@ -722,7 +865,7 @@ A man was killed in a dispute between Clan Vorath and Clan Iskeld. Both sides ag
 | 5 | Killed a Vorath man years ago | Arguably cancels debt |
 | 6 | Was planning to defect to Vorath | Vorath might not pay |
 
-**Complications:** Tormund's widow wants maximum payment. The killer claims self-defense with coached witnesses. A third clan wants the feud to continue. The Althing is in two weeks - if not settled, public arbitration.
+**Complications:** Tormund's widow wants maximum payment. The killer claims self-defense with coached witnesses. A third clan wants the feud to continue. The Althing is in two weeks—if not settled, public arbitration.
 
 ---
 
@@ -783,7 +926,7 @@ Merchant Calvino Destri was murdered. Official verdict: robbery. His daughter Lu
 | 3 | Foreign power buying influence | Foreign agents |
 | 4 | Fraud in city's banking | Consortium of bankers |
 | 5 | Blackmail scheme involving families | The blackmailer |
-| 6 | Nothing - personal reasons | Jealous rival |
+| 6 | Nothing—personal reasons | Jealous rival |
 
 **Complications:** Characters are foreign outsiders. Lucia is being watched. Ledger is scattered. Someone has framed a scapegoat. Truth would destabilize Verrenza.
 
@@ -800,11 +943,11 @@ Characters transporting cargo by ship are intercepted. Two parties claim ownersh
 | d6 | The Truth |
 |----|-----------|
 | 1 | Hjalmur's merchant sold stolen goods unknowingly |
-| 2 | Trading house is lying - sold it, want it back |
+| 2 | Trading house is lying—sold it, want it back |
 | 3 | Cargo was duplicated somehow (forgery? magic?) |
 | 4 | Third party sold same cargo to both, disappeared |
 | 5 | Cargo is different than documented (more valuable/dangerous) |
-| 6 | Both documents forged - cargo belongs to neither |
+| 6 | Both documents forged—cargo belongs to neither |
 
 **Complications:** Characters legally liable as transporters. Weather forces everyone to shelter together. Cargo is perishable. Hidden stowaway knows truth.
 
@@ -825,7 +968,7 @@ During the Althing where violence is forbidden, Chief Solmund of Clan Brennir is
 | 3 | Thorvald (rival chief) | Old feud, lost control |
 | 4 | Old Emporium merchant | Solmund was blackmailing them |
 | 5 | Third party agent | Wants war for profit/revenge |
-| 6 | None - Solmund killed himself | To frame someone |
+| 6 | None—Solmund killed himself | To frame someone |
 
 **Suspects:** Rival Chief Thorvald (publicly quarreled), Lady Vigdis (widow), Nephew Ragnar (heir), Foreign merchant, Third party beneficiary. Three days until Althing ends.
 
@@ -878,7 +1021,7 @@ The Free Passage Compact challenges the Wayfarer's Guild monopoly. Both sides re
 | 5 | Reformers within Guild itself |
 | 6 | Dragons (trade disruption serves some purpose) |
 
-**Escalation:** Week 1 - economic pressure, propaganda. Week 2 - sabotage, intimidation. Week 3 - violence, disappearances. Week 4 - open conflict, authorities intervene.
+**Escalation:** Week 1—economic pressure, propaganda. Week 2—sabotage, intimidation. Week 3—violence, disappearances. Week 4—open conflict, authorities intervene.
 
 ---
 
@@ -892,10 +1035,10 @@ Ship arrives in port with no living crew. Cargo intact. Ship undamaged. Food on 
 
 | d6 | The Truth |
 |----|-----------|
-| 1 | Dragon attack - taken, not killed |
+| 1 | Dragon attack—taken, not killed |
 | 2 | Encountered something at sea (ghost ship, creature, phenomenon) |
 | 3 | Crew mutinied, fled in boats |
-| 4 | Plague - bodies thrown overboard, last survivor died at helm |
+| 4 | Plague—bodies thrown overboard, last survivor died at helm |
 | 5 | Picked up castaway who wasn't human |
 | 6 | Ship passed through something (portal, time distortion) |
 
@@ -903,7 +1046,7 @@ Ship arrives in port with no living crew. Cargo intact. Ship undamaged. Food on 
 
 | d6 | Hidden |
 |----|--------|
-| 1 | Nothing - cargo exactly as listed |
+| 1 | Nothing—cargo exactly as listed |
 | 2 | Smuggled goods |
 | 3 | Stowaway (dead? hiding? transformed?) |
 | 4 | Something from a ruin (cursed object?) |
@@ -940,33 +1083,11 @@ Chief Brennar of Clan Stormhold died after ruling forty years without clearly de
 4. Prepare the opening scene
 5. Let player choices drive what happens next
 
-## Connecting Seeds
-
-Consequence chains link adventures naturally. NPCs recur across scenarios. Factions have long memories. Solved problems create new ones. Geographic movement opens new regions.
-
 ## Improvising from Seeds
 
 When stuck, roll on relevant table. NPCs always want something and face obstacles. Escalation keeps situations dynamic. Rumors introduce new elements. Every resolution plants future seeds.
 
-## Combining Hooks
-
-The strongest hooks combine multiple methods:
-
-*"A merchant (patron) hires you to investigate missing shipments (job). While investigating, you discover the thieves are from a clan one character has history with (personal hook). Solving this requires traveling through Dragon Isles territory (environmental challenges) and the thieves work for a faction in a city-state power struggle (intrigue)."*
-
-## Hook Strength Assessment
-
-| Factor | Weak | Medium | Strong |
-|--------|------|--------|--------|
-| Personal stakes | None | Indirect | Direct |
-| Time pressure | None | Soft deadline | Hard deadline |
-| Opposition | None/trivial | Capable | Formidable |
-| Reward | Vague/small | Clear/adequate | Exceptional |
-| Moral clarity | Ambiguous | Mixed | Clear right/wrong |
-| Complexity | Simple fetch quest | Multiple steps | Layered/branching |
-
-You don't need every hook to be strong in all factors - variety is good. But knowing where a hook sits helps you adjust if players seem disengaged.
-
 ---
 
-*Pillars GM Reference — A Fantasy Role-Playing Game by Spencer Marks with Stan Heckman*
+*Pillars GM Reference v2 — Aligned with Handbook and The Weave*
+*A Fantasy Role-Playing Game by Spencer Marks with Stan Hickman*

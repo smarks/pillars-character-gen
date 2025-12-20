@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pillars: Turn Sequence</title>
+</head>
+<body>
+
+<script>
+// ╔════════════════════════════════════════════════════════════════════════════╗
+// ║                                                                            ║
+// ║   CONTENT - EDIT THIS SECTION TO CHANGE TEXT                               ║
+// ║                                                                            ║
+// ╚════════════════════════════════════════════════════════════════════════════╝
+
+const CONTENT = {
+
+  title: "PILLARS — Turn Sequence",
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PHASE 1: INITIATIVE
+  // ──────────────────────────────────────────────────────────────────────────
+  phase1: {
+    name: "INITIATIVE",
+    subtitle: "Once per turn",
+    content: "Each side rolls 1d6. Winner chooses to move first or second. Ties reroll."
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PHASE 2: RENEW SPELLS
+  // ──────────────────────────────────────────────────────────────────────────
+  phase2: {
+    name: "RENEW SPELLS",
+    subtitle: "By DX+INT+WIS order (high→low)",
+    content: "Each caster with continuing spells: pay mana to maintain or spell ends immediately. Effects happen now (before movement)."
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PHASE 3: MOVEMENT — Choose your OPTION (movement + action combined)
+  // ──────────────────────────────────────────────────────────────────────────
+  phase3: {
+    name: "MOVEMENT",
+    subtitle: "By initiative order — choose your OPTION",
+    decision: "PASS, or choose an OPTION based on your state:",
+    
+    pass: {
+      label: "PASS",
+      description: "Defer to Phase 4. Wait to see where enemies go."
+    },
+    
+    disengaged: {
+      label: "DISENGAGED",
+      condition: "Not in enemy's front hex",
+      options: [
+        { code: "a", name: "MOVE",           move: "Full MA",  action: "None (movement only)", notes: "Fatigue 1/turn" },
+        { code: "b", name: "CHARGE ATTACK",  move: "≤½ MA",    action: "Melee attack or HTH", notes: "No missiles; can't attack if moved >½ MA" },
+        { code: "c", name: "DODGE",          move: "≤½ MA",    action: "+1 die to be hit (missiles/thrown/missile spells)", notes: null },
+        { code: "d", name: "DROP",           move: "≤½ MA",    action: "Go prone or kneeling", notes: null },
+        { code: "e", name: "READY WEAPON",   move: "≤2 hex",   action: "Re-sling current, ready new weapon/shield", notes: "Or pick up dropped from hex/adjacent" },
+        { code: "f", name: "MISSILE ATTACK", move: "≤1 hex",   action: "Fire bow, crossbow, or thrown weapon", notes: "May also drop to prone/kneeling" },
+        { code: "g", name: "STAND UP",       move: "0",        action: "Rise from prone/kneeling", notes: "Entire turn" },
+        { code: "",  name: "CRAWL",          move: "2 hex",    action: "Move while prone (stay prone)", notes: null },
+        { code: "h", name: "CAST SPELL",     move: "≤1 hex",   action: "Attempt any spell", notes: null },
+        { code: "i", name: "DISBELIEVE",     move: "≤1 hex",   action: "See through one illusion", notes: null }
+      ]
+    },
+    
+    engaged: {
+      label: "ENGAGED",
+      condition: "In enemy's front hex",
+      options: [
+        { code: "j", name: "ATTACK",         move: "Shift/still", action: "Melee attack (non-missile)", notes: null },
+        { code: "k", name: "DEFEND",         move: "Shift/still", action: "+1 die to be hit (melee/thrown)", notes: "Not vs missile spells" },
+        { code: "l", name: "ONE LAST SHOT",  move: "Still",       action: "Fire missile (if ready before engaged)", notes: "Must drop bow next turn" },
+        { code: "m", name: "CHANGE WEAPON",  move: "Shift/still", action: "Drop current, ready new non-missile", notes: "Can't ready missiles while engaged" },
+        { code: "n", name: "DISENGAGE",      move: "Shift/still", action: "Move 1 hex any direction instead of attack", notes: "Faster foes hit; slower at −(DX diff)" },
+        { code: "o", name: "ATTEMPT HTH",    move: "Shift/still", action: "Move INTO enemy hex, bare hands/dagger", notes: "Req: wall, prone, higher MA, rear, consent" },
+        { code: "p", name: "STAND UP",       move: "Still",       action: "Rise from prone/kneeling", notes: "Entire turn" },
+        { code: "q", name: "PICK UP WEAPON", move: "Still",       action: "Drop yours, grab from hex/adjacent", notes: null },
+        { code: "r", name: "CAST SPELL",     move: "Shift/still", action: "Attempt any spell", notes: null },
+        { code: "s", name: "DISBELIEVE",     move: "Shift/still", action: "See through one illusion", notes: null }
+      ]
+    },
+    
+    hth: {
+      label: "HTH",
+      condition: "Same hex as enemy",
+      options: [
+        { code: "t", name: "HTH ATTACK",   action: "Bare hands (1d−4) or dagger", notes: "Both get +4 DX" },
+        { code: "u", name: "DRAW DAGGER",  action: "Roll 3d6 ≤ DX to ready dagger", notes: null },
+        { code: "v", name: "DISENGAGE",    action: "Roll 4d6 ≤ DX → stand, move to adjacent", notes: null },
+        { code: "",  name: "CAST SPELL",   action: "If hands free or no-gesture spell", notes: null }
+      ]
+    }
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PHASE 4: DEFERRED MOVEMENT
+  // ──────────────────────────────────────────────────────────────────────────
+  phase4: {
+    name: "DEFERRED MOVEMENT",
+    subtitle: "By initiative order",
+    content: "Those who passed in Phase 3 now choose their option (same choices as above)."
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PHASE 5: ACTIONS — Execute the action from your chosen option
+  // ──────────────────────────────────────────────────────────────────────────
+  phase5: {
+    name: "ACTIONS",
+    subtitle: "By adjDX (high→low)",
+    intro: "Execute the ACTION from your chosen option:",
+    
+    attackSequence: [
+      { step: "1", name: "Roll to hit", detail: "3d6 ≤ adjDX (4d6 if Defending/Dodging)" },
+      { step: "2", name: "Auto-results", detail: "3=triple; 4=double+bleed; 5=hit; 16=miss; 17=drop; 18=break" },
+      { step: "3", name: "Roll damage", detail: "Per weapon" },
+      { step: "4", name: "Subtract armor", detail: "Protection reduces damage" },
+      { step: "5", name: "Apply damage", detail: "Normal → Fatigue only | Critical (3-4) → Fatigue AND Body" },
+      { step: "6", name: "Injury effects", detail: "½=−1 | 0-5=−2 | 0=KO | neg=save vs death | neg 2×=dead" }
+    ],
+    
+    spellSequence: [
+      { step: "1", name: "Declare spell", detail: "Name spell and target" },
+      { step: "2", name: "Pay mana", detail: "Including any boost" },
+      { step: "3", name: "Counter? (if declared)", detail: "Both roll: 3d6 ≤ INT (+1 per 3 mana)" },
+      { step: "", name: "Higher margin wins", detail: "Ties → caster wins" },
+      { step: "", name: "→ Caster wins", detail: "Proceed to step 4" },
+      { step: "", name: "→ Defender wins", detail: "Countered (caster may escalate next turn)" },
+      { step: "4", name: "Roll to cast", detail: "3d6 ≤ INT or WIS (per spell)" },
+      { step: "5", name: "Apply effect", detail: "Per spell" },
+      { step: "6", name: "Target saves", detail: "3d6 ≤ attr (if applicable)" }
+    ],
+    
+    counterNote: "Escalation: Caster can force spell next turn (pay mana again). Defender chooses to oppose or let succeed. Only caster can escalate. Ends when: caster succeeds, caster stops, defender stops, or Runaway (see below)."
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PHASE 6: FORCED RETREAT & CLEANUP
+  // ──────────────────────────────────────────────────────────────────────────
+  phase6: {
+    name: "FORCED RETREAT",
+    subtitle: null,
+    content: "If you dealt physical damage AND took none: push enemy 1 hex, may advance. No retreat hex → enemy rolls 3d6 ≤ DX or falls. Then: place dropped weapon counters, flip slain/unconscious, check combat end. → Next turn."
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // QUICK REFERENCE
+  // ──────────────────────────────────────────────────────────────────────────
+  quickRef: {
+    formulas: [
+      { label: "Movement",        formula: "MA = DX − 2", note: "(min 4)" },
+      { label: "To Hit",          formula: "3d6 ≤ adjDX", note: null },
+      { label: "vs Defend/Dodge", formula: "4d6 ≤ adjDX", note: "(4-5 hit; 20+ miss; 21-22 drop; 23-24 break)" }
+    ],
+    autoResults: [
+      { label: "Triple damage",  value: "3" },
+      { label: "Double + bleed", value: "4" },
+      { label: "Auto-hit",       value: "5" },
+      { label: "Auto-miss",      value: "16, 17, 18" },
+      { label: "Drop weapon",    value: "17" },
+      { label: "Break weapon",   value: "18" }
+    ],
+    damageEffects: [
+      { condition: "½ Fatigue or Body", effect: "−1 to rolls" },
+      { condition: "0-5 Fatigue or Body", effect: "−2 to rolls" },
+      { condition: "0 Fatigue or Body", effect: "Unconscious" },
+      { condition: "Negative starting", effect: "Save vs death/turn" },
+      { condition: "Negative 2×", effect: "Dead" }
+    ],
+    positionBonuses: [
+      { position: "Side hex", bonus: "+2" },
+      { position: "Rear hex", bonus: "+4" },
+      { position: "Pole vs charge", bonus: "+2" }
+    ],
+    encumbrance: [
+      { load: "≤STR",    mod: "0",    restrict: null },
+      { load: "≤1.5×",   mod: "−1",   restrict: null },
+      { load: "≤2×",     mod: "−2",   restrict: "no run" },
+      { load: "≤2.5×",   mod: "−4",   restrict: "no jog" },
+      { load: ">2.5×",   mod: "walk", restrict: null }
+    ]
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // COUNTERSPELL & ESCALATION
+  // ──────────────────────────────────────────────────────────────────────────
+  counterspell: {
+    title: "COUNTERSPELL",
+    initial: {
+      title: "Initial Counter (Turn 1)",
+      steps: [
+        "Higher adjDX defender: declare counter + commit mana (that's their action)",
+        "Caster's action: declare spell, pay mana",
+        "Lower adjDX defender: may counter when action comes",
+        "Opposed INT roll: +1 per 3 mana invested",
+        "Ties: caster wins (counter must overcome)"
+      ]
+    },
+    resolution: {
+      casterWins: "Spell goes off. Done.",
+      defenderWins: "Spell countered. Caster may escalate next turn or let fizzle."
+    },
+    escalation: {
+      title: "Escalation (Turn 2+)",
+      note: "Only caster can escalate — defender gets one shot",
+      steps: [
+        "Caster's action: pay mana again, new opposed INT roll",
+        "Defender chooses: oppose (pay mana again) or let spell succeed",
+        "Repeat until: caster succeeds, caster stops, defender stops, or Runaway"
+      ]
+    }
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PUSH & CONTROL
+  // ──────────────────────────────────────────────────────────────────────────
+  push: {
+    title: "PUSH (Boosting & Borrowing)",
+    control: {
+      title: "Control Roll",
+      desc: "3d6 ≤ INT, with penalty for mana invested:",
+      table: [
+        { mana: "1-5", penalty: "−1" },
+        { mana: "6-10", penalty: "−2" },
+        { mana: "11-15", penalty: "−3" },
+        { mana: "16-20", penalty: "−4" },
+        { mana: "21+", penalty: "−5 (−1 per 5 more)" }
+      ]
+    },
+    beyondChannel: {
+      title: "Beyond Channel",
+      table: [
+        { beyond: "1-2", penalty: "−2 additional" },
+        { beyond: "3-4", penalty: "−4 additional" },
+        { beyond: "5+", penalty: "−6 (cap); any fail = Runaway" }
+      ]
+    },
+    results: {
+      title: "Control Results",
+      table: [
+        { result: "Success", effect: "Spell works as intended" },
+        { result: "Fail 1-3", effect: "Minor deviation" },
+        { result: "Fail 4-6", effect: "Significant deviation" },
+        { result: "Fail 7+", effect: "RUNAWAY (see below)" },
+        { result: "Natural 18", effect: "RUNAWAY (regardless of margin)" }
+      ]
+    },
+    borrowing: {
+      title: "Borrowing (mana you don't have)",
+      steps: [
+        "Spend all remaining mana",
+        "Borrow remainder → becomes Debt",
+        "Debt Roll after spell: 3d6 ≤ (INT + WIS − Debt)",
+        "Channel is hard cap — can't exceed even by Borrowing"
+      ]
+    }
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // RUNAWAY
+  // ──────────────────────────────────────────────────────────────────────────
+  runaway: {
+    title: "RUNAWAY",
+    trigger: "Triggers: Fail Control by 7+, natural 18 on casting, or Debt Roll Collapse",
+    procedure: [
+      "Runaway begins immediately when triggered",
+      "Each combat round = one Runaway round",
+      "At start of each Runaway round: drain occurs automatically",
+      "Caster's action: attempt Anchor Roll (3d6 ≤ WIS with penalty)",
+      "Success = Runaway ends, roll on Survivor Consequences",
+      "Failure = continues to next round"
+    ],
+    rounds: [
+      { round: "1", drain: "1d6 mana", body: "—", anchor: "−2", desc: "Spell destabilizes" },
+      { round: "2", drain: "2d6 mana", body: "—", anchor: "−4", desc: "Bleed from nose/eyes" },
+      { round: "3", drain: "3d6 mana", body: "+1d6", anchor: "−6", desc: "Visible trauma" },
+      { round: "4", drain: "4d6 mana", body: "+2d6", anchor: "−8", desc: "Severe trauma" },
+      { round: "5", drain: "ALL mana", body: "+1d6", anchor: "−10", desc: "Death spiral begins" },
+      { round: "6+", drain: "—", body: "+1d6/rnd", anchor: "−10", desc: "Continues until anchored or dead" }
+    ],
+    anchor: "Anchor Roll: 3d6 ≤ WIS (apply round penalty from table)",
+    zeroPool: [
+      "When Pool hits 0 mid-drain: fall unconscious, excess drains Body",
+      "Unconscious casters cannot attempt Anchor",
+      "Runaway continues — someone must intervene or caster dies"
+    ],
+    death: [
+      "Body = 0 → deep coma (cannot act, may still die)",
+      "Body = negative starting Body → death"
+    ],
+    intervention: {
+      title: "Intervention (another mage helps)",
+      steps: [
+        "Intervening mage declares and invests mana",
+        "Intervening mage rolls Anchor (uses current round's penalty)",
+        "Success = Runaway ends for both",
+        "Failure = BOTH mages now caught in Runaway"
+      ]
+    }
+  }
+
+};
+
+// ╔════════════════════════════════════════════════════════════════════════════╗
+// ║                                                                            ║
+// ║   PRESENTATION - YOU PROBABLY DON'T NEED TO EDIT BELOW THIS LINE           ║
+// ║                                                                            ║
+// ╚════════════════════════════════════════════════════════════════════════════╝
+</script>
+
+<style>
+:root {
+    --bg: #1a1a2e;
+    --card: #16213e;
+    --border: #2a3a5e;
+    --text: #e8e8e8;
+    --muted: #8a8a9a;
+    --gold: #d4a857;
+    --red: #c45c5c;
+    --green: #5c9a5c;
+    --blue: #5c8ac4;
+    --purple: #8a5cc4;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 10px;
+    font-size: 9px;
+    line-height: 1.2;
+}
+
+h1 {
+    text-align: center;
+    color: var(--gold);
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.flow-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.phase {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 5px 8px;
+}
+
+.phase-header {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 3px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid var(--border);
+}
+
+.phase-num {
+    background: var(--gold);
+    color: var(--bg);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 9px;
+    flex-shrink: 0;
+}
+
+.phase-title {
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--gold);
+}
+
+.phase-subtitle {
+    color: var(--muted);
+    font-size: 8px;
+    margin-left: auto;
+}
+
+.phase-content { color: var(--muted); font-size: 9px; }
+
+.arrow {
+    text-align: center;
+    color: var(--gold);
+    font-size: 10px;
+    margin: -2px 0;
+}
+
+.row { display: flex; gap: 6px; }
+.row > * { flex: 1; }
+
+.branch {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 5px;
+}
+
+.branch-engaged { border-left: 3px solid var(--red); }
+.branch-disengaged { border-left: 3px solid var(--green); }
+.branch-pass { border-left: 3px solid var(--blue); }
+.branch-hth { border-left: 3px solid var(--purple); }
+.branch-action { border-left: 3px solid var(--gold); }
+
+.branch-title {
+    font-weight: 600;
+    font-size: 9px;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tag {
+    font-size: 7px;
+    padding: 1px 3px;
+    border-radius: 2px;
+    background: var(--border);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tag-red { background: var(--red); color: white; }
+.tag-green { background: var(--green); color: white; }
+.tag-blue { background: var(--blue); color: white; }
+.tag-purple { background: var(--purple); color: white; }
+.tag-gold { background: var(--gold); color: var(--bg); }
+
+.opt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8px;
+}
+
+.opt-table th, .opt-table td {
+    padding: 2px 3px;
+    border: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+}
+
+.opt-table th {
+    background: var(--bg);
+    color: var(--gold);
+    font-size: 7px;
+    text-transform: uppercase;
+}
+
+.opt-table .code {
+    font-family: monospace;
+    color: var(--gold);
+    text-align: center;
+    width: 16px;
+}
+
+.opt-table .name {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.opt-table .notes {
+    color: var(--muted);
+    font-size: 7px;
+}
+
+.sequence {
+    list-style: none;
+    font-size: 8px;
+}
+
+.sequence li {
+    padding: 1px 0;
+    display: flex;
+    gap: 4px;
+    align-items: baseline;
+}
+
+.seq-num {
+    background: var(--gold);
+    color: var(--bg);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 7px;
+    flex-shrink: 0;
+}
+
+.seq-indent {
+    width: 12px;
+    flex-shrink: 0;
+}
+
+.sub-step {
+    margin-left: 16px;
+    font-size: 7px;
+}
+
+.sub-step .seq-name {
+    color: var(--muted);
+}
+
+.counter-note {
+    font-size: 7px;
+    color: var(--muted);
+    margin-top: 4px;
+    padding-top: 3px;
+    border-top: 1px dotted var(--border);
+}
+
+.seq-name { font-weight: 600; }
+.seq-detail { color: var(--muted); }
+
+.decision {
+    background: var(--bg);
+    border: 1px dashed var(--gold);
+    border-radius: 4px;
+    padding: 3px 6px;
+    text-align: center;
+    margin: 3px 0;
+}
+.decision-q { color: var(--gold); font-weight: 600; font-size: 9px; }
+
+.quick-ref {
+    background: var(--bg);
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    padding: 5px;
+    margin-top: 5px;
+}
+.quick-ref h3 { color: var(--gold); font-size: 9px; margin-bottom: 3px; }
+.quick-ref-grid { display: flex; gap: 10px; font-size: 8px; flex-wrap: wrap; }
+.quick-ref-grid > div { flex: 1; min-width: 100px; }
+
+.formula {
+    font-family: monospace;
+    background: var(--card);
+    padding: 1px 4px;
+    border-radius: 2px;
+}
+
+/* Magic reference section */
+.magic-section {
+    background: var(--bg);
+    border: 1px solid var(--purple);
+    border-radius: 4px;
+    padding: 5px;
+    margin-top: 5px;
+}
+
+.magic-section h3 {
+    color: var(--purple);
+    font-size: 10px;
+    margin-bottom: 5px;
+}
+
+.magic-subsection {
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px dotted var(--border);
+}
+
+.magic-subsection:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.magic-steps {
+    margin: 2px 0 2px 12px;
+    padding: 0;
+    font-size: 7px;
+    color: var(--muted);
+}
+
+.magic-steps li {
+    margin-bottom: 1px;
+}
+
+.magic-note {
+    font-size: 7px;
+    color: var(--gold);
+    font-style: italic;
+    margin: 2px 0;
+}
+
+.magic-notes {
+    list-style: none;
+    margin: 2px 0 0 0;
+    padding: 0;
+    font-size: 7px;
+    color: var(--muted);
+}
+
+.magic-notes li::before {
+    content: "• ";
+    color: var(--red);
+}
+
+.magic-result {
+    font-size: 7px;
+    margin-top: 3px;
+    padding: 2px 4px;
+    background: var(--bg);
+    border-radius: 2px;
+}
+
+.result-win {
+    color: var(--green);
+    font-weight: 600;
+}
+
+.result-lose {
+    color: var(--red);
+    font-weight: 600;
+}
+
+.mini-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7px;
+    margin-top: 2px;
+}
+
+.mini-table th, .mini-table td {
+    padding: 1px 3px;
+    border: 1px solid var(--border);
+    text-align: left;
+}
+
+.mini-table th {
+    background: var(--bg);
+    color: var(--gold);
+    font-size: 6px;
+    text-transform: uppercase;
+}
+
+@media print {
+    body { background: white; color: black; }
+    .phase, .branch { background: #f5f5f5; border-color: #ccc; }
+}
+</style>
+
+<div id="app" class="flow-container"></div>
+
+<script>
+function renderOptionTable(options, hasMove = true) {
+    let cols = hasMove 
+        ? '<th class="code"></th><th>Option</th><th>Move</th><th>Action</th><th>Notes</th>'
+        : '<th class="code"></th><th>Option</th><th>Action</th><th>Notes</th>';
+    
+    let rows = options.map(o => {
+        if (hasMove) {
+            return `<tr>
+                <td class="code">${o.code}</td>
+                <td class="name">${o.name}</td>
+                <td>${o.move}</td>
+                <td>${o.action}</td>
+                <td class="notes">${o.notes || ''}</td>
+            </tr>`;
+        } else {
+            return `<tr>
+                <td class="code">${o.code}</td>
+                <td class="name">${o.name}</td>
+                <td>${o.action}</td>
+                <td class="notes">${o.notes || ''}</td>
+            </tr>`;
+        }
+    }).join('');
+    
+    return `<table class="opt-table"><tr>${cols}</tr>${rows}</table>`;
+}
+
+function renderSequence(steps) {
+    return `<ul class="sequence">${steps.map(s => `
+        <li class="${s.step === '' ? 'sub-step' : ''}">
+            ${s.step ? `<span class="seq-num">${s.step}</span>` : '<span class="seq-indent"></span>'}
+            <span class="seq-name">${s.name}</span>
+            ${s.detail ? `<span class="seq-detail">— ${s.detail}</span>` : ''}
+        </li>
+    `).join('')}</ul>`;
+}
+
+function renderSimplePhase(num, phase) {
+    return `
+        <div class="phase">
+            <div class="phase-header">
+                <span class="phase-num">${num}</span>
+                <span class="phase-title">${phase.name}</span>
+                ${phase.subtitle ? `<span class="phase-subtitle">${phase.subtitle}</span>` : ''}
+            </div>
+            <div class="phase-content">${phase.content}</div>
+        </div>
+    `;
+}
+
+function render() {
+    const C = CONTENT;
+    const app = document.getElementById('app');
+    
+    app.innerHTML = `
+        <h1>⚔️ ${C.title}</h1>
+        
+        <!-- Phase 1 & 2 side by side -->
+        <div class="row">
+            ${renderSimplePhase(1, C.phase1)}
+            ${renderSimplePhase(2, C.phase2)}
+        </div>
+        <div class="arrow">▼</div>
+        
+        <!-- Phase 3: Movement - Choose Option -->
+        <div class="phase">
+            <div class="phase-header">
+                <span class="phase-num">3</span>
+                <span class="phase-title">${C.phase3.name}</span>
+                <span class="phase-subtitle">${C.phase3.subtitle}</span>
+            </div>
+            <div class="decision"><span class="decision-q">${C.phase3.decision}</span></div>
+            
+            <div class="row">
+                <div class="branch branch-pass" style="flex: 0 0 80px;">
+                    <div class="branch-title"><span class="tag tag-blue">${C.phase3.pass.label}</span></div>
+                    <div style="color: var(--muted);">${C.phase3.pass.description}</div>
+                </div>
+                
+                <div class="branch branch-disengaged" style="flex: 2;">
+                    <div class="branch-title">
+                        <span class="tag tag-green">${C.phase3.disengaged.label}</span>
+                        ${C.phase3.disengaged.condition}
+                    </div>
+                    ${renderOptionTable(C.phase3.disengaged.options, true)}
+                </div>
+            </div>
+            
+            <div class="row" style="margin-top: 5px;">
+                <div class="branch branch-engaged">
+                    <div class="branch-title">
+                        <span class="tag tag-red">${C.phase3.engaged.label}</span>
+                        ${C.phase3.engaged.condition}
+                    </div>
+                    ${renderOptionTable(C.phase3.engaged.options, true)}
+                </div>
+                
+                <div class="branch branch-hth" style="flex: 0 0 280px;">
+                    <div class="branch-title">
+                        <span class="tag tag-purple">${C.phase3.hth.label}</span>
+                        ${C.phase3.hth.condition}
+                    </div>
+                    ${renderOptionTable(C.phase3.hth.options, false)}
+                </div>
+            </div>
+        </div>
+        <div class="arrow">▼</div>
+        
+        <!-- Phase 4 -->
+        ${renderSimplePhase(4, C.phase4)}
+        <div class="arrow">▼</div>
+        
+        <!-- Phase 5: Actions -->
+        <div class="phase">
+            <div class="phase-header">
+                <span class="phase-num">5</span>
+                <span class="phase-title">${C.phase5.name}</span>
+                <span class="phase-subtitle">${C.phase5.subtitle}</span>
+            </div>
+            <div class="phase-content" style="margin-bottom: 4px;">${C.phase5.intro}</div>
+            
+            <div class="row">
+                <div class="branch branch-action">
+                    <div class="branch-title"><span class="tag tag-gold">ATTACK</span></div>
+                    ${renderSequence(C.phase5.attackSequence)}
+                </div>
+                
+                <div class="branch branch-action">
+                    <div class="branch-title"><span class="tag tag-gold">SPELL</span></div>
+                    ${renderSequence(C.phase5.spellSequence)}
+                    <div class="counter-note">${C.phase5.counterNote}</div>
+                </div>
+            </div>
+        </div>
+        <div class="arrow">▼</div>
+        
+        <!-- Phase 6 -->
+        ${renderSimplePhase(6, C.phase6)}
+        
+        <!-- Quick Reference -->
+        <div class="quick-ref">
+            <h3>Quick Reference</h3>
+            <div class="quick-ref-grid">
+                <div>
+                    ${C.quickRef.formulas.map(f => `
+                        <strong>${f.label}:</strong> <span class="formula">${f.formula}</span>${f.note ? ` ${f.note}` : ''}<br>
+                    `).join('')}
+                </div>
+                <div>
+                    ${C.quickRef.autoResults.map(a => `<strong>${a.label}:</strong> ${a.value}<br>`).join('')}
+                </div>
+                <div>
+                    ${C.quickRef.damageEffects.map(d => `<strong>${d.condition}:</strong> ${d.effect}<br>`).join('')}
+                </div>
+                <div>
+                    <strong>DX Bonuses:</strong><br>
+                    ${C.quickRef.positionBonuses.map(p => `${p.position}: ${p.bonus}`).join(' | ')}
+                </div>
+                <div>
+                    <strong>Encumbrance:</strong><br>
+                    ${C.quickRef.encumbrance.map(e => `${e.load}: ${e.mod}${e.restrict ? ` (${e.restrict})` : ''}`).join(' | ')}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Magic Reference Section -->
+        <div class="magic-section">
+            <h3>⚡ Magic Reference</h3>
+            <div class="row">
+                <!-- Counterspell -->
+                <div class="branch branch-action">
+                    <div class="branch-title"><span class="tag tag-purple">COUNTERSPELL</span></div>
+                    <div class="magic-subsection">
+                        <strong>${C.counterspell.initial.title}</strong>
+                        <ol class="magic-steps">
+                            ${C.counterspell.initial.steps.map(s => `<li>${s}</li>`).join('')}
+                        </ol>
+                        <div class="magic-result">
+                            <span class="result-win">Caster wins →</span> ${C.counterspell.resolution.casterWins}<br>
+                            <span class="result-lose">Defender wins →</span> ${C.counterspell.resolution.defenderWins}
+                        </div>
+                    </div>
+                    <div class="magic-subsection">
+                        <strong>${C.counterspell.escalation.title}</strong>
+                        <div class="magic-note">${C.counterspell.escalation.note}</div>
+                        <ol class="magic-steps">
+                            ${C.counterspell.escalation.steps.map(s => `<li>${s}</li>`).join('')}
+                        </ol>
+                    </div>
+                </div>
+                
+                <!-- Push & Control -->
+                <div class="branch branch-action">
+                    <div class="branch-title"><span class="tag tag-gold">PUSH</span> Boosting & Borrowing</div>
+                    <div class="magic-subsection">
+                        <strong>${C.push.control.title}</strong> — ${C.push.control.desc}
+                        <table class="mini-table">
+                            <tr><th>Mana</th><th>Penalty</th></tr>
+                            ${C.push.control.table.map(r => `<tr><td>${r.mana}</td><td>${r.penalty}</td></tr>`).join('')}
+                        </table>
+                    </div>
+                    <div class="magic-subsection">
+                        <strong>${C.push.beyondChannel.title}</strong>
+                        <table class="mini-table">
+                            <tr><th>Beyond</th><th>Penalty</th></tr>
+                            ${C.push.beyondChannel.table.map(r => `<tr><td>${r.beyond}</td><td>${r.penalty}</td></tr>`).join('')}
+                        </table>
+                    </div>
+                    <div class="magic-subsection">
+                        <strong>${C.push.results.title}</strong>
+                        <table class="mini-table">
+                            <tr><th>Result</th><th>Effect</th></tr>
+                            ${C.push.results.table.map(r => `<tr><td>${r.result}</td><td>${r.effect}</td></tr>`).join('')}
+                        </table>
+                    </div>
+                    <div class="magic-subsection">
+                        <strong>${C.push.borrowing.title}</strong>
+                        <ol class="magic-steps">
+                            ${C.push.borrowing.steps.map(s => `<li>${s}</li>`).join('')}
+                        </ol>
+                    </div>
+                </div>
+                
+                <!-- Runaway -->
+                <div class="branch branch-hth" style="flex: 1.2;">
+                    <div class="branch-title"><span class="tag tag-red">RUNAWAY</span></div>
+                    <div class="magic-note">${C.runaway.trigger}</div>
+                    
+                    <div class="magic-subsection">
+                        <strong>Procedure (each combat round):</strong>
+                        <ol class="magic-steps">
+                            ${C.runaway.procedure.map(s => `<li>${s}</li>`).join('')}
+                        </ol>
+                    </div>
+                    
+                    <table class="mini-table">
+                        <tr><th>Rnd</th><th>Drain</th><th>Body</th><th>Anchor</th><th>Effect</th></tr>
+                        ${C.runaway.rounds.map(r => `<tr><td>${r.round}</td><td>${r.drain}</td><td>${r.body}</td><td>${r.anchor}</td><td>${r.desc}</td></tr>`).join('')}
+                    </table>
+                    
+                    <div class="magic-subsection">
+                        <strong>Pool reaches 0:</strong>
+                        <ul class="magic-notes">
+                            ${C.runaway.zeroPool.map(n => `<li>${n}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="magic-subsection">
+                        <strong>Death:</strong>
+                        <ul class="magic-notes">
+                            ${C.runaway.death.map(n => `<li>${n}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="magic-subsection">
+                        <strong>${C.runaway.intervention.title}:</strong>
+                        <ol class="magic-steps">
+                            ${C.runaway.intervention.steps.map(s => `<li>${s}</li>`).join('')}
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+render();
+</script>
+
+</body>
+</html>

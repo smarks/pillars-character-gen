@@ -17,7 +17,8 @@ urlpatterns = [
     path('handbook/', views.handbook_section, {'section': 'players_handbook'}, name='handbook'),
     path('combat/', views.handbook_section, {'section': 'combat'}, name='combat'),
     path('dm/', views.dm_handbook, name='dm'),
-    path('turn-sequence/', views.serve_reference_html, {'filename': 'pillars-turn-sequence-4.html'}, name='turn_sequence'),
+    path('rulebook/', views.handbook_section, {'section': 'public_rulebook'}, name='rulebook'),
+    path('turn-sequence/', views.serve_reference_html, {'filename': 'pillars-turn-sequence.html'}, name='turn_sequence'),
     # Images for handbook markdown files
     path('images/<str:filename>', views.serve_reference_image, name='reference_image'),
     # Authentication

@@ -30,22 +30,6 @@
 .welcome-text strong {
     color: #333;
 }
-.welcome-container .nav-links {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 30px;
-}
-.welcome-container .nav-link {
-    padding: 10px 20px;
-    font-size: 0.85em;
-    min-width: auto;
-}
-.welcome-container .nav-link .icon {
-    font-size: 1.2em;
-    margin-bottom: 4px;
-}
 {% endblock %}
 
 {% block content %}
@@ -61,63 +45,6 @@
         <p><strong>The world is indifferent.</strong> It doesn't care about your backstory. Winter comes whether you're ready or not. This isn't bleakness for its own sake—it's respect for the fiction. Stakes feel real when the world behaves like it exists.</p>
         <p><strong>Mechanics serve the moment.</strong> Rules tighten around decisions that matter and dissolve everywhere else. If a rule doesn't create interesting choices, it shouldn't exist.</p>
         <p><strong>Proven bones.</strong> Pillars is D&D homebrew, built on The Fantasy Trip—Steve Jackson's 1977 system that predates GURPS—refined through forty years of homebrew and actual play. The chassis is simple, tested, and gets out of your way.</p>
-    </div>
-
-    <div class="nav-links">
-        <a href="{% url 'generator' %}" class="nav-link">
-            <span class="icon">&#9876;</span>
-            Character Generator
-        </a>
-        <a href="{% url 'about' %}" class="nav-link">
-            <span class="icon">&#9432;</span>
-            About
-        </a>
-        <a href="{% url 'lore' %}" class="nav-link">
-            <span class="icon">&#128220;</span>
-            Background
-        </a>
-        <a href="{% url 'handbook' %}" class="nav-link">
-            <span class="icon">&#128214;</span>
-            Player's Handbook
-        </a>
-        <a href="{% url 'combat' %}" class="nav-link">
-            <span class="icon">&#9876;</span>
-            Combat & Movement
-        </a>
-        <a href="{% url 'turn_sequence' %}" class="nav-link">
-            <span class="icon">&#8634;</span>
-            Turn Sequence
-        </a>
-        <a href="{% url 'dice_roller' %}" class="nav-link" onclick="window.open(this.href, 'dice', 'width=420,height=400,resizable=yes'); return false;">
-            <span class="icon">&#127922;</span>
-            Dice Roller
-        </a>
-        {% if user.is_authenticated %}
-        <a href="{% url 'my_characters' %}" class="nav-link">
-            <span class="icon">&#128100;</span>
-            My Characters
-        </a>
-        <a href="{% url 'notes' %}" class="nav-link">
-            <span class="icon">&#128221;</span>
-            My Notes
-        </a>
-        {% endif %}
-        {% if user.is_authenticated and user.profile.is_dm or user.is_authenticated and user.profile.is_admin %}
-        <a href="{% url 'dm' %}" class="nav-link">
-            <span class="icon">&#128218;</span>
-            DM Handbook
-        </a>
-        {% endif %}
-        {% if user.is_authenticated and user.profile.is_admin %}
-        <a href="{% url 'manage_users' %}" class="nav-link">
-            <span class="icon">&#9881;</span>
-            Manage Users
-        </a>
-        <a href="{% url 'admin_notes' %}" class="nav-link">
-            <span class="icon">&#128269;</span>
-            Browse Notes
-        </a>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
