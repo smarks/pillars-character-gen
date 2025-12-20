@@ -1811,6 +1811,19 @@ def manage_characters(request):
     })
 
 
+@dm_required
+@require_POST
+def bulk_delete_characters(request):
+    """DM/Admin view to delete multiple characters at once."""
+    character_ids = request.POST.getlist('character_ids')
+    if character_ids:
+        deleted_count = SavedCharacter.objects.filter(id__in=character_ids).delete()[0]
+        messages.success(request, f"Deleted {deleted_count} character(s).")
+    else:
+        messages.warning(request, "No characters selected.")
+    return redirect('manage_characters')
+
+
 @admin_required
 @require_POST
 def change_user_role(request, user_id):

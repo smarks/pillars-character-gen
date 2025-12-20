@@ -31,34 +31,67 @@
 
 <div class="section">
     {% if characters %}
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Player</th>
-                <th>Created</th>
-                <th>Updated</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for char in characters %}
-            <tr>
-                <td>{{ char.name }}</td>
-                <td>{{ char.user.username }}</td>
-                <td>{{ char.created_at|date:"M d, Y H:i" }}</td>
-                <td>{{ char.updated_at|date:"M d, Y H:i" }}</td>
-                <td>
-                    <a href="{% url 'character_sheet' char.id %}" class="btn primary">Edit</a>
-                    <form method="post" action="{% url 'admin_delete_character' char.id %}" style="display: inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn danger" onclick="return confirm('Are you sure you want to delete {{ char.name }}?');">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <form method="post" action="{% url 'bulk_delete_characters' %}" id="bulk-form">
+        {% csrf_token %}
+        <div class="button-group" style="margin-bottom: 15px;">
+            <button type="submit" class="btn danger" id="bulk-delete-btn" disabled onclick="return confirm('Are you sure you want to delete the selected characters?');">Delete Selected</button>
+            <span id="selected-count" style="margin-left: 10px; color: #666;"></span>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 30px;"><input type="checkbox" id="select-all" title="Select all"></th>
+                    <th>Name</th>
+                    <th>Player</th>
+                    <th>Created</th>
+                    <th>Updated</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for char in characters %}
+                <tr>
+                    <td><input type="checkbox" name="character_ids" value="{{ char.id }}" class="char-checkbox"></td>
+                    <td>{{ char.name }}</td>
+                    <td>{{ char.user.username }}</td>
+                    <td>{{ char.created_at|date:"M d, Y H:i" }}</td>
+                    <td>{{ char.updated_at|date:"M d, Y H:i" }}</td>
+                    <td>
+                        <a href="{% url 'character_sheet' char.id %}" class="btn primary">Edit</a>
+                        <form method="post" action="{% url 'admin_delete_character' char.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn danger" onclick="return confirm('Are you sure you want to delete {{ char.name }}?');">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+    <script>
+        (function() {
+            var selectAll = document.getElementById('select-all');
+            var checkboxes = document.querySelectorAll('.char-checkbox');
+            var bulkBtn = document.getElementById('bulk-delete-btn');
+            var countSpan = document.getElementById('selected-count');
+
+            function updateState() {
+                var checked = document.querySelectorAll('.char-checkbox:checked').length;
+                bulkBtn.disabled = checked === 0;
+                countSpan.textContent = checked > 0 ? checked + ' selected' : '';
+                selectAll.checked = checked === checkboxes.length && checkboxes.length > 0;
+            }
+
+            selectAll.addEventListener('change', function() {
+                checkboxes.forEach(function(cb) { cb.checked = selectAll.checked; });
+                updateState();
+            });
+
+            checkboxes.forEach(function(cb) {
+                cb.addEventListener('change', updateState);
+            });
+        })();
+    </script>
     {% else %}
     <p>No characters found{% if player_filter %} for {{ player_filter }}{% endif %}.</p>
     {% endif %}

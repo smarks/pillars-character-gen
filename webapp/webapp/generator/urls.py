@@ -40,6 +40,7 @@ urlpatterns = [
     # Admin/DM management
     path('manage-users/', views.manage_users, name='manage_users'),
     path('manage-characters/', views.manage_characters, name='manage_characters'),
+    path('manage-characters/bulk-delete/', views.bulk_delete_characters, name='bulk_delete_characters'),
     path('admin-notes/', views.admin_notes, name='admin_notes'),
     path('admin-notes/<int:note_id>/edit/', views.admin_edit_note, name='admin_edit_note'),
     path('admin-notes/<int:note_id>/delete/', views.admin_delete_note, name='admin_delete_note'),
