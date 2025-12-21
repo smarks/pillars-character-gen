@@ -1,7 +1,7 @@
 # PILLARS
 
 *A Fantasy Role-Playing Game*
-by Spencer Marks standing on the shoulders of Steve Jackson, Gary Gygax, Paul Gazis, the early members of MIT SGS, Ursula K. Le Guin, and, of course, J.R.R. Tolkien adn with the help of Stan Heckman.  
+by Spencer Marks standing on the shoulders of Steve Jackson, Gary Gygax, Paul Gazis, the early members of MIT SGS, Ursula K. Le Guin, and, of course, J.R.R. Tolkien and with the help of Stan Heckman.  
 
 ---- 
 
@@ -13,29 +13,11 @@ by Spencer Marks standing on the shoulders of Steve Jackson, Gary Gygax, Paul Ga
 
 ### Places
 
-In the far northeast lies The **Splinterings**  - an archipelago of  islands of various sizes that range from tiny to lands that might take a two or three weeks to walk around. These islands are the home to tribal clans of humanoids.  It is said that before the there were the Splinters, these lands were once unified under the Ur  or All Ruler.  When war came the splinters will formed. Now each island is fiercely independent. While some clans closer to the larger islands do a healthy business trading, they remain distance.  
-
-South and West lay the waters of the **Dragon Isles**, a land of mountainous desolation, desert isles and a few villages and towns, but these are sparse and sparsely populated.  There are dragons here though although usually they do not like to bothered with mortals. 
-
-**The Navel** is a vast kingdom rich from trade and its' central location which sets squat in the middle of the common  lands. At the center of The Navel is the Crystal isle on which empire has built there palace. The Navel is also the center of the **Wayfarer's Guild** and close to the islands of Roke and Marriage - home to serval schools of science and magic. 
-
-Down below South and West are the **Dragon Isles**.  Little and less is known of isles, of which there are many, nor the dragons that inhabit them as they like to keep to themselves. However sparse, other sentiment races inhabit the isles facilitating trade. 
-
-To the south east lies much water and finally the **Old Emporium**. While city states still, exotic and splendid, can be found a long the vast coastline. Less is known about the inner lands  away from the coast and further south. The city states are independent.
+To be updated 
 
 ## Characters
 
 ### Creating a Character
-
-# Character Generation
-
-Pillars offers several ways to generate a character. The most fun way, in my opinion, is to **roll dice** and use the tables below to flesh out your character. Alternatively, you can make your own character by rolling dice where required (not many places) and **specifying what skills** you'd like. Finally, you can use the **online character generator** to create your entire character in a web browser. This is handy for me, the GM, as I'll have immediate access to your character stats. If you opt for the more traditional methods of character generation, I'll probably ask you to register your character so I have access to their stats.
-
-You can even combine or mix and match, all three of these methods if you'd like.  The goals here are the same as the those in the game in general: 1) what's the most fun and  2) what gets you the character you want to play. 
-Some players like listening to the dice and seeing what path they take your character on, while players aren't as forgiving. _A special note to mini-maxers aka Known Optimizers - you can't try, but I wouldn't bother)._ 
-
-You can even combine or mix and match all three of these methods if you'd like. The goals, as always, are: what's the most fun, and what gets you the character you want to play. Some players like listening to the dice and seeing what path they create for them, while others aren't as forgiving.
-
 
 
 ### Attributes
@@ -76,8 +58,9 @@ Players can roll 3d6 to determine each attribute **OR** divide **65 points** bet
 - The order in which figures act each turn after movement
 - How likely a figure is to hit an enemy with a physical attack
 - How likely a figure is to avoid falling and similar mishaps
-- Base movement allowance (MA = DEX − 2)
+- Contributes to movement modifier (along with CON and STR)
 - Certain talents require a minimum DEX before they can be learned
+
 
 **Intelligence (INT)** governs a character's "smarts"—the ability to perceive or infer information, retain it as knowledge, and apply it. However, knowing *when* to apply intelligence is an aspect of Wisdom.
 - Perception
@@ -99,7 +82,8 @@ Players can roll 3d6 to determine each attribute **OR** divide **65 points** bet
 - Morale
 - Leadership
 
-**Constitution (CON)** governs how healthy a character is, how much endurance they have, and how much damage they can take. Add STR bonus or malus.
+**Constitution (CON)** governs how healthy a character is, how much endurance they have, and how much damage they can take. CON is a key component of Fatigue and Body, and determines survival saves when dying.
+
 
 ### Secondary Attributes
 
@@ -134,46 +118,35 @@ Final weight = Base weight + (STR ÷ 2) stones
 #### Fatigue Points
 
 Fatigue tracks the depletion of physical or mental energy due to exertion, stress, or environmental factors.
-
-**Fatigue = CON + WIS + (DEX or STR) + 1d6**
-
-(Apply INT and WIS modifiers)
-
-**Normal hits reduce Fatigue only.**
-
-Death by exhaustion. If you go negative your total amount of original fatigue points make survial saving (CON =\> 3d6) unit the character either recovers or dies. 
-
-
+- Fatigue = CON + WIS + INT + (DEX or STR, whichever is higher) + 2d6
+- Normal hits reduce Fatigue only.
+- 0 fatigue means your character is unconscious. 
+- Death by exhaustion: if Fatigue goes negative by your original total, make a survival saving throw (3d6 ≤ CON) each turn until the character either recovers or dies.
 #### Body Points
 
 Body points represent how many wounds a character can sustain before dying.
+- Body = 2/3 × Fatigue (round up)
+- Critical hits (roll of 3 or 4) reduce both Fatigue AND Body.
+- 0 body means your character is semi-unconscious. (Limited set of actions - see GM)
+	- When Body goes negative by your original total, make a survival saving throw (3d6 ≤ CON) each turn until the character either recovers or dies.
 
-**Body = CON + (DEX or STR) + 1d6**
-
-(Apply INT and WIS modifiers)
-
-**Critical hits (roll of 3 or 4) reduce both Fatigue AND Body.**
-
-#### Injury Thresholds & definition of Death
+### Injury Thresholds & Death
 
 These apply to both Fatigue and Body (whichever is worse):
 
-| Condition                   | Effect                          |
-| --------------------------- | ------------------------------- |
-| Down to ½ (but above 5)     | −1 to all rolls                 |
-| Between 0 and 5             | −2 to all rolls                 |
-| 0                           | Unconscious                     |
-| Negative 1/2 starting value | Saving throw vs death each turn |
-| Negative 2× starting value  | Dead                            |
+| Condition                    | Effect                               |
+| ---------------------------- | ------------------------------------ |
+| Down to ½ (but above 5)      | −1 to all rolls                      |
+| Between 1 and 5              | −2 to all rolls                      |
+| 0                            | Unconscious                          |
+| Negative ½ starting value    | Survival save each turn (3d6 ≤ CON)  |
+| Negative full starting value | Survival save each turn with penalty |
 
----
-e.g. 
+**Survival Save Penalty:** Once past negative full starting value, the penalty equals how far past the threshold you've gone.
 
-A character with a BODY of 30 goes unconscious when their remaining body points reach 0
-When the number of body points drops to 1/2 of the total, in this case, -15
-the character has to make surival roles (=\> CON 3D6).
-When the character's body reaches negative their total original body, in this case 30, they die.
+**Survival saves continue each turn** until the character is healed above the threshold or fails a save and dies.
 
+*Example: A character with Body 30 goes unconscious at 0. At −15, they begin making survival saves (3d6 ≤ CON). At −30, saves continue but are now penalized. At −35, the penalty is −5 (3d6 ≤ CON − 5). Each turn they must save again until healed above −15 or they fail and die.*
 
 ## Character Background
 
@@ -348,13 +321,13 @@ Very low and very high rolls have special effects—some fortunate, some catastr
 
 Multiple skill points in a spell grant additional abilities:
 
-| Level | Benefit                                                          |
-| ----- | ---------------------------------------------------------------- |
-| 2     | Cast without hand gestures                                       |
-| 3     | Cast without verbal incantation; protection from same spell      |
-| 4     | Reduced mana cost; halt same spell                               |
-| 5     | Further reduced cost; reflect same spell back onto caster        |
-| 6     | Minimal cost; invert spell; reflect spell group back onto caster |
+| Level | Benefit                                                                              |
+| ----- | ------------------------------------------------------------------------------------ |
+| 1     | Can cast the spell                                                                   |
+| 2     | Cast without hand gestures                                                           |
+| 3     | Cast without verbal incantation; unlocks protection from same spell (separate skill) |
+| 4     | Reduced mana cost; unlocks halt same spell (separate skill)                          |
+| 5     | Further reduced cost; unlocks reflect same spell back onto caster (separate skill)   |
 
 ### Renewing Spells
 
@@ -380,7 +353,7 @@ The experience is terrifying. The spell destabilizes. You feel your reserves dra
 
 Those who survive Runaway often bear permanent marks: white streaks in their hair, strange scars, a haunted look. Those who don't survive... the kindest outcome is a quick death.
 
-**Anchor Roll:** Each round, you attempt to regain control by rolling 3d6 ≤ WIS. The penalties are severe and worsen rapidly.
+**Anchor Roll:** Each round, you attempt to regain control by rolling 3d6 ≤ WIS.
 
 When your Pool empties, you fall unconscious, and the magic begins consuming your Body instead. When your Body fails, you die.
 
@@ -481,18 +454,18 @@ A turn represents approximately **five seconds** of action. Nothing happens simu
 
 #### Disengaged Figures
 
-| Option | Name           | Move    | Action                                            |
-| ------ | -------------- | ------- | ------------------------------------------------- |
-| a      | MOVE           | Full MA | None (movement only). Fatigue 1/turn              |
-| b      | CHARGE ATTACK  | ≤½ MA   | Melee attack or HTH                               |
-| c      | DODGE          | ≤½ MA   | +1 die to be hit (missiles/thrown/missile spells) |
-| d      | DROP           | ≤½ MA   | Go prone or kneeling                              |
-| e      | READY WEAPON   | ≤2 hex  | Re-sling current, ready new weapon/shield         |
-| f      | MISSILE ATTACK | ≤1 hex  | Fire bow, crossbow, or thrown weapon              |
-| g      | STAND UP       | 0       | Rise from prone/kneeling (entire turn)            |
-|        | CRAWL          | 2 hex   | Move while prone (stay prone)                     |
-| h      | CAST SPELL     | ≤1 hex  | Attempt any spell                                 |
-| i      | DISBELIEVE     | ≤1 hex  | See through one illusion                          |
+| Option | Name           | Move         | Action                                            |
+| ------ | -------------- | ------------ | ------------------------------------------------- |
+| a      | MOVE           | Run/Sprint   | None (movement only). Fatigue per gait            |
+| b      | CHARGE ATTACK  | Jog or less  | Melee attack or HTH                               |
+| c      | DODGE          | Jog or less  | +1 die to be hit (missiles/thrown/missile spells) |
+| d      | DROP           | Jog or less  | Go prone or kneeling                              |
+| e      | READY WEAPON   | Walk         | Re-sling current, ready new weapon/shield         |
+| f      | MISSILE ATTACK | Walk (slow)  | Fire bow, crossbow, or thrown weapon              |
+| g      | STAND UP       | 0            | Rise from prone/kneeling (entire turn)            |
+|        | CRAWL          | 2 hex        | Move while prone (stay prone)                     |
+| h      | CAST SPELL     | Walk (slow)  | Attempt any spell                                 |
+| i      | DISBELIEVE     | Walk (slow)  | See through one illusion                          |
 
 #### Engaged Figures
 
@@ -520,45 +493,39 @@ A turn represents approximately **five seconds** of action. Nothing happens simu
 
 ### Movement
 
-**Base Movement Allowance: MA = DEX − 2** (minimum 4)
-
-| DEX | Base MA |
-| --- | ------- |
-| 8   | 6       |
-| 9   | 7       |
-| 10  | 8       |
-| 11  | 9       |
-| 12  | 10      |
-| 13  | 11      |
-| 14  | 12      |
-
-**Hex Size:** Approximately 4 feet (1.3 meters)
+**Hex Size:** 5 feet (1.5 meters). Each movement phase is approximately 5 seconds.
 
 **Megahex:** 7 hexes (1 center + 6 surrounding). Used for missile range.
 
-### Encumbrance
+**Movement Modifier:** CON modifier + STR modifier + DEX modifier
 
+| Speed       | Distance (hexes) | Fatigue Cost                 | Available Actions               |
+| ----------- | ---------------- | ---------------------------- | ------------------------------- |
+| Sprint      | 18 + modifier    | 6 per turn                   | None                            |
+| Run         | 12 + modifier    | 1 per turn                   | None                            |
+| Jog         | 7 + modifier     | None (combat) / 1 per 10 min | Charge Attack, Dodge, Drop      |
+| Walk        | 4 + modifier     | None                         | Ready Weapon                    |
+| Walk (slow) | Up to 2 hex      | None                         | Cast Spell, Missile, Disbelieve |
+| Stand Still | 0                | None                         | Stand Up, Pick Up Weapon        |
+
+*Example: A character with CON 14 (+1), STR 10 (0), DEX 12 (0) has a movement modifier of +1. They walk 5, jog 8, run 13, sprint 19.*
+
+
+
+### Encumbrance
+Equipment weights are listed in pounds (lbs).
+ For reference, 1 stone = 14 lbs.
 Based on weight carried compared to STR:
 
-| Load Level   | Weight Carried     | MA Mod | Restrictions      |
-| ------------ | ------------------ | ------ | ----------------- |
-| Unencumbered | Up to STR lbs      | 0      | —                 |
-| Light        | STR+1 to STR×1.5   | −1     | —                 |
-| Medium       | STR×1.5+1 to STR×2 | −2     | Cannot Run        |
-| Heavy        | STR×2+1 to STR×2.5 | −4     | Cannot Run or Jog |
-| Overloaded   | Over STR×2.5       | Walk   | 1 hex max         |
+| Load Level   | Weight Carried     | Movement Penalty | Restrictions               |
+| ------------ | ------------------ | ---------------- | -------------------------- |
+| Unencumbered | Up to STR lbs      | 0                | —                          |
+| Light        | STR+1 to STR×1.5   | −1               | —                          |
+| Medium       | STR×1.5+1 to STR×2 | −2               | Cannot Run or Sprint       |
+| Heavy        | STR×2+1 to STR×2.5 | −4               | Cannot Jog, Run, or Sprint |
+| Overloaded   | Over STR×2.5       | —                | Walk only, 1 hex max       |
 
-**Dropping a Pack:** Free action at start of movement. Picking up takes one full turn.
-
-### Movement Speeds
-
-| Speed       | Distance    | Fatigue Cost                 | Available Actions               |
-| ----------- | ----------- | ---------------------------- | ------------------------------- |
-| Run         | Full MA     | 1 per turn                   | None (movement only)            |
-| Jog         | Half MA     | None (combat) / 1 per 10 min | Charge Attack, Dodge, Drop      |
-| Walk        | Up to 2 hex | None                         | Ready Weapon                    |
-| Walk (slow) | Up to 1 hex | None                         | Cast Spell, Missile, Disbelieve |
-| Stand Still | 0           | None                         | Stand Up, Pick Up Weapon        |
+**Dropping a Pack:** Free action at start of movement. Picking up takes one full turn. 
 
 ### Facing
 
@@ -690,7 +657,7 @@ Armor and natural protection subtract hits **from each attack**.
 A figure may enter an enemy's hex if:
 - Enemy has back to wall
 - Enemy is down, prone, or kneeling
-- Enemy has lower MA
+- Enemy has lower movement modifier
 - Attacker comes from rear
 - Enemy agrees
 
@@ -700,11 +667,11 @@ A figure may enter an enemy's hex if:
 
 | STR       | Damage | STR   | Damage |
 | --------- | ------ | ----- | ------ |
-| 8 or less | 1d−4   | 17–20 | 1d+1   |
-| 9–10      | 1d−3   | 21–24 | 1d+2   |
-| 11–12     | 1d−2   | 25–30 | 1d+3   |
-| 13–14     | 1d−1   | 31–40 | 2d+1   |
-| 15–16     | 1d     | 41–50 | 3d+1   |
+| 8 or less | 1d6−4  | 17–20 | 1d6+1  |
+| 9–10      | 1d6−3  | 21–24 | 1d6+2  |
+| 11–12     | 1d6−2  | 25–30 | 1d6+3  |
+| 13–14     | 1d6−1  | 31–40 | 2d6+1  |
+| 15–16     | 1d6    | 41–50 | 3d6+1  |
 
 #### Defending and Dodging
 
@@ -726,8 +693,10 @@ If you dealt physical hits and took none:
 
 ### Currency System
 
-- 1 gold piece (gp) = 10 silver pieces (sp)
-- 1 silver piece = 10 copper pieces (cp)
+MU (Monetary Unit) is the standard measure of value. In most regions, 1 MU = 1 gold piece (gp).
+
+- 1 MU (e.g. gp) = 10 Lesser MU (e.g. silver pieces (sp))
+- 1 Lesser MU (e.g. sp) = 10 Minor MU (e.g. copper pieces (cp))
 
 ### Economic Context
 
@@ -740,41 +709,41 @@ If you dealt physical hits and took none:
 
 | Weapon                   | Damage | STR | Cost | Wt (lbs) |
 | ------------------------ | ------ | --- | ---- | -------- |
-| Dagger††                 | 1d−1   | —   | 10   | 0.2      |
-| Rapier                   | 1d     | 9   | 40   | 1.0      |
-| Saber                    | 2d−2   | 10  | 50   | 3.0      |
-| Shortsword               | 2d−1   | 11  | 60   | 4.0      |
-| Broadsword               | 2d     | 12  | 80   | 5.0      |
-| Bastard Sword (1 hand)   | 2d+1   | 13  | 100  | 7.0      |
-| Bastard Sword (2 hands)† | 3d−2   | 13  | 100  | 7.0      |
-| 2-Handed Sword†          | 3d−1   | 14  | 120  | 10.0     |
-| Great Sword†             | 3d+1   | 16  | 150  | 15.0     |
+| Dagger††                 | 1d6−1  | —   | 10   | 0.2      |
+| Rapier                   | 1d6    | 9   | 40   | 1.0      |
+| Saber                    | 2d6−2  | 10  | 50   | 3.0      |
+| Shortsword               | 2d6−1  | 11  | 60   | 4.0      |
+| Broadsword               | 2d6    | 12  | 80   | 5.0      |
+| Bastard Sword (1 hand)   | 2d6+1  | 13  | 100  | 7.0      |
+| Bastard Sword (2 hands)† | 3d6−2  | 13  | 100  | 7.0      |
+| 2-Handed Sword†          | 3d6−1  | 14  | 120  | 10.0     |
+| Great Sword†             | 3d6+1  | 16  | 150  | 15.0     |
 
 ### Axes/Hammers/Maces
 
 | Weapon        | Damage | STR | Cost | Wt (lbs) |
 | ------------- | ------ | --- | ---- | -------- |
 | Club††        | Varies | —   | 10   | 3+       |
-| Hatchet††     | 1d     | 9   | 15   | 2.0      |
-| Hammer††      | 1d+1   | 10  | 25   | 4.0      |
-| Mace††        | 2d−1   | 11  | 40   | 6.0      |
-| Small Ax      | 1d+2   | 11  | 30   | 5.0      |
-| War Ax        | 2d     | 12  | 60   | 8.0      |
-| Morningstar   | 2d+1   | 13  | 100  | 12.0     |
-| Great Hammer† | 2d+2   | 14  | 110  | 16.0     |
-| Battle Axe†   | 3d     | 15  | 130  | 22.0     |
+| Hatchet††     | 1d6    | 9   | 15   | 2.0      |
+| Hammer††      | 1d6+1  | 10  | 25   | 4.0      |
+| Mace††        | 2d6−1  | 11  | 40   | 6.0      |
+| Small Ax      | 1d6+2  | 11  | 30   | 5.0      |
+| War Ax        | 2d6    | 12  | 60   | 8.0      |
+| Morningstar   | 2d6+1  | 13  | 100  | 12.0     |
+| Great Hammer† | 2d6+2  | 14  | 110  | 16.0     |
+| Battle Axe†   | 3d6    | 15  | 130  | 22.0     |
 
 ### Missile Weapons
 
 | Weapon          | Damage | STR | Cost | Wt (lbs) | Notes                           |
 | --------------- | ------ | --- | ---- | -------- | ------------------------------- |
-| Thrown Rock     | 1d−4   | —   | —    | 0.5      |                                 |
-| Sling†          | 1d−2   | —   | 2    | 1.0      | Including rocks                 |
-| Small Bow†      | 1d−1   | 9   | 20   | 4.0      | 2 shots/turn if adjDEX 15+      |
-| Horse Bow†      | 1d     | 10  | 30   | 4.0      | 2 shots/turn if adjDEX 16+      |
-| Longbow†        | 1d+2   | 11  | 40   | 4.0      | 2 shots/turn if adjDEX 18+      |
-| Light Crossbow† | 2d     | 12  | 50   | 6.0      | Every other turn; every if 14+  |
-| Heavy Crossbow† | 3d     | 15  | 80   | 10.0     | Every 3rd turn; every other 16+ |
+| Thrown Rock     | 1d6−4  | —   | —    | 0.5      |                                 |
+| Sling†          | 1d6−2  | —   | 2    | 1.0      | Including rocks                 |
+| Small Bow†      | 1d6−1  | 9   | 20   | 4.0      | 2 shots/turn if adjDEX 15+      |
+| Horse Bow†      | 1d6    | 10  | 30   | 4.0      | 2 shots/turn if adjDEX 16+      |
+| Longbow†        | 1d6+2  | 11  | 40   | 4.0      | 2 shots/turn if adjDEX 18+      |
+| Light Crossbow† | 2d6    | 12  | 50   | 6.0      | Every other turn; every if 14+  |
+| Heavy Crossbow† | 3d6    | 15  | 80   | 10.0     | Every 3rd turn; every other 16+ |
 | Arrows (20)     | —      | —   | 20   | 1.0      |                                 |
 | Quarrels (20)   | —      | —   | 20   | 1.0      |                                 |
 
@@ -782,45 +751,47 @@ If you dealt physical hits and took none:
 
 | Weapon              | Damage | STR | Cost | Wt (lbs) | Notes               |
 | ------------------- | ------ | --- | ---- | -------- | ------------------- |
-| Javelin††           | 1d−1   | 9   | 20   | 3.0      | Too short for 2-hex |
-| Spear††             | 1d     | 11  | 40   | 6.0      | 2-2½ yards          |
-| Spear (2 hands)††,† | 1d+1   | 11  | 40   | 6.0      | 2-2½ yards          |
-| Halberd†            | 2d     | 13  | 70   | 16.0     | 2-2½ yards          |
-| Pike Axe†           | 2d+2   | 15  | 100  | 22.0     | 2½-3 yards          |
-| Trident             | 1d     | 10  | 30   | 4.0      | Too short for 2-hex |
-| Cavalry Lance       | 3d−1   | 13  | 100  | 20.0     | Mounted only        |
-| Pike†               | 2d+1   | 12  | 50   | 12.0     | 5 yards             |
+| Javelin††           | 1d6−1  | 9   | 20   | 3.0      | Too short for 2-hex |
+| Spear††             | 1d6    | 11  | 40   | 6.0      | 2-2½ yards          |
+| Spear (2 hands)††,† | 1d6+1  | 11  | 40   | 6.0      | 2-2½ yards          |
+| Halberd†            | 2d6    | 13  | 70   | 16.0     | 2-2½ yards          |
+| Pike Axe†           | 2d6+2  | 15  | 100  | 22.0     | 2½-3 yards          |
+| Trident             | 1d6    | 10  | 30   | 4.0      | Too short for 2-hex |
+| Cavalry Lance       | 3d6−1  | 13  | 100  | 20.0     | Mounted only        |
+| Pike†               | 2d6+1  | 12  | 50   | 12.0     | 5 yards             |
 
 ### Unusual Weapons
 
 | Weapon                                         | Damage   | STR | Cost | Wt (lbs) | Notes |
 | ---------------------------------------------- | -------- | --- | ---- | -------- | ----- |
-| Quarterstaff†                                  | 1d+2     | 11  | 20   | 5.0      |       |
-| Net††                                          | 1d−3     | 10  | 40   | 2.0      |       |
+| Quarterstaff†                                  | 1d6+2    | 11  | 20   | 5.0      |       |
+| Net††                                          | 1d6−3    | 10  | 40   | 2.0      |       |
 | Cestus                                         | By STR   | —   | 20   | 2.0      |       |
-| Whip                                           | 1d−1     | 8   | 30   | 1.0      |       |
+| Whip                                           | 1d6−1    | 8   | 30   | 1.0      |       |
 | Lasso††                                        | Varies   | 8   | 10   | 1.0      |       |
-| Boomerang††                                    | 2d−1     | 11  | 20   | 3.0      |       |
-| Nunchaku                                       | 1d+1     | 9   | 35   | 4.0      |       |
+| Boomerang††                                    | 2d6−1    | 11  | 20   | 3.0      |       |
+| Nunchaku                                       | 1d6+1    | 9   | 35   | 4.0      |       |
 | Torch                                          | 1d6 fire | —   | 1    | 1.0      |       |
 | Bola††                                         | —        | 9   | 15   | 1.0      |       |
 | **†† = May be thrown | † = Two-handed weapon** |          |     |      |          |       |
 
+ 
 ### Armor and Shields
 
-| Type          | Stops | DEX | Cost  | Wt (lbs) | MA  |
-| ------------- | ----- | --- | ----- | -------- | --- |
-| Cloth Armor   | 1     | −1  | 50    | 14.0     | 10  |
-| Leather Armor | 2     | −2  | 100   | 16.0     | 8   |
-| Chainmail     | 3     | −3  | 200   | 30.0     | 6   |
-| Half-Plate    | 4     | −4  | 300   | 45.0     | 6   |
-| Plate Armor   | 5     | −5  | 500   | 55.0     | 6   |
-| Fine Plate    | 6     | −4  | 5,000 | 55.0     | 6   |
-| Small Shield  | 1     | 0   | 30    | 10.0     | —   |
-| Spike Shield  | 1     | 0   | 40    | 12.0     | —   |
-| Large Shield  | 2     | −1  | 50    | 20.0     | —   |
-| Tower Shield  | 3     | −2  | 70    | 35.0     | —   |
-| Main-Gauche   | 1     | −1  | 20    | 0.5      | —   |
+| Type          | Stops | DEX | Cost  | Wt (lbs) | Movement Restriction |
+| ------------- | ----- | --- | ----- | -------- | -------------------- |
+| Cloth Armor   | 1     | −1  | 50    | 14.0     | —                    |
+| Leather Armor | 2     | −2  | 100   | 16.0     | Cannot Sprint        |
+| Chainmail     | 3     | −3  | 200   | 30.0     | Cannot Run or Sprint |
+| Half-Plate    | 4     | −4  | 300   | 45.0     | Cannot Run or Sprint |
+| Plate Armor   | 5     | −5  | 500   | 55.0     | Cannot Run or Sprint |
+| Fine Plate    | 6     | −4  | 5,000 | 55.0     | Cannot Run or Sprint |
+| Small Shield  | 1     | 0   | 30    | 10.0     | —                    |
+| Spike Shield  | 1     | 0   | 40    | 12.0     | —                    |
+| Large Shield  | 2     | −1  | 50    | 20.0     | —                    |
+| Tower Shield  | 3     | −2  | 70    | 35.0     | —                    |
+| Main-Gauche   | 1     | −1  | 20    | 0.5      | —                    |
+
 
 ### Adventuring Gear
 
