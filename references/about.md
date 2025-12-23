@@ -8,7 +8,7 @@ A while ago I decided to stop missing the kind of D&D I loved and started doing 
 
 ## What is Pillars?
 
-**TL;DR**: Pillars is a homebrew Fantasy Role-Playing game designed to be easy to play but rich with details and possibilities.
+**TL;DR**: Pillars is a homebrew Fantasy Role-Playing game designed to be easy to play but rich with details and possibilities. See the [public rulebook](/html/public-rulebook/) for the rules or [create a character](/).
 
 Similar to original D&D (which always had a fair amount of homebrew baked in), you might hear me referring to Pillars as D&D. This will make sense to older players but may confuse—or even ruffle—players familiar with the current D&D system, which has evolved tremendously over the years.
 
@@ -58,7 +58,7 @@ Skills are rated on a numerical scale. For example, having high skill in blacksm
 
 Success depends on both your character's capabilities and the difficulty of what they're attempting. A skilled character attempting something reasonable has good odds of success, while anyone attempting something beyond the world's physical laws will fail regardless of their skill level.
 
-Character's start out at age 16. However, you can age your character using prior experience tables. 
+Character's start out at age 16. However, you can age your character using [prior experience](/html/public-rulebook/#prior-experience) tables. 
  
 ### 21st Century Gaming
 #### (experimental )
@@ -71,7 +71,7 @@ For Pillars, I'm going to try something that might work a little more seamlessly
 
 Pillars is designed to reward creative problem-solving, strategic thinking, and character investment. Whether you want to delve into dungeons, build a merchant empire, uncover ancient mysteries, or simply survive on the streets, the game provides the framework for your story.
 
-The rules are intentionally accessible—you don't need to master hundreds of pages before your first session. Jump in, experiment, and discover what your character can become. NO PRIOR GAMING EXPERIENCE NEEDED. 
+The rules are intentionally accessible—you don't need to master hundreds of pages before your first session. Jump in, experiment, and discover what your character can become. NO PRIOR GAMING EXPERIENCE NEEDED. [Create your first character](/). 
 
 
 ## Gameplay

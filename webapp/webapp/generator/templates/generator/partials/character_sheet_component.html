@@ -186,10 +186,35 @@ Attribute display variables (computed by view):
     <!-- Skills Section (separate div as requested) -->
     <div class="sheet-section skills-section">
         <h2>Skills</h2>
+
+        <!-- Experience and Free Points Display -->
+        <div class="skill-points-info" id="{{ component_id|default:'cs' }}-skill-points-info">
+            <div class="xp-display">
+                <label>Experience:</label>
+                <span class="xp-value" id="{{ component_id|default:'cs' }}-total-xp">{{ total_xp|default:0 }} XP</span>
+            </div>
+            {% if free_skill_points > 0 %}
+            <div class="free-points-banner">
+                <strong><span id="{{ component_id|default:'cs' }}-free-points">{{ free_skill_points }}</span> Free Skill Points Available!</strong>
+                {% if editable %}
+                <span class="help-text">Click +1 to allocate a point to a skill.</span>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="free-points-display">
+                <label>Free Points:</label>
+                <span id="{{ component_id|default:'cs' }}-free-points">0</span>
+            </div>
+            {% endif %}
+        </div>
+
         <ul class="skills-list" id="{{ component_id|default:'cs' }}-skills-list">
             {% for skill in skills %}
-            <li class="skill-item">
-                <span class="skill-tag">{{ skill }}</span>
+            <li class="skill-item" data-skill-name="{{ skill.name|default:skill }}">
+                <span class="skill-tag">{{ skill.display|default:skill }}</span>
+                {% if editable and free_skill_points > 0 %}
+                <button type="button" class="btn-allocate" onclick="CharacterSheet.allocatePoint('{{ component_id|default:'cs' }}', '{{ skill.name|default:skill }}')" title="Allocate 1 free point">+1</button>
+                {% endif %}
             </li>
             {% empty %}
             <li class="skill-item no-skills-msg"><em>No skills yet</em></li>
@@ -200,7 +225,7 @@ Attribute display variables (computed by view):
         <div class="add-skill-row">
             <input type="text" id="{{ component_id|default:'cs' }}-new-skill" placeholder="Add skill (e.g., Tracking)"
                    onkeypress="if(event.key==='Enter'){CharacterSheet.addSkill('{{ component_id|default:'cs' }}');return false;}">
-            <button type="button" class="btn-add" onclick="CharacterSheet.addSkill('{{ component_id|default:'cs' }}')">+ Add</button>
+            <button type="button" class="btn-add" onclick="CharacterSheet.addSkill('{{ component_id|default:'cs' }}')">+ Add{% if free_skill_points > 0 %} (uses 1 free point){% endif %}</button>
         </div>
         {% endif %}
     </div>
@@ -776,6 +801,78 @@ Attribute display variables (computed by view):
 
 .add-skill-row .btn-add:hover {
     background: #3a3;
+}
+
+/* Skill points info */
+.skill-points-info {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #ddd;
+}
+
+.xp-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.xp-display label {
+    font-weight: bold;
+}
+
+.xp-value {
+    font-size: 1.1em;
+    color: #333;
+}
+
+.free-points-banner {
+    background: #e8f5e9;
+    border: 2px solid #4caf50;
+    padding: 10px 15px;
+    border-radius: 4px;
+    color: #2e7d32;
+}
+
+.free-points-banner .help-text {
+    display: block;
+    font-size: 0.85em;
+    font-weight: normal;
+    margin-top: 5px;
+    color: #558b2f;
+}
+
+.free-points-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.free-points-display label {
+    font-weight: bold;
+}
+
+/* Skill allocation button */
+.skill-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-allocate {
+    background: #4caf50;
+    color: white;
+    border: none;
+    padding: 2px 8px;
+    font-size: 0.8em;
+    cursor: pointer;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.btn-allocate:hover {
+    background: #388e3c;
 }
 
 /* Experience section */
@@ -1461,7 +1558,7 @@ var CharacterSheet = (function() {
 
                 // Rebuild skills list if returned
                 if (result.computed && result.computed.skills) {
-                    rebuildSkillsList(componentId, result.computed.skills);
+                    rebuildSkillsList(componentId, result.computed.skills, result.computed.free_skill_points || 0);
                 } else {
                     // Fallback: add to DOM directly
                     var list = document.getElementById(componentId + '-skills-list');
@@ -1480,8 +1577,9 @@ var CharacterSheet = (function() {
         });
     }
 
-    function rebuildSkillsList(componentId, skills) {
+    function rebuildSkillsList(componentId, skills, freePoints) {
         var list = document.getElementById(componentId + '-skills-list');
+        var container = document.getElementById(componentId + '-container');
         list.innerHTML = '';
 
         if (skills.length === 0) {
@@ -1495,14 +1593,87 @@ var CharacterSheet = (function() {
         skills.forEach(function(skill) {
             var li = document.createElement('li');
             li.className = 'skill-item';
-            li.innerHTML = '<span class="skill-tag">' + escapeHtml(skill) + '</span>';
+            var skillName = skill.name || skill;
+            var skillDisplay = skill.display || skill;
+            li.dataset.skillName = skillName;
+            var html = '<span class="skill-tag">' + escapeHtml(skillDisplay) + '</span>';
+            if (freePoints > 0) {
+                html += ' <button type="button" class="btn-allocate" onclick="CharacterSheet.allocatePoint(\'' + componentId + '\', \'' + escapeHtml(skillName).replace(/'/g, "\\'") + '\')" title="Allocate 1 free point">+1</button>';
+            }
+            li.innerHTML = html;
             list.appendChild(li);
         });
+
+        // Update free points display
+        var freePointsSpan = document.getElementById(componentId + '-free-points');
+        if (freePointsSpan) {
+            freePointsSpan.textContent = freePoints;
+        }
+
+        // Update add skill button text
+        var addBtn = container.querySelector('.add-skill-row .btn-add');
+        if (addBtn) {
+            addBtn.textContent = freePoints > 0 ? '+ Add (uses 1 free point)' : '+ Add';
+        }
+
+        // Show/hide free points banner based on remaining points
+        var infoSection = document.getElementById(componentId + '-skill-points-info');
+        if (infoSection) {
+            var banner = infoSection.querySelector('.free-points-banner');
+            var display = infoSection.querySelector('.free-points-display');
+            if (freePoints > 0) {
+                if (!banner) {
+                    // Create banner if it doesn't exist
+                    var div = document.createElement('div');
+                    div.className = 'free-points-banner';
+                    div.innerHTML = '<strong><span id="' + componentId + '-free-points">' + freePoints + '</span> Free Skill Points Available!</strong><span class="help-text">Click +1 to allocate a point to a skill.</span>';
+                    if (display) display.remove();
+                    infoSection.appendChild(div);
+                }
+            } else {
+                if (banner) {
+                    banner.remove();
+                    var div = document.createElement('div');
+                    div.className = 'free-points-display';
+                    div.innerHTML = '<label>Free Points:</label><span id="' + componentId + '-free-points">0</span>';
+                    infoSection.appendChild(div);
+                }
+            }
+        }
 
         // Recalculate encumbrance in case Porter skill was added/changed
         if (typeof EncumbranceCalc !== 'undefined') {
             EncumbranceCalc.recalculate(componentId);
         }
+    }
+
+    function allocatePoint(componentId, skillName) {
+        var container = document.getElementById(componentId + '-container');
+        var saveUrl = container.dataset.saveUrl;
+        var csrfToken = container.dataset.csrfToken;
+
+        fetch(saveUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ field: 'skill_points', action: 'allocate', skill_name: skillName })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(result) {
+            if (result.success) {
+                // Rebuild skills list with updated data
+                if (result.computed && result.computed.skills) {
+                    rebuildSkillsList(componentId, result.computed.skills, result.computed.free_skill_points || 0);
+                }
+            } else {
+                console.error('Allocate point failed:', result.error);
+            }
+        })
+        .catch(function(error) {
+            console.error('Allocate point error:', error);
+        });
     }
 
     function escapeHtml(text) {
@@ -1550,6 +1721,7 @@ var CharacterSheet = (function() {
     return {
         init: init,
         addSkill: addSkill,
+        allocatePoint: allocatePoint,
         parseAttributeValue: parseAttributeValue
     };
 })();

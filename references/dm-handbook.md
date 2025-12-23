@@ -2,13 +2,13 @@
 
 # Game Master's Book
 
-*This section is for the Game Master only — contains secrets, mechanics, and scenario details that players should not read*
+*This section is for the Game Master only — contains secrets, mechanics, and scenario details that players should not read. For player-visible rules, see the [public rulebook](/html/public-rulebook/).*
 
 ---
 
 ## Magic Mechanics (GM Reference)
 
-This chapter contains the specific mechanical details players don't see. The Player's Book describes magic in general terms; here are the exact numbers.
+This chapter contains the specific mechanical details players don't see. The [public rulebook](/html/public-rulebook/#magic) describes magic in general terms; here are the exact numbers.
 
 ### Mana Pool
 

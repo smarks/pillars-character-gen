@@ -168,29 +168,6 @@
             background: #f4f4f4;
             color: #14a;
         }
-        .hamburger-dropdown .menu-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 15px;
-            border-bottom: 1px solid #eee;
-        }
-        .hamburger-dropdown .menu-row a {
-            padding: 0;
-            border: none;
-        }
-        .hamburger-dropdown .fmt-links a {
-            display: inline;
-            padding: 2px 6px;
-            font-size: 0.85em;
-            background: #f0f0f0;
-            border-radius: 3px;
-            color: #666;
-            margin-left: 5px;
-        }
-        .hamburger-dropdown .fmt-links a:hover {
-            background: #ddd;
-        }
         .hamburger-dropdown .menu-section {
             font-weight: bold;
             color: #666;
@@ -206,9 +183,6 @@
         .hamburger-dropdown .menu-sub a {
             padding: 10px 15px;
             font-size: 1.05em;
-        }
-        .hamburger-dropdown .menu-sub .menu-row {
-            padding: 10px 15px 10px 20px;
         }
         .hamburger-dropdown .menu-divider {
             border-top: 1px solid #ddd;
@@ -511,10 +485,10 @@
 
                     <div class="menu-section">References</div>
                     <div class="menu-sub">
-                        <div class="menu-row"><a href="{% url 'about' %}">About</a><span class="fmt-links"><a href="{% url 'reference_file' 'about.md' %}">md</a> <a href="{% url 'reference_html' 'about' %}">html</a></span></div>
-                        <div class="menu-row"><a href="{% url 'rulebook' %}">Public Rules</a><span class="fmt-links"><a href="{% url 'reference_file' 'public-rulebook.md' %}">md</a> <a href="{% url 'reference_html' 'public-rulebook' %}">html</a></span></div>
+                        <a href="{% url 'reference_html' 'about' %}">About</a>
+                        <a href="{% url 'reference_html' 'public-rulebook' %}">Public Rules</a>
                         {% if user.is_authenticated and user.profile.is_dm or user.is_authenticated and user.profile.is_admin %}
-                        <div class="menu-row"><a href="{% url 'dm' %}">Private Rules</a><span class="fmt-links"><a href="{% url 'reference_file' 'dm-handbook.md' %}">md</a> <a href="{% url 'reference_html' 'dm-handbook' %}">html</a></span></div>
+                        <a href="{% url 'reference_html' 'dm-handbook' %}">Private Rules</a>
                         {% endif %}
                         <a href="{% url 'turn_sequence' %}">Turn Sequence</a>
                         {% if user.is_authenticated %}

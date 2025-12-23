@@ -613,7 +613,7 @@ class RoleTests(TestCase):
         """Test that DM can see DM link on welcome page."""
         self.client.login(username='dm_test', password='testpass')
         response = self.client.get(reverse('welcome'))
-        self.assertContains(response, reverse('dm'))
+        self.assertContains(response, '/html/dm-handbook/')
         self.assertNotContains(response, 'Manage Users')
 
     def test_player_cannot_access_manage_users(self):
@@ -982,21 +982,60 @@ class UpdateCharacterAPITests(TestCase):
         data = response.json()
         self.assertTrue(data['success'])
 
-        # Verify in database
+        # Verify skill was added to skill_points_data
         self.saved_char.refresh_from_db()
-        self.assertIn('Sword +1', self.saved_char.character_data['manual_skills'])
+        skill_points_data = self.saved_char.character_data.get('skill_points_data', {})
+        skill_points = skill_points_data.get('skill_points', {})
+        # Sword +1 gets normalized to just "Sword"
+        self.assertIn('Sword', skill_points)
 
     def test_remove_skill(self):
-        """Test removing a skill."""
+        """Test removing (deallocating) a skill point."""
         import json
-        # First add a skill
-        self.saved_char.character_data['manual_skills'] = ['Sword +1', 'Shield']
+        # First set up skill_points_data with allocated points
+        self.saved_char.character_data['skill_points_data'] = {
+            'skill_points': {
+                'Sword': {'automatic': 0, 'allocated': 2},  # 2 allocated points
+                'Shield': {'automatic': 1, 'allocated': 0}   # 1 automatic point
+            },
+            'free_skill_points': 0,
+            'total_xp': 0
+        }
         self.saved_char.save()
 
         self.client.login(username='api_test', password='testpass')
         response = self.client.post(
             reverse('update_character', args=[self.saved_char.id]),
-            data=json.dumps({'field': 'skills', 'action': 'remove', 'index': 0}),
+            data=json.dumps({'field': 'skills', 'action': 'remove', 'value': 'Sword'}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+
+        # Verify in database - one allocated point deallocated
+        self.saved_char.refresh_from_db()
+        skill_points_data = self.saved_char.character_data.get('skill_points_data', {})
+        self.assertEqual(skill_points_data['skill_points']['Sword']['allocated'], 1)
+        self.assertEqual(skill_points_data['free_skill_points'], 1)
+
+    def test_skill_allocation(self):
+        """Test allocating a free skill point."""
+        import json
+        # Set up with free points
+        self.saved_char.character_data['skill_points_data'] = {
+            'skill_points': {
+                'Sword': {'automatic': 1, 'allocated': 0}
+            },
+            'free_skill_points': 2,
+            'total_xp': 2000
+        }
+        self.saved_char.save()
+
+        self.client.login(username='api_test', password='testpass')
+        response = self.client.post(
+            reverse('update_character', args=[self.saved_char.id]),
+            data=json.dumps({'field': 'skill_points', 'action': 'allocate', 'skill_name': 'Sword'}),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 200)
@@ -1005,28 +1044,9 @@ class UpdateCharacterAPITests(TestCase):
 
         # Verify in database
         self.saved_char.refresh_from_db()
-        self.assertEqual(self.saved_char.character_data['manual_skills'], ['Shield'])
-
-    def test_edit_skill(self):
-        """Test editing a skill."""
-        import json
-        # First add a skill
-        self.saved_char.character_data['manual_skills'] = ['Sword +1']
-        self.saved_char.save()
-
-        self.client.login(username='api_test', password='testpass')
-        response = self.client.post(
-            reverse('update_character', args=[self.saved_char.id]),
-            data=json.dumps({'field': 'skills', 'action': 'edit', 'index': 0, 'value': 'Sword +3'}),
-            content_type='application/json'
-        )
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertTrue(data['success'])
-
-        # Verify in database
-        self.saved_char.refresh_from_db()
-        self.assertEqual(self.saved_char.character_data['manual_skills'], ['Sword +3'])
+        skill_points_data = self.saved_char.character_data.get('skill_points_data', {})
+        self.assertEqual(skill_points_data['skill_points']['Sword']['allocated'], 1)
+        self.assertEqual(skill_points_data['free_skill_points'], 1)
 
     def test_update_notes(self):
         """Test updating notes field."""
@@ -1884,16 +1904,16 @@ class CharacterSheetLayoutTests(TestCase):
         self.assertContains(response, 'exportMarkdown')
 
     def test_character_sheet_consolidates_skills(self):
-        """Test that character sheet shows consolidated skills."""
+        """Test that character sheet shows consolidated skills with level display."""
         self.client.login(username='layout_test', password='test123')
 
         response = self.client.get(reverse('character_sheet', args=[self.saved_char.id]))
 
         self.assertEqual(response.status_code, 200)
-        # "Farming" appears twice, should be consolidated
+        # "Farming" appears twice (2 points), should show as Level I with 1 excess point
         content = response.content.decode()
-        self.assertIn('Farming 2', content)
-        self.assertIn('Tracking', content)
+        self.assertIn('Farming I (+1)', content)
+        self.assertIn('Tracking I', content)
 
 
 class SkillAdditionConsolidationTests(TestCase):
@@ -1920,7 +1940,7 @@ class SkillAdditionConsolidationTests(TestCase):
         )
 
     def test_adding_skill_returns_consolidated_list(self):
-        """Test that adding a skill returns the consolidated skill list."""
+        """Test that adding a skill returns the consolidated skill list with details."""
         import json
         self.client.login(username='skill_test', password='test123')
 
@@ -1935,11 +1955,16 @@ class SkillAdditionConsolidationTests(TestCase):
         data = response.json()
         self.assertTrue(data['success'])
 
-        # Should have consolidated skills in response
+        # Should have consolidated skills in response with details
         self.assertIn('computed', data)
         self.assertIn('skills', data['computed'])
-        # Should show "Tracking 2" since we now have 2 Tracking skills
-        self.assertIn('Tracking 2', data['computed']['skills'])
+        # Skills now returned as list of dicts with details
+        skills = data['computed']['skills']
+        self.assertEqual(len(skills), 1)
+        tracking_skill = skills[0]
+        self.assertEqual(tracking_skill['name'], 'Tracking')
+        self.assertEqual(tracking_skill['total_points'], 2)  # 2 points total
+        self.assertEqual(tracking_skill['display'], 'Tracking I (+1)')  # Level I with 1 excess
 
     def test_update_with_invalid_json(self):
         """Test that update endpoint handles invalid JSON gracefully."""
@@ -3084,7 +3109,7 @@ class HamburgerMenuLinksTests(TestCase):
         """Test that anonymous users don't see DM-only links."""
         response = self.client.get(reverse('welcome'))
         self.assertNotContains(response, '>Private Rules</a>')
-        self.assertNotContains(response, reverse('dm'))
+        self.assertNotContains(response, '/html/dm-handbook/')
 
     def test_anonymous_does_not_see_admin_links(self):
         """Test that anonymous users don't see admin-only links."""
@@ -3169,7 +3194,7 @@ class HamburgerMenuLinksTests(TestCase):
         self.client.login(username='dm', password='testpass')
         response = self.client.get(reverse('welcome'))
         self.assertContains(response, '>Private Rules</a>')
-        self.assertContains(response, reverse('dm'))
+        self.assertContains(response, '/html/dm-handbook/')
         self.assertContains(response, '>Characters</a>')
         self.assertContains(response, reverse('manage_characters'))
         self.assertContains(response, '>Manage</div>')
@@ -3503,14 +3528,15 @@ class HamburgerMenuLinkTests(TestCase):
         self.assertContains(response, 'Users')
         self.assertContains(response, 'Characters')
 
-    def test_hamburger_menu_has_md_html_links(self):
-        """Test hamburger menu has md and html format links."""
+    def test_hamburger_menu_has_reference_links(self):
+        """Test hamburger menu has reference links (html only, no format options)."""
         response = self.client.get(reverse('welcome'))
-        # Check for format links (md files still served from /ref/, html from /html/)
-        self.assertContains(response, '/ref/about.md')
+        # Check for reference links (html format only)
         self.assertContains(response, '/html/about/')
-        self.assertContains(response, '/ref/public-rulebook.md')
         self.assertContains(response, '/html/public-rulebook/')
+        # Should NOT have md format links in menu anymore
+        self.assertNotContains(response, '/ref/about.md')
+        self.assertNotContains(response, '/ref/public-rulebook.md')
 
     # === Reference HTML view tests ===
 

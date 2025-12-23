@@ -208,7 +208,7 @@ Roll percentile dice (or choose if you don't want to be rich):
 
 ## Prior Experience
 
-Characters start at 16 years of age. They can begin playing immediately or acquire additional skills through prior experience.
+Characters start at 16 years of age. They can begin playing immediately or acquire additional skills through prior experience. Use the [character generator](/) to create your character interactively.
 
 For every year of prior experience:
 - Death (survival roll required)
@@ -437,7 +437,7 @@ These duels can drain both parties quickly, and a failed Control Roll during esc
 
 ### The Turn
 
-A turn represents approximately **five seconds** of action. Nothing happens simultaneously—each movement and action can affect what follows.
+A turn represents approximately **five seconds** of action. Nothing happens simultaneously—each movement and action can affect what follows. For a detailed walkthrough of each phase, see the [Turn Sequence reference](/turn-sequence/).
 
 ### Turn Sequence
 

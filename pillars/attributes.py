@@ -2181,18 +2181,20 @@ class YearResult:
     track: TrackType
     skill_gained: str
     skill_roll: int
-    skill_points: int  # Always 1
+    skill_points: int  # Always 1 (automatic point for the rolled skill)
     survivability_target: int
     survivability_roll: int  # Base 3d6 roll
     survivability_modifier: int  # Sum of all attribute modifiers
     survivability_total: int  # Roll + modifier
     survived: bool
     aging_penalties: Optional[Dict[str, int]] = None  # Any new aging penalties this year
+    free_skill_points: int = 1  # Free point to allocate to any skill
+    xp_gained: int = 1000  # Experience points gained this year
 
     def __str__(self) -> str:
         status = "Survived" if self.survived else "DIED"
         mod_str = f"{self.survivability_modifier:+d}" if self.survivability_modifier != 0 else "+0"
-        result = (f"Year {self.year}: {self.skill_gained} (+1 SP) | "
+        result = (f"Year {self.year}: {self.skill_gained} (+1 SP, +1 free, +{self.xp_gained} XP) | "
                   f"Survival: {self.survivability_roll}{mod_str}={self.survivability_total} vs {self.survivability_target}+ [{status}]")
 
         # Show aging penalties if any were applied this year
@@ -2213,13 +2215,15 @@ class PriorExperience:
     track: TrackType
     survivability_target: int
     yearly_results: List[YearResult]
-    total_skill_points: int
+    total_skill_points: int  # Automatic points (1 per year to rolled skill)
     all_skills: List[str]
     died: bool
     death_year: Optional[int]
     attribute_scores: Optional[Dict[str, int]] = None  # Raw attribute scores
     attribute_modifiers: Optional[Dict[str, int]] = None  # Attribute modifiers
     aging_effects: Optional[AgingEffects] = None  # Cumulative aging penalties
+    total_free_points: int = 0  # Free points to allocate (1 per year)
+    total_xp: int = 0  # Experience points (1000 per year)
 
     def __str__(self) -> str:
         lines = [
@@ -2430,6 +2434,8 @@ def roll_prior_experience(
     yearly_results = []
     all_skills = []
     total_skill_points = 0
+    total_free_points = 0
+    total_xp = 0
     died = False
     death_year = None
     years_served = 0
@@ -2452,7 +2458,9 @@ def roll_prior_experience(
             initial_skills_granted = True
 
         all_skills.append(year_result.skill_gained)
-        total_skill_points += 1
+        total_skill_points += year_result.skill_points
+        total_free_points += year_result.free_skill_points
+        total_xp += year_result.xp_gained
         yearly_results.append(year_result)
 
         if not year_result.survived:
@@ -2475,5 +2483,7 @@ def roll_prior_experience(
         death_year=death_year,
         attribute_scores=attribute_scores,
         attribute_modifiers=attribute_modifiers,
-        aging_effects=aging_effects if years_served > 18 else None
+        aging_effects=aging_effects if years_served > 18 else None,
+        total_free_points=total_free_points,
+        total_xp=total_xp
     )

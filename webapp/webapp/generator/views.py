@@ -2075,6 +2075,102 @@ def consolidate_skills(skills):
     return consolidated
 
 
+def build_skill_points_from_char_data(char_data):
+    """Build skill points structure from character data.
+
+    If char_data already has 'skill_points_data', returns it.
+    Otherwise, migrates from legacy skill lists.
+
+    Returns:
+        CharacterSkills object with all skill point data
+    """
+    from pillars.skills import CharacterSkills, normalize_skill_name
+
+    # Check if already migrated
+    if char_data.get('skill_points_data'):
+        return CharacterSkills.from_dict(char_data['skill_points_data'])
+
+    # Migrate from legacy format
+    all_skills = []
+
+    # Collect skills from all sources
+    all_skills.extend(char_data.get('location_skills', []))
+    if char_data.get('skill_track'):
+        all_skills.extend(char_data['skill_track'].get('initial_skills', []))
+    all_skills.extend(char_data.get('interactive_skills', []))
+    all_skills.extend(char_data.get('manual_skills', []))
+
+    # Calculate years from interactive experience
+    years = char_data.get('interactive_years', 0)
+
+    # Build CharacterSkills from legacy data
+    char_skills = CharacterSkills.from_legacy_skills(all_skills, years)
+
+    return char_skills
+
+
+def get_skills_with_levels(char_data):
+    """Get skills formatted with level display.
+
+    Returns list of dicts with skill details for UI rendering:
+    [
+        {'name': 'Sword', 'display': 'Sword II (+2)', 'level': 2, ...},
+        ...
+    ]
+    """
+    char_skills = build_skill_points_from_char_data(char_data)
+    return char_skills.get_skills_with_details()
+
+
+def get_skill_display_list(char_data):
+    """Get skills formatted for display as a simple list.
+
+    Returns list like ['Sword II (+2)', 'Tracking I', ...]
+    """
+    char_skills = build_skill_points_from_char_data(char_data)
+    return char_skills.get_display_list()
+
+
+def allocate_skill_point(char_data, skill_name):
+    """Allocate a free skill point to a skill.
+
+    Updates char_data in place with new skill_points_data.
+
+    Returns:
+        (success: bool, error: str or None, updated_skills: list)
+    """
+    from pillars.skills import CharacterSkills
+
+    char_skills = build_skill_points_from_char_data(char_data)
+
+    if char_skills.free_points <= 0:
+        return False, "No free skill points available", []
+
+    if char_skills.allocate_point(skill_name):
+        # Update char_data with new skill_points_data
+        char_data['skill_points_data'] = char_skills.to_dict()
+        return True, None, char_skills.get_display_list()
+    else:
+        return False, "Failed to allocate point", []
+
+
+def deallocate_skill_point(char_data, skill_name):
+    """Remove an allocated point from a skill, returning it to free pool.
+
+    Updates char_data in place.
+
+    Returns:
+        (success: bool, error: str or None, updated_skills: list)
+    """
+    char_skills = build_skill_points_from_char_data(char_data)
+
+    if char_skills.deallocate_point(skill_name):
+        char_data['skill_points_data'] = char_skills.to_dict()
+        return True, None, char_skills.get_display_list()
+    else:
+        return False, "No allocated points to remove from this skill", []
+
+
 def format_attribute_display(value):
     """Format attribute value for display.
 
@@ -2138,20 +2234,12 @@ def character_sheet(request, char_id):
     char_data = character.character_data
     attrs = char_data.get('attributes', {})
 
-    # Build combined skills list
-    raw_skills = []
-    # Location skills
-    raw_skills.extend(char_data.get('location_skills', []))
-    # Track initial skills
-    if char_data.get('skill_track'):
-        raw_skills.extend(char_data['skill_track'].get('initial_skills', []))
-    # Prior experience skills
-    raw_skills.extend(char_data.get('interactive_skills', []))
-    # Manually added skills
-    raw_skills.extend(char_data.get('manual_skills', []))
-
-    # Consolidate duplicate skills
-    skills = consolidate_skills(raw_skills)
+    # Build skill points data (migrates legacy if needed)
+    char_skills = build_skill_points_from_char_data(char_data)
+    skills_with_details = char_skills.get_skills_with_details()
+    skills = char_skills.get_display_list()
+    free_skill_points = char_skills.free_points
+    total_xp = char_skills.total_xp
 
     # Prior experience data
     yearly_results = char_data.get('interactive_yearly_results', [])
@@ -2179,6 +2267,9 @@ def character_sheet(request, char_id):
         'character': character,
         'char_data': char_data,
         'skills': skills,
+        'skills_with_details': skills_with_details,
+        'free_skill_points': free_skill_points,
+        'total_xp': total_xp,
         # Attribute display values
         'str_display': format_attribute_display(attrs.get('STR', 10)),
         'dex_display': format_attribute_display(attrs.get('DEX', 10)),
@@ -2234,33 +2325,41 @@ def update_character(request, char_id):
         # Update the model's name field
         character.name = value
     elif field == 'skills':
-        # Handle skills list operations
-        manual_skills = char_data.get('manual_skills', [])
+        # Handle skills list operations using skill points system
         if action == 'add':
-            # Normalize the skill name before adding
+            # Use skill points system to add the skill
+            from pillars.skills import CharacterSkills
+            char_skills = build_skill_points_from_char_data(char_data)
+
+            # Normalize the skill name
             normalized_skill = normalize_skill_name(value)
-            manual_skills.append(normalized_skill)
-            char_data['manual_skills'] = manual_skills
-            # Return all skills consolidated for display update
-            all_skills = []
-            all_skills.extend(char_data.get('location_skills', []))
-            if char_data.get('skill_track'):
-                all_skills.extend(char_data['skill_track'].get('initial_skills', []))
-            all_skills.extend(char_data.get('interactive_skills', []))
-            all_skills.extend(manual_skills)
-            computed['skills'] = consolidate_skills(all_skills)
-            computed['index'] = len(manual_skills) - 1
+
+            # If we have free points, allocate one to this skill
+            if char_skills.free_points > 0:
+                char_skills.allocate_point(normalized_skill)
+            else:
+                # No free points - add an automatic point (for initial skills etc.)
+                char_skills.add_automatic_point(normalized_skill)
+
+            # Save back to char_data
+            char_data['skill_points_data'] = char_skills.to_dict()
+
+            # Return updated skills for display
+            computed['skills'] = char_skills.get_skills_with_details()
+            computed['free_skill_points'] = char_skills.free_points
+            computed['total_xp'] = char_skills.total_xp
         elif action == 'remove':
-            # Need to figure out which list the skill is in
-            # For now, just handle manual_skills removal
-            if index is not None and 0 <= index < len(manual_skills):
-                manual_skills.pop(index)
-                char_data['manual_skills'] = manual_skills
+            # Handle skill removal - deallocate points if possible
+            from pillars.skills import CharacterSkills
+            char_skills = build_skill_points_from_char_data(char_data)
+            skill_name = normalize_skill_name(value)
+            char_skills.deallocate_point(skill_name)
+            char_data['skill_points_data'] = char_skills.to_dict()
+            computed['skills'] = char_skills.get_skills_with_details()
+            computed['free_skill_points'] = char_skills.free_points
         elif action == 'edit':
-            # Edit skill at index in manual_skills
-            if index is not None and 0 <= index < len(manual_skills):
-                manual_skills[index] = value
-                char_data['manual_skills'] = manual_skills
+            # Edit not supported in skill points system
+            pass
     elif field.startswith('attributes.'):
         # Handle nested attribute fields
         attr_name = field.split('.')[1]
@@ -2276,6 +2375,29 @@ def update_character(request, char_id):
         char_data['notes'] = value
     elif field in ['appearance', 'height', 'weight', 'provenance', 'location', 'literacy', 'wealth']:
         char_data[field] = value
+    elif field == 'skill_points':
+        # Handle skill point allocation/deallocation
+        skill_name = data.get('skill_name', '')
+        if action == 'allocate':
+            success, error, skills = allocate_skill_point(char_data, skill_name)
+            if not success:
+                return JsonResponse({'success': False, 'error': error}, status=400)
+            char_skills = build_skill_points_from_char_data(char_data)
+            computed['skills'] = skills
+            computed['skills_with_details'] = char_skills.get_skills_with_details()
+            computed['free_skill_points'] = char_skills.free_points
+            computed['total_xp'] = char_skills.total_xp
+        elif action == 'deallocate':
+            success, error, skills = deallocate_skill_point(char_data, skill_name)
+            if not success:
+                return JsonResponse({'success': False, 'error': error}, status=400)
+            char_skills = build_skill_points_from_char_data(char_data)
+            computed['skills'] = skills
+            computed['skills_with_details'] = char_skills.get_skills_with_details()
+            computed['free_skill_points'] = char_skills.free_points
+            computed['total_xp'] = char_skills.total_xp
+        else:
+            return JsonResponse({'success': False, 'error': f'Unknown skill_points action: {action}'}, status=400)
     else:
         return JsonResponse({'success': False, 'error': f'Unknown field: {field}'}, status=400)
 
@@ -2337,20 +2459,23 @@ def update_session_character(request):
     if field == 'name':
         char_data['name'] = value
     elif field == 'skills':
-        # Handle skills list operations
-        manual_skills = char_data.get('manual_skills', [])
+        # Handle skills list operations using skill points system
         if action == 'add':
+            from pillars.skills import CharacterSkills
+            char_skills = build_skill_points_from_char_data(char_data)
             normalized_skill = normalize_skill_name(value)
-            manual_skills.append(normalized_skill)
-            char_data['manual_skills'] = manual_skills
-            # Return all skills consolidated for display update
-            all_skills = []
-            all_skills.extend(char_data.get('location_skills', []))
-            if char_data.get('skill_track'):
-                all_skills.extend(char_data['skill_track'].get('initial_skills', []))
-            all_skills.extend(request.session.get('interactive_skills', []))
-            all_skills.extend(manual_skills)
-            computed['skills'] = consolidate_skills(all_skills)
+
+            # If we have free points, allocate one to this skill
+            if char_skills.free_points > 0:
+                char_skills.allocate_point(normalized_skill)
+            else:
+                # No free points - add an automatic point
+                char_skills.add_automatic_point(normalized_skill)
+
+            char_data['skill_points_data'] = char_skills.to_dict()
+            computed['skills'] = char_skills.get_skills_with_details()
+            computed['free_skill_points'] = char_skills.free_points
+            computed['total_xp'] = char_skills.total_xp
     elif field.startswith('attributes.'):
         attr_name = field.split('.')[1]
         if attr_name in ['STR', 'DEX', 'INT', 'WIS', 'CON', 'CHR']:
