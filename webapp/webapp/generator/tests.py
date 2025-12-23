@@ -3366,25 +3366,49 @@ class HamburgerMenuLinksTests(TestCase):
         # Access is denied - either via redirect or 403
         self.assertIn(response.status_code, [302, 403])
 
-    # ========== STATIC FORMAT LINKS (md/html) ==========
+    # ========== REFERENCE FORMAT LINKS (md/html) ==========
 
-    def test_about_md_static_link_exists(self):
-        """Test that about.md static link is accessible."""
-        response = self.client.get('/static/about.md')
-        # Static files may or may not be served in test; check it doesn't error
-        self.assertIn(response.status_code, [200, 404])
+    def test_about_md_link_accessible(self):
+        """Test that about.md reference link is accessible."""
+        response = self.client.get('/ref/about.md')
+        self.assertEqual(response.status_code, 200)
 
-    def test_about_html_static_link_exists(self):
-        """Test that about.html static link is accessible."""
-        response = self.client.get('/static/about.html')
-        self.assertIn(response.status_code, [200, 404])
+    def test_about_html_link_accessible(self):
+        """Test that about.html reference link is accessible."""
+        response = self.client.get('/ref/about.html')
+        self.assertEqual(response.status_code, 200)
 
-    def test_rulebook_md_static_link_exists(self):
-        """Test that public-rulebook.md static link is accessible."""
-        response = self.client.get('/static/public-rulebook.md')
-        self.assertIn(response.status_code, [200, 404])
+    def test_rulebook_md_link_accessible(self):
+        """Test that public-rulebook.md reference link is accessible."""
+        response = self.client.get('/ref/public-rulebook.md')
+        self.assertEqual(response.status_code, 200)
 
-    def test_rulebook_html_static_link_exists(self):
-        """Test that public-rulebook.html static link is accessible."""
-        response = self.client.get('/static/public-rulebook.html')
-        self.assertIn(response.status_code, [200, 404])
+    def test_rulebook_html_link_accessible(self):
+        """Test that public-rulebook.html reference link is accessible."""
+        response = self.client.get('/ref/public-rulebook.html')
+        self.assertEqual(response.status_code, 200)
+
+    def test_dm_handbook_md_link_accessible(self):
+        """Test that dm-handbook.md reference link is accessible."""
+        response = self.client.get('/ref/dm-handbook.md')
+        self.assertEqual(response.status_code, 200)
+
+    def test_dm_handbook_html_link_accessible(self):
+        """Test that dm-handbook.html reference link is accessible."""
+        response = self.client.get('/ref/dm-handbook.html')
+        self.assertEqual(response.status_code, 200)
+
+    def test_invalid_ref_file_returns_404(self):
+        """Test that invalid reference file returns 404."""
+        response = self.client.get('/ref/nonexistent.md')
+        self.assertEqual(response.status_code, 404)
+
+    def test_ref_blocks_directory_traversal(self):
+        """Test that directory traversal is blocked in ref URLs."""
+        response = self.client.get('/ref/../settings.py')
+        self.assertEqual(response.status_code, 404)
+
+    def test_ref_blocks_invalid_extensions(self):
+        """Test that invalid file extensions are blocked."""
+        response = self.client.get('/ref/about.py')
+        self.assertEqual(response.status_code, 404)

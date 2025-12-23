@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            color: #333;
+        }
+        h1 { border-bottom: 2px solid #333; padding-bottom: 10px; margin-top: 0; }
+        h2, h3, h4 { margin-top: 1.5em; }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .hamburger-menu { position: relative; }
+        .hamburger-btn {
+            background: none;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            padding: 8px 12px;
+            font-size: 1.8em;
+            line-height: 1;
+            border-radius: 4px;
+        }
+        .hamburger-btn:hover { background: #f4f4f4; }
+
+        .hamburger-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 320px;
+            margin-top: 4px;
+        }
+        .hamburger-dropdown.open { display: block; }
+
+        .menu-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .menu-row:last-child { border-bottom: none; }
+        .menu-row:hover { background: #f8f8f8; }
+
+        .menu-title {
+            color: #333;
+            text-decoration: none;
+            flex: 1;
+        }
+        .menu-title:hover { color: #36c; }
+
+        .menu-formats a {
+            color: #888;
+            text-decoration: none;
+            font-size: 0.8em;
+            padding: 3px 8px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            margin-left: 5px;
+        }
+        .menu-formats a:hover { background: #e0e0e0; color: #333; }
+
+        .page-title { margin-bottom: 30px; }
+
+        hr { border: none; border-top: 1px solid #ccc; margin: 30px 0; }
+
+        .table-wrapper { overflow-x: auto; margin: 15px 0; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background: #f4f4f4; }
+
+        ul, ol { margin: 15px 0 15px 25px; }
+        li { margin-bottom: 5px; }
+        code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
+        a { color: #36c; }
+        strong { font-weight: bold; }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 1px solid #ccc;
+            text-align: center;
+            color: #888;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="hamburger-menu">
+            <button class="hamburger-btn" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+            <div class="hamburger-dropdown">
+                    <div class="menu-row">
+                        <a href="In the far northeast lies The Splinterings — an archipelago of islands of various sizes that range.html" class="menu-title">In The Far Northeast Lies The Splinterings — An Archipelago Of Islands Of Various Sizes That Range</a>
+                        <span class="menu-formats"><a href="In the far northeast lies The Splinterings — an archipelago of islands of various sizes that range.md">md</a> <a href="In the far northeast lies The Splinterings — an archipelago of islands of various sizes that range.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="about.html" class="menu-title">Starting Out</a>
+                        <span class="menu-formats"><a href="about.md">md</a> <a href="about.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="dm-handbook.html" class="menu-title">Game Master&#x27;s Book</a>
+                        <span class="menu-formats"><a href="dm-handbook.md">md</a> <a href="dm-handbook.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="public-rulebook-v2.html" class="menu-title">PILLARS</a>
+                        <span class="menu-formats"><a href="public-rulebook-v2.md">md</a> <a href="public-rulebook-v2.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="public-rulebook.html" class="menu-title">PILLARS</a>
+                        <span class="menu-formats"><a href="public-rulebook.md">md</a> <a href="public-rulebook.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="todo.html" class="menu-title">Todo</a>
+                        <span class="menu-formats"><a href="todo.md">md</a> <a href="todo.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="welcome.html" class="menu-title">PILLARS</a>
+                        <span class="menu-formats"><a href="welcome.md">md</a> <a href="welcome.html">html</a></span>
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-title">
+        <h1>Todo</h1>
+    </div>
+
+<p>consistent movement rules</p>
+<p>track gold add gold per year</p>
+<p>spell track in handbook</p>
+<p>track changes in characteristics.</p>
+<p>skills don't persist  across adding experience</p>
+<p>keep track skill points you can allocate</p>
+<p>switch tracks</p>
+<p>keep track of experience / available skill point</p>
+<p>Angar is king of the mainland and claims proveance over all the splintering</p>
+<p>cost of daggers vs other things like great swords</p>
+<p>pack weight</p>
+<p>adventure logs</p>
+<hr>
+<p>Code Review Summary</p>
+<p>CRITICAL (Fix Now)</p>
+<ol><li>Hardcoded SECRET_KEY fallback - settings.py:24-27 - should fail if not set in production</li><li>Git subprocess on every request - context_processors.py - should cache at startup</li></ol>
+<p>HIGH (Fix Soon)</p>
+<ol><li>DEBUG defaults to True - dangerous for production</li><li>Path traversal check is weak - views.py:1410-1412 - use pathlib.resolve() instead</li><li>Race condition in auto-save - character count isn't atomic</li><li>No models registered in admin</li></ol>
+<p>MEDIUM (Technical Debt)</p>
+<ol><li>index() view is 343 lines - needs to be split up</li><li>Duplicate consolidate_skills() - imported AND redefined locally</li><li>Inconsistent error handling - mix of JsonResponse, messages.error, Http404</li><li>No database indexes on frequently queried fields</li><li>Session data has no size limits</li><li>Missing CSRF verification on JSON endpoints</li></ol>
+<p>LOW (Cleanup)</p>
+<ol><li>Unused imports - Counter never used</li><li>Magic numbers - hardcoded 4, 1.5, 2 without constants</li><li>80+ lines of JS in templates - should be external files</li><li>No logging</li><li>Missing docstrings on many functions</li><li>CSS duplication across templates</li></ol>
+<p>Security Gaps</p>
+<ul><li>No rate limiting</li><li>No Content Security Policy</li><li>Markdown rendered without sanitization</li></ul>
+<p>Testing Gaps</p>
+<ul><li>build_final_str_repr() untested</li><li>Edge cases in skill consolidation</li><li>Race conditions in auto-save</li></ul>
+<hr>
+
+    <div class="footer">Todo</div>
+
+    <script>
+        document.addEventListener('click', function(e) {
+            var menu = document.querySelector('.hamburger-menu');
+            var dropdown = document.querySelector('.hamburger-dropdown');
+            if (menu && dropdown && !menu.contains(e.target)) dropdown.classList.remove('open');
+        });
+    </script>
+</body>
+</html>

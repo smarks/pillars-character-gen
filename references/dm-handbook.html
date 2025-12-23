@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dm Handbook</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            color: #333;
+        }
+        h1 { border-bottom: 2px solid #333; padding-bottom: 10px; margin-top: 0; }
+        h2, h3, h4 { margin-top: 1.5em; }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .hamburger-menu { position: relative; }
+        .hamburger-btn {
+            background: none;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            padding: 8px 12px;
+            font-size: 1.8em;
+            line-height: 1;
+            border-radius: 4px;
+        }
+        .hamburger-btn:hover { background: #f4f4f4; }
+
+        .hamburger-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 320px;
+            margin-top: 4px;
+        }
+        .hamburger-dropdown.open { display: block; }
+
+        .menu-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .menu-row:last-child { border-bottom: none; }
+        .menu-row:hover { background: #f8f8f8; }
+
+        .menu-title {
+            color: #333;
+            text-decoration: none;
+            flex: 1;
+        }
+        .menu-title:hover { color: #36c; }
+
+        .menu-formats a {
+            color: #888;
+            text-decoration: none;
+            font-size: 0.8em;
+            padding: 3px 8px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            margin-left: 5px;
+        }
+        .menu-formats a:hover { background: #e0e0e0; color: #333; }
+
+        .page-title { margin-bottom: 30px; }
+
+        hr { border: none; border-top: 1px solid #ccc; margin: 30px 0; }
+
+        .table-wrapper { overflow-x: auto; margin: 15px 0; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background: #f4f4f4; }
+
+        ul, ol { margin: 15px 0 15px 25px; }
+        li { margin-bottom: 5px; }
+        code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
+        a { color: #36c; }
+        strong { font-weight: bold; }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 1px solid #ccc;
+            text-align: center;
+            color: #888;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="hamburger-menu">
+            <button class="hamburger-btn" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+            <div class="hamburger-dropdown">
+                    <div class="menu-row">
+                        <a href="In the far northeast lies The Splinterings — an archipelago of islands of various sizes that range.html" class="menu-title">In The Far Northeast Lies The Splinterings — An Archipelago Of Islands Of Various Sizes That Range</a>
+                        <span class="menu-formats"><a href="In the far northeast lies The Splinterings — an archipelago of islands of various sizes that range.md">md</a> <a href="In the far northeast lies The Splinterings — an archipelago of islands of various sizes that range.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="about.html" class="menu-title">Starting Out</a>
+                        <span class="menu-formats"><a href="about.md">md</a> <a href="about.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="dm-handbook.html" class="menu-title">Game Master&#x27;s Book</a>
+                        <span class="menu-formats"><a href="dm-handbook.md">md</a> <a href="dm-handbook.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="public-rulebook-v2.html" class="menu-title">PILLARS</a>
+                        <span class="menu-formats"><a href="public-rulebook-v2.md">md</a> <a href="public-rulebook-v2.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="public-rulebook.html" class="menu-title">PILLARS</a>
+                        <span class="menu-formats"><a href="public-rulebook.md">md</a> <a href="public-rulebook.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="todo.html" class="menu-title">Todo</a>
+                        <span class="menu-formats"><a href="todo.md">md</a> <a href="todo.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="welcome.html" class="menu-title">PILLARS</a>
+                        <span class="menu-formats"><a href="welcome.md">md</a> <a href="welcome.html">html</a></span>
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-title">
+        <h1>Dm Handbook</h1>
+    </div>
+
+<h1 id="game-masters-book">Game Master's Book</h1>
+<p><em>This section is for the Game Master only — contains secrets, mechanics, and scenario details that players should not read</em></p>
+<hr>
+<h2 id="magic-mechanics-gm-reference">Magic Mechanics (GM Reference)</h2>
+<p>This chapter contains the specific mechanical details players don't see. The Player's Book describes magic in general terms; here are the exact numbers.</p>
+<h3 id="mana-pool">Mana Pool</h3>
+<p><strong>Roll:</strong> 3d6 at character creation (secret from player)</p>
+<h3 id="casting-roll">\### Casting Roll</h3>
+<p><strong>Casting Roll:</strong> 3d6 ≤ adjINT or adjWIS (depending on the spell). Rolls of 3-5 and 16-18 have special effects per the table below.</p>
+<h3 id="special-casting-rolls">Special Casting Rolls</h3>
+<div class="table-wrapper"><table><thead><tr><th>Roll</th><th>Result</th></tr></thead><tbody><tr><td>3</td><td>Critical success—GM determines bonus effect</td></tr><tr><td>4</td><td>Strong success—minor bonus</td></tr><tr><td>5</td><td>Clean success</td></tr><tr><td>16</td><td>Fumble—spell fails, minor consequence</td></tr><tr><td>17</td><td>Bad fumble—spell fails, mana lost, negative effect</td></tr><tr><td>18</td><td>Catastrophic—triggers Runaway</td></tr></tbody></table></div>
+<h3 id="push">Push</h3>
+<p>If you push, it makes it harder to succeed but the resulting spell is more powerful.</p>
+<p>Control Roll: 3d6 ≤ INT, with penalty equal to total mana invested. Penalty = −(total mana invested)</p>
+<p>Example: A mage with INT 12 pushes 4 mana into a spell. Their Control Roll is 3d6 ≤ 8 (12 − 4). If they pushed 7 mana, they'd need 3d6 ≤ 5.</p>
+<p>The effects of pushing mana varies based on spell. See GM</p>
+<h3 id="control-results">Control Results</h3>
+<div class="table-wrapper"><table><thead><tr><th>Result</th><th>Outcome</th></tr></thead><tbody><tr><td>Success</td><td>Spell works as intended</td></tr><tr><td>Fail by 1-3</td><td>Minor deviation</td></tr><tr><td>Fail by 4-6</td><td>Significant deviation</td></tr><tr><td>Fail by 7+</td><td><strong>RUNAWAY</strong></td></tr><tr><td>Natural 18</td><td><strong>RUNAWAY</strong> (regardless)</td></tr></tbody></table></div>
+<h3 id="borrowing-mechanics">Borrowing Mechanics</h3>
+<ol><li>Spend all remaining mana</li><li>Borrow remainder → becomes Debt</li><li>Debt Roll after spell: 3d6 ≤ (INT + WIS − Debt)</li><li>Channel is hard cap—can't exceed even by Borrowing</li></ol>
+<h3 id="channel">Channel</h3>
+<p>Channel represents how much mana a caster can safely control at once.</p>
+<ul><li><strong>Recipe Magic:</strong> Channel equals the caster's skill level in that specific spell.</li><li><strong>True Magic:</strong> Channel equals the caster's Arcane skill level (which costs double skill points to advance).</li></ul>
+<p>Channel is the hard cap—you cannot exceed it even by Borrowing.</p>
+<h3 id="runaway">Runaway</h3>
+<p>When a caster loses control, the spell begins feeding on them.</p>
+<p><strong>Each turn:</strong></p>
+<ul><li>Spell drains mana equal to original casting cost</li><li>Spell effect grows unpredictably (GM determines)</li></ul>
+<p><strong>At 0 mana:</strong> Caster falls unconscious. Spell drains Body instead.</p>
+<p><strong>Death:</strong> When Body reaches negative full starting value.</p>
+<p><strong>Anchoring:</strong></p>
+<ul><li><strong>Conscious caster:</strong> 3d6 ≤ WIS to regain control</li><li><strong>Third party mage:</strong> Invest mana equal to original spell cost, roll 3d6 ≤ INT. Failure = both caught in Runaway.</li></ul>
+<p><strong>Once anchored:</strong> Controller may continue the spell normally or end it.</p>
+<h3 id="counterspell-mechanics">Counterspell Mechanics</h3>
+<p><strong>Initial Counter:</strong></p>
+<ol><li>Higher adjDEX defender: declare counter + commit mana (their action)</li><li>Caster's action: declare spell, pay mana</li><li>Lower adjDEX defender: may counter when action comes</li><li>Opposed INT roll: +1 per 3 mana invested</li><li>Ties: caster wins</li></ol>
+<p><strong>Resolution:</strong></p>
+<ul><li>Caster wins: Spell goes off</li><li>Defender wins: Spell countered; caster may escalate next turn</li></ul>
+<p><strong>Escalation (Turn 2+):</strong></p>
+<ul><li>Only caster can escalate—defender gets one shot</li><li>Caster's action: pay mana again, new opposed INT roll</li><li>Defender chooses: oppose (pay mana again) or let spell succeed</li><li>Ends when: caster succeeds, caster stops, defender stops, or Runaway</li></ul>
+<hr>
+<h2 id="the-world">The World</h2>
+<h3 id="the-splinterings">The Splinterings</h3>
+<p>The northeastern archipelago of tribal clans. Fierce independence, blood feuds, and raiding culture.</p>
+<h4 id="conflict-generator">Conflict Generator</h4>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Source</th><th>Stakes</th></tr></thead><tbody><tr><td>1</td><td>Blood debt</td><td>Honor/status</td></tr><tr><td>2</td><td>Resource dispute</td><td>Survival/wealth</td></tr><tr><td>3</td><td>Succession crisis</td><td>Power</td></tr><tr><td>4</td><td>Broken oath</td><td>Trust/alliance</td></tr><tr><td>5</td><td>Territorial claim</td><td>Land/sovereignty</td></tr><tr><td>6</td><td>Theft/raid gone wrong</td><td>Property/vengeance</td></tr></tbody></table></div>
+<h4 id="conflict-complication">Conflict Complication</h4>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Complication</th></tr></thead><tbody><tr><td>1</td><td>Third clan benefits from conflict continuing</td></tr><tr><td>2</td><td>The "wronged" party was actually the original aggressor</td></tr><tr><td>3</td><td>Marriage alliance on the table, one party stalling</td></tr><tr><td>4</td><td>Someone wants to escalate to draw in allies</td></tr><tr><td>5</td><td>Key evidence everyone relies on is forged</td></tr><tr><td>6</td><td>Supernatural element (omen, curse, prophecy) involved</td></tr></tbody></table></div>
+<h4 id="island-generator">Island Generator</h4>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>Size/Type</th></tr></thead><tbody><tr><td>1-2</td><td>Skerry (barely habitable, maybe one family)</td></tr><tr><td>3-4</td><td>Small (single village, one clan)</td></tr><tr><td>5-6</td><td>Medium (several settlements, dominant clan with minor families)</td></tr><tr><td>7</td><td>Large (multiple clans, internal politics)</td></tr><tr><td>8</td><td>Cluster (archipelago within archipelago)</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>Notable Feature</th></tr></thead><tbody><tr><td>1</td><td>Excellent harbor</td></tr><tr><td>2</td><td>Fresh water source</td></tr><tr><td>3</td><td>Rich fishing/sealing grounds</td></tr><tr><td>4</td><td>Timber (rare in the Splinterings)</td></tr><tr><td>5</td><td>Mineral deposits</td></tr><tr><td>6</td><td>Ruins from before the Splintering</td></tr><tr><td>7</td><td>Sacred site</td></tr><tr><td>8</td><td>Strategic position (controls a passage)</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Current Problem</th></tr></thead><tbody><tr><td>1</td><td>Succession dispute</td></tr><tr><td>2</td><td>Resource running low</td></tr><tr><td>3</td><td>Feud with neighbor escalating</td></tr><tr><td>4</td><td>Raids from unknown source</td></tr><tr><td>5</td><td>Bad omen/curse/illness</td></tr><tr><td>6</td><td>Refugees arriving from elsewhere</td></tr></tbody></table></div>
+<h4 id="splinterings-rumors">Splinterings Rumors</h4>
+<div class="table-wrapper"><table><thead><tr><th>d12</th><th>They say...</th></tr></thead><tbody><tr><td>1</td><td>A ship came back from distant place with strange cargo</td></tr><tr><td>2</td><td>Clan chief is dying, succession unclear</td></tr><tr><td>3</td><td>Someone found something valuable, trying to keep quiet</td></tr><tr><td>4</td><td>Person isn't who they claim to be</td></tr><tr><td>5</td><td>Work available for people who don't ask questions</td></tr><tr><td>6</td><td>Feud between clans about to turn bloody</td></tr><tr><td>7</td><td>Something attacked boats near location</td></tr><tr><td>8</td><td>A mage is offering services on island</td></tr><tr><td>9</td><td>Island is cursed/blessed/haunted</td></tr><tr><td>10</td><td>The Navel is looking for someone, paying well</td></tr><tr><td>11</td><td>Someone escaped from somewhere, in hiding</td></tr><tr><td>12</td><td>An old ruin has been opened/discovered/disturbed</td></tr></tbody></table></div>
+<h3 id="the-navel">The Navel</h3>
+<p>The wealthy center of the known world. Imperial power, the Wayfarer's Guild, and endless intrigue.</p>
+<h4 id="districts">Districts</h4>
+<div class="table-wrapper"><table><thead><tr><th>d10</th><th>District/Area</th></tr></thead><tbody><tr><td>1</td><td>Crystal Isle (imperial palace, high nobility)</td></tr><tr><td>2</td><td>Guild Quarter (Wayfarer's Guild HQ, associated businesses)</td></tr><tr><td>3</td><td>Foreign Quarter (traders from Splinterings, Old Emporium)</td></tr><tr><td>4</td><td>Temple District</td></tr><tr><td>5</td><td>The Docks (warehouses, sailors, smugglers)</td></tr><tr><td>6</td><td>Scholars' Row (bookshops, tutors, minor academics)</td></tr><tr><td>7</td><td>The Warrens (poor, dense, criminal)</td></tr><tr><td>8</td><td>Merchant Heights (wealthy traders, new money)</td></tr><tr><td>9</td><td>Old City (ancient buildings, old families, secrets)</td></tr><tr><td>10</td><td>The Ferries (connects islands, transient population)</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Current Situation</th></tr></thead><tbody><tr><td>1</td><td>Festival or public event (cover for other activities)</td></tr><tr><td>2</td><td>Crackdown by authorities</td></tr><tr><td>3</td><td>Construction/renovation uncovering something</td></tr><tr><td>4</td><td>Power vacuum (someone important died/fled/arrested)</td></tr><tr><td>5</td><td>Foreigners arriving in unusual numbers</td></tr><tr><td>6</td><td>Plague, fire, or other disaster (recent or threatened)</td></tr></tbody></table></div>
+<h4 id="wayfarers-guild">Wayfarer's Guild</h4>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>Guild Job</th></tr></thead><tbody><tr><td>1</td><td>Escort a VIP (why unofficial protection?)</td></tr><tr><td>2</td><td>Investigate a missing shipment</td></tr><tr><td>3</td><td>Carry sealed documents (don't open them)</td></tr><tr><td>4</td><td>Scout a new route</td></tr><tr><td>5</td><td>Resolve a dispute with local authorities</td></tr><tr><td>6</td><td>Find a rogue Guild member</td></tr><tr><td>7</td><td>Assess a potential new member</td></tr><tr><td>8</td><td>Quietly handle something embarrassing</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Guild Politics</th></tr></thead><tbody><tr><td>1</td><td>Faction pushing to expand into new territory</td></tr><tr><td>2</td><td>Faction wanting to raise/lower fees</td></tr><tr><td>3</td><td>Corruption investigation (real or manufactured)</td></tr><tr><td>4</td><td>Succession struggle for leadership</td></tr><tr><td>5</td><td>External pressure from imperial court</td></tr><tr><td>6</td><td>Rival organization challenging monopoly</td></tr></tbody></table></div>
+<h3 id="dragon-isles">Dragon Isles</h3>
+<p>Sparse, dangerous frontier. Dragons keep to themselves, but their presence shapes everything.</p>
+<h4 id="settlement-generator">Settlement Generator</h4>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Settlement Type</th></tr></thead><tbody><tr><td>1</td><td>Mining outpost (what are they mining?)</td></tr><tr><td>2</td><td>Trading post (between whom?)</td></tr><tr><td>3</td><td>Exile community (fled from where? why?)</td></tr><tr><td>4</td><td>Hermitage (religious, scholarly, or hiding)</td></tr><tr><td>5</td><td>Dragon-cult village (worship or appease)</td></tr><tr><td>6</td><td>Salvage operation (wrecks, ruins, dragon leavings)</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>The Locals Are...</th></tr></thead><tbody><tr><td>1</td><td>Suspicious of outsiders</td></tr><tr><td>2</td><td>Desperate for outside contact</td></tr><tr><td>3</td><td>Hiding from something</td></tr><tr><td>4</td><td>Engaged in something illegal</td></tr><tr><td>5</td><td>Under threat they can't handle alone</td></tr><tr><td>6</td><td>Sitting on something valuable they don't understand</td></tr><tr><td>7</td><td>In conflict with each other</td></tr><tr><td>8</td><td>Not what they appear to be</td></tr></tbody></table></div>
+<h4 id="dragon-tables">Dragon Tables</h4>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Local Dragon Situation</th></tr></thead><tbody><tr><td>1</td><td>No dragons nearby (or so they think)</td></tr><tr><td>2</td><td>Dragon present but dormant/uninterested</td></tr><tr><td>3</td><td>Tribute arrangement</td></tr><tr><td>4</td><td>Dragon recently arrived or departed</td></tr><tr><td>5</td><td>Multiple dragons, territorial conflict</td></tr><tr><td>6</td><td>Dragon is dead (what killed it?)</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d10</th><th>Dragon Disposition</th></tr></thead><tbody><tr><td>1-4</td><td>Ignores you (beneath notice)</td></tr><tr><td>5-6</td><td>Warns you off</td></tr><tr><td>7</td><td>Curious (uncomfortable attention)</td></tr><tr><td>8</td><td>Wants something (trade? service?)</td></tr><tr><td>9</td><td>Territorial (you've trespassed)</td></tr><tr><td>10</td><td>Hungry, bored, or malicious</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Dragon Complication</th></tr></thead><tbody><tr><td>1</td><td>Has enemies among dragonkind</td></tr><tr><td>2</td><td>Is dying</td></tr><tr><td>3</td><td>Remembers before the Splintering</td></tr><tr><td>4</td><td>Has human servants/cult</td></tr><tr><td>5</td><td>Knows exactly what's in its hoard</td></tr><tr><td>6</td><td>Is not what it appears</td></tr></tbody></table></div>
+<h3 id="old-emporium">Old Emporium</h3>
+<p>Independent city-states along the southeastern coast. Ancient, cosmopolitan, competitive.</p>
+<h4 id="city-state-generator">City-State Generator</h4>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>Known for...</th></tr></thead><tbody><tr><td>1</td><td>Banking/finance</td></tr><tr><td>2</td><td>Specific luxury goods (silk, spices, dyes)</td></tr><tr><td>3</td><td>Mercenaries</td></tr><tr><td>4</td><td>Shipbuilding</td></tr><tr><td>5</td><td>Scholarship/libraries</td></tr><tr><td>6</td><td>Religious significance</td></tr><tr><td>7</td><td>Craftsmanship (weapons, jewelry, pottery)</td></tr><tr><td>8</td><td>Vice (gambling, narcotics, slavery)</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Government</th></tr></thead><tbody><tr><td>1</td><td>Hereditary ruler</td></tr><tr><td>2</td><td>Elected council of merchants</td></tr><tr><td>3</td><td>Theocracy</td></tr><tr><td>4</td><td>Oligarchy (few ruling families)</td></tr><tr><td>5</td><td>Elected tyrant (temporary dictator)</td></tr><tr><td>6</td><td>Complicated (multiple competing powers)</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>Current Tension</th></tr></thead><tbody><tr><td>1</td><td>Trade war with rival city</td></tr><tr><td>2</td><td>Internal power struggle</td></tr><tr><td>3</td><td>Religious controversy</td></tr><tr><td>4</td><td>Foreign influence (Navel meddling?)</td></tr><tr><td>5</td><td>Criminal organization gaining power</td></tr><tr><td>6</td><td>Plague or famine</td></tr><tr><td>7</td><td>Refugees from interior</td></tr><tr><td>8</td><td>Ancient debt or treaty coming due</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>Why Outsiders Are Useful</th></tr></thead><tbody><tr><td>1</td><td>Jobs that would shame locals</td></tr><tr><td>2</td><td>Deniable operations against rivals</td></tr><tr><td>3</td><td>Fresh perspectives on old problems</td></tr><tr><td>4</td><td>Blame (if things go wrong)</td></tr><tr><td>5</td><td>Connections to distant places</td></tr><tr><td>6</td><td>Skills not available locally</td></tr><tr><td>7</td><td>Neutral parties in local disputes</td></tr><tr><td>8</td><td>Expendable muscle</td></tr></tbody></table></div>
+<hr>
+<h2 id="gm-tools">GM Tools</h2>
+<h3 id="universal-npc-tables">Universal NPC Tables</h3>
+<h4 id="npc-motivation">NPC Motivation</h4>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>Wants</th><th>Hindered by</th></tr></thead><tbody><tr><td>1</td><td>Revenge</td><td>Oath they cannot break</td></tr><tr><td>2</td><td>Wealth/security</td><td>Debt owed</td></tr><tr><td>3</td><td>Status/recognition</td><td>Family obligations</td></tr><tr><td>4</td><td>Escape situation</td><td>Their reputation</td></tr><tr><td>5</td><td>Protect a secret</td><td>Someone knows secret</td></tr><tr><td>6</td><td>Power over rival</td><td>Lack of resources</td></tr><tr><td>7</td><td>Knowledge/truth</td><td>Physical limitation</td></tr><tr><td>8</td><td>Peace/end conflict</td><td>Divided loyalties</td></tr></tbody></table></div>
+<h4 id="npc-role-splinterings">NPC Role (Splinterings)</h4>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>Role</th></tr></thead><tbody><tr><td>1</td><td>Clan chief or elder</td></tr><tr><td>2</td><td>Warrior/raider</td></tr><tr><td>3</td><td>Trader/craftsperson</td></tr><tr><td>4</td><td>Thrall or former thrall</td></tr><tr><td>5</td><td>Skald/keeper of stories</td></tr><tr><td>6</td><td>Healer/herbalist</td></tr><tr><td>7</td><td>Fisherfolk/sailor</td></tr><tr><td>8</td><td>Outsider</td></tr></tbody></table></div>
+<h4 id="npc-role-navel">NPC Role (Navel)</h4>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>Position</th><th>d8</th><th>Currently...</th></tr></thead><tbody><tr><td>1</td><td>Imperial functionary</td><td>1</td><td>Rising (new money/position)</td></tr><tr><td>2</td><td>Wayfarer's Guild member</td><td>2</td><td>Falling (debts, scandal)</td></tr><tr><td>3</td><td>Merchant</td><td>3</td><td>Hiding something valuable</td></tr><tr><td>4</td><td>Scholar</td><td>4</td><td>Caught between powers</td></tr><tr><td>5</td><td>Noble house retainer</td><td>5</td><td>Seeking revenge quietly</td></tr><tr><td>6</td><td>Criminal/underworld</td><td>6</td><td>Looking for outsiders</td></tr><tr><td>7</td><td>Artisan/entertainer</td><td>7</td><td>Fleeing their past</td></tr><tr><td>8</td><td>Temple servant/priest</td><td>8</td><td>Playing multiple sides</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Connection to Power</th></tr></thead><tbody><tr><td>1</td><td>Direct (family, position)</td></tr><tr><td>2</td><td>Indirect (serves someone important)</td></tr><tr><td>3</td><td>Financial (creditor or debtor)</td></tr><tr><td>4</td><td>Informational (knows secrets)</td></tr><tr><td>5</td><td>None (but pretends otherwise)</td></tr><tr><td>6</td><td>Opposed (works against current powers)</td></tr></tbody></table></div>
+<h4 id="npc-secret">NPC Secret</h4>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Secret</th></tr></thead><tbody><tr><td>1</td><td>Different parentage than claimed</td></tr><tr><td>2</td><td>Committed crime blamed on another</td></tr><tr><td>3</td><td>Hidden wealth or hidden poverty</td></tr><tr><td>4</td><td>Alliance with rival/enemy</td></tr><tr><td>5</td><td>Witnessed something they shouldn't have</td></tr><tr><td>6</td><td>Practicing forbidden magic</td></tr></tbody></table></div>
+<h3 id="job-generator">Job Generator</h3>
+<div class="table-wrapper"><table><thead><tr><th>d10</th><th>Someone needs...</th><th>d6</th><th>The catch...</th></tr></thead><tbody><tr><td>1</td><td>Message delivered</td><td>1</td><td>Job isn't what it appears</td></tr><tr><td>2</td><td>Goods transported</td><td>2</td><td>Someone wants it to fail</td></tr><tr><td>3</td><td>Person found</td><td>3</td><td>Time pressure</td></tr><tr><td>4</td><td>Protection</td><td>4</td><td>Employer not honest</td></tr><tr><td>5</td><td>Something retrieved</td><td>5</td><td>Creates new enemy</td></tr><tr><td>6</td><td>Dispute witnessed</td><td>6</td><td>Moral complication</td></tr><tr><td>7</td><td>Information gathered</td><td></td><td></td></tr><tr><td>8</td><td>Debt collected</td><td></td><td></td></tr><tr><td>9</td><td>Something appraised</td><td></td><td></td></tr><tr><td>10</td><td>Crime investigated</td><td></td><td></td></tr></tbody></table></div>
+<h3 id="escalation">Escalation</h3>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>Things get worse because...</th></tr></thead><tbody><tr><td>1</td><td>Someone dies (accident? murder? unclear?)</td></tr><tr><td>2</td><td>Insulting words spoken publicly</td></tr><tr><td>3</td><td>Property destroyed</td></tr><tr><td>4</td><td>Third party gets involved</td></tr><tr><td>5</td><td>Old grievances resurface</td></tr><tr><td>6</td><td>Someone flees/defects, bringing secrets</td></tr><tr><td>7</td><td>Powerful figure picks side</td></tr><tr><td>8</td><td>Supernatural event interpreted as omen</td></tr></tbody></table></div>
+<h3 id="rumor-truth-level">Rumor Truth Level</h3>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Truth Level</th></tr></thead><tbody><tr><td>1-2</td><td>Mostly true</td></tr><tr><td>3-4</td><td>True but missing key context</td></tr><tr><td>5</td><td>Exaggerated version of real</td></tr><tr><td>6</td><td>Deliberately planted misinformation</td></tr></tbody></table></div>
+<h3 id="dungeons-ruins">Dungeons &amp; Ruins</h3>
+<h4 id="ruin-origin">Ruin Origin</h4>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>Built by...</th></tr></thead><tbody><tr><td>1</td><td>Pre-Splintering unified civilization</td></tr><tr><td>2</td><td>Earlier cycle of current peoples</td></tr><tr><td>3</td><td>Non-human builders</td></tr><tr><td>4</td><td>Dragon-kind (or their servants)</td></tr><tr><td>5</td><td>Magical academy or cult</td></tr><tr><td>6</td><td>Forgotten empire from interior</td></tr><tr><td>7</td><td>Unknown</td></tr><tr><td>8</td><td>Multiple builders (layered)</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Original Purpose</th></tr></thead><tbody><tr><td>1</td><td>Tomb/memorial</td></tr><tr><td>2</td><td>Temple/religious site</td></tr><tr><td>3</td><td>Fortress/military</td></tr><tr><td>4</td><td>Residence (palace, estate)</td></tr><tr><td>5</td><td>Functional (mine, workshop, warehouse)</td></tr><tr><td>6</td><td>Scholarly (library, observatory, laboratory)</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>Current State</th></tr></thead><tbody><tr><td>1</td><td>Sealed (never breached, or resealed)</td></tr><tr><td>2</td><td>Partially explored</td></tr><tr><td>3</td><td>Occupied</td></tr><tr><td>4</td><td>Picked over (obvious valuables gone)</td></tr><tr><td>5</td><td>Unstable (collapsing, flooded)</td></tr><tr><td>6</td><td>Active (something still functions)</td></tr><tr><td>7</td><td>Contested (multiple parties interested)</td></tr><tr><td>8</td><td>Cursed/warded</td></tr></tbody></table></div>
+<h4 id="occupants">Occupants</h4>
+<div class="table-wrapper"><table><thead><tr><th>d10</th><th>Currently inhabited by...</th></tr></thead><tbody><tr><td>1</td><td>Nothing living (but traps/wards remain)</td></tr><tr><td>2</td><td>Animals/natural creatures</td></tr><tr><td>3</td><td>Criminals/outcasts</td></tr><tr><td>4</td><td>Cult or secret society</td></tr><tr><td>5</td><td>Undead</td></tr><tr><td>6</td><td>Magical creatures/constructs</td></tr><tr><td>7</td><td>Rival explorers</td></tr><tr><td>8</td><td>Descendants of original inhabitants</td></tr><tr><td>9</td><td>Something summoned/released</td></tr><tr><td>10</td><td>Something that was imprisoned here</td></tr></tbody></table></div>
+<h4 id="roomarea-generator">Room/Area Generator</h4>
+<div class="table-wrapper"><table><thead><tr><th>d12</th><th>This area contains...</th></tr></thead><tbody><tr><td>1</td><td>Empty (but signs of previous use)</td></tr><tr><td>2</td><td>Obstacle (collapsed passage, locked door)</td></tr><tr><td>3</td><td>Trap (still active?)</td></tr><tr><td>4</td><td>Creature(s)</td></tr><tr><td>5</td><td>Treasure</td></tr><tr><td>6</td><td>Information (inscriptions, murals)</td></tr><tr><td>7</td><td>Functional element (well, forge, altar)</td></tr><tr><td>8</td><td>Bodies</td></tr><tr><td>9</td><td>Camp/nest</td></tr><tr><td>10</td><td>Puzzle/mechanism</td></tr><tr><td>11</td><td>Something weird (magic residue, time distortion)</td></tr><tr><td>12</td><td>Connection to somewhere unexpected</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Environmental Hazard</th></tr></thead><tbody><tr><td>1</td><td>Darkness (deeper than torchlight)</td></tr><tr><td>2</td><td>Bad air (poison, no oxygen, spores)</td></tr><tr><td>3</td><td>Water (flooded, dripping, underwater)</td></tr><tr><td>4</td><td>Structural instability</td></tr><tr><td>5</td><td>Temperature (extreme cold or heat)</td></tr><tr><td>6</td><td>Magical interference</td></tr></tbody></table></div>
+<h4 id="treasure">Treasure</h4>
+<div class="table-wrapper"><table><thead><tr><th>d10</th><th>Treasure Type</th></tr></thead><tbody><tr><td>1</td><td>Coins/precious metals</td></tr><tr><td>2</td><td>Gems/jewelry</td></tr><tr><td>3</td><td>Art objects</td></tr><tr><td>4</td><td>Books/scrolls/maps</td></tr><tr><td>5</td><td>Magical items</td></tr><tr><td>6</td><td>Craft goods (weapons, tools)</td></tr><tr><td>7</td><td>Alchemical/magical components</td></tr><tr><td>8</td><td>Information (secrets, blackmail)</td></tr><tr><td>9</td><td>Relics (religious, historical)</td></tr><tr><td>10</td><td>Something unique</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Treasure Complication</th></tr></thead><tbody><tr><td>1</td><td>Too heavy/bulky to remove easily</td></tr><tr><td>2</td><td>Someone else has a claim</td></tr><tr><td>3</td><td>Cursed or dangerous</td></tr><tr><td>4</td><td>Legally problematic</td></tr><tr><td>5</td><td>Incomplete (need other pieces)</td></tr><tr><td>6</td><td>Valuable only to specific buyer</td></tr></tbody></table></div>
+<h3 id="urban-intrigue">Urban Intrigue</h3>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>Situation involves...</th><th>d8</th><th>Players drawn in because...</th></tr></thead><tbody><tr><td>1</td><td>Succession/inheritance</td><td>1</td><td>They witnessed something</td></tr><tr><td>2</td><td>Business rivalry</td><td>2</td><td>Mistaken for someone else</td></tr><tr><td>3</td><td>Criminal enterprise</td><td>3</td><td>Someone they know involved</td></tr><tr><td>4</td><td>Political faction conflict</td><td>4</td><td>Have needed skills</td></tr><tr><td>5</td><td>Foreign interference</td><td>5</td><td>Outsiders (deniable)</td></tr><tr><td>6</td><td>Religious conflict</td><td>6</td><td>Acquired something important</td></tr><tr><td>7</td><td>Personal vendetta</td><td>7</td><td>Wrong place, wrong time</td></tr><tr><td>8</td><td>Cover-up of past crime</td><td>8</td><td>Being framed</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Real stakes are...</th></tr></thead><tbody><tr><td>1</td><td>Higher than they appear</td></tr><tr><td>2</td><td>Lower than they appear</td></tr><tr><td>3</td><td>Different than they appear</td></tr><tr><td>4</td><td>Personal (pride/honor)</td></tr><tr><td>5</td><td>Exactly what they appear</td></tr><tr><td>6</td><td>Unknown even to participants</td></tr></tbody></table></div>
+<h3 id="faction-generator">Faction Generator</h3>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Type</th><th>d6</th><th>Wants</th><th>d6</th><th>Weakness</th></tr></thead><tbody><tr><td>1</td><td>Family/clan</td><td>1</td><td>More territory</td><td>1</td><td>Internal division</td></tr><tr><td>2</td><td>Guild</td><td>2</td><td>Revenge</td><td>2</td><td>Resource shortage</td></tr><tr><td>3</td><td>Religious order</td><td>3</td><td>Protect position</td><td>3</td><td>Vulnerable leader</td></tr><tr><td>4</td><td>Criminal org</td><td>4</td><td>Change laws</td><td>4</td><td>Damaging secret</td></tr><tr><td>5</td><td>Political movement</td><td>5</td><td>Specific person</td><td>5</td><td>External enemy</td></tr><tr><td>6</td><td>Foreign interest</td><td>6</td><td>Specific object</td><td>6</td><td>Overextended</td></tr></tbody></table></div>
+<h3 id="trade-economics">Trade &amp; Economics</h3>
+<h4 id="trade-goods">Trade Goods</h4>
+<div class="table-wrapper"><table><thead><tr><th>d12</th><th>Commodity</th></tr></thead><tbody><tr><td>1</td><td>Grain/foodstuffs</td></tr><tr><td>2</td><td>Textiles (wool, linen, silk)</td></tr><tr><td>3</td><td>Metals (iron, copper, tin, precious)</td></tr><tr><td>4</td><td>Timber</td></tr><tr><td>5</td><td>Salt/preserved foods</td></tr><tr><td>6</td><td>Wine/ale/spirits</td></tr><tr><td>7</td><td>Spices/dyes</td></tr><tr><td>8</td><td>Livestock</td></tr><tr><td>9</td><td>Slaves/thralls</td></tr><tr><td>10</td><td>Weapons/armor</td></tr><tr><td>11</td><td>Luxury goods (jewelry, art)</td></tr><tr><td>12</td><td>Exotic (magical components)</td></tr></tbody></table></div>
+<h4 id="trade-routes">Trade Routes</h4>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Route Type</th></tr></thead><tbody><tr><td>1</td><td>Short, safe, low margin</td></tr><tr><td>2</td><td>Medium distance, some risk, decent margin</td></tr><tr><td>3</td><td>Long distance, significant risk, high margin</td></tr><tr><td>4</td><td>Illegal/smuggling</td></tr><tr><td>5</td><td>Seasonal</td></tr><tr><td>6</td><td>Speculative</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>Route Complication</th></tr></thead><tbody><tr><td>1</td><td>Pirates/bandits active</td></tr><tr><td>2</td><td>Tariffs/tolls changed</td></tr><tr><td>3</td><td>Political situation unstable</td></tr><tr><td>4</td><td>Competition undercutting prices</td></tr><tr><td>5</td><td>Weather/seasonal problems</td></tr><tr><td>6</td><td>Goods are perishable or fragile</td></tr><tr><td>7</td><td>Permit/license required</td></tr><tr><td>8</td><td>Local merchants hostile</td></tr></tbody></table></div>
+<h4 id="market-fluctuation">Market Fluctuation</h4>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Prices</th><th>d6</th><th>Why</th></tr></thead><tbody><tr><td>1</td><td>Crashed</td><td>1</td><td>Another ship arrived first</td></tr><tr><td>2</td><td>Lower than expected</td><td>2</td><td>Local production changed</td></tr><tr><td>3-4</td><td>As expected</td><td>3</td><td>War affecting supply</td></tr><tr><td>5</td><td>Higher than expected</td><td>4</td><td>Weather/harvest issues</td></tr><tr><td>6</td><td>Spiking</td><td>5</td><td>Fashion/taste changed</td></tr><tr><td></td><td></td><td>6</td><td>Government intervention</td></tr></tbody></table></div>
+<h4 id="business-ventures">Business Ventures</h4>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>Venture Type</th></tr></thead><tbody><tr><td>1</td><td>Trade expedition</td></tr><tr><td>2</td><td>Shop/stall</td></tr><tr><td>3</td><td>Tavern/inn</td></tr><tr><td>4</td><td>Craft workshop</td></tr><tr><td>5</td><td>Money-lending</td></tr><tr><td>6</td><td>Shipping/transport</td></tr><tr><td>7</td><td>Brokerage</td></tr><tr><td>8</td><td>Speculation</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Startup Challenge</th><th>d6</th><th>Ongoing Challenge</th></tr></thead><tbody><tr><td>1</td><td>Capital shortage</td><td>1</td><td>Theft/fraud</td></tr><tr><td>2</td><td>Permit/license issues</td><td>2</td><td>Protection money demands</td></tr><tr><td>3</td><td>Established competition</td><td>3</td><td>Debt collection</td></tr><tr><td>4</td><td>Location problems</td><td>4</td><td>Quality control</td></tr><tr><td>5</td><td>Supplier reliability</td><td>5</td><td>Reputation management</td></tr><tr><td>6</td><td>Finding trustworthy employees</td><td>6</td><td>Regulatory compliance</td></tr></tbody></table></div>
+<h3 id="hook-introduction">Hook Introduction</h3>
+<h4 id="patron-system">Patron System</h4>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>Patron Type</th><th>d6</th><th>Why Hire Outsiders</th></tr></thead><tbody><tr><td>1</td><td>Wealthy individual</td><td>1</td><td>Deniability</td></tr><tr><td>2</td><td>Organization (guild, temple)</td><td>2</td><td>Specific skills not local</td></tr><tr><td>3</td><td>Community</td><td>3</td><td>Urgency</td></tr><tr><td>4</td><td>Criminal</td><td>4</td><td>Secrecy</td></tr><tr><td>5</td><td>Scholar/collector</td><td>5</td><td>Expendability</td></tr><tr><td>6</td><td>Rival adventurers</td><td>6</td><td>No local entanglements</td></tr><tr><td>7</td><td>Family/old friend</td><td></td><td></td></tr><tr><td>8</td><td>Mysterious stranger</td><td></td><td></td></tr></tbody></table></div>
+<h4 id="consequence-chains">Consequence Chains</h4>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Your last job resulted in...</th></tr></thead><tbody><tr><td>1</td><td>Someone wanting revenge</td></tr><tr><td>2</td><td>Someone wanting to hire you for similar work</td></tr><tr><td>3</td><td>Information that leads somewhere new</td></tr><tr><td>4</td><td>An object more than it seemed</td></tr><tr><td>5</td><td>A relationship (ally, enemy, dependent)</td></tr><tr><td>6</td><td>Reputation that attracts attention</td></tr></tbody></table></div>
+<h4 id="environmental-hooks">Environmental Hooks</h4>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>While traveling, you encounter...</th></tr></thead><tbody><tr><td>1</td><td>Someone in obvious distress</td></tr><tr><td>2</td><td>Someone fleeing something</td></tr><tr><td>3</td><td>A body/wreck/ruin</td></tr><tr><td>4</td><td>A standoff between parties</td></tr><tr><td>5</td><td>An unusual natural phenomenon</td></tr><tr><td>6</td><td>Someone who recognizes a character</td></tr><tr><td>7</td><td>Evidence of recent violence</td></tr><tr><td>8</td><td>Something that shouldn't be here</td></tr></tbody></table></div>
+<h4 id="information-hooks">Information Hooks</h4>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Source</th><th>d6</th><th>Information suggests...</th></tr></thead><tbody><tr><td>1</td><td>Overheard conversation</td><td>1</td><td>Opportunity for profit</td></tr><tr><td>2</td><td>Posted notice</td><td>2</td><td>Danger to someone cared about</td></tr><tr><td>3</td><td>Rumor from contact</td><td>3</td><td>Injustice to right</td></tr><tr><td>4</td><td>News from traveler</td><td>4</td><td>Mystery to solve</td></tr><tr><td>5</td><td>Written message</td><td>5</td><td>Power vacuum to exploit</td></tr><tr><td>6</td><td>Discovered document/map</td><td>6</td><td>Ticking clock situation</td></tr></tbody></table></div>
+<h4 id="personal-hooks">Personal Hooks</h4>
+<div class="table-wrapper"><table><thead><tr><th>d8</th><th>From your past...</th></tr></thead><tbody><tr><td>1</td><td>A debt comes due</td></tr><tr><td>2</td><td>A relative needs help</td></tr><tr><td>3</td><td>An old enemy resurfaces</td></tr><tr><td>4</td><td>An old friend is in trouble</td></tr><tr><td>5</td><td>Your home community faces crisis</td></tr><tr><td>6</td><td>Something you thought settled isn't</td></tr><tr><td>7</td><td>An inheritance/legacy arrives</td></tr><tr><td>8</td><td>Someone from prior experience contacts you</td></tr></tbody></table></div>
+<hr>
+<h2 id="scenario-seeds">Scenario Seeds</h2>
+<h3 id="seed-1-the-weregild-appraiser">Seed 1: The Weregild Appraiser</h3>
+<p><strong>Region:</strong> Splinterings</p>
+<p>A man was killed in a dispute between Clan Vorath and Clan Iskeld. Both sides agreed to settle with weregild rather than blood feud, but cannot agree on the dead man's worth. Characters are hired as neutral outsiders to appraise his value.</p>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Tormund's Secret</th><th>Effect on Value</th></tr></thead><tbody><tr><td>1</td><td>Illegitimate son of Vorath chief</td><td>Dramatically higher</td></tr><tr><td>2</td><td>Owed massive gambling debts</td><td>Lower (heirs inherit debt)</td></tr><tr><td>3</td><td>Was spying for third clan</td><td>Complicated</td></tr><tr><td>4</td><td>Had hidden silver cache</td><td>Higher if found</td></tr><tr><td>5</td><td>Killed a Vorath man years ago</td><td>Arguably cancels debt</td></tr><tr><td>6</td><td>Was planning to defect to Vorath</td><td>Vorath might not pay</td></tr></tbody></table></div>
+<p><strong>Complications:</strong> Tormund's widow wants maximum payment. The killer claims self-defense. A third clan wants the feud to continue. The Althing is in two weeks.</p>
+<hr>
+<h3 id="seed-2-the-sealed-wing">Seed 2: The Sealed Wing</h3>
+<p><strong>Region:</strong> The Navel</p>
+<p>Construction in the Old City accidentally breached a sealed section of an ancient building. The noble owner hired workers to wall it back up. But one worker saw something inside and is selling information.</p>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>The sealed wing contains...</th></tr></thead><tbody><tr><td>1</td><td>Tomb challenging imperial legitimacy</td></tr><tr><td>2</td><td>Library with forbidden knowledge</td></tr><tr><td>3</td><td>Workshop where something was being built</td></tr><tr><td>4</td><td>Prison where something was held (empty now?)</td></tr><tr><td>5</td><td>Treasury (cursed/warded)</td></tr><tr><td>6</td><td>Gate/portal</td></tr></tbody></table></div>
+<p><strong>Interested parties:</strong> Lady Valdren, the worker, scholars from Roke, imperial functionaries, criminal organization, religious faction.</p>
+<hr>
+<h3 id="seed-3-the-dragons-debt">Seed 3: The Dragon's Debt</h3>
+<p><strong>Region:</strong> Dragon Isles</p>
+<p>A small trading post (Saltmere, 50 people) has operated under tribute arrangement with dragon Vaskarath for decades. This year, the dragon changed its demands to something impossible.</p>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Vaskarath...</th><th>New Demand</th></tr></thead><tbody><tr><td>1</td><td>Has enemies among dragonkind</td><td>Weapons/armor</td></tr><tr><td>2</td><td>Is dying</td><td>Alchemical ingredients</td></tr><tr><td>3</td><td>Remembers before Splintering</td><td>A specific relic</td></tr><tr><td>4</td><td>Has gained human servants</td><td>More humans</td></tr><tr><td>5</td><td>Knows exactly what's in hoard</td><td>Item to complete set</td></tr><tr><td>6</td><td>Is not what it appears</td><td>Something bizarre</td></tr></tbody></table></div>
+<p><strong>Local factions:</strong> Elder Marit (meet demand), Trader Oswin (relocate), Hunter Vella (kill dragon), Tribute-keeper Torvald (negotiate).</p>
+<hr>
+<h3 id="seed-4-the-forged-ledger">Seed 4: The Forged Ledger</h3>
+<p><strong>Region:</strong> Old Emporium (Verrenza)</p>
+<p>Merchant Calvino Destri was murdered. Official verdict: robbery. His daughter Lucia believes he was killed over business dealings. His ledgers are missing.</p>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Calvino discovered...</th><th>Killed by...</th></tr></thead><tbody><tr><td>1</td><td>Ruling family laundering money</td><td>Family's agents</td></tr><tr><td>2</td><td>Smuggling through his brokerage</td><td>Criminal organization</td></tr><tr><td>3</td><td>Foreign power buying influence</td><td>Foreign agents</td></tr><tr><td>4</td><td>Fraud in city's banking</td><td>Consortium of bankers</td></tr><tr><td>5</td><td>Blackmail scheme</td><td>The blackmailer</td></tr><tr><td>6</td><td>Nothing—personal reasons</td><td>Jealous rival</td></tr></tbody></table></div>
+<p><strong>Complications:</strong> Characters are outsiders. Lucia is watched. Ledger is scattered. Someone framed a scapegoat. Truth would destabilize Verrenza.</p>
+<hr>
+<h3 id="seed-5-the-twice-claimed-cargo">Seed 5: The Twice-Claimed Cargo</h3>
+<p><strong>Region:</strong> Multiple</p>
+<p>Characters transporting cargo are intercepted. Two parties claim ownership with documentation. Both willing to fight.</p>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>The Truth</th></tr></thead><tbody><tr><td>1</td><td>Merchant sold stolen goods unknowingly</td></tr><tr><td>2</td><td>Trading house is lying—sold it, want it back</td></tr><tr><td>3</td><td>Cargo was duplicated (forgery? magic?)</td></tr><tr><td>4</td><td>Third party sold same cargo to both</td></tr><tr><td>5</td><td>Cargo is different than documented</td></tr><tr><td>6</td><td>Both documents forged—belongs to neither</td></tr></tbody></table></div>
+<p><strong>Complications:</strong> Characters legally liable. Weather forces shelter together. Cargo is perishable. Hidden stowaway knows truth.</p>
+<hr>
+<h3 id="seed-6-the-althing-murder">Seed 6: The Althing Murder</h3>
+<p><strong>Region:</strong> Splinterings</p>
+<p>During the Althing where violence is forbidden, Chief Solmund of Clan Brennir is found dead. If unsolved before Althing ends, blood feud is inevitable.</p>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Killer</th><th>Motive</th></tr></thead><tbody><tr><td>1</td><td>Lady Vigdis (wife)</td><td>Solmund discovered her secret</td></tr><tr><td>2</td><td>Ragnar (heir)</td><td>Impatient, manipulated</td></tr><tr><td>3</td><td>Thorvald (rival chief)</td><td>Old feud, lost control</td></tr><tr><td>4</td><td>Old Emporium merchant</td><td>Solmund was blackmailing them</td></tr><tr><td>5</td><td>Third party agent</td><td>Wants war for profit</td></tr><tr><td>6</td><td>None—suicide</td><td>To frame someone</td></tr></tbody></table></div>
+<p><strong>Suspects:</strong> Rival Chief Thorvald, Lady Vigdis, Nephew Ragnar, Foreign merchant. Three days until Althing ends.</p>
+<hr>
+<h3 id="seed-7-the-inheritance-map">Seed 7: The Inheritance Map</h3>
+<p><strong>Region:</strong> Multiple</p>
+<p>A character receives word that a distant relative died and left them a map to a location in the Dragon Isles, with cryptic notes.</p>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Location Type</th></tr></thead><tbody><tr><td>1</td><td>Pre-Splintering ruin on uninhabited island</td></tr><tr><td>2</td><td>Hidden cave system</td></tr><tr><td>3</td><td>Underwater structure visible at low tide</td></tr><tr><td>4</td><td>Location in dragon's territory</td></tr><tr><td>5</td><td>Coordinates match no known geography</td></tr><tr><td>6</td><td>Open ocean (something sank?)</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Why Relative Never Used It</th></tr></thead><tbody><tr><td>1</td><td>Tried and failed</td></tr><tr><td>2</td><td>Obtained late in life, too old</td></tr><tr><td>3</td><td>Knew what was there, decided to leave it</td></tr><tr><td>4</td><td>Was murdered for it</td></tr><tr><td>5</td><td>Was waiting for the right heir</td></tr><tr><td>6</td><td>The map is a test, not directions</td></tr></tbody></table></div>
+<hr>
+<h3 id="seed-8-the-guild-war">Seed 8: The Guild War</h3>
+<p><strong>Region:</strong> The Navel</p>
+<p>The Free Passage Compact challenges the Wayfarer's Guild monopoly. Both sides recruiting agents.</p>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Who Backs the Compact</th></tr></thead><tbody><tr><td>1</td><td>Old Emporium city-states</td></tr><tr><td>2</td><td>Splinterings coalition</td></tr><tr><td>3</td><td>Imperial faction</td></tr><tr><td>4</td><td>Criminal syndicate</td></tr><tr><td>5</td><td>Reformers within Guild</td></tr><tr><td>6</td><td>Dragons</td></tr></tbody></table></div>
+<p><strong>Escalation:</strong> Week 1—economic pressure. Week 2—sabotage. Week 3—violence. Week 4—open conflict.</p>
+<hr>
+<h3 id="seed-9-the-cursed-ship">Seed 9: The Cursed Ship</h3>
+<p><strong>Region:</strong> Sea Routes</p>
+<p>Ship arrives in port with no living crew. Cargo intact. Ship undamaged. Food on tables. Everyone simply... gone.</p>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>What Happened</th></tr></thead><tbody><tr><td>1</td><td>Dragon attack—taken, not killed</td></tr><tr><td>2</td><td>Encountered something at sea</td></tr><tr><td>3</td><td>Crew mutinied, fled in boats</td></tr><tr><td>4</td><td>Plague—bodies thrown overboard</td></tr><tr><td>5</td><td>Picked up castaway who wasn't human</td></tr><tr><td>6</td><td>Ship passed through something</td></tr></tbody></table></div>
+<div class="table-wrapper"><table><thead><tr><th>d6</th><th>Hidden in Cargo</th></tr></thead><tbody><tr><td>1</td><td>Nothing—cargo exactly as listed</td></tr><tr><td>2</td><td>Smuggled goods</td></tr><tr><td>3</td><td>Stowaway</td></tr><tr><td>4</td><td>Something from a ruin</td></tr><tr><td>5</td><td>Documents revealing conspiracy</td></tr><tr><td>6</td><td>Something alive that shouldn't be</td></tr></tbody></table></div>
+<hr>
+<h3 id="seed-10-the-succession-crisis">Seed 10: The Succession Crisis</h3>
+<p><strong>Region:</strong> Splinterings (adaptable)</p>
+<p>Chief Brennar of Clan Stormhold died after ruling forty years without designating an heir. Three claimants. Civil war seems inevitable.</p>
+<div class="table-wrapper"><table><thead><tr><th>Claimant</th><th>Claim</th><th>Support</th></tr></thead><tbody><tr><td>Kell (Son)</td><td>Only surviving child, considered weak</td><td>Merchants, Navel trade interests</td></tr><tr><td>Ulf (Brother)</td><td>Strong warrior, popular</td><td>Warriors, traditionalists</td></tr><tr><td>Astrid (Widow)</td><td>Mother of dead firstborn, claims regency</td><td>Elders, priests, her birth clan</td></tr></tbody></table></div>
+<p><strong>Complications:</strong> Brennar may have been murdered. A fourth claimant might exist. External enemies see opportunity.</p>
+<hr>
+<h2 id="using-these-tables">Using These Tables</h2>
+<h3 id="running-a-seed">Running a Seed</h3>
+<ol><li>Roll or choose variable elements</li><li>Decide which NPCs need full detail vs. sketches</li><li>Consider how character backgrounds connect</li><li>Prepare the opening scene</li><li>Let player choices drive what happens next</li></ol>
+<h3 id="connecting-seeds">Connecting Seeds</h3>
+<p>Consequence chains link adventures naturally. NPCs recur across scenarios. Factions have long memories. Solved problems create new ones. Geographic movement opens new regions.</p>
+<h3 id="improvising-from-seeds">Improvising from Seeds</h3>
+<p>When stuck, roll on relevant table. NPCs always want something and face obstacles. Escalation keeps situations dynamic. Rumors introduce new elements. Every resolution plants future seeds.</p>
+<h3 id="combining-hooks">Combining Hooks</h3>
+<p>The strongest hooks combine multiple methods:</p>
+<p><em>"A merchant (patron) hires you to investigate missing shipments (job). While investigating, you discover the thieves are from a clan one character has history with (personal hook). Solving this requires traveling through Dragon Isles territory (environmental challenges) and the thieves work for a faction in a city-state power struggle (intrigue)."</em></p>
+<h3 id="hook-strength-assessment">Hook Strength Assessment</h3>
+<div class="table-wrapper"><table><thead><tr><th>Factor</th><th>Weak</th><th>Medium</th><th>Strong</th></tr></thead><tbody><tr><td>Personal stakes</td><td>None</td><td>Indirect</td><td>Direct</td></tr><tr><td>Time pressure</td><td>None</td><td>Soft deadline</td><td>Hard deadline</td></tr><tr><td>Opposition</td><td>None/trivial</td><td>Capable</td><td>Formidable</td></tr><tr><td>Reward</td><td>Vague/small</td><td>Clear/adequate</td><td>Exceptional</td></tr><tr><td>Moral clarity</td><td>Ambiguous</td><td>Mixed</td><td>Clear right/wrong</td></tr><tr><td>Complexity</td><td>Simple fetch</td><td>Multiple steps</td><td>Layered/branching</td></tr></tbody></table></div>
+<p>Variety is good. Knowing where a hook sits helps adjust if players seem disengaged.</p>
+
+    <div class="footer">Dm Handbook</div>
+
+    <script>
+        document.addEventListener('click', function(e) {
+            var menu = document.querySelector('.hamburger-menu');
+            var dropdown = document.querySelector('.hamburger-dropdown');
+            if (menu && dropdown && !menu.contains(e.target)) dropdown.classList.remove('open');
+        });
+    </script>
+</body>
+</html>

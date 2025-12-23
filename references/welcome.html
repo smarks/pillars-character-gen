@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PILLARS</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            color: #333;
+        }
+        h1 { border-bottom: 2px solid #333; padding-bottom: 10px; margin-top: 0; }
+        h2, h3, h4 { margin-top: 1.5em; }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .hamburger-menu { position: relative; }
+        .hamburger-btn {
+            background: none;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            padding: 8px 12px;
+            font-size: 1.8em;
+            line-height: 1;
+            border-radius: 4px;
+        }
+        .hamburger-btn:hover { background: #f4f4f4; }
+
+        .hamburger-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 320px;
+            margin-top: 4px;
+        }
+        .hamburger-dropdown.open { display: block; }
+
+        .menu-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .menu-row:last-child { border-bottom: none; }
+        .menu-row:hover { background: #f8f8f8; }
+
+        .menu-title {
+            color: #333;
+            text-decoration: none;
+            flex: 1;
+        }
+        .menu-title:hover { color: #36c; }
+
+        .menu-formats a {
+            color: #888;
+            text-decoration: none;
+            font-size: 0.8em;
+            padding: 3px 8px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            margin-left: 5px;
+        }
+        .menu-formats a:hover { background: #e0e0e0; color: #333; }
+
+        .page-title { margin-bottom: 30px; }
+
+        hr { border: none; border-top: 1px solid #ccc; margin: 30px 0; }
+
+        .table-wrapper { overflow-x: auto; margin: 15px 0; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background: #f4f4f4; }
+
+        ul, ol { margin: 15px 0 15px 25px; }
+        li { margin-bottom: 5px; }
+        code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
+        a { color: #36c; }
+        strong { font-weight: bold; }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 1px solid #ccc;
+            text-align: center;
+            color: #888;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="hamburger-menu">
+            <button class="hamburger-btn" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+            <div class="hamburger-dropdown">
+                    <div class="menu-row">
+                        <a href="In the far northeast lies The Splinterings — an archipelago of islands of various sizes that range.html" class="menu-title">In The Far Northeast Lies The Splinterings — An Archipelago Of Islands Of Various Sizes That Range</a>
+                        <span class="menu-formats"><a href="In the far northeast lies The Splinterings — an archipelago of islands of various sizes that range.md">md</a> <a href="In the far northeast lies The Splinterings — an archipelago of islands of various sizes that range.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="about.html" class="menu-title">Starting Out</a>
+                        <span class="menu-formats"><a href="about.md">md</a> <a href="about.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="dm-handbook.html" class="menu-title">Game Master&#x27;s Book</a>
+                        <span class="menu-formats"><a href="dm-handbook.md">md</a> <a href="dm-handbook.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="public-rulebook-v2.html" class="menu-title">PILLARS</a>
+                        <span class="menu-formats"><a href="public-rulebook-v2.md">md</a> <a href="public-rulebook-v2.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="public-rulebook.html" class="menu-title">PILLARS</a>
+                        <span class="menu-formats"><a href="public-rulebook.md">md</a> <a href="public-rulebook.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="todo.html" class="menu-title">Todo</a>
+                        <span class="menu-formats"><a href="todo.md">md</a> <a href="todo.html">html</a></span>
+                    </div>
+                    <div class="menu-row">
+                        <a href="welcome.html" class="menu-title">PILLARS</a>
+                        <span class="menu-formats"><a href="welcome.md">md</a> <a href="welcome.html">html</a></span>
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-title">
+        <h1>PILLARS</h1>
+    </div>
+
+<p><strong>Many RPGs funnel you toward a destination. Pillars hands you a compass and a world.</strong></p>
+<p><strong>Go anywhere. Become anyone.</strong> There's no plot to follow, no balance to maintain, no invisible walls. The system doesn't care if you burn down the tavern, befriend the villain, or abandon the quest to become a merchant. It just asks: what happens next?</p>
+<p><strong>Characters are people, not builds.</strong> They become who they become through play—shaped by what they survive, what they carry, what they leave behind. A sellsword who learns to read is more interesting than one who hits 2% harder.</p>
+<p><strong>The GM has tools, not a script.</strong> Tables, generators, seeds—raw material to riff on. The best sessions happen in the gaps between what's prepared.</p>
+<p><strong>The world is indifferent.</strong> It doesn't care about your backstory. Winter comes whether you're ready or not. This isn't bleakness for its own sake—it's respect for the fiction. Stakes feel real when the world behaves like it exists.</p>
+<p><strong>Mechanics serve the moment.</strong> Rules tighten around decisions that matter and dissolve everywhere else. If a rule doesn't create interesting choices, it shouldn't exist.</p>
+<p>Pillars is D&amp;D homebrew, with some mechanics borrowed from The Fantasy Trip—Steve Jackson's 1977 system (that is the precursor to GURPS). However, there are other mechanics both public and private that is a original (or at least tries to be) content.</p>
+<p>Special thanks to Stan Heckman for lot of play testing and valuable insights.</p>
+
+    <div class="footer">PILLARS</div>
+
+    <script>
+        document.addEventListener('click', function(e) {
+            var menu = document.querySelector('.hamburger-menu');
+            var dropdown = document.querySelector('.hamburger-dropdown');
+            if (menu && dropdown && !menu.contains(e.target)) dropdown.classList.remove('open');
+        });
+    </script>
+</body>
+</html>

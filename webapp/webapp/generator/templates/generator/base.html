@@ -504,7 +504,7 @@
                 <button class="hamburger-btn" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menu">&#9776;</button>
                 <div class="hamburger-dropdown">
                     <a href="{% url 'welcome' %}">Home</a>
-                    <div class="menu-row"><a href="{% url 'about' %}">About</a><span class="fmt-links"><a href="/static/about.md">md</a> <a href="/static/about.html">html</a></span></div>
+                    <div class="menu-row"><a href="{% url 'about' %}">About</a><span class="fmt-links"><a href="/ref/about.md">md</a> <a href="/ref/about.html">html</a></span></div>
                     {% if user.is_authenticated %}
                     <a href="{% url 'my_characters' %}">Character Generator</a>
                     <a href="{% url 'notes' %}">Notes</a>
@@ -512,9 +512,9 @@
 
                     <div class="menu-section">References</div>
                     <div class="menu-sub">
-                        <div class="menu-row"><a href="{% url 'rulebook' %}">Public Rules</a><span class="fmt-links"><a href="/static/public-rulebook.md">md</a> <a href="/static/public-rulebook.html">html</a></span></div>
+                        <div class="menu-row"><a href="{% url 'rulebook' %}">Public Rules</a><span class="fmt-links"><a href="/ref/public-rulebook.md">md</a> <a href="/ref/public-rulebook.html">html</a></span></div>
                         {% if user.is_authenticated and user.profile.is_dm or user.is_authenticated and user.profile.is_admin %}
-                        <div class="menu-row"><a href="{% url 'dm' %}">Private Rules</a><span class="fmt-links"><a href="/static/dm-handbook.md">md</a> <a href="/static/dm-handbook.html">html</a></span></div>
+                        <div class="menu-row"><a href="{% url 'dm' %}">Private Rules</a><span class="fmt-links"><a href="/ref/dm-handbook.md">md</a> <a href="/ref/dm-handbook.html">html</a></span></div>
                         {% endif %}
                         <a href="{% url 'turn_sequence' %}">Turn Quick Reference</a>
                     </div>

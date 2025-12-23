@@ -1538,6 +1538,31 @@ def serve_reference_image(request, filename):
     return FileResponse(open(image_path, 'rb'), content_type=content_type)
 
 
+def serve_reference_file(request, filename):
+    """Serve raw reference files (md/html) from the references directory."""
+    import mimetypes
+
+    # Security: prevent directory traversal
+    if '..' in filename or filename.startswith('/'):
+        raise Http404("Invalid filename")
+
+    # Only allow specific file extensions
+    allowed_extensions = ['.md', '.html']
+    if not any(filename.endswith(ext) for ext in allowed_extensions):
+        raise Http404("Invalid file type")
+
+    file_path = os.path.join(settings.BASE_DIR, '..', 'references', filename)
+
+    if not os.path.exists(file_path):
+        raise Http404("File not found")
+
+    content_type, _ = mimetypes.guess_type(file_path)
+    if content_type is None:
+        content_type = 'text/plain'
+
+    return FileResponse(open(file_path, 'rb'), content_type=content_type)
+
+
 # =============================================================================
 # Authentication Views
 # =============================================================================

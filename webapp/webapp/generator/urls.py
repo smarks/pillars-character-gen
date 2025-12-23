@@ -21,6 +21,8 @@ urlpatterns = [
     path('turn-sequence/', views.serve_reference_html, {'filename': 'pillars-turn-sequence.html'}, name='turn_sequence'),
     # Images for handbook markdown files
     path('images/<str:filename>', views.serve_reference_image, name='reference_image'),
+    # Raw reference files (md/html downloads)
+    path('ref/<str:filename>', views.serve_reference_file, name='reference_file'),
     # Authentication
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
