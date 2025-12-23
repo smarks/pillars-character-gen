@@ -1,3 +1,18 @@
+## Contents
+
+- [A Bit About The Author](#a-bit-about-the-author)
+- [What is Pillars?](#what-is-pillars)
+- [System Foundation](#system-foundation)
+- [Design Philosophy](#design-philosophy)
+- [Core Mechanics](#core-mechanics)
+- [Getting Started](#getting-started)
+- [Gameplay](#gameplay)
+  - [Roles](#roles)
+  - [Setting](#setting)
+- [Starting Out](#starting-out)
+
+---
+
 ### A Bit About The Author
 
 I played D&D for the first time in 7th grade back in 1977. I was an active player for the next 25 years, but slowed down around the turn of the century. D&D and the entire gaming ecosystem has changed tremendously since then, and I found myself not really liking how the D&D ruleset has evolved. However, it's really cool to see the thousands of RPG systems that have been developed.

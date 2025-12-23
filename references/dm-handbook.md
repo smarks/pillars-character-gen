@@ -4,6 +4,31 @@
 
 *This section is for the Game Master only — contains secrets, mechanics, and scenario details that players should not read. For player-visible rules, see the [public rulebook](/html/public-rulebook/).*
 
+## Contents
+
+- [Magic Mechanics (GM Reference)](#magic-mechanics-gm-reference)
+  - [Mana Pool](#mana-pool)
+  - [Push](#push)
+  - [Borrowing Mechanics](#borrowing-mechanics)
+  - [Channel](#channel)
+  - [Runaway](#runaway)
+  - [Counterspell Mechanics](#counterspell-mechanics)
+- [The World](#the-world)
+  - [The Splinterings](#the-splinterings)
+  - [The Navel](#the-navel)
+  - [Dragon Isles](#dragon-isles)
+  - [Old Emporium](#old-emporium)
+- [GM Tools](#gm-tools)
+  - [Universal NPC Tables](#universal-npc-tables)
+  - [Job Generator](#job-generator)
+  - [Dungeons & Ruins](#dungeons--ruins)
+  - [Urban Intrigue](#urban-intrigue)
+  - [Faction Generator](#faction-generator)
+  - [Trade & Economics](#trade--economics)
+  - [Hook Introduction](#hook-introduction)
+- [Scenario Seeds](#scenario-seeds)
+- [Using These Tables](#using-these-tables)
+
 ---
 
 ## Magic Mechanics (GM Reference)

@@ -6,8 +6,43 @@ by Spencer Marks standing on the shoulders of Steve Jackson, Gary Gygax, Paul Ga
 ---- 
 
 # Public Rules
- 
+
 *This section is for all players*
+
+## Contents
+
+- [Characters](#characters)
+  - [Attributes](#attributes)
+  - [Derived Pools](#derived-pools)
+  - [Injury Thresholds & Death](#injury-thresholds--death)
+- [Character Background](#character-background)
+  - [Provenance](#provenance)
+  - [Location](#location)
+  - [Wealth](#wealth)
+- [Prior Experience](#prior-experience)
+  - [Aging](#aging)
+  - [Survivability](#survivability)
+  - [Skill Tracks](#skill-tracks)
+- [Magic](#magic)
+  - [Casting Spells](#casting-spells)
+  - [Spell Mastery](#spell-mastery)
+  - [Push (Boosting)](#push-boosting)
+  - [Runaway](#runaway)
+  - [Counterspell](#counterspell)
+  - [Schools of Magic](#schools-of-magic)
+- [Combat](#combat)
+  - [Turn Sequence](#turn-sequence)
+  - [Action Options](#action-options)
+  - [Movement](#movement)
+  - [Attack Rolls](#attack-rolls)
+  - [DEX Adjustments](#dex-adjustments)
+  - [Special Combat Situations](#special-combat-situations)
+- [Equipment](#equipment)
+  - [Weapons](#knives-and-swords)
+  - [Armor and Shields](#armor-and-shields)
+  - [Adventuring Gear](#adventuring-gear)
+
+---
 
 ## Lore
 
