@@ -3312,29 +3312,14 @@ class HamburgerMenuLinksTests(TestCase):
         response = self.client.get('/ref/about.md')
         self.assertEqual(response.status_code, 200)
 
-    def test_about_html_link_accessible(self):
-        """Test that about.html reference link is accessible."""
-        response = self.client.get('/ref/about.html')
-        self.assertEqual(response.status_code, 200)
-
     def test_rulebook_md_link_accessible(self):
         """Test that public-rulebook.md reference link is accessible."""
         response = self.client.get('/ref/public-rulebook.md')
         self.assertEqual(response.status_code, 200)
 
-    def test_rulebook_html_link_accessible(self):
-        """Test that public-rulebook.html reference link is accessible."""
-        response = self.client.get('/ref/public-rulebook.html')
-        self.assertEqual(response.status_code, 200)
-
     def test_dm_handbook_md_link_accessible(self):
         """Test that dm-handbook.md reference link is accessible."""
         response = self.client.get('/ref/dm-handbook.md')
-        self.assertEqual(response.status_code, 200)
-
-    def test_dm_handbook_html_link_accessible(self):
-        """Test that dm-handbook.html reference link is accessible."""
-        response = self.client.get('/ref/dm-handbook.html')
         self.assertEqual(response.status_code, 200)
 
     def test_invalid_ref_file_returns_404(self):
@@ -3456,29 +3441,14 @@ class HamburgerMenuLinkTests(TestCase):
         response = self.client.get('/ref/about.md')
         self.assertEqual(response.status_code, 200)
 
-    def test_about_html_static_file_exists(self):
-        """Test about.html static file is accessible."""
-        response = self.client.get('/ref/about.html')
-        self.assertEqual(response.status_code, 200)
-
     def test_public_rulebook_md_static_file_exists(self):
         """Test public-rulebook.md static file is accessible."""
         response = self.client.get('/ref/public-rulebook.md')
         self.assertEqual(response.status_code, 200)
 
-    def test_public_rulebook_html_static_file_exists(self):
-        """Test public-rulebook.html static file is accessible."""
-        response = self.client.get('/ref/public-rulebook.html')
-        self.assertEqual(response.status_code, 200)
-
     def test_dm_handbook_md_static_file_exists(self):
         """Test dm-handbook.md static file is accessible."""
         response = self.client.get('/ref/dm-handbook.md')
-        self.assertEqual(response.status_code, 200)
-
-    def test_dm_handbook_html_static_file_exists(self):
-        """Test dm-handbook.html static file is accessible."""
-        response = self.client.get('/ref/dm-handbook.html')
         self.assertEqual(response.status_code, 200)
 
     # === Menu visibility tests ===
