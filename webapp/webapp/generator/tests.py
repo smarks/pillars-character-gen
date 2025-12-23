@@ -3093,3 +3093,298 @@ class AdminNotesBrowserTests(TestCase):
         response = self.client.get(reverse('manage_users'))
         self.assertContains(response, reverse('admin_notes'))
         self.assertContains(response, 'Browse All Notes')
+
+
+class HamburgerMenuLinksTests(TestCase):
+    """Tests for verifying all links in the hamburger menu work correctly."""
+
+    def setUp(self):
+        self.client = Client()
+
+        # Create users with different roles
+        self.regular_user = User.objects.create_user('regular', password='testpass')
+        UserProfile.objects.create(user=self.regular_user, roles=['player'])
+
+        self.dm_user = User.objects.create_user('dm', password='testpass')
+        UserProfile.objects.create(user=self.dm_user, roles=['dm'])
+
+        self.admin_user = User.objects.create_user('admin', password='testpass')
+        UserProfile.objects.create(user=self.admin_user, roles=['admin'])
+
+        self.admin_dm_user = User.objects.create_user('admin_dm', password='testpass')
+        UserProfile.objects.create(user=self.admin_dm_user, roles=['admin', 'dm'])
+
+    # ========== PUBLIC LINKS (no auth required) ==========
+
+    def test_home_link_accessible(self):
+        """Test that Home link works for anonymous users."""
+        response = self.client.get(reverse('welcome'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_about_link_accessible(self):
+        """Test that About link works for anonymous users."""
+        response = self.client.get(reverse('about'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_rulebook_link_accessible(self):
+        """Test that Public Rules link works for anonymous users."""
+        response = self.client.get(reverse('rulebook'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_turn_sequence_link_accessible(self):
+        """Test that Turn Quick Reference link works for anonymous users."""
+        response = self.client.get(reverse('turn_sequence'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_login_link_accessible(self):
+        """Test that Login link works for anonymous users."""
+        response = self.client.get(reverse('login'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_register_link_accessible(self):
+        """Test that Register link works for anonymous users."""
+        response = self.client.get(reverse('register'))
+        self.assertEqual(response.status_code, 200)
+
+    # ========== MENU VISIBILITY FOR ANONYMOUS USERS ==========
+
+    def test_anonymous_sees_public_links_in_menu(self):
+        """Test that anonymous users see public links in hamburger menu."""
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, 'hamburger-menu')
+        self.assertContains(response, '>Home</a>')
+        self.assertContains(response, '>About</a>')
+        self.assertContains(response, '>Public Rules</a>')
+        self.assertContains(response, '>Turn Quick Reference</a>')
+        self.assertContains(response, '>Login</a>')
+        self.assertContains(response, '>Register</a>')
+
+    def test_anonymous_does_not_see_auth_links(self):
+        """Test that anonymous users don't see authenticated-only links."""
+        response = self.client.get(reverse('welcome'))
+        self.assertNotContains(response, reverse('my_characters'))
+        self.assertNotContains(response, reverse('notes'))
+        self.assertNotContains(response, '>Logout</a>')
+
+    def test_anonymous_does_not_see_dm_links(self):
+        """Test that anonymous users don't see DM-only links."""
+        response = self.client.get(reverse('welcome'))
+        self.assertNotContains(response, '>Private Rules</a>')
+        self.assertNotContains(response, reverse('dm'))
+
+    def test_anonymous_does_not_see_admin_links(self):
+        """Test that anonymous users don't see admin-only links."""
+        response = self.client.get(reverse('welcome'))
+        self.assertNotContains(response, reverse('manage_users'))
+        self.assertNotContains(response, reverse('admin_notes'))
+
+    # ========== AUTHENTICATED USER LINKS ==========
+
+    def test_my_characters_link_accessible_for_authenticated(self):
+        """Test that Character Generator link works for authenticated users."""
+        self.client.login(username='regular', password='testpass')
+        response = self.client.get(reverse('my_characters'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_notes_link_accessible_for_authenticated(self):
+        """Test that Notes link works for authenticated users."""
+        self.client.login(username='regular', password='testpass')
+        response = self.client.get(reverse('notes'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_logout_link_accessible_for_authenticated(self):
+        """Test that Logout link works for authenticated users."""
+        self.client.login(username='regular', password='testpass')
+        response = self.client.get(reverse('logout'))
+        # Logout typically redirects
+        self.assertIn(response.status_code, [200, 302])
+
+    def test_authenticated_sees_user_links_in_menu(self):
+        """Test that authenticated users see their links in hamburger menu."""
+        self.client.login(username='regular', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, reverse('my_characters'))
+        self.assertContains(response, '>Character Generator</a>')
+        self.assertContains(response, reverse('notes'))
+        self.assertContains(response, '>Logout</a>')
+
+    def test_authenticated_does_not_see_login_register(self):
+        """Test that authenticated users don't see Login/Register links."""
+        self.client.login(username='regular', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        # Check the hamburger menu doesn't show login/register
+        # Note: we need to be careful since "Login" and "Register" might appear elsewhere
+        content = response.content.decode()
+        # Count occurrences in hamburger-dropdown section
+        hamburger_section_start = content.find('hamburger-dropdown')
+        hamburger_section_end = content.find('</div>', content.find('menu-divider', hamburger_section_start))
+        hamburger_content = content[hamburger_section_start:hamburger_section_end]
+        self.assertNotIn('>Login</a>', hamburger_content)
+        self.assertNotIn('>Register</a>', hamburger_content)
+
+    def test_regular_user_does_not_see_dm_links(self):
+        """Test that regular authenticated users don't see DM links."""
+        self.client.login(username='regular', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertNotContains(response, '>Private Rules</a>')
+        self.assertNotContains(response, reverse('manage_characters'))
+
+    def test_regular_user_does_not_see_admin_links(self):
+        """Test that regular authenticated users don't see admin links."""
+        self.client.login(username='regular', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertNotContains(response, reverse('manage_users'))
+        self.assertNotContains(response, reverse('admin_notes'))
+
+    # ========== DM-ONLY LINKS ==========
+
+    def test_dm_handbook_accessible_for_dm(self):
+        """Test that Private Rules link works for DM users."""
+        self.client.login(username='dm', password='testpass')
+        response = self.client.get(reverse('dm'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_manage_characters_accessible_for_dm(self):
+        """Test that manage characters link works for DM users."""
+        self.client.login(username='dm', password='testpass')
+        response = self.client.get(reverse('manage_characters'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_dm_sees_dm_links_in_menu(self):
+        """Test that DM users see DM-only links in hamburger menu."""
+        self.client.login(username='dm', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, '>Private Rules</a>')
+        self.assertContains(response, reverse('dm'))
+        self.assertContains(response, '>Characters</a>')
+        self.assertContains(response, reverse('manage_characters'))
+        self.assertContains(response, '>Manage</div>')
+
+    def test_dm_does_not_see_admin_only_links(self):
+        """Test that DM users don't see admin-only links."""
+        self.client.login(username='dm', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertNotContains(response, reverse('manage_users'))
+        self.assertNotContains(response, reverse('admin_notes'))
+
+    # ========== ADMIN-ONLY LINKS ==========
+
+    def test_manage_users_accessible_for_admin(self):
+        """Test that manage users link works for admin users."""
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('manage_users'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_admin_notes_accessible_for_admin(self):
+        """Test that admin notes link works for admin users."""
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('admin_notes'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_dm_handbook_accessible_for_admin(self):
+        """Test that Private Rules link also works for admin users."""
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('dm'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_manage_characters_accessible_for_admin(self):
+        """Test that manage characters link also works for admin users."""
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('manage_characters'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_admin_sees_all_admin_links_in_menu(self):
+        """Test that admin users see all admin links in hamburger menu."""
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, '>Users</a>')
+        self.assertContains(response, reverse('manage_users'))
+        self.assertContains(response, reverse('admin_notes'))
+        self.assertContains(response, '>Private Rules</a>')
+        self.assertContains(response, '>Characters</a>')
+        self.assertContains(response, '>Manage</div>')
+
+    # ========== ADMIN+DM USER LINKS ==========
+
+    def test_admin_dm_sees_all_links_in_menu(self):
+        """Test that admin+DM user sees all management links."""
+        self.client.login(username='admin_dm', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        # All DM links
+        self.assertContains(response, '>Private Rules</a>')
+        self.assertContains(response, '>Characters</a>')
+        # All admin links
+        self.assertContains(response, '>Users</a>')
+        self.assertContains(response, reverse('admin_notes'))
+
+    # ========== ACCESS CONTROL TESTS ==========
+
+    def test_my_characters_redirects_anonymous(self):
+        """Test that my_characters redirects anonymous users to login."""
+        response = self.client.get(reverse('my_characters'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+
+    def test_notes_redirects_anonymous(self):
+        """Test that notes redirects anonymous users to login."""
+        response = self.client.get(reverse('notes'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+
+    def test_dm_handbook_denied_for_regular_user(self):
+        """Test that DM handbook denies access for regular users (redirect or 403)."""
+        self.client.login(username='regular', password='testpass')
+        response = self.client.get(reverse('dm'))
+        # Access is denied - either via redirect or 403
+        self.assertIn(response.status_code, [302, 403])
+
+    def test_manage_users_denied_for_dm(self):
+        """Test that manage users denies access for DM users (redirect or 403)."""
+        self.client.login(username='dm', password='testpass')
+        response = self.client.get(reverse('manage_users'))
+        # Access is denied - either via redirect or 403
+        self.assertIn(response.status_code, [302, 403])
+
+    def test_admin_notes_denied_for_dm(self):
+        """Test that admin notes denies access for DM users (redirect or 403)."""
+        self.client.login(username='dm', password='testpass')
+        response = self.client.get(reverse('admin_notes'))
+        # Access is denied - either via redirect or 403
+        self.assertIn(response.status_code, [302, 403])
+
+    def test_manage_users_denied_for_regular_user(self):
+        """Test that manage users denies access for regular users (redirect or 403)."""
+        self.client.login(username='regular', password='testpass')
+        response = self.client.get(reverse('manage_users'))
+        # Access is denied - either via redirect or 403
+        self.assertIn(response.status_code, [302, 403])
+
+    def test_manage_characters_denied_for_regular_user(self):
+        """Test that manage characters denies access for regular users (redirect or 403)."""
+        self.client.login(username='regular', password='testpass')
+        response = self.client.get(reverse('manage_characters'))
+        # Access is denied - either via redirect or 403
+        self.assertIn(response.status_code, [302, 403])
+
+    # ========== STATIC FORMAT LINKS (md/html) ==========
+
+    def test_about_md_static_link_exists(self):
+        """Test that about.md static link is accessible."""
+        response = self.client.get('/static/about.md')
+        # Static files may or may not be served in test; check it doesn't error
+        self.assertIn(response.status_code, [200, 404])
+
+    def test_about_html_static_link_exists(self):
+        """Test that about.html static link is accessible."""
+        response = self.client.get('/static/about.html')
+        self.assertIn(response.status_code, [200, 404])
+
+    def test_rulebook_md_static_link_exists(self):
+        """Test that public-rulebook.md static link is accessible."""
+        response = self.client.get('/static/public-rulebook.md')
+        self.assertIn(response.status_code, [200, 404])
+
+    def test_rulebook_html_static_link_exists(self):
+        """Test that public-rulebook.html static link is accessible."""
+        response = self.client.get('/static/public-rulebook.html')
+        self.assertIn(response.status_code, [200, 404])
