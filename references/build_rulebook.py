@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Build script to convert all .md files to .html in the references directory.
-Matches the Django app style - simple hamburger dropdown, no sidebar.
+Build script to convert all .md files to content-only .html fragments.
+These fragments are served by Django views wrapped in the base template,
+ensuring consistent navigation everywhere.
 """
 
 import re
-import html
 import sys
 from pathlib import Path
 
@@ -131,150 +131,13 @@ def convert_markdown_to_html(content: str) -> tuple:
     return title, subtitle, credits, '\n'.join(html_parts)
 
 
-def generate_html(title: str, subtitle: str, credits: str, body_html: str, filename: str, all_docs: list) -> str:
-    page_title = f"{html.escape(title)}"
+def generate_content_html(title: str, body_html: str) -> str:
+    """Generate content-only HTML (no page wrapper, no menu).
 
-    menu_items = []
-    for doc_name, doc_title in all_docs:
-        md_name = doc_name.replace('.html', '.md')
-        menu_items.append(f'''                    <div class="menu-row">
-                        <a href="{html.escape(doc_name)}" class="menu-title">{html.escape(doc_title)}</a>
-                        <span class="menu-formats"><a href="{html.escape(md_name)}">md</a> <a href="{html.escape(doc_name)}">html</a></span>
-                    </div>''')
-    menu_html = '\n'.join(menu_items)
-
-    return f'''<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{page_title}</title>
-    <style>
-        body {{
-            font-family: monospace;
-            padding: 20px;
-            max-width: 900px;
-            margin: 0 auto;
-            background: #fff;
-            color: #333;
-        }}
-        h1 {{ border-bottom: 2px solid #333; padding-bottom: 10px; margin-top: 0; }}
-        h2, h3, h4 {{ margin-top: 1.5em; }}
-
-        .top-bar {{
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }}
-
-        .hamburger-menu {{ position: relative; }}
-        .hamburger-btn {{
-            background: none;
-            border: 1px solid #ccc;
-            cursor: pointer;
-            padding: 8px 12px;
-            font-size: 1.8em;
-            line-height: 1;
-            border-radius: 4px;
-        }}
-        .hamburger-btn:hover {{ background: #f4f4f4; }}
-
-        .hamburger-dropdown {{
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: white;
-            border: 1px solid #ccc;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1000;
-            min-width: 320px;
-            margin-top: 4px;
-        }}
-        .hamburger-dropdown.open {{ display: block; }}
-
-        .menu-row {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 15px;
-            border-bottom: 1px solid #eee;
-        }}
-        .menu-row:last-child {{ border-bottom: none; }}
-        .menu-row:hover {{ background: #f8f8f8; }}
-
-        .menu-title {{
-            color: #333;
-            text-decoration: none;
-            flex: 1;
-        }}
-        .menu-title:hover {{ color: #36c; }}
-
-        .menu-formats a {{
-            color: #888;
-            text-decoration: none;
-            font-size: 0.8em;
-            padding: 3px 8px;
-            background: #f0f0f0;
-            border-radius: 3px;
-            margin-left: 5px;
-        }}
-        .menu-formats a:hover {{ background: #e0e0e0; color: #333; }}
-
-        .page-title {{ margin-bottom: 30px; }}
-
-        hr {{ border: none; border-top: 1px solid #ccc; margin: 30px 0; }}
-
-        .table-wrapper {{ overflow-x: auto; margin: 15px 0; }}
-        table {{ border-collapse: collapse; width: 100%; }}
-        th, td {{ border: 1px solid #ccc; padding: 8px; text-align: left; }}
-        th {{ background: #f4f4f4; }}
-
-        ul, ol {{ margin: 15px 0 15px 25px; }}
-        li {{ margin-bottom: 5px; }}
-        code {{ background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }}
-        a {{ color: #36c; }}
-        strong {{ font-weight: bold; }}
-
-        .footer {{
-            margin-top: 40px;
-            padding-top: 15px;
-            border-top: 1px solid #ccc;
-            text-align: center;
-            color: #888;
-            font-size: 0.85em;
-        }}
-    </style>
-</head>
-<body>
-    <div class="top-bar">
-        <div class="hamburger-menu">
-            <button class="hamburger-btn" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
-            <div class="hamburger-dropdown">
-{menu_html}
-            </div>
-        </div>
-    </div>
-
-    <div class="page-title">
-        <h1>{html.escape(title)}</h1>
-    </div>
-
+    This content will be loaded by Django and wrapped in base.html template.
+    """
+    return f'''<!-- title: {title} -->
 {body_html}
-
-    <div class="footer">{html.escape(title)}</div>
-
-    <script>
-        document.addEventListener('click', function(e) {{
-            var menu = document.querySelector('.hamburger-menu');
-            var dropdown = document.querySelector('.hamburger-dropdown');
-            if (menu && dropdown && !menu.contains(e.target)) dropdown.classList.remove('open');
-        }});
-    </script>
-</body>
-</html>
 '''
 
 
@@ -286,14 +149,14 @@ def get_doc_title(md_path: Path) -> str:
     return md_path.stem.replace('-', ' ').replace('_', ' ').title()
 
 
-def convert_file(md_path: Path, all_docs: list) -> None:
+def convert_file(md_path: Path) -> None:
     print(f"Converting {md_path.name}...")
     md_content = md_path.read_text(encoding='utf-8')
     title, subtitle, credits, body_html = convert_markdown_to_html(md_content)
     if not title:
         title = md_path.stem.replace('-', ' ').replace('_', ' ').title()
     html_path = md_path.with_suffix('.html')
-    final_html = generate_html(title, subtitle, credits, body_html, html_path.name, all_docs)
+    final_html = generate_content_html(title, body_html)
     html_path.write_text(final_html, encoding='utf-8')
     print(f"  -> {html_path.name}")
 
@@ -302,14 +165,12 @@ def main():
     script_dir = Path(__file__).parent
     md_files = sorted(script_dir.glob('*.md'))
 
-    all_docs = [(md_file.with_suffix('.html').name, get_doc_title(md_file)) for md_file in md_files]
-
     if len(sys.argv) > 1:
         target = sys.argv[1]
         if target.endswith('.md'):
             md_path = script_dir / target
             if md_path.exists():
-                convert_file(md_path, all_docs)
+                convert_file(md_path)
             else:
                 print(f"File not found: {target}"); sys.exit(1)
         else:
@@ -319,7 +180,7 @@ def main():
             print("No .md files found."); sys.exit(0)
         print(f"Found {len(md_files)} markdown file(s):\n")
         for md_file in md_files:
-            convert_file(md_file, all_docs)
+            convert_file(md_file)
         print(f"\nDone! Converted {len(md_files)} file(s).")
 
 

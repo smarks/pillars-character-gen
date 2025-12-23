@@ -3046,7 +3046,7 @@ class HamburgerMenuLinksTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_turn_sequence_link_accessible(self):
-        """Test that Turn Quick Reference link works for anonymous users."""
+        """Test that Turn Sequence link works for anonymous users."""
         response = self.client.get(reverse('turn_sequence'))
         self.assertEqual(response.status_code, 200)
 
@@ -3069,7 +3069,7 @@ class HamburgerMenuLinksTests(TestCase):
         self.assertContains(response, '>Home</a>')
         self.assertContains(response, '>About</a>')
         self.assertContains(response, '>Public Rules</a>')
-        self.assertContains(response, '>Turn Quick Reference</a>')
+        self.assertContains(response, '>Turn Sequence</a>')
         self.assertContains(response, '>Login</a>')
         self.assertContains(response, '>Register</a>')
 
@@ -3320,9 +3320,279 @@ class HamburgerMenuLinksTests(TestCase):
     def test_ref_blocks_directory_traversal(self):
         """Test that directory traversal is blocked in ref URLs."""
         response = self.client.get('/ref/../settings.py')
-        self.assertEqual(response.status_code, 404)
+        # Django returns 400 (Bad Request) for suspicious paths, which is fine
+        self.assertIn(response.status_code, [400, 404])
 
     def test_ref_blocks_invalid_extensions(self):
         """Test that invalid file extensions are blocked."""
         response = self.client.get('/ref/about.py')
         self.assertEqual(response.status_code, 404)
+
+
+class HamburgerMenuLinkTests(TestCase):
+    """Tests for hamburger menu links - both Django URLs and static file links."""
+
+    def setUp(self):
+        self.client = Client()
+        # Create users with different roles
+        self.regular_user = User.objects.create_user(
+            username='player', password='testpass'
+        )
+        # Delete auto-created profile and create with specific roles
+        UserProfile.objects.filter(user=self.regular_user).delete()
+        UserProfile.objects.create(user=self.regular_user, roles=['player'])
+
+        self.dm_user = User.objects.create_user(
+            username='dungeonmaster', password='testpass'
+        )
+        UserProfile.objects.filter(user=self.dm_user).delete()
+        UserProfile.objects.create(user=self.dm_user, roles=['dm'])
+
+        self.admin_user = User.objects.create_user(
+            username='admin', password='testpass'
+        )
+        UserProfile.objects.filter(user=self.admin_user).delete()
+        UserProfile.objects.create(user=self.admin_user, roles=['admin'])
+
+    # === Django URL Tests (all users) ===
+
+    def test_home_link_works(self):
+        """Test Home link works."""
+        response = self.client.get(reverse('welcome'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_about_link_works(self):
+        """Test About link works."""
+        response = self.client.get(reverse('about'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_public_rules_link_works(self):
+        """Test Public Rules link works."""
+        response = self.client.get(reverse('rulebook'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_turn_sequence_link_works(self):
+        """Test Turn Sequence link works."""
+        response = self.client.get(reverse('turn_sequence'))
+        self.assertEqual(response.status_code, 200)
+
+    # === Django URL Tests (authenticated users) ===
+
+    def test_character_generator_link_works_authenticated(self):
+        """Test Character Generator link works for authenticated user."""
+        self.client.login(username='player', password='testpass')
+        response = self.client.get(reverse('my_characters'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_notes_link_works_authenticated(self):
+        """Test Notes link works for authenticated user."""
+        self.client.login(username='player', password='testpass')
+        response = self.client.get(reverse('notes'))
+        self.assertEqual(response.status_code, 200)
+
+    # === Django URL Tests (DM/Admin only) ===
+
+    def test_private_rules_link_works_for_dm(self):
+        """Test Private Rules link works for DM."""
+        self.client.login(username='dungeonmaster', password='testpass')
+        response = self.client.get(reverse('dm'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_private_rules_link_works_for_admin(self):
+        """Test Private Rules link works for admin."""
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('dm'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_manage_characters_link_works_for_dm(self):
+        """Test Manage Characters link works for DM."""
+        self.client.login(username='dungeonmaster', password='testpass')
+        response = self.client.get(reverse('manage_characters'))
+        self.assertEqual(response.status_code, 200)
+
+    # === Django URL Tests (Admin only) ===
+
+    def test_manage_users_link_works_for_admin(self):
+        """Test Manage Users link works for admin."""
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('manage_users'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_manage_notes_link_works_for_admin(self):
+        """Test Manage Notes link works for admin."""
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('admin_notes'))
+        self.assertEqual(response.status_code, 200)
+
+    # === Static File Tests (md and html) ===
+
+    def test_about_md_static_file_exists(self):
+        """Test about.md static file is accessible."""
+        response = self.client.get('/ref/about.md')
+        self.assertEqual(response.status_code, 200)
+
+    def test_about_html_static_file_exists(self):
+        """Test about.html static file is accessible."""
+        response = self.client.get('/ref/about.html')
+        self.assertEqual(response.status_code, 200)
+
+    def test_public_rulebook_md_static_file_exists(self):
+        """Test public-rulebook.md static file is accessible."""
+        response = self.client.get('/ref/public-rulebook.md')
+        self.assertEqual(response.status_code, 200)
+
+    def test_public_rulebook_html_static_file_exists(self):
+        """Test public-rulebook.html static file is accessible."""
+        response = self.client.get('/ref/public-rulebook.html')
+        self.assertEqual(response.status_code, 200)
+
+    def test_dm_handbook_md_static_file_exists(self):
+        """Test dm-handbook.md static file is accessible."""
+        response = self.client.get('/ref/dm-handbook.md')
+        self.assertEqual(response.status_code, 200)
+
+    def test_dm_handbook_html_static_file_exists(self):
+        """Test dm-handbook.html static file is accessible."""
+        response = self.client.get('/ref/dm-handbook.html')
+        self.assertEqual(response.status_code, 200)
+
+    # === Menu visibility tests ===
+
+    def test_hamburger_menu_shows_public_links_anonymous(self):
+        """Test hamburger menu shows public links for anonymous users."""
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, 'Home')
+        self.assertContains(response, 'About')
+        self.assertContains(response, 'Public Rules')
+        self.assertContains(response, 'Turn Sequence')
+        self.assertContains(response, 'Login')
+        self.assertContains(response, 'Register')
+
+    def test_hamburger_menu_shows_auth_links_for_logged_in(self):
+        """Test hamburger menu shows auth links for logged in users."""
+        self.client.login(username='player', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, 'Character Generator')
+        self.assertContains(response, 'Notes')
+        self.assertContains(response, 'Logout')
+
+    def test_hamburger_menu_hides_private_rules_for_regular_user(self):
+        """Test hamburger menu hides Private Rules for regular users."""
+        self.client.login(username='player', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertNotContains(response, 'Private Rules')
+
+    def test_hamburger_menu_shows_private_rules_for_dm(self):
+        """Test hamburger menu shows Private Rules for DM."""
+        self.client.login(username='dungeonmaster', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, 'Private Rules')
+
+    def test_hamburger_menu_shows_manage_section_for_dm(self):
+        """Test hamburger menu shows Manage section for DM."""
+        self.client.login(username='dungeonmaster', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, 'Manage')
+        self.assertContains(response, 'Characters')
+
+    def test_hamburger_menu_shows_full_manage_for_admin(self):
+        """Test hamburger menu shows full Manage section for admin."""
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, 'Manage')
+        self.assertContains(response, 'Users')
+        self.assertContains(response, 'Characters')
+
+    def test_hamburger_menu_has_md_html_links(self):
+        """Test hamburger menu has md and html format links."""
+        response = self.client.get(reverse('welcome'))
+        # Check for format links (md files still served from /ref/, html from /html/)
+        self.assertContains(response, '/ref/about.md')
+        self.assertContains(response, '/html/about/')
+        self.assertContains(response, '/ref/public-rulebook.md')
+        self.assertContains(response, '/html/public-rulebook/')
+
+    # === Reference HTML view tests ===
+
+    def test_reference_html_about_works(self):
+        """Test /html/about/ serves about content with base template."""
+        response = self.client.get('/html/about/')
+        self.assertEqual(response.status_code, 200)
+        # Should include base template elements
+        self.assertContains(response, 'hamburger-menu')
+        # Should have content from about.html
+        self.assertContains(response, 'About')
+
+    def test_reference_html_public_rulebook_works(self):
+        """Test /html/public-rulebook/ serves rulebook with base template."""
+        response = self.client.get('/html/public-rulebook/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'hamburger-menu')
+
+    def test_reference_html_invalid_name_returns_404(self):
+        """Test /html/nonexistent/ returns 404."""
+        response = self.client.get('/html/nonexistent/')
+        self.assertEqual(response.status_code, 404)
+
+    def test_reference_html_blocks_directory_traversal(self):
+        """Test directory traversal is blocked in reference_html."""
+        response = self.client.get('/html/../settings/')
+        # Should return 404 due to security check
+        self.assertEqual(response.status_code, 404)
+
+    # === My Profile view tests ===
+
+    def test_my_profile_requires_login(self):
+        """Test my profile page requires authentication."""
+        response = self.client.get(reverse('my_profile'))
+        self.assertEqual(response.status_code, 302)  # Redirect to login
+
+    def test_my_profile_works_for_authenticated_user(self):
+        """Test my profile page works for logged in users."""
+        self.client.login(username='player', password='testpass')
+        response = self.client.get(reverse('my_profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'My Profile')
+        self.assertContains(response, 'player')
+
+    def test_my_profile_shows_user_info(self):
+        """Test my profile page shows user information."""
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('my_profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'admin')
+        self.assertContains(response, 'Admin')  # Role display
+
+    def test_my_profile_link_in_menu_for_authenticated(self):
+        """Test My Profile link appears in menu for authenticated users."""
+        self.client.login(username='player', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, 'My Profile')
+
+    # === Additional menu structure tests ===
+
+    def test_menu_has_references_section(self):
+        """Test menu has References section."""
+        response = self.client.get(reverse('welcome'))
+        # The text is "References" in HTML (CSS transforms to uppercase)
+        self.assertContains(response, 'menu-section')
+        self.assertContains(response, 'References')
+
+    def test_menu_has_manage_section_for_admin(self):
+        """Test menu has Manage section for admin users."""
+        self.client.login(username='admin', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        # The text is "Manage" in HTML (CSS transforms to uppercase)
+        self.assertContains(response, 'Manage')
+
+    def test_menu_notes_under_references_for_authenticated(self):
+        """Test Notes appears under References for authenticated users."""
+        self.client.login(username='player', password='testpass')
+        response = self.client.get(reverse('welcome'))
+        # Notes should be in menu
+        self.assertContains(response, '>Notes</a>')
+
+    def test_turn_sequence_link_works(self):
+        """Test Turn Sequence link in menu works."""
+        response = self.client.get(reverse('turn_sequence'))
+        self.assertEqual(response.status_code, 200)

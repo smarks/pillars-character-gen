@@ -19,6 +19,8 @@ urlpatterns = [
     path('dm/', views.dm_handbook, name='dm'),
     path('rulebook/', views.handbook_section, {'section': 'public_rulebook'}, name='rulebook'),
     path('turn-sequence/', views.serve_reference_html, {'filename': 'pillars-turn-sequence.html'}, name='turn_sequence'),
+    # HTML reference pages - served wrapped in base template for consistent navigation
+    path('html/<str:name>/', views.reference_html, name='reference_html'),
     # Images for handbook markdown files
     path('images/<str:filename>', views.serve_reference_image, name='reference_image'),
     # Raw reference files (md/html downloads)
@@ -27,6 +29,8 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('register/', views.register_view, name='register'),
+    # User profile
+    path('profile/', views.my_profile, name='my_profile'),
     # Character save/load
     path('my-characters/', views.my_characters, name='my_characters'),
     path('save-character/', views.save_character, name='save_character'),

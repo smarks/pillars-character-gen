@@ -504,31 +504,35 @@
                 <button class="hamburger-btn" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menu">&#9776;</button>
                 <div class="hamburger-dropdown">
                     <a href="{% url 'welcome' %}">Home</a>
-                    <div class="menu-row"><a href="{% url 'about' %}">About</a><span class="fmt-links"><a href="/ref/about.md">md</a> <a href="/ref/about.html">html</a></span></div>
+                    <div class="menu-divider"></div>
                     {% if user.is_authenticated %}
                     <a href="{% url 'my_characters' %}">Character Generator</a>
-                    <a href="{% url 'notes' %}">Notes</a>
                     {% endif %}
 
                     <div class="menu-section">References</div>
                     <div class="menu-sub">
-                        <div class="menu-row"><a href="{% url 'rulebook' %}">Public Rules</a><span class="fmt-links"><a href="/ref/public-rulebook.md">md</a> <a href="/ref/public-rulebook.html">html</a></span></div>
+                        <div class="menu-row"><a href="{% url 'about' %}">About</a><span class="fmt-links"><a href="{% url 'reference_file' 'about.md' %}">md</a> <a href="{% url 'reference_html' 'about' %}">html</a></span></div>
+                        <div class="menu-row"><a href="{% url 'rulebook' %}">Public Rules</a><span class="fmt-links"><a href="{% url 'reference_file' 'public-rulebook.md' %}">md</a> <a href="{% url 'reference_html' 'public-rulebook' %}">html</a></span></div>
                         {% if user.is_authenticated and user.profile.is_dm or user.is_authenticated and user.profile.is_admin %}
-                        <div class="menu-row"><a href="{% url 'dm' %}">Private Rules</a><span class="fmt-links"><a href="/ref/dm-handbook.md">md</a> <a href="/ref/dm-handbook.html">html</a></span></div>
+                        <div class="menu-row"><a href="{% url 'dm' %}">Private Rules</a><span class="fmt-links"><a href="{% url 'reference_file' 'dm-handbook.md' %}">md</a> <a href="{% url 'reference_html' 'dm-handbook' %}">html</a></span></div>
                         {% endif %}
-                        <a href="{% url 'turn_sequence' %}">Turn Quick Reference</a>
+                        <a href="{% url 'turn_sequence' %}">Turn Sequence</a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'notes' %}">Notes</a>
+                        {% endif %}
                     </div>
 
-                    {% if user.is_authenticated and user.profile.is_admin or user.is_authenticated and user.profile.is_dm %}
+                    {% if user.is_authenticated %}
                     <div class="menu-section">Manage</div>
                     <div class="menu-sub">
-                        {% if user.is_authenticated and user.profile.is_admin %}
+                        <a href="{% url 'my_profile' %}">My Profile</a>
+                        {% if user.profile.is_admin %}
                         <a href="{% url 'manage_users' %}">Users</a>
                         {% endif %}
-                        {% if user.is_authenticated and user.profile.is_dm or user.is_authenticated and user.profile.is_admin %}
+                        {% if user.profile.is_dm or user.profile.is_admin %}
                         <a href="{% url 'manage_characters' %}">Characters</a>
                         {% endif %}
-                        {% if user.is_authenticated and user.profile.is_admin %}
+                        {% if user.profile.is_admin %}
                         <a href="{% url 'admin_notes' %}">Notes</a>
                         {% endif %}
                     </div>
