@@ -171,6 +171,9 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [
+    BASE_DIR / ".." / "references",
+]
 
 # References images directory (for handbook/markdown images)
 REFERENCES_IMAGES_DIR = BASE_DIR / ".." / "references" / "images"
