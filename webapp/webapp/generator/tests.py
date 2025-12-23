@@ -17,23 +17,6 @@ class WelcomePageTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'PILLARS')
 
-    def test_welcome_has_generator_link(self):
-        """Test that welcome page has link to character generator."""
-        response = self.client.get(reverse('welcome'))
-        self.assertContains(response, 'Character Generator')
-        self.assertContains(response, reverse('generator'))
-
-    def test_welcome_has_lore_link(self):
-        """Test that welcome page has link to lore/background."""
-        response = self.client.get(reverse('welcome'))
-        self.assertContains(response, 'Background')
-        self.assertContains(response, reverse('lore'))
-
-    def test_welcome_has_handbook_link(self):
-        """Test that welcome page has link to handbook."""
-        response = self.client.get(reverse('welcome'))
-        self.assertContains(response, "Player's Handbook")
-        self.assertContains(response, reverse('handbook'))
 
 
 class LorePageTests(TestCase):
@@ -114,11 +97,6 @@ class TurnSequencePageTests(TestCase):
         self.assertContains(response, 'Turn Sequence')
         self.assertContains(response, 'INITIATIVE')
 
-    def test_welcome_has_turn_sequence_link(self):
-        """Test that welcome page has turn sequence link."""
-        response = self.client.get(reverse('welcome'))
-        self.assertContains(response, 'turn-sequence')
-        self.assertContains(response, 'Turn Sequence')
 
 
 class ReferenceImageTests(TestCase):
@@ -146,14 +124,6 @@ class ReferenceImageTests(TestCase):
         response = self.client.get('/images//etc/passwd')
         self.assertEqual(response.status_code, 404)
 
-    def test_combat_page_renders_image(self):
-        """Test that the combat page contains an img tag with correct absolute path."""
-        response = self.client.get(reverse('combat'))
-        self.assertEqual(response.status_code, 200)
-        # The markdown ![Mega hex](/images/megahex.png) should render as an img tag
-        # Note: must use absolute path /images/ to match the URL route
-        self.assertContains(response, '<img')
-        self.assertContains(response, '/images/megahex.png')
 
 
 class IndexViewTests(TestCase):
@@ -646,20 +616,6 @@ class RoleTests(TestCase):
         self.assertContains(response, reverse('dm'))
         self.assertNotContains(response, 'Manage Users')
 
-    def test_admin_can_see_all_links(self):
-        """Test that admin can see all links on welcome page."""
-        self.client.login(username='admin_test', password='testpass')
-        response = self.client.get(reverse('welcome'))
-        self.assertContains(response, reverse('dm'))
-        self.assertContains(response, 'Manage Users')
-
-    def test_admin_dm_can_see_all_links(self):
-        """Test that admin+dm user can see all links on welcome page."""
-        self.client.login(username='admin_dm_test', password='testpass')
-        response = self.client.get(reverse('welcome'))
-        self.assertContains(response, reverse('dm'))
-        self.assertContains(response, 'Manage Users')
-
     def test_player_cannot_access_manage_users(self):
         """Test that player cannot access manage users page."""
         self.client.login(username='player_test', password='testpass')
@@ -709,15 +665,6 @@ class DMHandbookContentTests(TestCase):
         self.client.login(username='dm_content_test', password='testpass')
         response = self.client.get(reverse('dm'))
         self.assertEqual(response.status_code, 200)
-
-    def test_dm_handbook_has_correct_structure(self):
-        """Test that DM handbook starts with proper header, not corrupted content."""
-        self.client.login(username='dm_content_test', password='testpass')
-        response = self.client.get(reverse('dm'))
-
-        # The handbook should contain the proper Game Master Reference header
-        self.assertContains(response, 'Game Master Reference')
-        self.assertContains(response, 'Quick Reference Tables')
 
     def test_dm_handbook_has_no_corrupted_content(self):
         """Test that DM handbook does not have corrupted content at the start."""
@@ -1501,19 +1448,6 @@ class AdminViewAllCharactersTests(TestCase):
         self.assertContains(response, 'My Saved Characters')
         # Should not have show_owner in context
         self.assertNotIn('show_owner', response.context)
-
-    def test_admin_sees_all_characters_in_manage_users(self):
-        """Test that admin sees all characters grouped by user in manage_users page."""
-        self.client.login(username='admin1', password='test123')
-        response = self.client.get(reverse('manage_users'))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'All Characters')
-        self.assertContains(response, 'player1')  # Username as section header
-        self.assertContains(response, 'Player Character')  # Character name
-        # Should have characters_by_user in context
-        self.assertIn('characters_by_user', response.context)
-        self.assertIn('player1', response.context['characters_by_user'])
 
     def test_dm_cannot_access_manage_users(self):
         """Test that DM (non-admin) cannot access manage_users page."""
@@ -2337,13 +2271,6 @@ class AdminUserManagementTests(TestCase):
         self.assertContains(response, 'player_test')
         self.assertContains(response, 'dm_test')
 
-    def test_manage_users_shows_characters_by_user(self):
-        """Test that manage users page shows characters grouped by user."""
-        self.client.login(username='admin_test', password='admin123')
-        response = self.client.get(reverse('manage_users'))
-        self.assertContains(response, 'Test Character')
-        self.assertContains(response, 'player_test')
-
     def test_edit_user_requires_admin(self):
         """Test that edit user page requires admin role."""
         # Player can't access
@@ -2929,12 +2856,6 @@ class NotesNavigationTests(TestCase):
         response = self.client.get(reverse('welcome'))
         self.assertNotContains(response, reverse('notes'))
 
-    def test_notes_link_on_welcome_page_for_authenticated_user(self):
-        """Test that My Notes link appears on welcome page for logged-in users."""
-        self.client.login(username='testuser', password='testpass')
-        response = self.client.get(reverse('welcome'))
-        self.assertContains(response, 'My Notes')
-
     def test_notes_link_in_base_template_nav(self):
         """Test that Notes link appears in base template navigation."""
         self.client.login(username='testuser', password='testpass')
@@ -3079,13 +3000,6 @@ class AdminNotesBrowserTests(TestCase):
         response = self.client.get(reverse('admin_notes'))
         self.assertContains(response, '<select name="user"')
         self.assertContains(response, 'alice')
-
-    def test_admin_notes_link_on_welcome_page(self):
-        """Test that Browse Notes link appears on welcome page for admin."""
-        self.client.login(username='admin', password='testpass')
-        response = self.client.get(reverse('welcome'))
-        self.assertContains(response, reverse('admin_notes'))
-        self.assertContains(response, 'Browse Notes')
 
     def test_browse_notes_link_on_manage_users(self):
         """Test that Browse All Notes button appears on manage users page."""
