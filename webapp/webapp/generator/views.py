@@ -1679,14 +1679,28 @@ def my_profile(request):
     if request.method == 'POST':
         # Handle profile updates
         email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        discord = request.POST.get('discord', '').strip()
+        preferred_contact = request.POST.get('preferred_contact', '').strip()
+
+        # Update user email
         if email:
             request.user.email = email
             request.user.save()
-            messages.success(request, 'Profile updated successfully.')
+
+        # Update profile fields
+        profile.phone = phone
+        profile.discord_handle = discord
+        if preferred_contact in ['email', 'sms', 'discord', '']:
+            profile.preferred_contact = preferred_contact
+        profile.save()
+
+        messages.success(request, 'Profile updated successfully.')
         return redirect('my_profile')
 
     return render(request, 'generator/my_profile.html', {
         'profile': profile,
+        'contact_choices': UserProfile.CONTACT_METHOD_CHOICES,
     })
 
 

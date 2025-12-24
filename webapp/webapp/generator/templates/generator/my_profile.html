@@ -40,24 +40,26 @@
             <input type="email" id="email" name="email" value="{{ user.email }}" style="flex: 1; max-width: 300px;">
         </div>
         <div class="control-row">
-            <label>Phone:</label>
-            <span>{{ profile.phone|default:"Not set" }}</span>
+            <label for="phone">Phone:</label>
+            <input type="tel" id="phone" name="phone" value="{{ profile.phone }}" placeholder="Optional" style="flex: 1; max-width: 200px;">
         </div>
         <div class="control-row">
-            <label>Discord:</label>
-            <span>{{ profile.discord_handle|default:"Not set" }}</span>
+            <label for="discord">Discord:</label>
+            <input type="text" id="discord" name="discord" value="{{ profile.discord_handle }}" placeholder="username#1234" style="flex: 1; max-width: 200px;">
         </div>
         <div class="control-row">
-            <label>Preferred Contact:</label>
-            <span>{{ profile.get_preferred_contact_display|default:"Not set" }}</span>
+            <label for="preferred_contact">Preferred Contact:</label>
+            <select id="preferred_contact" name="preferred_contact">
+                <option value="">-- Select --</option>
+                {% for value, label in contact_choices %}
+                <option value="{{ value }}" {% if profile.preferred_contact == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
         </div>
         <div class="button-group">
-            <button type="submit" class="primary">Update Email</button>
+            <button type="submit" class="primary">Save Profile</button>
         </div>
     </form>
-    <p style="margin-top: 15px; color: #666; font-size: 0.9em;">
-        Contact your game master to update other profile information.
-    </p>
 </div>
 
 <div class="section">
