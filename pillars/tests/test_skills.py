@@ -118,13 +118,16 @@ class TestNormalizeSkillName:
         assert normalize_skill_name("Sword") == "Sword"
 
     def test_strips_plus_to_hit(self):
-        assert normalize_skill_name("Sword +1 to hit") == "Sword"
+        # "to hit" and "parry" are kept as separate skill types
+        assert normalize_skill_name("Sword +1 to hit") == "Sword to hit"
 
     def test_strips_plus_parry(self):
-        assert normalize_skill_name("Shield +2 parry") == "Shield"
+        # "to hit" and "parry" are kept as separate skill types
+        assert normalize_skill_name("Shield +2 parry") == "Shield parry"
 
     def test_strips_plus_damage(self):
-        assert normalize_skill_name("Axe +1 damage") == "Axe"
+        # "damage" is kept as a separate skill type
+        assert normalize_skill_name("Axe +1 damage") == "Axe damage"
 
     def test_strips_bare_plus(self):
         assert normalize_skill_name("Sword +1") == "Sword"
@@ -136,7 +139,8 @@ class TestNormalizeSkillName:
         assert normalize_skill_name("Farming 2") == "Farming"
 
     def test_case_insensitive(self):
-        assert normalize_skill_name("Sword +1 TO HIT") == "Sword"
+        # Case insensitive matching, but keeps the skill type
+        assert normalize_skill_name("Sword +1 TO HIT") == "Sword to hit"
 
     def test_empty_string_returns_empty(self):
         assert normalize_skill_name("") == ""
@@ -198,8 +202,9 @@ class TestCharacterSkills:
     def test_add_automatic_point_normalizes_name(self):
         cs = CharacterSkills()
         cs.add_automatic_point("Sword +1 to hit")
-        assert "Sword" in cs.skills
-        assert cs.skills["Sword"].automatic == 1
+        # "Sword +1 to hit" normalizes to "Sword to hit" (keeps the type separate)
+        assert "Sword to hit" in cs.skills
+        assert cs.skills["Sword to hit"].automatic == 1
 
     def test_add_automatic_point_accumulates(self):
         cs = CharacterSkills()

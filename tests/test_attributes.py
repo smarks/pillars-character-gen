@@ -1041,19 +1041,19 @@ class TestSkillTrack(unittest.TestCase):
 
     def test_officer_acceptance_rich(self):
         """Test Officer acceptance for Rich characters."""
-        check = check_officer_acceptance(is_rich=True, is_promoted=False)
+        check = check_officer_acceptance(wealth_level="Rich", is_promoted=False)
         self.assertTrue(check.accepted)
         self.assertIn("Rich", check.reason)
 
     def test_officer_acceptance_promoted(self):
         """Test Officer acceptance for promoted characters."""
-        check = check_officer_acceptance(is_rich=False, is_promoted=True)
+        check = check_officer_acceptance(wealth_level="Moderate", is_promoted=True)
         self.assertTrue(check.accepted)
         self.assertIn("Promoted", check.reason)
 
     def test_officer_acceptance_neither(self):
         """Test Officer rejection when neither Rich nor promoted."""
-        check = check_officer_acceptance(is_rich=False, is_promoted=False)
+        check = check_officer_acceptance(wealth_level="Moderate", is_promoted=False)
         self.assertFalse(check.accepted)
 
     def test_merchant_acceptance_poor(self):
@@ -1067,12 +1067,15 @@ class TestSkillTrack(unittest.TestCase):
         """Test Merchant acceptance for working class characters."""
         random.seed(42)
         check = check_merchant_acceptance(social_class="Commoner", wealth_level="Moderate")
+        # Working class: Moderate wealth + Commoner/Laborer = target 8
         self.assertEqual(check.target, 8)
         self.assertIn("working class", check.reason)
 
     def test_merchant_acceptance_above_working_class(self):
         """Test Merchant acceptance for above working class."""
         random.seed(42)
+        # Above working class: Not poor and not (Moderate + Commoner/Laborer)
+        # Merchant wealth level with Nobility = above working class, target 6
         check = check_merchant_acceptance(social_class="Nobility", wealth_level="Merchant")
         self.assertEqual(check.target, 6)
         self.assertIn("above working class", check.reason)

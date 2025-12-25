@@ -279,13 +279,13 @@ class TestAcceptanceChecks(unittest.TestCase):
 
     def test_officer_acceptance_rich_or_promoted(self):
         """Officer needs Rich or promotion."""
-        result = check_officer_acceptance(is_rich=False, is_promoted=False)
+        result = check_officer_acceptance(wealth_level="Moderate", is_promoted=False)
         self.assertFalse(result.accepted)
 
-        result = check_officer_acceptance(is_rich=True, is_promoted=False)
+        result = check_officer_acceptance(wealth_level="Rich", is_promoted=False)
         self.assertTrue(result.accepted)
 
-        result = check_officer_acceptance(is_rich=False, is_promoted=True)
+        result = check_officer_acceptance(wealth_level="Moderate", is_promoted=True)
         self.assertTrue(result.accepted)
 
 

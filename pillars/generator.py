@@ -11,6 +11,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
+from pillars.skills import normalize_skill_name, level_from_points, to_roman
 from pillars.attributes import (
     generate_attributes_4d6_drop_lowest,
     roll_appearance,
@@ -25,6 +26,7 @@ from pillars.attributes import (
     roll_single_year,
     get_track_availability,
     create_skill_track_for_choice,
+    format_total_modifier,
     CharacterAttributes,
     Appearance,
     Height,
@@ -43,44 +45,48 @@ from pillars.attributes import (
 
 def consolidate_skills(skills: List[str]) -> List[str]:
     """
-    Consolidate duplicate skills and sum their bonuses.
-
-    "Cutlass +1 to hit" x 5 becomes "Cutlass +5 to hit"
-    "Swimming" x 3 becomes "Swimming +2" (base +2 more)
+    Consolidate skills using the skill point system with triangular numbers.
+    
+    Each skill occurrence = 1 skill point.
+    Skills are grouped by base name (normalized).
+    Display uses triangular numbers: Level 1 = 1pt, Level 2 = 3pts, Level 3 = 6pts, etc.
+    
+    Examples:
+        ["Cutlass +1 to hit", "Cutlass +1 to hit", "Cutlass +1 to hit"] 
+        -> "Cutlass II" (3 points = Level 2)
+        
+        ["Sword +1 to hit", "Sword +1 to hit", "Sword +1 to hit", "Sword +1 to hit"]
+        -> "Sword II (+1)" (4 points = Level 2 with 1 point toward Level 3)
+        
+        ["Cutlass +1 to hit", "Cutlass +1 parry"] 
+        -> "Cutlass I" (2 points = Level 1 with 1 point toward Level 2)
     """
     if not skills:
         return []
 
-    # Count occurrences
-    skill_counts: Dict[str, int] = Counter(skills)
+    # Count skill points by normalized skill name
+    # Each occurrence = 1 skill point
+    skill_points: Dict[str, int] = {}
+    for skill in skills:
+        normalized = normalize_skill_name(skill)
+        if normalized:  # Skip empty/normalized-away skills
+            skill_points[normalized] = skill_points.get(normalized, 0) + 1
 
-    # Consolidate skills with +1 pattern
-    consolidated: Dict[tuple, int] = {}
-    for skill, count in skill_counts.items():
-        # Match patterns like "Sword +1 to hit" or "Cutlass +1 parry"
-        match = re.match(r'^(.+?)\s*\+1\s+(.+)$', skill)
-        if match:
-            base = match.group(1).strip()
-            suffix = match.group(2).strip()
-            key = (base, suffix)
-            consolidated[key] = consolidated.get(key, 0) + count
-        else:
-            # Non-bonus skill
-            key = ('_plain_', skill)
-            consolidated[key] = consolidated.get(key, 0) + count
-
-    # Build result list
+    # Build result list with proper level display
     result = []
-    for key, total in sorted(consolidated.items()):
-        if key[0] == '_plain_':
-            skill_name = key[1]
-            if total > 1:
-                result.append(f"{skill_name} +{total - 1}")
+    for skill_name in sorted(skill_points.keys()):
+        points = skill_points[skill_name]
+        level, excess = level_from_points(points)
+        
+        if level >= 1:
+            roman = to_roman(level)
+            if excess > 0:
+                result.append(f"{skill_name} {roman} (+{excess})")
             else:
-                result.append(skill_name)
+                result.append(f"{skill_name} {roman}")
         else:
-            base, suffix = key
-            result.append(f"{base} +{total} {suffix}")
+            # Less than 1 point (shouldn't happen, but handle gracefully)
+            result.append(f"{skill_name} (+{points})")
 
     return result
 
@@ -211,8 +217,7 @@ class Character:
             lines.append(f"Survivability Target: {pe.survivability_target}+")
 
             if pe.attribute_modifiers:
-                total_mod = sum(pe.attribute_modifiers.values())
-                total_str = f"+{total_mod}" if total_mod >= 0 else str(total_mod)
+                total_str = format_total_modifier(pe.attribute_modifiers)
                 lines.append(f"Total Modifier: {total_str}")
 
             # Show cumulative aging effects if any
@@ -323,8 +328,8 @@ def generate_character(
         )
         # Calculate total attribute modifier for survivability checks
         attribute_modifiers = attributes.get_all_modifiers()
-        total_modifier = sum(attribute_modifiers.values())
-        attribute_scores = {attr: getattr(attributes, attr) for attr in ["STR", "DEX", "INT", "WIS", "CON", "CHR"]}
+        total_modifier = attributes.get_total_modifier()
+        attribute_scores = attributes.get_attribute_scores_dict()
         prior_experience = roll_prior_experience(
             skill_track,
             years=years,
@@ -346,8 +351,8 @@ def generate_character(
         )
         # Calculate total attribute modifier for survivability checks
         attribute_modifiers = attributes.get_all_modifiers()
-        total_modifier = sum(attribute_modifiers.values())
-        attribute_scores = {attr: getattr(attributes, attr) for attr in ["STR", "DEX", "INT", "WIS", "CON", "CHR"]}
+        total_modifier = attributes.get_total_modifier()
+        attribute_scores = attributes.get_attribute_scores_dict()
         prior_experience = roll_prior_experience(
             skill_track,
             years=years,

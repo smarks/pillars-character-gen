@@ -68,20 +68,28 @@ def to_roman(num: int) -> str:
 def normalize_skill_name(skill: str) -> str:
     """Normalize skill name for point tracking.
 
-    Strips modifiers like '+1 to hit' to group related skills.
-    'Sword +1 to hit' and 'Sword +1 parry' both become 'Sword'.
+    Groups skills by base name and type. 
+    'Sword +1 to hit' and 'Sword +1 parry' are kept separate as 'Sword to hit' and 'Sword parry'.
+    'Sword +1 to hit' and 'Sword +2 to hit' both become 'Sword to hit' (number stripped).
     """
     if not skill:
         return ""
 
     skill = skill.strip()
 
-    # Remove common suffixes/modifiers
+    # Extract base name and suffix type, keeping them separate
+    # Pattern: "BaseName +N suffix" -> "BaseName suffix"
+    match = re.match(r'^(.+?)\s*\+\d+\s+(to\s+hit|parry|damage)(\s*$)', skill, re.IGNORECASE)
+    if match:
+        base = match.group(1).strip()
+        suffix = match.group(2).strip().lower()
+        return f"{base} {suffix}"
+    
+    # For skills with just +N (no specific suffix), strip the number
+    skill = re.sub(r'\s*\+\d+\s*$', '', skill, flags=re.IGNORECASE)
+    
+    # Remove other patterns
     patterns = [
-        r'\s*\+\d+\s*to\s*hit\s*$',
-        r'\s*\+\d+\s*parry\s*$',
-        r'\s*\+\d+\s*damage\s*$',
-        r'\s*\+\d+\s*$',
         r'\s*\(x\d+\)\s*$',
         r'\s+\d+\s*$',  # Trailing numbers with space
     ]

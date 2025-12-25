@@ -243,7 +243,7 @@ Roll percentile dice (or choose if you don't want to be rich):
 
 ## Prior Experience
 
-Characters start at 16 years of age. They can begin playing immediately or acquire additional skills through prior experience. Use the [character generator](/) to create your character interactively.
+Characters start at 16 years of age. They can begin playing immediately or acquire additional skills through prior experience. Use the [character generator](/generator/) to create your character interactively.
 
 For every year of prior experience:
 - Death (survival roll required)

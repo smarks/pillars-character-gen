@@ -176,6 +176,14 @@ class CharacterAttributes:
         """Get modifiers for all attributes."""
         return {attr: self.get_modifier(attr) for attr in CORE_ATTRIBUTES}
 
+    def get_total_modifier(self) -> int:
+        """Get the sum of all attribute modifiers."""
+        return sum(self.get_all_modifiers().values())
+
+    def get_attribute_scores_dict(self) -> Dict[str, int]:
+        """Get all attribute scores as a dictionary."""
+        return {attr: getattr(self, attr) for attr in CORE_ATTRIBUTES}
+
     def __str__(self) -> str:
         """Format attributes for display."""
         lines = [f"**Attributes** ({self.generation_method})"]
@@ -215,6 +223,20 @@ class CharacterAttributes:
         lines.append(f"- Body Points: {self.body_points}  (CON+{higher_phys_name}+1d6 = {body_calc})")
 
         return "\n".join(lines)
+
+
+def format_total_modifier(modifiers: Dict[str, int]) -> str:
+    """
+    Format total modifier as a string with sign.
+    
+    Args:
+        modifiers: Dictionary of attribute modifiers
+        
+    Returns:
+        Formatted string like "+5" or "-2"
+    """
+    total = sum(modifiers.values())
+    return f"+{total}" if total >= 0 else str(total)
 
 
 def get_attribute_modifier(value: int) -> int:
@@ -1236,91 +1258,21 @@ class MagicSchool(Enum):
     CONTROL = "Control"
 
 
-# Magic school spell progressions
-MAGIC_SPELL_PROGRESSION = {
-    # Elemental schools share the same progression
-    MagicSchool.ELEMENTAL_FIRE: [
-        "Fire Missile", "Fire Ball", "Fire Bolt", "Fire Shield", "Fire Barrier", "Fire Elemental"
-    ],
-    MagicSchool.ELEMENTAL_LIGHTNING: [
-        "Lightning Missile", "Lightning Ball", "Lightning Bolt", "Lightning Shield", "Lightning Barrier", "Lightning Elemental"
-    ],
-    MagicSchool.ELEMENTAL_WATER: [
-        "Water Missile", "Water Ball", "Water Bolt", "Water Shield", "Water Barrier", "Water Elemental"
-    ],
-    MagicSchool.ELEMENTAL_EARTH: [
-        "Earth Missile", "Earth Ball", "Earth Bolt", "Earth Shield", "Earth Barrier", "Earth Elemental"
-    ],
-    MagicSchool.ELEMENTAL_WIND: [
-        "Wind Missile", "Wind Ball", "Wind Bolt", "Wind Shield", "Wind Barrier", "Wind Elemental"
-    ],
-    MagicSchool.ALL_ELEMENTS: [
-        "Elemental Missile", "Elemental Ball", "Elemental Bolt", "Elemental Shield", "Elemental Barrier", "Summon Elemental"
-    ],
-    MagicSchool.PASSAGE: [
-        "Detect Magic/Light", "Knock/Hold/Blur", "Transparency/Detect Invisibility/Lock",
-        "Breathing", "Flying", "Pass Wall", "Shape Change"
-    ],
-    MagicSchool.PROTECTION: [
-        "Counter 1/Shield/Detect Magic", "Counter 2/Shield Wall/Knowledge",
-        "Counter 3/Minor Protection from Element", "Counter 4/Major Protection from Element",
-        "Counter 5/Encase"
-    ],
-    MagicSchool.MENDING: [
-        "Heal", "Cure", "Web", "Joining","Breaking", "Shaping"
-    ],
-    MagicSchool.WEATHER: [
-        "Detect Weather", "Wind/Wind Counter", "Rain/Rain Counter", "Storm/Storm Counter"
-    ],
-    MagicSchool.COUNTER: [
-        "Counter 1", "Counter 2", "Counter 3", "Counter 4", "Counter 5", "Counter 6"
-    ],
-    MagicSchool.ARCANE_HELP: [
-        "Wild Magic", "Any Level 2 spell", "Controlled Magic", "Summon/Control", "Bind", "Ask"
-    ],
-    MagicSchool.CONTROL: [
-        "Persuade Minor/Calm/Enrage", "Minor Illusion/Fatigue",
-        "Wound/Effect Mental State", "Persuade Major/Illusion",
-        "Major Illusion/Area/Effect Senses", "Force (Paralyze/Move/etc)"
-    ],
-}
+# Import constants from constants module
+# This is done after TrackType and MagicSchool are defined to avoid circular imports
+from pillars.constants import (
+    MAGIC_SPELL_PROGRESSION,
+    SPELL_SKILL_MASTERY,
+    TRACK_SURVIVABILITY,
+    TRACK_INITIAL_SKILLS,
+    TRACK_YEARLY_SKILLS,
+)
 
-# Spell skill mastery levels (applies to all spells)
-SPELL_SKILL_MASTERY = {
-    1: "Cast spell normally",
-    2: "Cast without hand gestures",
-    3: "Cast without verbal incantation, protection from same spell",
-    4: "Costs 1/3 less fatigue, halt same spell",
-    5: "Costs 1/2 less fatigue, reflect same spell back onto caster",
-    6: "Costs 2/3 less fatigue, invert spell, reflect same spell group back onto caster",
-}
+# All constants are now imported from pillars.constants above
 
 
-# Track survivability values
-TRACK_SURVIVABILITY = {
-    TrackType.ARMY: 5,
-    TrackType.NAVY: 5,
-    TrackType.RANGER: 6,
-    TrackType.OFFICER: 5,
-    TrackType.RANDOM: None,  # Roll d8, reroll 5s
-    TrackType.WORKER: 4,
-    TrackType.CRAFTS: 3,
-    TrackType.MERCHANT: 3,
-    TrackType.MAGIC: 7,  # Most dangerous track
-}
+@dataclass
 
-# Initial skills by track (Year 1 only)
-TRACK_INITIAL_SKILLS = {
-    TrackType.ARMY: ["Sword +1 to hit", "Sword +1 parry"],
-    TrackType.NAVY: ["Cutlass +1 to hit", "Cutlass +1 parry", "Swimming"],
-    TrackType.RANGER: ["Weapon hit", "Weapon parry", "Tracking", "Wood lore", "Ken", "Literacy"],
-    TrackType.OFFICER: ["Morale", "Ken", "Literacy", "Weapon hit", "Weapon parry"],
-    TrackType.RANDOM: ["Random skill", "Swimming"],
-    TrackType.WORKER: ["Laborer"],  # Additional Laborer if poor/working class
-    TrackType.CRAFTS: ["Laborer", "Literacy"],  # Plus craft type
-    TrackType.MERCHANT: ["Coins", "Literacy"],
-    TrackType.MAGIC: [],  # See Magic spell tables
-}
 
 
 @dataclass
@@ -1340,6 +1292,18 @@ class AcceptanceCheck:
             return (f"{self.track.value}: {'Accepted' if self.accepted else 'Rejected'} "
                     f"(Rolled {self.roll} + {mod_str} vs {self.target}+) - {self.reason}")
         return f"{self.track.value}: {'Accepted' if self.accepted else 'Rejected'} - {self.reason}"
+
+
+def create_auto_accept_check(track: TrackType, reason: str = "No requirements") -> AcceptanceCheck:
+    """Create an AcceptanceCheck for tracks that auto-accept."""
+    return AcceptanceCheck(
+        track=track,
+        accepted=True,
+        roll=None,
+        target=None,
+        modifiers={},
+        reason=reason
+    )
 
 
 @dataclass
@@ -1583,16 +1547,17 @@ def check_ranger_acceptance(str_mod: int, dex_mod: int, int_mod: int, wis_mod: i
     )
 
 
-def check_officer_acceptance(is_rich: bool, is_promoted: bool = False) -> AcceptanceCheck:
+def check_officer_acceptance(wealth_level: str, is_promoted: bool = False) -> AcceptanceCheck:
     """
     Check if character meets Officer track requirements.
     Requirement: Must be promoted OR be Rich
     """
-    accepted = is_rich or is_promoted
+    rich = is_rich(wealth_level)
+    accepted = rich or is_promoted
 
     if is_promoted:
         reason = "Promoted to Officer"
-    elif is_rich:
+    elif rich:
         reason = "Rich wealth level"
     else:
         reason = "Not promoted and not Rich"
@@ -1607,6 +1572,22 @@ def check_officer_acceptance(is_rich: bool, is_promoted: bool = False) -> Accept
     )
 
 
+def is_rich(wealth_level: str) -> bool:
+    """Check if wealth level is Rich."""
+    return wealth_level == "Rich"
+
+
+def is_poor(wealth_level: str) -> bool:
+    """Check if wealth level is Subsistence."""
+    return wealth_level == "Subsistence"
+
+
+def is_working_class(wealth_level: str, social_class: str) -> bool:
+    """Check if character is working class."""
+    return (wealth_level == "Moderate" and
+            social_class in ["Commoner", "Laborer"])
+
+
 def check_merchant_acceptance(social_class: str, wealth_level: str) -> AcceptanceCheck:
     """
     Check if character meets Merchant track requirements.
@@ -1618,14 +1599,13 @@ def check_merchant_acceptance(social_class: str, wealth_level: str) -> Acceptanc
     roll = sum(roll_dice(2, 6))
 
     # Determine target based on social standing
-    is_poor = wealth_level == "Subsistence"
-    is_working_class = (wealth_level == "Moderate" and
-                       social_class in ["Commoner", "Laborer"])
+    is_poor_val = is_poor(wealth_level)
+    is_working_class_val = is_working_class(wealth_level, social_class)
 
-    if is_poor:
+    if is_poor_val:
         target = 10
         class_desc = "poor"
-    elif is_working_class:
+    elif is_working_class_val:
         target = 8
         class_desc = "working class"
     else:
@@ -1642,6 +1622,39 @@ def check_merchant_acceptance(social_class: str, wealth_level: str) -> Acceptanc
         modifiers={},
         reason=f"Roll {roll} {'≥' if accepted else '<'} {target} ({class_desc})"
     )
+
+
+def calculate_roll_availability(
+    min_roll: int,
+    max_roll: int,
+    total_modifier: int,
+    target: int,
+    requirement_desc: str
+) -> Dict:
+    """
+    Calculate track availability based on roll range and modifier.
+    
+    Args:
+        min_roll: Minimum possible roll (e.g., 2 for 2d6)
+        max_roll: Maximum possible roll (e.g., 12 for 2d6)
+        total_modifier: Total modifier to add to roll
+        target: Target number to meet or exceed
+        requirement_desc: Description of the requirement
+        
+    Returns:
+        Dictionary with availability information
+    """
+    min_total = min_roll + total_modifier
+    max_total = max_roll + total_modifier
+    
+    return {
+        'available': max_total >= target,
+        'requires_roll': True,
+        'auto_accept': min_total >= target,
+        'impossible': max_total < target,
+        'requirement': requirement_desc,
+        'roll_info': f"Need {target}+, your modifier: {total_modifier:+d}"
+    }
 
 
 def get_track_availability(
@@ -1683,31 +1696,23 @@ def get_track_availability(
 
     # Army: 8+ on 2d6 + STR + DEX
     total_mod = str_mod + dex_mod
-    # With 2d6, minimum roll is 2, maximum is 12
-    # If total_mod + 12 < 8, impossible. If total_mod + 2 >= 8, auto-accept
-    army_min = 2 + total_mod
-    army_max = 12 + total_mod
-    availability[TrackType.ARMY] = {
-        'available': army_max >= 8,  # Can possibly succeed
-        'requires_roll': True,
-        'auto_accept': army_min >= 8,  # Always succeeds
-        'impossible': army_max < 8,  # Can never succeed
-        'requirement': f"2d6 + STR({str_mod:+d}) + DEX({dex_mod:+d}) ≥ 8",
-        'roll_info': f"Need 8+, your modifier: {total_mod:+d}"
-    }
+    availability[TrackType.ARMY] = calculate_roll_availability(
+        min_roll=2,
+        max_roll=12,
+        total_modifier=total_mod,
+        target=8,
+        requirement_desc=f"2d6 + STR({str_mod:+d}) + DEX({dex_mod:+d}) ≥ 8"
+    )
 
     # Navy: 8+ on 2d6 + STR + DEX + INT
     total_mod = str_mod + dex_mod + int_mod
-    navy_min = 2 + total_mod
-    navy_max = 12 + total_mod
-    availability[TrackType.NAVY] = {
-        'available': navy_max >= 8,
-        'requires_roll': True,
-        'auto_accept': navy_min >= 8,
-        'impossible': navy_max < 8,
-        'requirement': f"2d6 + STR({str_mod:+d}) + DEX({dex_mod:+d}) + INT({int_mod:+d}) ≥ 8",
-        'roll_info': f"Need 8+, your modifier: {total_mod:+d}"
-    }
+    availability[TrackType.NAVY] = calculate_roll_availability(
+        min_roll=2,
+        max_roll=12,
+        total_modifier=total_mod,
+        target=8,
+        requirement_desc=f"2d6 + STR({str_mod:+d}) + DEX({dex_mod:+d}) + INT({int_mod:+d}) ≥ 8"
+    )
 
     # Ranger: Need STR or DEX bonus AND INT or WIS bonus (no roll)
     has_physical = str_mod > 0 or dex_mod > 0
@@ -1723,8 +1728,7 @@ def get_track_availability(
     }
 
     # Officer: Must be Rich or promoted (no roll)
-    is_rich = wealth_level == "Rich"
-    officer_eligible = is_rich or is_promoted
+    officer_eligible = is_rich(wealth_level) or is_promoted
     availability[TrackType.OFFICER] = {
         'available': officer_eligible,
         'requires_roll': False,
@@ -1735,29 +1739,23 @@ def get_track_availability(
     }
 
     # Merchant: 2d6 vs variable target based on social standing
-    is_poor = wealth_level == "Subsistence"
-    is_working_class = (wealth_level == "Moderate" and
-                       social_class in ["Commoner", "Laborer"])
-    if is_poor:
+    if is_poor(wealth_level):
         target = 10
         class_desc = "poor"
-    elif is_working_class:
+    elif is_working_class(wealth_level, social_class):
         target = 8
         class_desc = "working class"
     else:
         target = 6
         class_desc = "above working class"
 
-    merchant_min = 2
-    merchant_max = 12
-    availability[TrackType.MERCHANT] = {
-        'available': merchant_max >= target,
-        'requires_roll': True,
-        'auto_accept': merchant_min >= target,
-        'impossible': merchant_max < target,
-        'requirement': f"2d6 ≥ {target} ({class_desc})",
-        'roll_info': f"Need {target}+ on 2d6"
-    }
+    availability[TrackType.MERCHANT] = calculate_roll_availability(
+        min_roll=2,
+        max_roll=12,
+        total_modifier=0,  # No attribute modifiers for merchant
+        target=target,
+        requirement_desc=f"2d6 ≥ {target} ({class_desc})"
+    )
 
     # Magic track: Requires INT or WIS bonus (no roll, just attribute check)
     has_mental = int_mod > 0 or wis_mod > 0
@@ -1771,6 +1769,87 @@ def get_track_availability(
     }
 
     return availability
+
+
+def get_magic_initial_skills(magic_school: MagicSchool) -> List[str]:
+    """Get initial skills for a magic school track."""
+    spells = MAGIC_SPELL_PROGRESSION.get(magic_school, [])
+    skills = []
+    if spells:
+        skills.append(f"Spell: {spells[0]}")
+    skills.append(f"School: {magic_school.value}")
+    return skills
+
+
+def build_skill_track(
+    track: TrackType,
+    acceptance_check: AcceptanceCheck,
+    sub_class: str,
+    wealth_level: str
+) -> SkillTrack:
+    """
+    Build a complete SkillTrack object from track type and acceptance check.
+    
+    Args:
+        track: The track type
+        acceptance_check: The acceptance check result
+        sub_class: Character's sub-class
+        wealth_level: Character's wealth level
+        
+    Returns:
+        Complete SkillTrack object
+    """
+    # If not accepted, return with failure
+    if not acceptance_check.accepted:
+        return SkillTrack(
+            track=track,
+            acceptance_check=acceptance_check,
+            survivability=0,
+            survivability_roll=None,
+            initial_skills=[],
+            craft_type=None,
+            craft_rolls=None
+        )
+    
+    # Determine survivability
+    survivability_roll = None
+    if track == TrackType.RANDOM:
+        survivability, survivability_roll = roll_survivability_random()
+    else:
+        survivability = TRACK_SURVIVABILITY.get(track, 5)
+        if survivability is None:
+            survivability = 5
+    
+    # Get initial skills
+    initial_skills = list(TRACK_INITIAL_SKILLS.get(track, []))
+    
+    # Handle special cases
+    craft_type = None
+    craft_rolls = None
+    magic_school = None
+    magic_school_rolls = None
+    
+    if track == TrackType.WORKER:
+        if wealth_level == "Subsistence" or sub_class == "Laborer":
+            initial_skills.append("Laborer (bonus)")
+    elif track == TrackType.CRAFTS:
+        craft_type, craft_rolls = roll_craft_type()
+        initial_skills.append(f"Craft: {craft_type.value}")
+    elif track == TrackType.MAGIC:
+        magic_school, magic_school_rolls = roll_magic_school()
+        initial_skills.extend(get_magic_initial_skills(magic_school))
+    
+    return SkillTrack(
+        track=track,
+        acceptance_check=acceptance_check,
+        survivability=survivability,
+        survivability_roll=survivability_roll,
+        initial_skills=initial_skills,
+        craft_type=craft_type,
+        craft_rolls=craft_rolls,
+        magic_school=magic_school,
+        magic_school_rolls=magic_school_rolls
+    )
 
 
 def create_skill_track_for_choice(
@@ -1798,20 +1877,11 @@ def create_skill_track_for_choice(
     acceptance_check = None
 
     if chosen_track == TrackType.RANDOM:
-        acceptance_check = AcceptanceCheck(
-            track=TrackType.RANDOM, accepted=True, roll=None, target=None,
-            modifiers={}, reason="No requirements"
-        )
+        acceptance_check = create_auto_accept_check(TrackType.RANDOM)
     elif chosen_track == TrackType.WORKER:
-        acceptance_check = AcceptanceCheck(
-            track=TrackType.WORKER, accepted=True, roll=None, target=None,
-            modifiers={}, reason="No requirements"
-        )
+        acceptance_check = create_auto_accept_check(TrackType.WORKER)
     elif chosen_track == TrackType.CRAFTS:
-        acceptance_check = AcceptanceCheck(
-            track=TrackType.CRAFTS, accepted=True, roll=None, target=None,
-            modifiers={}, reason="No requirements"
-        )
+        acceptance_check = create_auto_accept_check(TrackType.CRAFTS)
     elif chosen_track == TrackType.ARMY:
         acceptance_check = check_army_acceptance(str_mod, dex_mod)
     elif chosen_track == TrackType.NAVY:
@@ -1819,8 +1889,7 @@ def create_skill_track_for_choice(
     elif chosen_track == TrackType.RANGER:
         acceptance_check = check_ranger_acceptance(str_mod, dex_mod, int_mod, wis_mod)
     elif chosen_track == TrackType.OFFICER:
-        is_rich = wealth_level == "Rich"
-        acceptance_check = check_officer_acceptance(is_rich, is_promoted)
+        acceptance_check = check_officer_acceptance(wealth_level, is_promoted)
     elif chosen_track == TrackType.MERCHANT:
         acceptance_check = check_merchant_acceptance(social_class, wealth_level)
     elif chosen_track == TrackType.MAGIC:
@@ -1832,59 +1901,8 @@ def create_skill_track_for_choice(
             modifiers={}, reason="Unknown track"
         )
 
-    # If not accepted, return with failure
-    if not acceptance_check.accepted:
-        return SkillTrack(
-            track=chosen_track,
-            acceptance_check=acceptance_check,
-            survivability=0,
-            survivability_roll=None,
-            initial_skills=[],
-            craft_type=None,
-            craft_rolls=None
-        )
-
-    # Accepted - build the full skill track
-    survivability_roll = None
-    if chosen_track == TrackType.RANDOM:
-        survivability, survivability_roll = roll_survivability_random()
-    else:
-        survivability = TRACK_SURVIVABILITY.get(chosen_track, 5)
-        if survivability is None:
-            survivability = 5
-
-    initial_skills = list(TRACK_INITIAL_SKILLS.get(chosen_track, []))
-
-    craft_type = None
-    craft_rolls = None
-    magic_school = None
-    magic_school_rolls = None
-
-    if chosen_track == TrackType.WORKER:
-        if wealth_level == "Subsistence" or sub_class == "Laborer":
-            initial_skills.append("Laborer (bonus)")
-    elif chosen_track == TrackType.CRAFTS:
-        craft_type, craft_rolls = roll_craft_type()
-        initial_skills.append(f"Craft: {craft_type.value}")
-    elif chosen_track == TrackType.MAGIC:
-        magic_school, magic_school_rolls = roll_magic_school()
-        # Get first spell from school progression
-        spells = MAGIC_SPELL_PROGRESSION.get(magic_school, [])
-        if spells:
-            initial_skills.append(f"Spell: {spells[0]}")
-        initial_skills.append(f"School: {magic_school.value}")
-
-    return SkillTrack(
-        track=chosen_track,
-        acceptance_check=acceptance_check,
-        survivability=survivability,
-        survivability_roll=survivability_roll,
-        initial_skills=initial_skills,
-        craft_type=craft_type,
-        craft_rolls=craft_rolls,
-        magic_school=magic_school,
-        magic_school_rolls=magic_school_rolls
-    )
+    # Build the skill track using the helper function
+    return build_skill_track(chosen_track, acceptance_check, sub_class, wealth_level)
 
 
 def get_eligible_tracks(
@@ -1905,18 +1923,9 @@ def get_eligible_tracks(
     eligible = []
 
     # Always eligible tracks
-    eligible.append((TrackType.RANDOM, AcceptanceCheck(
-        track=TrackType.RANDOM, accepted=True, roll=None, target=None,
-        modifiers={}, reason="No requirements"
-    )))
-    eligible.append((TrackType.WORKER, AcceptanceCheck(
-        track=TrackType.WORKER, accepted=True, roll=None, target=None,
-        modifiers={}, reason="No requirements"
-    )))
-    eligible.append((TrackType.CRAFTS, AcceptanceCheck(
-        track=TrackType.CRAFTS, accepted=True, roll=None, target=None,
-        modifiers={}, reason="No requirements"
-    )))
+    eligible.append((TrackType.RANDOM, create_auto_accept_check(TrackType.RANDOM)))
+    eligible.append((TrackType.WORKER, create_auto_accept_check(TrackType.WORKER)))
+    eligible.append((TrackType.CRAFTS, create_auto_accept_check(TrackType.CRAFTS)))
 
     # Tracks with requirements
     army_check = check_army_acceptance(str_mod, dex_mod)
@@ -1931,8 +1940,7 @@ def get_eligible_tracks(
     if ranger_check.accepted:
         eligible.append((TrackType.RANGER, ranger_check))
 
-    is_rich = wealth_level == "Rich"
-    officer_check = check_officer_acceptance(is_rich, is_promoted)
+    officer_check = check_officer_acceptance(wealth_level, is_promoted)
     if officer_check.accepted:
         eligible.append((TrackType.OFFICER, officer_check))
 
@@ -1982,8 +1990,6 @@ def select_optimal_track(
     eligible_types = {t for t, _ in eligible}
 
     # Priority selection
-    is_rich = wealth_level == "Rich"
-
     # Officer is best if available (Rich or promoted)
     if TrackType.OFFICER in eligible_types:
         return next((t, c) for t, c in eligible if t == TrackType.OFFICER)
@@ -2002,7 +2008,7 @@ def select_optimal_track(
 
     # Merchant for wealth building (especially if already merchant class)
     if TrackType.MERCHANT in eligible_types:
-        if social_class == "Merchant" or is_rich:
+        if social_class == "Merchant" or is_rich(wealth_level):
             return next((t, c) for t, c in eligible if t == TrackType.MERCHANT)
 
     # Match background if possible
@@ -2068,110 +2074,15 @@ def roll_skill_track(
         )
         track, acceptance_check = random.choice(eligible)
 
-    # Determine survivability
-    survivability_roll = None
-    if track == TrackType.RANDOM:
-        survivability, survivability_roll = roll_survivability_random()
-    else:
-        survivability = TRACK_SURVIVABILITY.get(track, 5)
-        if survivability is None:
-            survivability = 5  # Default for Magic or unknown
-
-    # Get initial skills
-    initial_skills = list(TRACK_INITIAL_SKILLS.get(track, []))
-
-    # Handle special cases
-    craft_type = None
-    craft_rolls = None
-
-    if track == TrackType.WORKER:
-        # Additional Laborer if poor/working class
-        if wealth_level == "Subsistence" or sub_class == "Laborer":
-            initial_skills.append("Laborer (bonus)")
-
-    elif track == TrackType.CRAFTS:
-        # Roll for craft type
-        craft_type, craft_rolls = roll_craft_type()
-        initial_skills.append(f"Craft: {craft_type.value}")
-
-    # Handle Magic track
-    magic_school = None
-    magic_school_rolls = None
-
-    if track == TrackType.MAGIC:
-        magic_school, magic_school_rolls = roll_magic_school()
-        # Get first spell from school progression
-        spells = MAGIC_SPELL_PROGRESSION.get(magic_school, [])
-        if spells:
-            initial_skills.append(f"Spell: {spells[0]}")
-        initial_skills.append(f"School: {magic_school.value}")
-
-    return SkillTrack(
-        track=track,
-        acceptance_check=acceptance_check,
-        survivability=survivability,
-        survivability_roll=survivability_roll,
-        initial_skills=initial_skills,
-        craft_type=craft_type,
-        craft_rolls=craft_rolls,
-        magic_school=magic_school,
-        magic_school_rolls=magic_school_rolls
-    )
+    # Build the skill track using the helper function
+    return build_skill_track(track, acceptance_check, sub_class, wealth_level)
 
 
 # =============================================================================
 # PRIOR EXPERIENCE (Years 16-34)
 # =============================================================================
 
-# Skill tables by track - skills gained each year (roll d6 or use year index)
-# These are representative skills; actual tables may vary
-TRACK_YEARLY_SKILLS = {
-    TrackType.ARMY: [
-        "Sword +1 to hit", "Sword +1 parry", "Shield", "Tactics",
-        "Formation Fighting", "Polearm", "Archery", "Riding",
-        "Survival", "First Aid", "Intimidation", "Leadership"
-    ],
-    TrackType.NAVY: [
-        "Cutlass +1 to hit", "Cutlass +1 parry", "Swimming", "Sailing",
-        "Navigation", "Rope Use", "Climbing", "Weather Sense",
-        "Ship Knowledge", "Trading", "Leadership"
-    ],
-    TrackType.RANGER: [
-        "Weapon hit", "Weapon parry", "Tracking", "Wood Lore",
-        "Survival", "Herb Lore", "Stealth", "Archery",
-        "Animal Handling", "Camouflage", "Trapping", "Ken"
-    ],
-    TrackType.OFFICER: [
-        "Morale", "Ken", "Tactics", "Leadership",
-        "Weapon hit", "Weapon parry", "Riding", "Etiquette",
-        "Strategy", "Logistics", "Diplomacy", "Command"
-    ],
-    TrackType.RANDOM: [
-        "Random Skill", "Swimming", "Gambling", "Streetwise",
-        "Brawling", "Running", "Climbing", "Persuasion",
-        "Observation", "Luck", "Contacts", "Survival"
-    ],
-    TrackType.WORKER: [
-        "Laborer", "Strength Training", "Endurance", "Hauling",
-        "Tool Use", "Construction", "Mining", "Farming",
-        "Animal Handling", "Repair", "Teamwork", "Fortitude"
-    ],
-    TrackType.CRAFTS: [
-        "Craft Skill", "Literacy", "Mathematics", "Drafting",
-        "Apprentice Work", "Journeyman Work", "Master Technique", "Teaching",
-        "Business", "Negotiation", "Quality Control", "Innovation"
-    ],
-    TrackType.MERCHANT: [
-        "Coins", "Literacy", "Negotiation", "Appraisal",
-        "Bookkeeping", "Contacts", "Trading", "Languages",
-        "Law", "Contracts", "Investment", "Management"
-    ],
-    TrackType.MAGIC: [
-        "Spell", "Ritual", "Magical Theory", "Concentration",
-        "Meditation", "Arcane Lore", "Spell", "Component Knowledge",
-        "Enchanting", "Warding", "Spell", "Mastery"
-    ],
-}
+# TRACK_YEARLY_SKILLS is now imported from constants.py above
 
 
 @dataclass
@@ -2243,8 +2154,7 @@ class PriorExperience:
 
         if self.attribute_scores and self.attribute_modifiers:
             # Show total modifier calculation
-            total_mod = sum(self.attribute_modifiers.values())
-            total_str = f"+{total_mod}" if total_mod >= 0 else str(total_mod)
+            total_str = format_total_modifier(self.attribute_modifiers)
             lines.append(f"Total Modifier: {total_str}")
 
         lines.append(f"\n**Year-by-Year**")

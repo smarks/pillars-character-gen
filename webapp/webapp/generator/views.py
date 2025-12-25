@@ -581,13 +581,31 @@ def _build_index_context(request, character, char_data):
     # Calculate movement and encumbrance
     movement = _calculate_movement_encumbrance(char_data)
 
+    # Build skill points data (migrates legacy if needed)
+    char_skills = build_skill_points_from_char_data(char_data or {})
+    skills_with_details = char_skills.get_skills_with_details()
+    skills_display = char_skills.get_display_list()
+    free_skill_points = char_skills.free_points
+    total_xp = char_skills.total_xp
+
+    # Use skills_with_details for component (has name/display structure), or fall back to simple list
+    if skills_with_details:
+        skills = skills_with_details
+    else:
+        # Fall back to legacy format - convert to dict structure for consistency
+        legacy_skills = consolidate_skills(skills) if skills else []
+        skills = [{'name': s, 'display': s} for s in legacy_skills]
+
     return {
         'character': character,
         'char_data': char_data or {},
         'years_completed': years_completed,
         'years_served': years_completed,
         'current_age': 16 + years_completed,
-        'skills': consolidate_skills(skills) if skills else [],
+        'skills': skills,
+        'skills_with_details': skills_with_details,
+        'free_skill_points': free_skill_points,
+        'total_xp': total_xp,
         'yearly_results': yearly_results,
         'has_experience': years_completed > 0,
         'died': died,
@@ -2048,46 +2066,57 @@ def normalize_skill_name(skill):
 
 
 def consolidate_skills(skills):
-    """Consolidate duplicate skills into single entries with counts.
-
-    Case-insensitive matching: 'Weather Sense' and 'Weather sense' are the same.
-
+    """Consolidate skills using the skill point system with triangular numbers.
+    
+    Each skill occurrence = 1 skill point.
+    Skills are grouped by base name (normalized).
+    Display uses triangular numbers: Level 1 = 1pt, Level 2 = 3pts, Level 3 = 6pts, etc.
+    
     Examples:
-        ['Tracking', 'Tracking', 'Tracking'] -> ['Tracking 3']
-        ['Sword +1', 'Sword +1'] -> ['Sword +1 (x2)']
-        ['Tracking', 'Survival', 'Tracking'] -> ['Tracking 2', 'Survival']
-        ['Weather Sense', 'Weather sense'] -> ['Weather Sense 2']
+        ['Cutlass +1 to hit', 'Cutlass +1 to hit', 'Cutlass +1 to hit'] 
+        -> ['Cutlass II'] (3 points = Level 2)
+        
+        ['Sword +1 to hit', 'Sword +1 to hit', 'Sword +1 to hit', 'Sword +1 to hit']
+        -> ['Sword II (+1)'] (4 points = Level 2 with 1 point toward Level 3)
     """
-    import re
-    from collections import Counter, defaultdict
+    from pillars.skills import normalize_skill_name, level_from_points, to_roman
+    from collections import defaultdict
 
-    # Normalize skills and count occurrences (case-insensitive)
-    # Track the first seen version for display
-    skill_display = {}  # lowercase -> display version
-    skill_counts = defaultdict(int)
+    if not skills:
+        return []
 
+    # Count skill points by normalized skill name
+    # Each occurrence = 1 skill point
+    skill_points = defaultdict(int)
+    skill_display = {}  # lowercase -> display version (first seen)
+    
     for skill in skills:
         if not skill:
             continue
         normalized = normalize_skill_name(skill)
-        key = normalized.lower()
-        if key not in skill_display:
-            skill_display[key] = normalized
-        skill_counts[key] += 1
+        if normalized:
+            key = normalized.lower()
+            if key not in skill_display:
+                skill_display[key] = normalized
+            skill_points[key] += 1
 
-    # Build consolidated list
+    # Build consolidated list using skill point system with triangular numbers
+    from pillars.skills import level_from_points, to_roman
+    
     consolidated = []
-    for key, count in skill_counts.items():
+    for key, points in skill_points.items():
         display_name = skill_display[key]
-        if count > 1:
-            # Check if skill already has a number suffix (like "Sword +1")
-            # If so, use (xN) format to avoid confusion
-            if re.search(r'\d+\s*$', display_name) or '+' in display_name:
-                consolidated.append(f"{display_name} (x{count})")
+        level, excess = level_from_points(points)
+        
+        if level >= 1:
+            roman = to_roman(level)
+            if excess > 0:
+                consolidated.append(f"{display_name} {roman} (+{excess})")
             else:
-                consolidated.append(f"{display_name} {count}")
+                consolidated.append(f"{display_name} {roman}")
         else:
-            consolidated.append(display_name)
+            # Less than 1 point (shouldn't happen, but handle gracefully)
+            consolidated.append(f"{display_name} (+{points})")
 
     # Sort alphabetically for consistent display
     consolidated.sort(key=lambda s: s.lower())

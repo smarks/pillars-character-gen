@@ -1,5 +1,5 @@
-import re
 from django import template
+from pillars.skills import normalize_skill_name, level_from_points, to_roman
 
 register = template.Library()
 
@@ -7,45 +7,44 @@ register = template.Library()
 @register.filter
 def consolidate_skills(skills):
     """
-    Consolidate duplicate skills and sum their bonuses.
-
-    "Cutlass +1 to hit" x 5 becomes "Cutlass +5 to hit"
-    "Swimming" x 3 becomes "Swimming (3)"
+    Consolidate skills using the skill point system with triangular numbers.
+    
+    Each skill occurrence = 1 skill point.
+    Skills are grouped by base name (normalized).
+    Display uses triangular numbers: Level 1 = 1pt, Level 2 = 3pts, Level 3 = 6pts, etc.
+    
+    Examples:
+        ['Cutlass +1 to hit', 'Cutlass +1 to hit', 'Cutlass +1 to hit'] 
+        -> ['Cutlass II'] (3 points = Level 2)
+        
+        ['Sword +1 to hit', 'Sword +1 to hit', 'Sword +1 to hit', 'Sword +1 to hit']
+        -> ['Sword II (+1)'] (4 points = Level 2 with 1 point toward Level 3)
     """
     if not skills:
         return []
 
-    # Count occurrences
-    skill_counts = {}
+    # Count skill points by normalized skill name
+    # Each occurrence = 1 skill point
+    skill_points = {}
     for skill in skills:
-        skill_counts[skill] = skill_counts.get(skill, 0) + 1
+        normalized = normalize_skill_name(skill)
+        if normalized:
+            skill_points[normalized] = skill_points.get(normalized, 0) + 1
 
-    # Consolidate skills with +1 pattern
-    consolidated = {}
-    for skill, count in skill_counts.items():
-        # Match patterns like "Sword +1 to hit" or "Cutlass +1 parry"
-        match = re.match(r'^(.+?)\s*\+1\s+(.+)$', skill)
-        if match:
-            base = match.group(1).strip()
-            suffix = match.group(2).strip()
-            key = (base, suffix)
-            consolidated[key] = consolidated.get(key, 0) + count
-        else:
-            # Non-bonus skill
-            key = ('_plain_', skill)
-            consolidated[key] = consolidated.get(key, 0) + count
-
-    # Build result list
+    # Build result list with proper level display
     result = []
-    for key, total in consolidated.items():
-        if key[0] == '_plain_':
-            skill_name = key[1]
-            if total > 1:
-                result.append(f"{skill_name} ({total})")
+    for skill_name in sorted(skill_points.keys()):
+        points = skill_points[skill_name]
+        level, excess = level_from_points(points)
+        
+        if level >= 1:
+            roman = to_roman(level)
+            if excess > 0:
+                result.append(f"{skill_name} {roman} (+{excess})")
             else:
-                result.append(skill_name)
+                result.append(f"{skill_name} {roman}")
         else:
-            base, suffix = key
-            result.append(f"{base} +{total} {suffix}")
+            # Less than 1 point (shouldn't happen, but handle gracefully)
+            result.append(f"{skill_name} (+{points})")
 
     return result

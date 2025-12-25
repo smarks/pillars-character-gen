@@ -1,0 +1,137 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Create virtual environment
+      run: |
+        uv venv
+        source .venv/bin/activate
+    
+    - name: Install dependencies
+      run: |
+        source .venv/bin/activate
+        uv pip install -r requirements.txt
+    
+    - name: Set up Chrome for Selenium
+      uses: browser-actions/setup-chrome@v1
+    
+    - name: Run core library tests
+      run: |
+        source .venv/bin/activate
+        python -m pytest tests/ -v
+    
+    - name: Run Django webapp tests
+      run: |
+        source .venv/bin/activate
+        cd webapp
+        python manage.py migrate
+        python manage.py test --keepdb
+        cd ..
+      env:
+        DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/test_db
+    
+    - name: Run E2E tests
+      run: |
+        source .venv/bin/activate
+        cd webapp
+        python manage.py migrate
+        python manage.py test webapp.generator.ui_tests --keepdb
+        cd ..
+      env:
+        DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/test_db
+        DISPLAY: :99
+    
+    - name: Generate coverage report
+      run: |
+        source .venv/bin/activate
+        python -m pytest tests/ --cov=pillars --cov-report=xml --cov-report=term
+        cd webapp
+        coverage run --source='webapp' manage.py test --keepdb || true
+        coverage xml || true
+        cd ..
+      env:
+        DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/test_db
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage.xml,./webapp/coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Create virtual environment
+      run: |
+        uv venv
+        source .venv/bin/activate
+    
+    - name: Install linting dependencies
+      run: |
+        source .venv/bin/activate
+        uv pip install black ruff
+    
+    - name: Check code formatting with black
+      run: |
+        source .venv/bin/activate
+        python -m black --check pillars/ tests/ webapp/ --exclude migrations
+    
+    - name: Lint with ruff
+      run: |
+        source .venv/bin/activate
+        python -m ruff check pillars/ tests/ webapp/ --exclude migrations
+

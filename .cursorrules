@@ -1,0 +1,47 @@
+# Cursor Rules for Pillars Character Generator
+
+## Project Context
+This is a Django web application for generating characters for the Pillars tabletop RPG. The project consists of:
+- Core library (`pillars/`) - Dice rolling, attributes, skills, character generation
+- Django web app (`webapp/`) - Interactive character generation UI
+
+## Code Style
+- Follow PEP 8 Python style guidelines
+- Use type hints where appropriate
+- Prefer dataclasses for data structures (see `generator.py` for examples)
+- Use descriptive variable names
+
+## Key Patterns
+- Attribute modifiers: 3-7 = negative, 8-13 = 0, 14+ = positive
+- Skill consolidation: `consolidate_skills()` combines duplicate skills
+- Session-based state management for interactive character creation
+- Character serialization/deserialization for Django sessions
+
+## Testing
+- Core library tests in `tests/` directory
+- Django tests in `webapp/webapp/generator/tests.py` and `ui_tests.py`
+- Run tests with: `./test.sh` or `python -m pytest tests/ -v`
+
+## Database
+- Uses SQLite by default, PostgreSQL in production
+- Migrations: `./db.sh migrate` or `python manage.py migrate`
+- Default users created via `create_default_users` management command
+
+## Common Commands
+- Run server: `./run.sh` or `./dev.sh run`
+- Run tests: `./test.sh` or `./dev.sh test`
+- Code quality: `./lint.sh` or `./dev.sh lint`
+- Database: `./db.sh migrate`
+
+## Important Files
+- `pillars/generator.py` - Main character generation logic
+- `pillars/attributes.py` - Character attributes and skill tracks
+- `webapp/webapp/generator/views.py` - Django views
+- `webapp/webapp/generator/models.py` - Django models
+
+## When Making Changes
+- Update tests if changing core logic
+- Run migrations if changing models
+- Check code quality with `./lint.sh` before committing
+- Consider session state when modifying interactive flow
+

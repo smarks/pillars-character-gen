@@ -1,9 +1,17 @@
 # Core library (no web dependencies)
 pytest>=7.4.0
+pytest-cov>=7.0.0
+coverage>=7.0.0
+pytest-cov>=4.1.0
+coverage>=7.3.0
 
 # Web app (optional - only needed for webapp/)
 django>=5.0
 markdown>=3.5
+
+# E2E testing (optional - only needed for UI tests)
+selenium>=4.15.0
+webdriver-manager>=4.0.0
 
 # Database (optional - only needed for PostgreSQL, SQLite works by default)
 psycopg2-binary>=2.9

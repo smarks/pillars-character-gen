@@ -14,7 +14,7 @@
 
 **Mechanics serve the moment.** Rules tighten around decisions that matter and dissolve everywhere else. If a rule doesn't create interesting choices, it shouldn't exist.
 
-Pillars is D&D homebrew, with some mechanics borrowed from The Fantasy Trip—Steve Jackson's 1977 system (that is the precursor to GURPS). However, there are other mechanics both public and private that is a original (or at least tries to be) content. Read the [public rulebook](/html/public-rulebook/) or [create a character](/).    
+Pillars is D&D homebrew, with some mechanics borrowed from The Fantasy Trip—Steve Jackson's 1977 system (that is the precursor to GURPS). However, there are other mechanics both public and private that is a original (or at least tries to be) content. Read the [public rulebook](/html/public-rulebook/) or [create a character](/generator/).    
 
 Special thanks to Stan Heckman for lot of play testing and valuable insights. 
 

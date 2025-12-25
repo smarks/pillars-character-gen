@@ -193,17 +193,19 @@ Attribute display variables (computed by view):
                 <label>Experience:</label>
                 <span class="xp-value" id="{{ component_id|default:'cs' }}-total-xp">{{ total_xp|default:0 }} XP</span>
             </div>
+            <div class="free-points-display">
+                <label>Available Skill Points:</label>
+                <span class="free-points-value" id="{{ component_id|default:'cs' }}-free-points">{{ free_skill_points|default:0 }}</span>
+                {% if free_skill_points > 0 and editable %}
+                <span class="help-text">Click +1 next to a skill to allocate a point.</span>
+                {% endif %}
+            </div>
             {% if free_skill_points > 0 %}
             <div class="free-points-banner">
-                <strong><span id="{{ component_id|default:'cs' }}-free-points">{{ free_skill_points }}</span> Free Skill Points Available!</strong>
+                <strong><span id="{{ component_id|default:'cs' }}-free-points-banner">{{ free_skill_points }}</span> Free Skill Points Available!</strong>
                 {% if editable %}
                 <span class="help-text">Click +1 to allocate a point to a skill.</span>
                 {% endif %}
-            </div>
-            {% else %}
-            <div class="free-points-display">
-                <label>Free Points:</label>
-                <span id="{{ component_id|default:'cs' }}-free-points">0</span>
             </div>
             {% endif %}
         </div>
@@ -1604,10 +1606,16 @@ var CharacterSheet = (function() {
             list.appendChild(li);
         });
 
-        // Update free points display
+        // Update free points display (always visible)
         var freePointsSpan = document.getElementById(componentId + '-free-points');
         if (freePointsSpan) {
             freePointsSpan.textContent = freePoints;
+        }
+
+        // Update banner if it exists
+        var bannerSpan = document.getElementById(componentId + '-free-points-banner');
+        if (bannerSpan) {
+            bannerSpan.textContent = freePoints;
         }
 
         // Update add skill button text
@@ -1620,24 +1628,8 @@ var CharacterSheet = (function() {
         var infoSection = document.getElementById(componentId + '-skill-points-info');
         if (infoSection) {
             var banner = infoSection.querySelector('.free-points-banner');
-            var display = infoSection.querySelector('.free-points-display');
-            if (freePoints > 0) {
-                if (!banner) {
-                    // Create banner if it doesn't exist
-                    var div = document.createElement('div');
-                    div.className = 'free-points-banner';
-                    div.innerHTML = '<strong><span id="' + componentId + '-free-points">' + freePoints + '</span> Free Skill Points Available!</strong><span class="help-text">Click +1 to allocate a point to a skill.</span>';
-                    if (display) display.remove();
-                    infoSection.appendChild(div);
-                }
-            } else {
-                if (banner) {
-                    banner.remove();
-                    var div = document.createElement('div');
-                    div.className = 'free-points-display';
-                    div.innerHTML = '<label>Free Points:</label><span id="' + componentId + '-free-points">0</span>';
-                    infoSection.appendChild(div);
-                }
+            if (banner) {
+                banner.style.display = freePoints > 0 ? 'block' : 'none';
             }
         }
 
