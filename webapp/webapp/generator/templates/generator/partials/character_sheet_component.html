@@ -16,6 +16,7 @@ Optional context variables:
 - component_id: unique ID prefix for this instance (default: 'cs')
 - save_url: URL for auto-save (required if editable=True)
 - csrf_token: CSRF token (required if editable=True)
+- aging_penalties: dict with 'str', 'dex', 'int', 'wis', 'con' keys (optional)
 
 Attribute display variables (computed by view):
 - str_display, dex_display, etc.: formatted attribute values
@@ -25,6 +26,15 @@ Attribute display variables (computed by view):
 {% load static %}
 
 <div class="character-sheet-component" id="{{ component_id|default:'cs' }}-container">
+    {% if component_id == 'gensheet' %}
+    <!-- Name (only shown in generator view) -->
+    <div class="editable-field" style="margin-bottom: 15px;">
+        <label>Name:</label>
+        <input type="text" name="char_name" id="char-name" data-field="name" 
+               value="{{ char_data.name|default:'' }}" placeholder="Enter character name">
+    </div>
+    {% endif %}
+    
     <!-- Attributes Section -->
     <div class="sheet-section">
         <h2>Attributes</h2>
@@ -42,6 +52,9 @@ Attribute display variables (computed by view):
                 <span class="attr-value">{{ str_display|default:char_data.attributes.STR }}</span>
                 {% endif %}
                 <span class="modifier" data-computed="str_mod">({% if str_mod >= 0 %}+{% endif %}{{ str_mod|default:"0" }})</span>
+                {% if aging_penalties.str|default:0 %}
+                <span class="aging-penalty" title="Aging penalty">(Aging: -{{ aging_penalties.str }})</span>
+                {% endif %}
             </div>
             <div class="attr-box">
                 <label>DEX</label>
@@ -52,6 +65,9 @@ Attribute display variables (computed by view):
                 <span class="attr-value">{{ dex_display|default:char_data.attributes.DEX }}</span>
                 {% endif %}
                 <span class="modifier" data-computed="dex_mod">({% if dex_mod >= 0 %}+{% endif %}{{ dex_mod|default:"0" }})</span>
+                {% if aging_penalties.dex|default:0 %}
+                <span class="aging-penalty" title="Aging penalty">(Aging: -{{ aging_penalties.dex }})</span>
+                {% endif %}
             </div>
             <div class="attr-box">
                 <label>INT</label>
@@ -62,6 +78,9 @@ Attribute display variables (computed by view):
                 <span class="attr-value">{{ int_display|default:char_data.attributes.INT }}</span>
                 {% endif %}
                 <span class="modifier" data-computed="int_mod">({% if int_mod >= 0 %}+{% endif %}{{ int_mod|default:"0" }})</span>
+                {% if aging_penalties.int|default:0 %}
+                <span class="aging-penalty" title="Aging penalty">(Aging: -{{ aging_penalties.int }})</span>
+                {% endif %}
             </div>
             <div class="attr-box">
                 <label>WIS</label>
@@ -72,6 +91,9 @@ Attribute display variables (computed by view):
                 <span class="attr-value">{{ wis_display|default:char_data.attributes.WIS }}</span>
                 {% endif %}
                 <span class="modifier" data-computed="wis_mod">({% if wis_mod >= 0 %}+{% endif %}{{ wis_mod|default:"0" }})</span>
+                {% if aging_penalties.wis|default:0 %}
+                <span class="aging-penalty" title="Aging penalty">(Aging: -{{ aging_penalties.wis }})</span>
+                {% endif %}
             </div>
             <div class="attr-box">
                 <label>CON</label>
@@ -82,6 +104,9 @@ Attribute display variables (computed by view):
                 <span class="attr-value">{{ con_display|default:char_data.attributes.CON }}</span>
                 {% endif %}
                 <span class="modifier" data-computed="con_mod">({% if con_mod >= 0 %}+{% endif %}{{ con_mod|default:"0" }})</span>
+                {% if aging_penalties.con|default:0 %}
+                <span class="aging-penalty" title="Aging penalty">(Aging: -{{ aging_penalties.con }})</span>
+                {% endif %}
             </div>
             <div class="attr-box">
                 <label>CHR</label>
@@ -916,6 +941,9 @@ Attribute display variables (computed by view):
 .aging-penalty {
     color: #c60;
     font-style: italic;
+    font-size: 0.85em;
+    display: block;
+    margin-top: 2px;
 }
 
 /* Notes */

@@ -389,9 +389,14 @@ def _update_experience_session(request, char_data, skill_track, existing_years, 
                                new_skills, existing_yearly_results, new_yearly_results,
                                died, aging_effects):
     """Update session with new experience data."""
-    request.session['interactive_years'] = existing_years + len(new_yearly_results)
-    request.session['interactive_skills'] = existing_skills + new_skills
-    request.session['interactive_yearly_results'] = existing_yearly_results + new_yearly_results
+    total_years = existing_years + len(new_yearly_results)
+    all_skills = existing_skills + new_skills
+    all_yearly_results = existing_yearly_results + new_yearly_results
+    
+    # Update session
+    request.session['interactive_years'] = total_years
+    request.session['interactive_skills'] = all_skills
+    request.session['interactive_yearly_results'] = all_yearly_results
     request.session['interactive_died'] = died
     request.session['interactive_aging'] = {
         'str': aging_effects.str_penalty,
@@ -401,6 +406,20 @@ def _update_experience_session(request, char_data, skill_track, existing_years, 
         'con': aging_effects.con_penalty,
     }
     request.session['interactive_track_name'] = skill_track.track.value
+    
+    # Update char_data with interactive experience data so it's available for skill points calculation
+    char_data['interactive_years'] = total_years
+    char_data['interactive_skills'] = all_skills
+    char_data['interactive_yearly_results'] = all_yearly_results
+    char_data['interactive_died'] = died
+    char_data['interactive_aging'] = {
+        'str': aging_effects.str_penalty,
+        'dex': aging_effects.dex_penalty,
+        'int': aging_effects.int_penalty,
+        'wis': aging_effects.wis_penalty,
+        'con': aging_effects.con_penalty,
+    }
+    
     request.session['current_character'] = char_data
     request.session.modified = True
 
@@ -439,6 +458,18 @@ def _handle_add_experience(request):
         character = generate_character(years=0, skip_track=True)
         store_current_character(request, character)
         char_data = request.session.get('current_character')
+
+    # Preserve name and other editable fields from form submission
+    if request.method == 'POST':
+        char_name = request.POST.get('char_name', '').strip()
+        if char_name:
+            char_data['name'] = char_name
+        # Also preserve any existing name if form field is empty but we have one
+        elif not char_data.get('name'):
+            # Try to get from existing session data
+            existing_name = request.session.get('current_character', {}).get('name')
+            if existing_name:
+                char_data['name'] = existing_name
 
     character = deserialize_character(char_data)
 
@@ -596,6 +627,16 @@ def _build_index_context(request, character, char_data):
         legacy_skills = consolidate_skills(skills) if skills else []
         skills = [{'name': s, 'display': s} for s in legacy_skills]
 
+    # Extract aging penalties
+    aging = char_data.get('interactive_aging', {}) if char_data else {}
+    aging_penalties = {
+        'str': aging.get('str', 0),
+        'dex': aging.get('dex', 0),
+        'int': aging.get('int', 0),
+        'wis': aging.get('wis', 0),
+        'con': aging.get('con', 0),
+    }
+
     return {
         'character': character,
         'char_data': char_data or {},
@@ -603,6 +644,7 @@ def _build_index_context(request, character, char_data):
         'years_served': years_completed,
         'current_age': 16 + years_completed,
         'skills': skills,
+        'aging_penalties': aging_penalties,
         'skills_with_details': skills_with_details,
         'free_skill_points': free_skill_points,
         'total_xp': total_xp,
@@ -659,12 +701,22 @@ def index(request):
     return render(request, 'generator/index.html', context)
 
 
-def store_current_character(request, character):
+def store_current_character(request, character, preserve_data=None):
     """Store character in session for the generator flow.
 
     If user is logged in, also save to database and return the saved character ID.
+    
+    Args:
+        request: Django request object
+        character: Character object to store
+        preserve_data: Optional dict with fields to preserve (like 'name', 'notes')
     """
-    char_data = serialize_character(character)
+    # Get existing char_data to preserve user-edited fields
+    existing_data = request.session.get('current_character', {})
+    if preserve_data:
+        existing_data.update(preserve_data)
+    
+    char_data = serialize_character(character, preserve_data=existing_data)
     request.session['current_character'] = char_data
     # Clear any prior experience data when re-rolling
     request.session['interactive_years'] = 0
@@ -1137,8 +1189,13 @@ def interactive(request):
     })
 
 
-def serialize_character(character):
-    """Serialize character to JSON-compatible dict for session storage."""
+def serialize_character(character, preserve_data=None):
+    """Serialize character to JSON-compatible dict for session storage.
+    
+    Args:
+        character: Character object to serialize
+        preserve_data: Optional dict with fields to preserve (like 'name', 'notes')
+    """
     data = {
         'attributes': {
             'STR': character.attributes.STR,
@@ -1166,6 +1223,15 @@ def serialize_character(character):
         'wealth_level': character.wealth.wealth_level if hasattr(character.wealth, 'wealth_level') else 'Moderate',
         'str_repr': str(character),
     }
+    
+    # Preserve user-edited fields if provided
+    if preserve_data:
+        if 'name' in preserve_data:
+            data['name'] = preserve_data['name']
+        if 'notes' in preserve_data:
+            data['notes'] = preserve_data['notes']
+        if 'skill_points_data' in preserve_data:
+            data['skill_points_data'] = preserve_data['skill_points_data']
 
     # Only include skill_track if it exists
     if character.skill_track is not None:
@@ -2311,6 +2377,16 @@ def character_sheet(request, char_id):
         )
         track_info = build_track_info(track_availability)
 
+    # Extract aging penalties
+    aging = char_data.get('interactive_aging', {})
+    aging_penalties = {
+        'str': aging.get('str', 0),
+        'dex': aging.get('dex', 0),
+        'int': aging.get('int', 0),
+        'wis': aging.get('wis', 0),
+        'con': aging.get('con', 0),
+    }
+
     return render(request, 'generator/character_sheet.html', {
         'character': character,
         'char_data': char_data,
@@ -2339,6 +2415,7 @@ def character_sheet(request, char_id):
         'track_info': track_info,
         'is_owner': is_owner,
         'character_owner': character.user,
+        'aging_penalties': aging_penalties,
     })
 
 

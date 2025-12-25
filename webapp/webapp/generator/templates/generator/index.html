@@ -395,12 +395,6 @@
         <div class="character-sheet">
             <h3>Character Preview</h3>
 
-            <!-- Name -->
-            <div class="editable-field">
-                <label>Name:</label>
-                <input type="text" name="char_name" id="char-name" value="{{ char_data.name|default:'' }}" placeholder="Enter character name">
-            </div>
-
             {% with component_id="gensheet" editable=True show_experience=has_experience %}
             {% include "generator/partials/character_sheet_component.html" %}
             {% endwith %}
