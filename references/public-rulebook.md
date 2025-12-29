@@ -532,6 +532,8 @@ A turn represents approximately **five seconds** of action. Nothing happens simu
 
 **Megahex:** 7 hexes (1 center + 6 surrounding). Used for missile range.
 
+![Megahex diagram](images/megahex.png)
+
 **Movement Modifier:** CON modifier + STR modifier + DEX modifier
 
 | Speed       | Distance (hexes) | Fatigue Cost                 | Available Actions               |
@@ -565,6 +567,8 @@ Based on weight carried compared to STR:
 ### Facing
 
 Each figure faces one hex side, determining front, side, and rear hexes.
+
+![Facing diagram](images/facing.png)
 
 - Physical attacks: Only into your front hexes
 - Spells: Your hex, adjacent hexes, or any hex "in front"
