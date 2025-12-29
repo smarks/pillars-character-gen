@@ -21,19 +21,19 @@ class TestAgingEffects:
     def test_aging_effects_apply_year(self):
         """Test applying aging effects at specific year thresholds."""
         effects = AgingEffects()
-        
+
         # Apply year 19 (first aging threshold)
         new_penalties = effects.apply_year(19)
         assert new_penalties["STR"] == -1
         assert new_penalties["DEX"] == -1
         assert effects.str_penalty == -1
         assert effects.dex_penalty == -1
-        
+
         # Apply year 23 (CON penalty)
         new_penalties = effects.apply_year(23)
         assert new_penalties["CON"] == -1
         assert effects.con_penalty == -1
-        
+
         # Apply year 51 (all attributes penalty)
         new_penalties = effects.apply_year(51)
         assert new_penalties["STR"] == -1
@@ -47,7 +47,7 @@ class TestAgingEffects:
         effects = AgingEffects()
         effects.apply_year(19)  # STR and DEX penalties
         effects.apply_year(23)  # CON penalty
-        
+
         result = str(effects)
         assert "STR -1" in result
         assert "DEX -1" in result
@@ -64,16 +64,16 @@ class TestAgingEffects:
         # Age 16-34: No penalties
         effects = get_aging_effects_for_age(20)
         assert effects.str_penalty == 0
-        
+
         # Age 35-38: STR and DEX penalties
         effects = get_aging_effects_for_age(35)
         assert effects.str_penalty == -1
         assert effects.dex_penalty == -1
-        
+
         # Age 39-42: Also CON penalty
         effects = get_aging_effects_for_age(40)
         assert effects.con_penalty == -1
-        
+
         # Age 67+: All penalties
         effects = get_aging_effects_for_age(70)
         assert effects.str_penalty == -2  # -1 from year 19, -1 from year 51
@@ -86,10 +86,11 @@ class TestDisplayFunctions:
     def test_display_attribute_rolls(self, capsys):
         """Test display_attribute_rolls function."""
         import random
+
         random.seed(42)
         attrs = generate_attributes_4d6_drop_lowest()
         display_attribute_rolls(attrs)
-        
+
         captured = capsys.readouterr()
         assert "ATTRIBUTE GENERATION" in captured.out
         assert "SUMMARY:" in captured.out
@@ -186,7 +187,7 @@ class TestAttributeModifierEdgeCases:
         # Below minimum
         assert get_attribute_modifier(1) == -5
         assert get_attribute_modifier(2) == -5
-        
+
         # Above maximum
         assert get_attribute_modifier(19) == 6  # 5 + (19-18)
         assert get_attribute_modifier(20) == 7  # 5 + (20-18)
@@ -198,13 +199,18 @@ class TestCharacterDisplay:
     def test_character_str_with_craft_type(self):
         """Test Character.__str__ with craft type."""
         from pillars.generator import generate_character, Character
-        from pillars.attributes import TrackType, CraftType, create_skill_track_for_choice
-        
+        from pillars.attributes import (
+            TrackType,
+            CraftType,
+            create_skill_track_for_choice,
+        )
+
         # Create a character with Crafts track
         import random
+
         random.seed(42)
         char = generate_character(years=0, chosen_track=TrackType.CRAFTS)
-        
+
         result = str(char)
         assert "Craft:" in result or "Skill Track:" in result
 
@@ -212,13 +218,16 @@ class TestCharacterDisplay:
         """Test Character.__str__ with magic school."""
         from pillars.generator import generate_character
         from pillars.attributes import TrackType
-        
+
         # Create a character with Magic track (requires INT or WIS bonus)
         import random
+
         random.seed(42)
         # Try multiple times to get a character with mental bonus
         for _ in range(50):
-            char = generate_character(years=0, chosen_track=TrackType.MAGIC, attribute_focus='mental')
+            char = generate_character(
+                years=0, chosen_track=TrackType.MAGIC, attribute_focus="mental"
+            )
             if char.skill_track and char.skill_track.magic_school:
                 result = str(char)
                 assert "Magic School:" in result or "School:" in result
@@ -228,12 +237,13 @@ class TestCharacterDisplay:
         """Test Character.__str__ with aging effects."""
         from pillars.generator import generate_character
         from pillars.attributes import TrackType
-        
+
         import random
+
         random.seed(42)
         # Generate character with many years to trigger aging
         char = generate_character(years=20, chosen_track=TrackType.WORKER)
-        
+
         if char.prior_experience and char.prior_experience.aging_effects:
             result = str(char)
             # Aging effects should be shown if penalties exist
@@ -246,13 +256,21 @@ class TestCharacterDisplay:
         from pillars.generator import Character
         from pillars.attributes import (
             generate_attributes_4d6_drop_lowest,
-            roll_appearance, roll_height, roll_weight,
-            roll_provenance, roll_location, roll_literacy_check,
-            roll_wealth, TrackType, SkillTrack, PriorExperience,
-            create_auto_accept_check
+            roll_appearance,
+            roll_height,
+            roll_weight,
+            roll_provenance,
+            roll_location,
+            roll_literacy_check,
+            roll_wealth,
+            TrackType,
+            SkillTrack,
+            PriorExperience,
+            create_auto_accept_check,
         )
-        
+
         import random
+
         random.seed(42)
         attrs = generate_attributes_4d6_drop_lowest()
         track = SkillTrack(
@@ -262,7 +280,7 @@ class TestCharacterDisplay:
             survivability_roll=None,
             initial_skills=[],
             craft_type=None,
-            craft_rolls=None
+            craft_rolls=None,
         )
         pe = PriorExperience(
             starting_age=16,
@@ -274,7 +292,7 @@ class TestCharacterDisplay:
             total_skill_points=0,
             all_skills=[],
             died=False,
-            death_year=None
+            death_year=None,
         )
         char = Character(
             attributes=attrs,
@@ -286,7 +304,7 @@ class TestCharacterDisplay:
             literacy=roll_literacy_check(attrs.INT, 0),
             wealth=roll_wealth(),
             skill_track=track,
-            prior_experience=pe
+            prior_experience=pe,
         )
         result = str(char)
         # Should handle empty skills gracefully
@@ -313,11 +331,8 @@ class TestSkillsEdgeCasesMore:
         """Test get_skill_display with less than 1 point (edge case)."""
         skills = CharacterSkills()
         # This shouldn't happen in practice, but test the edge case
-        skills.skills["Test"] = type('SkillPoints', (), {
-            'total': 0,
-            'automatic': 0,
-            'allocated': 0
-        })()
+        skills.skills["Test"] = type(
+            "SkillPoints", (), {"total": 0, "automatic": 0, "allocated": 0}
+        )()
         result = skills.get_skill_display("Test")
         assert "Test" in result
-

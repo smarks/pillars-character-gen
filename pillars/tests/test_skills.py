@@ -308,11 +308,9 @@ class TestCharacterSkills:
 
     def test_from_dict(self):
         d = {
-            "skill_points": {
-                "Sword": {"automatic": 2, "allocated": 1}
-            },
+            "skill_points": {"Sword": {"automatic": 2, "allocated": 1}},
             "free_skill_points": 3,
-            "total_xp": 2000
+            "total_xp": 2000,
         }
         cs = CharacterSkills.from_dict(d)
         assert "Sword" in cs.skills
@@ -345,21 +343,23 @@ class TestSkillLevelProgression:
 
         expected_levels = [
             # (points, expected_level, expected_excess)
-            (1, 1, 0),   # Level I
-            (2, 1, 1),   # Level I (+1)
-            (3, 2, 0),   # Level II
-            (4, 2, 1),   # Level II (+1)
-            (5, 2, 2),   # Level II (+2)
-            (6, 3, 0),   # Level III
-            (7, 3, 1),   # Level III (+1)
-            (8, 3, 2),   # Level III (+2)
-            (9, 3, 3),   # Level III (+3)
+            (1, 1, 0),  # Level I
+            (2, 1, 1),  # Level I (+1)
+            (3, 2, 0),  # Level II
+            (4, 2, 1),  # Level II (+1)
+            (5, 2, 2),  # Level II (+2)
+            (6, 3, 0),  # Level III
+            (7, 3, 1),  # Level III (+1)
+            (8, 3, 2),  # Level III (+2)
+            (9, 3, 3),  # Level III (+3)
             (10, 4, 0),  # Level IV
         ]
 
         for points, expected_level, expected_excess in expected_levels:
             cs.skills["Sword"] = SkillPoints(automatic=points, allocated=0)
-            assert cs.skills["Sword"].level == expected_level, \
-                f"With {points} points, expected level {expected_level}"
-            assert cs.skills["Sword"].excess_points == expected_excess, \
-                f"With {points} points, expected excess {expected_excess}"
+            assert (
+                cs.skills["Sword"].level == expected_level
+            ), f"With {points} points, expected level {expected_level}"
+            assert (
+                cs.skills["Sword"].excess_points == expected_excess
+            ), f"With {points} points, expected excess {expected_excess}"

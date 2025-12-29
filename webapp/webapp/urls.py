@@ -11,5 +11,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("webapp.generator.urls")),
     # Serve reference files at /ref/
-    re_path(r'^ref/(?P<path>.*)$', serve, {'document_root': REFERENCES_DIR}),
+    re_path(r"^ref/(?P<path>.*)$", serve, {"document_root": REFERENCES_DIR}),
 ]

@@ -116,23 +116,23 @@ class TestGenerateCharacterFunction(unittest.TestCase):
     def test_generate_character_physical_focus(self):
         """Test character generation with physical attribute focus."""
         for _ in range(10):
-            char = generate_character(skip_track=True, attribute_focus='physical')
+            char = generate_character(skip_track=True, attribute_focus="physical")
             str_mod = char.attributes.get_modifier("STR")
             dex_mod = char.attributes.get_modifier("DEX")
             self.assertTrue(
                 str_mod >= 1 or dex_mod >= 1,
-                f"Physical focus should have STR({str_mod}) or DEX({dex_mod}) >= 1"
+                f"Physical focus should have STR({str_mod}) or DEX({dex_mod}) >= 1",
             )
 
     def test_generate_character_mental_focus(self):
         """Test character generation with mental attribute focus."""
         for _ in range(10):
-            char = generate_character(skip_track=True, attribute_focus='mental')
+            char = generate_character(skip_track=True, attribute_focus="mental")
             int_mod = char.attributes.get_modifier("INT")
             wis_mod = char.attributes.get_modifier("WIS")
             self.assertTrue(
                 int_mod >= 1 or wis_mod >= 1,
-                f"Mental focus should have INT({int_mod}) or WIS({wis_mod}) >= 1"
+                f"Mental focus should have INT({int_mod}) or WIS({wis_mod}) >= 1",
             )
 
     def test_generate_character_no_focus(self):
@@ -149,8 +149,14 @@ class TestGenerateCharacterFunction(unittest.TestCase):
 
     def test_generate_character_all_tracks(self):
         """Test character generation can use all track types."""
-        for track in [TrackType.WORKER, TrackType.ARMY, TrackType.NAVY,
-                      TrackType.RANGER, TrackType.CRAFTS, TrackType.MERCHANT]:
+        for track in [
+            TrackType.WORKER,
+            TrackType.ARMY,
+            TrackType.NAVY,
+            TrackType.RANGER,
+            TrackType.CRAFTS,
+            TrackType.MERCHANT,
+        ]:
             char = generate_character(years=1, chosen_track=track)
             self.assertEqual(char.skill_track.track, track)
 
@@ -160,7 +166,7 @@ class TestMainFunction(unittest.TestCase):
 
     def test_main_prints_character(self):
         """Test that main() prints a character."""
-        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             main()
             output = mock_stdout.getvalue()
             self.assertIn("Welcome to Pillars Character Generator", output)
@@ -204,5 +210,5 @@ class TestCharacterIntegration(unittest.TestCase):
         self.assertGreater(len(set(str_values)), 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

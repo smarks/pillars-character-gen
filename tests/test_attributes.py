@@ -60,7 +60,7 @@ from pillars.attributes import (
     AcceptanceCheck,
     SkillTrack,
     YearResult,
-    PriorExperience
+    PriorExperience,
 )
 
 
@@ -218,13 +218,11 @@ class TestGenerate4d6DropLowest(unittest.TestCase):
 
         # Calculate average totals
         avg_3d6 = sum(
-            sum(getattr(c, attr) for attr in CORE_ATTRIBUTES)
-            for c in chars_3d6
+            sum(getattr(c, attr) for attr in CORE_ATTRIBUTES) for c in chars_3d6
         ) / len(chars_3d6)
 
         avg_4d6 = sum(
-            sum(getattr(c, attr) for attr in CORE_ATTRIBUTES)
-            for c in chars_4d6
+            sum(getattr(c, attr) for attr in CORE_ATTRIBUTES) for c in chars_4d6
         ) / len(chars_4d6)
 
         # 4d6 drop lowest should have higher average
@@ -237,13 +235,7 @@ class TestCharacterAttributes(unittest.TestCase):
     def setUp(self):
         """Create a test character."""
         self.character = CharacterAttributes(
-            STR=15,
-            DEX=12,
-            INT=10,
-            WIS=8,
-            CON=14,
-            CHR=16,
-            generation_method="test"
+            STR=15, DEX=12, INT=10, WIS=8, CON=14, CHR=16, generation_method="test"
         )
 
     def test_get_modifier(self):
@@ -294,7 +286,7 @@ class TestAttributeRoll(unittest.TestCase):
             all_rolls=[3, 5, 2, 6],
             kept_rolls=[3, 5, 6],
             value=14,
-            modifier=1
+            modifier=1,
         )
 
         self.assertEqual(roll.attribute_name, "STR")
@@ -310,7 +302,7 @@ class TestAttributeRoll(unittest.TestCase):
             all_rolls=[3, 5, 2, 6],
             kept_rolls=[3, 5, 6],
             value=14,
-            modifier=1
+            modifier=1,
         )
 
         result = str(roll)
@@ -335,14 +327,7 @@ class TestPointBuy(unittest.TestCase):
 
     def test_validate_point_buy_valid(self):
         """Test validating a legal point buy."""
-        attributes = {
-            "STR": 10,
-            "DEX": 12,
-            "INT": 14,
-            "WIS": 11,
-            "CON": 9,
-            "CHR": 9
-        }
+        attributes = {"STR": 10, "DEX": 12, "INT": 14, "WIS": 11, "CON": 9, "CHR": 9}
 
         is_valid, message = validate_point_buy(attributes)
         self.assertTrue(is_valid)
@@ -350,14 +335,7 @@ class TestPointBuy(unittest.TestCase):
 
     def test_validate_point_buy_too_many_points(self):
         """Test validating point buy with too many points."""
-        attributes = {
-            "STR": 18,
-            "DEX": 18,
-            "INT": 18,
-            "WIS": 18,
-            "CON": 18,
-            "CHR": 18
-        }
+        attributes = {"STR": 18, "DEX": 18, "INT": 18, "WIS": 18, "CON": 18, "CHR": 18}
 
         is_valid, message = validate_point_buy(attributes)
         self.assertFalse(is_valid)
@@ -365,14 +343,7 @@ class TestPointBuy(unittest.TestCase):
 
     def test_validate_point_buy_too_few_points(self):
         """Test validating point buy with too few points."""
-        attributes = {
-            "STR": 8,
-            "DEX": 8,
-            "INT": 8,
-            "WIS": 8,
-            "CON": 8,
-            "CHR": 8
-        }
+        attributes = {"STR": 8, "DEX": 8, "INT": 8, "WIS": 8, "CON": 8, "CHR": 8}
 
         is_valid, message = validate_point_buy(attributes)
         self.assertFalse(is_valid)
@@ -385,7 +356,7 @@ class TestPointBuy(unittest.TestCase):
             "DEX": 12,
             "INT": 14,
             "WIS": 11,
-            "CON": 9
+            "CON": 9,
             # Missing CHR
         }
 
@@ -401,7 +372,7 @@ class TestPointBuy(unittest.TestCase):
             "INT": 14,
             "WIS": 11,
             "CON": 13,
-            "CHR": 13
+            "CHR": 13,
         }
 
         is_valid, message = validate_point_buy(attributes)
@@ -416,7 +387,7 @@ class TestPointBuy(unittest.TestCase):
             "INT": 12,
             "WIS": 11,
             "CON": 11,
-            "CHR": 0
+            "CHR": 0,
         }
 
         is_valid, message = validate_point_buy(attributes)
@@ -598,13 +569,17 @@ class TestWeight(unittest.TestCase):
 
     def test_weight_total_calculation(self):
         """Test total weight calculation."""
-        weight = Weight(rolls=[3], base_stones=10, str_bonus_stones=5.0, total_stones=15.0)
+        weight = Weight(
+            rolls=[3], base_stones=10, str_bonus_stones=5.0, total_stones=15.0
+        )
         self.assertEqual(weight.total_stones, 15.0)
         self.assertEqual(weight.total_pounds, 210)  # 15 * 14
 
     def test_weight_str_representation(self):
         """Test string representation of weight."""
-        weight = Weight(rolls=[3], base_stones=10, str_bonus_stones=5.0, total_stones=15.0)
+        weight = Weight(
+            rolls=[3], base_stones=10, str_bonus_stones=5.0, total_stones=15.0
+        )
         result = str(weight)
         self.assertIn("15.0 stones", result)
         self.assertIn("210 lbs", result)
@@ -691,7 +666,7 @@ class TestProvenance(unittest.TestCase):
             craft_roll=None,
             social_class="Nobility",
             sub_class="Baron",
-            craft_type=None
+            craft_type=None,
         )
         result = str(provenance)
         self.assertIn("Nobility", result)
@@ -702,13 +677,15 @@ class TestProvenance(unittest.TestCase):
         for seed in range(200):
             random.seed(seed)
             provenance = roll_provenance()
-            if provenance.social_class == "Commoner" and provenance.sub_class == "Crafts":
+            if (
+                provenance.social_class == "Commoner"
+                and provenance.sub_class == "Crafts"
+            ):
                 self.assertIsNotNone(provenance.craft_type)
-                self.assertIn(provenance.craft_type, [
-                    "Smith/Builder/Wainwright",
-                    "Medical/Herb Lore/Maker",
-                    "Magic"
-                ])
+                self.assertIn(
+                    provenance.craft_type,
+                    ["Smith/Builder/Wainwright", "Medical/Herb Lore/Maker", "Magic"],
+                )
                 break
 
     def test_provenance_main_roll_determines_class(self):
@@ -800,7 +777,7 @@ class TestLocation(unittest.TestCase):
             attribute_modifiers={},
             attribute_roll=None,
             skill_rolls=None,
-            literacy_check_modifier=0
+            literacy_check_modifier=0,
         )
         self.assertEqual(location.location_type, "Special (Off-lander)")
         self.assertEqual(location.skills, [])
@@ -815,7 +792,7 @@ class TestLocation(unittest.TestCase):
             attribute_modifiers={"CON": -1, "INT": 1},
             attribute_roll=None,
             skill_rolls=None,
-            literacy_check_modifier=0
+            literacy_check_modifier=0,
         )
         result = str(location)
         self.assertIn("City", result)
@@ -923,11 +900,7 @@ class TestLiteracyCheck(unittest.TestCase):
     def test_literacy_check_str_representation(self):
         """Test string representation of literacy check."""
         literacy = LiteracyCheck(
-            roll=5,
-            int_value=10,
-            difficulty_modifier=4,
-            target=6,
-            is_literate=False
+            roll=5, int_value=10, difficulty_modifier=4, target=6, is_literate=False
         )
         result = str(literacy)
         self.assertIn("Illiterate", result)
@@ -938,11 +911,7 @@ class TestLiteracyCheck(unittest.TestCase):
     def test_literacy_str_representation_literate(self):
         """Test string representation when literate."""
         literacy = LiteracyCheck(
-            roll=5,
-            int_value=12,
-            difficulty_modifier=0,
-            target=12,
-            is_literate=True
+            roll=5, int_value=12, difficulty_modifier=0, target=12, is_literate=True
         )
         result = str(literacy)
         self.assertIn("Literate", result)
@@ -1059,14 +1028,18 @@ class TestSkillTrack(unittest.TestCase):
     def test_merchant_acceptance_poor(self):
         """Test Merchant acceptance for poor (Subsistence) characters."""
         random.seed(42)
-        check = check_merchant_acceptance(social_class="Commoner", wealth_level="Subsistence")
+        check = check_merchant_acceptance(
+            social_class="Commoner", wealth_level="Subsistence"
+        )
         self.assertEqual(check.target, 10)
         self.assertIn("poor", check.reason)
 
     def test_merchant_acceptance_working_class(self):
         """Test Merchant acceptance for working class characters."""
         random.seed(42)
-        check = check_merchant_acceptance(social_class="Commoner", wealth_level="Moderate")
+        check = check_merchant_acceptance(
+            social_class="Commoner", wealth_level="Moderate"
+        )
         # Working class: Moderate wealth + Commoner/Laborer = target 8
         self.assertEqual(check.target, 8)
         self.assertIn("working class", check.reason)
@@ -1076,15 +1049,21 @@ class TestSkillTrack(unittest.TestCase):
         random.seed(42)
         # Above working class: Not poor and not (Moderate + Commoner/Laborer)
         # Merchant wealth level with Nobility = above working class, target 6
-        check = check_merchant_acceptance(social_class="Nobility", wealth_level="Merchant")
+        check = check_merchant_acceptance(
+            social_class="Nobility", wealth_level="Merchant"
+        )
         self.assertEqual(check.target, 6)
         self.assertIn("above working class", check.reason)
 
     def test_get_eligible_tracks_always_includes_basics(self):
         """Test that Random, Worker, and Crafts are always eligible."""
         eligible = get_eligible_tracks(
-            str_mod=0, dex_mod=0, int_mod=0, wis_mod=0,
-            social_class="Commoner", wealth_level="Moderate"
+            str_mod=0,
+            dex_mod=0,
+            int_mod=0,
+            wis_mod=0,
+            social_class="Commoner",
+            wealth_level="Moderate",
         )
         eligible_types = {t for t, _ in eligible}
         self.assertIn(TrackType.RANDOM, eligible_types)
@@ -1094,16 +1073,26 @@ class TestSkillTrack(unittest.TestCase):
     def test_select_optimal_track_prioritizes_officer_for_rich(self):
         """Test that Officer is selected for Rich characters."""
         track, check = select_optimal_track(
-            str_mod=2, dex_mod=2, int_mod=2, wis_mod=2,
-            social_class="Nobility", wealth_level="Rich", sub_class="Baron"
+            str_mod=2,
+            dex_mod=2,
+            int_mod=2,
+            wis_mod=2,
+            social_class="Nobility",
+            wealth_level="Rich",
+            sub_class="Baron",
         )
         self.assertEqual(track, TrackType.OFFICER)
 
     def test_select_optimal_track_prioritizes_ranger(self):
         """Test that Ranger is prioritized when eligible (and not Officer)."""
         track, check = select_optimal_track(
-            str_mod=2, dex_mod=0, int_mod=2, wis_mod=0,
-            social_class="Commoner", wealth_level="Moderate", sub_class="Laborer"
+            str_mod=2,
+            dex_mod=0,
+            int_mod=2,
+            wis_mod=0,
+            social_class="Commoner",
+            wealth_level="Moderate",
+            sub_class="Laborer",
         )
         self.assertEqual(track, TrackType.RANGER)
 
@@ -1144,9 +1133,13 @@ class TestSkillTrack(unittest.TestCase):
         """Test that roll_skill_track returns a SkillTrack object."""
         random.seed(42)
         track = roll_skill_track(
-            str_mod=0, dex_mod=0, int_mod=0, wis_mod=0,
-            social_class="Commoner", sub_class="Laborer",
-            wealth_level="Moderate"
+            str_mod=0,
+            dex_mod=0,
+            int_mod=0,
+            wis_mod=0,
+            social_class="Commoner",
+            sub_class="Laborer",
+            wealth_level="Moderate",
         )
         self.assertIsInstance(track, SkillTrack)
         self.assertIsInstance(track.track, TrackType)
@@ -1158,10 +1151,14 @@ class TestSkillTrack(unittest.TestCase):
         for seed in range(100):
             random.seed(seed)
             track = roll_skill_track(
-                str_mod=-5, dex_mod=-5, int_mod=-5, wis_mod=-5,
-                social_class="Commoner", sub_class="Crafts",
+                str_mod=-5,
+                dex_mod=-5,
+                int_mod=-5,
+                wis_mod=-5,
+                social_class="Commoner",
+                sub_class="Crafts",
                 wealth_level="Subsistence",
-                optimize=False  # Random selection
+                optimize=False,  # Random selection
             )
             if track.track == TrackType.CRAFTS:
                 self.assertIsNotNone(track.craft_type)
@@ -1173,10 +1170,14 @@ class TestSkillTrack(unittest.TestCase):
         for seed in range(100):
             random.seed(seed)
             track = roll_skill_track(
-                str_mod=-5, dex_mod=-5, int_mod=-5, wis_mod=-5,
-                social_class="Commoner", sub_class="Laborer",
+                str_mod=-5,
+                dex_mod=-5,
+                int_mod=-5,
+                wis_mod=-5,
+                social_class="Commoner",
+                sub_class="Laborer",
                 wealth_level="Subsistence",
-                optimize=False
+                optimize=False,
             )
             if track.track == TrackType.WORKER:
                 self.assertIn("Laborer (bonus)", track.initial_skills)
@@ -1187,15 +1188,18 @@ class TestSkillTrack(unittest.TestCase):
         track = SkillTrack(
             track=TrackType.ARMY,
             acceptance_check=AcceptanceCheck(
-                track=TrackType.ARMY, accepted=True, roll=9,
-                target=8, modifiers={"STR": 1, "DEX": 1},
-                reason="Total 11 ≥ 8"
+                track=TrackType.ARMY,
+                accepted=True,
+                roll=9,
+                target=8,
+                modifiers={"STR": 1, "DEX": 1},
+                reason="Total 11 ≥ 8",
             ),
             survivability=5,
             survivability_roll=None,
             initial_skills=["Sword +1 to hit", "Sword +1 parry"],
             craft_type=None,
-            craft_rolls=None
+            craft_rolls=None,
         )
         result = str(track)
         self.assertIn("Army", result)
@@ -1205,9 +1209,12 @@ class TestSkillTrack(unittest.TestCase):
     def test_acceptance_check_str_with_roll(self):
         """Test AcceptanceCheck string with roll."""
         check = AcceptanceCheck(
-            track=TrackType.ARMY, accepted=True, roll=9,
-            target=8, modifiers={"STR": 2, "DEX": 1},
-            reason="Total 12 ≥ 8"
+            track=TrackType.ARMY,
+            accepted=True,
+            roll=9,
+            target=8,
+            modifiers={"STR": 2, "DEX": 1},
+            reason="Total 12 ≥ 8",
         )
         result = str(check)
         self.assertIn("Army", result)
@@ -1217,9 +1224,12 @@ class TestSkillTrack(unittest.TestCase):
     def test_acceptance_check_str_without_roll(self):
         """Test AcceptanceCheck string without roll."""
         check = AcceptanceCheck(
-            track=TrackType.OFFICER, accepted=True, roll=None,
-            target=None, modifiers={},
-            reason="Rich wealth level"
+            track=TrackType.OFFICER,
+            accepted=True,
+            roll=None,
+            target=None,
+            modifiers={},
+            reason="Rich wealth level",
         )
         result = str(check)
         self.assertIn("Officer", result)
@@ -1296,7 +1306,7 @@ class TestPriorExperience(unittest.TestCase):
             survivability_roll=None,
             initial_skills=["Sword +1 to hit", "Sword +1 parry"],
             craft_type=None,
-            craft_rolls=None
+            craft_rolls=None,
         )
         experience = roll_prior_experience(skill_track, years=5)
         self.assertIsInstance(experience, PriorExperience)
@@ -1313,7 +1323,7 @@ class TestPriorExperience(unittest.TestCase):
             survivability_roll=None,
             initial_skills=["Laborer"],
             craft_type=None,
-            craft_rolls=None
+            craft_rolls=None,
         )
         experience = roll_prior_experience(skill_track, years=5)
         if not experience.died:
@@ -1330,7 +1340,7 @@ class TestPriorExperience(unittest.TestCase):
             survivability_roll=None,
             initial_skills=initial_skills,
             craft_type=None,
-            craft_rolls=None
+            craft_rolls=None,
         )
         experience = roll_prior_experience(skill_track, years=1)
         for skill in initial_skills:
@@ -1348,7 +1358,7 @@ class TestPriorExperience(unittest.TestCase):
                 survivability_roll=None,
                 initial_skills=[],
                 craft_type=None,
-                craft_rolls=None
+                craft_rolls=None,
             )
             experience = roll_prior_experience(skill_track, years=18)
             if experience.died:
@@ -1369,7 +1379,7 @@ class TestPriorExperience(unittest.TestCase):
             survivability_roll=None,
             initial_skills=["Coins", "Literacy"],
             craft_type=None,
-            craft_rolls=None
+            craft_rolls=None,
         )
         experience = roll_prior_experience(skill_track, years=0)
         self.assertEqual(experience.years_served, 0)
@@ -1388,7 +1398,7 @@ class TestPriorExperience(unittest.TestCase):
             survivability_roll=None,
             initial_skills=[],
             craft_type=None,
-            craft_rolls=None
+            craft_rolls=None,
         )
         experience = roll_prior_experience(skill_track, years=10)
         if not experience.died:
@@ -1403,7 +1413,7 @@ class TestPriorExperience(unittest.TestCase):
             survivability_roll=None,
             initial_skills=[],
             craft_type=None,
-            craft_rolls=None
+            craft_rolls=None,
         )
         years_seen = set()
         for seed in range(200):
@@ -1423,7 +1433,7 @@ class TestPriorExperience(unittest.TestCase):
             survivability_roll=None,
             initial_skills=[],
             craft_type=None,
-            craft_rolls=None
+            craft_rolls=None,
         )
         # Test negative (not -1) gets clamped to 0
         random.seed(42)
@@ -1448,7 +1458,7 @@ class TestPriorExperience(unittest.TestCase):
             survivability_roll=8,
             survivability_modifier=2,
             survivability_total=10,
-            survived=True
+            survived=True,
         )
         result_str = str(result)
         self.assertIn("Year 20", result_str)
@@ -1469,7 +1479,7 @@ class TestPriorExperience(unittest.TestCase):
             survivability_roll=4,
             survivability_modifier=-2,
             survivability_total=2,
-            survived=False
+            survived=False,
         )
         result_str = str(result)
         self.assertIn("DIED", result_str)
@@ -1488,8 +1498,22 @@ class TestPriorExperience(unittest.TestCase):
             all_skills=["Swimming", "Sailing", "Navigation", "Rope Use"],
             died=False,
             death_year=None,
-            attribute_scores={"STR": 12, "DEX": 14, "INT": 10, "WIS": 11, "CON": 13, "CHR": 9},
-            attribute_modifiers={"STR": 0, "DEX": 1, "INT": 0, "WIS": 0, "CON": 0, "CHR": 0}
+            attribute_scores={
+                "STR": 12,
+                "DEX": 14,
+                "INT": 10,
+                "WIS": 11,
+                "CON": 13,
+                "CHR": 9,
+            },
+            attribute_modifiers={
+                "STR": 0,
+                "DEX": 1,
+                "INT": 0,
+                "WIS": 0,
+                "CON": 0,
+                "CHR": 0,
+            },
         )
         result_str = str(experience)
         self.assertIn("Navy", result_str)
@@ -1509,7 +1533,7 @@ class TestPriorExperience(unittest.TestCase):
             total_skill_points=3,
             all_skills=["Sword +1 to hit"],
             died=True,
-            death_year=19
+            death_year=19,
         )
         result_str = str(experience)
         self.assertIn("DIED", result_str)
@@ -1527,7 +1551,7 @@ class TestPriorExperience(unittest.TestCase):
             total_skill_points=4,
             all_skills=["Sword +1 to hit", "Sword +1 to hit", "Shield", "Tactics"],
             died=False,
-            death_year=None
+            death_year=None,
         )
         result_str = str(experience)
         self.assertIn("Sword +1 to hit x2", result_str)
@@ -1632,7 +1656,9 @@ class TestWealth(unittest.TestCase):
 
     def test_wealth_str_representation(self):
         """Test string representation of wealth."""
-        wealth = Wealth(roll=50, wealth_level="Moderate", starting_coin=100, bonus_roll=None)
+        wealth = Wealth(
+            roll=50, wealth_level="Moderate", starting_coin=100, bonus_roll=None
+        )
         result = str(wealth)
         self.assertIn("Moderate", result)
         self.assertIn("100 coin", result)
@@ -1640,7 +1666,9 @@ class TestWealth(unittest.TestCase):
 
     def test_wealth_str_with_bonus(self):
         """Test string representation with bonus roll."""
-        wealth = Wealth(roll=80, wealth_level="Merchant", starting_coin=145, bonus_roll=45)
+        wealth = Wealth(
+            roll=80, wealth_level="Merchant", starting_coin=145, bonus_roll=45
+        )
         result = str(wealth)
         self.assertIn("Merchant", result)
         self.assertIn("145 coin", result)
@@ -1676,8 +1704,7 @@ class TestFatigueAndBodyPoints(unittest.TestCase):
         # max(14, 10) = 14
         # 10 + 12 + 14 + 3 + 0 + 0 = 39
         result = calculate_fatigue_points(
-            con=10, wis=12, str_val=14, dex=10,
-            int_mod=0, wis_mod=0, roll=3
+            con=10, wis=12, str_val=14, dex=10, int_mod=0, wis_mod=0, roll=3
         )
         self.assertEqual(result, 39)
 
@@ -1689,8 +1716,7 @@ class TestFatigueAndBodyPoints(unittest.TestCase):
         # max(10, 16) = 16
         # 12 + 14 + 16 + 4 + 2 + 1 = 49
         result = calculate_fatigue_points(
-            con=12, wis=14, str_val=10, dex=16,
-            int_mod=2, wis_mod=1, roll=4
+            con=12, wis=14, str_val=10, dex=16, int_mod=2, wis_mod=1, roll=4
         )
         self.assertEqual(result, 49)
 
@@ -1702,8 +1728,7 @@ class TestFatigueAndBodyPoints(unittest.TestCase):
         # max(12, 10) = 12
         # 8 + 8 + 12 + 2 + (-2) + (-2) = 26
         result = calculate_fatigue_points(
-            con=8, wis=8, str_val=12, dex=10,
-            int_mod=-2, wis_mod=-2, roll=2
+            con=8, wis=8, str_val=12, dex=10, int_mod=-2, wis_mod=-2, roll=2
         )
         self.assertEqual(result, 26)
 
@@ -1718,8 +1743,7 @@ class TestFatigueAndBodyPoints(unittest.TestCase):
         # max(14, 10) = 14
         # 10 + 14 + 3 + 0 + 0 = 27
         result = calculate_body_points(
-            con=10, str_val=14, dex=10,
-            int_mod=0, wis_mod=0, roll=3
+            con=10, str_val=14, dex=10, int_mod=0, wis_mod=0, roll=3
         )
         self.assertEqual(result, 27)
 
@@ -1731,8 +1755,7 @@ class TestFatigueAndBodyPoints(unittest.TestCase):
         # max(10, 16) = 16
         # 12 + 16 + 4 + 2 + 1 = 35
         result = calculate_body_points(
-            con=12, str_val=10, dex=16,
-            int_mod=2, wis_mod=1, roll=4
+            con=12, str_val=10, dex=16, int_mod=2, wis_mod=1, roll=4
         )
         self.assertEqual(result, 35)
 
@@ -1744,8 +1767,7 @@ class TestFatigueAndBodyPoints(unittest.TestCase):
         # max(12, 10) = 12
         # 8 + 12 + 2 + (-2) + (-2) = 18
         result = calculate_body_points(
-            con=8, str_val=12, dex=10,
-            int_mod=-2, wis_mod=-2, roll=2
+            con=8, str_val=12, dex=10, int_mod=-2, wis_mod=-2, roll=2
         )
         self.assertEqual(result, 18)
 
@@ -1756,12 +1778,10 @@ class TestFatigueAndBodyPoints(unittest.TestCase):
         # Using same values and roll, fatigue - body should equal WIS
         wis = 14
         fatigue = calculate_fatigue_points(
-            con=10, wis=wis, str_val=12, dex=10,
-            int_mod=0, wis_mod=0, roll=3
+            con=10, wis=wis, str_val=12, dex=10, int_mod=0, wis_mod=0, roll=3
         )
         body = calculate_body_points(
-            con=10, str_val=12, dex=10,
-            int_mod=0, wis_mod=0, roll=3
+            con=10, str_val=12, dex=10, int_mod=0, wis_mod=0, roll=3
         )
         # Note: Different rolls in practice, but formula-wise fatigue has WIS
         self.assertEqual(fatigue - wis, body)
@@ -1805,7 +1825,7 @@ class TestFatigueAndBodyPoints(unittest.TestCase):
 
     def test_fatigue_points_range(self):
         """Test reasonable range of fatigue points over many rolls."""
-        min_fp = float('inf')
+        min_fp = float("inf")
         max_fp = 0
 
         for seed in range(100):
@@ -1818,11 +1838,11 @@ class TestFatigueAndBodyPoints(unittest.TestCase):
         # Maximum possible (all 18s, +5 mods, roll 6): 18+18+18+6+5+5 = 70
         # In practice with 4d6 drop lowest, ranges are more realistic
         self.assertGreater(min_fp, 0)  # Should always be positive in practice
-        self.assertLess(max_fp, 80)    # Should be reasonable
+        self.assertLess(max_fp, 80)  # Should be reasonable
 
     def test_body_points_range(self):
         """Test reasonable range of body points over many rolls."""
-        min_bp = float('inf')
+        min_bp = float("inf")
         max_bp = 0
 
         for seed in range(100):
@@ -1835,8 +1855,8 @@ class TestFatigueAndBodyPoints(unittest.TestCase):
         # Minimum possible: 3+3+1+(-5)+(-5) = -3 but realistically positive
         # Maximum possible: 18+18+6+5+5 = 52
         self.assertGreater(min_bp, 0)  # Should always be positive in practice
-        self.assertLess(max_bp, 60)    # Should be reasonable
+        self.assertLess(max_bp, 60)  # Should be reasonable
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

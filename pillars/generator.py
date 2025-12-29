@@ -46,19 +46,19 @@ from pillars.attributes import (
 def consolidate_skills(skills: List[str]) -> List[str]:
     """
     Consolidate skills using the skill point system with triangular numbers.
-    
+
     Each skill occurrence = 1 skill point.
     Skills are grouped by base name (normalized).
     Display uses triangular numbers: Level 1 = 1pt, Level 2 = 3pts, Level 3 = 6pts, etc.
-    
+
     Examples:
-        ["Cutlass +1 to hit", "Cutlass +1 to hit", "Cutlass +1 to hit"] 
+        ["Cutlass +1 to hit", "Cutlass +1 to hit", "Cutlass +1 to hit"]
         -> "Cutlass II" (3 points = Level 2)
-        
+
         ["Sword +1 to hit", "Sword +1 to hit", "Sword +1 to hit", "Sword +1 to hit"]
         -> "Sword II (+1)" (4 points = Level 2 with 1 point toward Level 3)
-        
-        ["Cutlass +1 to hit", "Cutlass +1 parry"] 
+
+        ["Cutlass +1 to hit", "Cutlass +1 parry"]
         -> "Cutlass I" (2 points = Level 1 with 1 point toward Level 2)
     """
     if not skills:
@@ -77,7 +77,7 @@ def consolidate_skills(skills: List[str]) -> List[str]:
     for skill_name in sorted(skill_points.keys()):
         points = skill_points[skill_name]
         level, excess = level_from_points(points)
-        
+
         if level >= 1:
             roman = to_roman(level)
             if excess > 0:
@@ -121,6 +121,7 @@ class Character:
         # Generate complete character with track and experience
         char = generate_character(years=5, chosen_track=TrackType.RANGER)
     """
+
     attributes: CharacterAttributes
     appearance: Appearance
     height: Height
@@ -175,7 +176,7 @@ class Character:
             Multi-line string with formatted character information.
         """
         # Get just the first line of location (without skills/attribute modifiers)
-        location_line = str(self.location).split('\n')[0]
+        location_line = str(self.location).split("\n")[0]
 
         lines = [
             "**Pillars Character**",
@@ -201,7 +202,9 @@ class Character:
             if self.skill_track.craft_type:
                 track_lines.append(f"Craft: {self.skill_track.craft_type.value}")
             if self.skill_track.magic_school:
-                track_lines.append(f"Magic School: {self.skill_track.magic_school.value}")
+                track_lines.append(
+                    f"Magic School: {self.skill_track.magic_school.value}"
+                )
             lines.extend(track_lines)
 
         if self.prior_experience is not None:
@@ -263,7 +266,7 @@ def generate_character(
     years: int = 0,
     chosen_track: Optional[TrackType] = None,
     attribute_focus: Optional[str] = None,
-    skip_track: bool = False
+    skip_track: bool = False,
 ) -> Character:
     """
     Generate a complete Pillars RPG character.
@@ -290,12 +293,12 @@ def generate_character(
         attributes = generate_attributes_4d6_drop_lowest()
 
         # Check if focus requirement is met
-        if attribute_focus == 'physical':
+        if attribute_focus == "physical":
             str_mod = attributes.get_modifier("STR")
             dex_mod = attributes.get_modifier("DEX")
             if str_mod >= 1 or dex_mod >= 1:
                 break  # Focus requirement met
-        elif attribute_focus == 'mental':
+        elif attribute_focus == "mental":
             int_mod = attributes.get_modifier("INT")
             wis_mod = attributes.get_modifier("WIS")
             if int_mod >= 1 or wis_mod >= 1:
@@ -335,7 +338,7 @@ def generate_character(
             years=years,
             total_modifier=total_modifier,
             attribute_scores=attribute_scores,
-            attribute_modifiers=attribute_modifiers
+            attribute_modifiers=attribute_modifiers,
         )
     else:
         # Auto-select optimal track
@@ -347,7 +350,7 @@ def generate_character(
             social_class=provenance.social_class,
             sub_class=provenance.sub_class,
             wealth_level=wealth.wealth_level,
-            optimize=True
+            optimize=True,
         )
         # Calculate total attribute modifier for survivability checks
         attribute_modifiers = attributes.get_all_modifiers()
@@ -358,7 +361,7 @@ def generate_character(
             years=years,
             total_modifier=total_modifier,
             attribute_scores=attribute_scores,
-            attribute_modifiers=attribute_modifiers
+            attribute_modifiers=attribute_modifiers,
         )
 
     return Character(

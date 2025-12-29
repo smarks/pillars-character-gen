@@ -83,7 +83,9 @@ def roll_and_sum(num_dice: int, sides: int) -> Tuple[List[int], int]:
     return rolls, sum(rolls)
 
 
-def roll_with_drop_lowest(num_dice: int, sides: int, num_drop: int = 1) -> Tuple[List[int], List[int], int]:
+def roll_with_drop_lowest(
+    num_dice: int, sides: int, num_drop: int = 1
+) -> Tuple[List[int], List[int], int]:
     """
     Roll multiple dice and drop the lowest rolls.
 
@@ -117,7 +119,9 @@ def roll_with_drop_lowest(num_dice: int, sides: int, num_drop: int = 1) -> Tuple
     return all_rolls, kept_rolls, sum(kept_rolls)
 
 
-def roll_with_drop_highest(num_dice: int, sides: int, num_drop: int = 1) -> Tuple[List[int], List[int], int]:
+def roll_with_drop_highest(
+    num_dice: int, sides: int, num_drop: int = 1
+) -> Tuple[List[int], List[int], int]:
     """
     Roll multiple dice and drop the highest rolls.
 

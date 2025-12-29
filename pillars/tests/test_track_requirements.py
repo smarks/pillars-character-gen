@@ -3,6 +3,7 @@ Tests for skill track requirements and auto-selection logic.
 
 Uses mock character data to verify that track requirements are properly enforced.
 """
+
 import unittest
 from dataclasses import dataclass
 from typing import Optional, Dict, Any
@@ -25,6 +26,7 @@ from pillars.attributes import (
 @dataclass
 class MockCharacter:
     """Mock character data for testing track requirements."""
+
     str_mod: int = 0
     dex_mod: int = 0
     int_mod: int = 0
@@ -37,22 +39,38 @@ class MockCharacter:
     def get_track_availability(self) -> Dict[TrackType, Dict]:
         """Get track availability for this mock character."""
         return get_track_availability(
-            self.str_mod, self.dex_mod, self.int_mod, self.wis_mod,
-            self.social_class, self.wealth_level, self.is_promoted
+            self.str_mod,
+            self.dex_mod,
+            self.int_mod,
+            self.wis_mod,
+            self.social_class,
+            self.wealth_level,
+            self.is_promoted,
         )
 
     def get_eligible_tracks(self):
         """Get list of eligible tracks for this character."""
         return get_eligible_tracks(
-            self.str_mod, self.dex_mod, self.int_mod, self.wis_mod,
-            self.social_class, self.wealth_level, self.is_promoted
+            self.str_mod,
+            self.dex_mod,
+            self.int_mod,
+            self.wis_mod,
+            self.social_class,
+            self.wealth_level,
+            self.is_promoted,
         )
 
     def select_optimal_track(self):
         """Select optimal track for this character."""
         return select_optimal_track(
-            self.str_mod, self.dex_mod, self.int_mod, self.wis_mod,
-            self.social_class, self.wealth_level, self.sub_class, self.is_promoted
+            self.str_mod,
+            self.dex_mod,
+            self.int_mod,
+            self.wis_mod,
+            self.social_class,
+            self.wealth_level,
+            self.sub_class,
+            self.is_promoted,
         )
 
     def create_track(self, track: TrackType):
@@ -66,7 +84,7 @@ class MockCharacter:
             social_class=self.social_class,
             sub_class=self.sub_class,
             wealth_level=self.wealth_level,
-            is_promoted=self.is_promoted
+            is_promoted=self.is_promoted,
         )
 
 
@@ -76,56 +94,97 @@ class MockCharacter:
 
 # Character with no attribute bonuses - baseline peasant
 BASELINE_CHARACTER = MockCharacter(
-    str_mod=0, dex_mod=0, int_mod=0, wis_mod=0,
-    social_class="Commoner", sub_class="Laborer", wealth_level="Moderate"
+    str_mod=0,
+    dex_mod=0,
+    int_mod=0,
+    wis_mod=0,
+    social_class="Commoner",
+    sub_class="Laborer",
+    wealth_level="Moderate",
 )
 
 # Strong character - physical focus
 STRONG_CHARACTER = MockCharacter(
-    str_mod=2, dex_mod=1, int_mod=0, wis_mod=0,
-    social_class="Commoner", sub_class="Laborer", wealth_level="Moderate"
+    str_mod=2,
+    dex_mod=1,
+    int_mod=0,
+    wis_mod=0,
+    social_class="Commoner",
+    sub_class="Laborer",
+    wealth_level="Moderate",
 )
 
 # Smart character - mental focus
 SMART_CHARACTER = MockCharacter(
-    str_mod=0, dex_mod=0, int_mod=2, wis_mod=1,
-    social_class="Commoner", sub_class="Laborer", wealth_level="Moderate"
+    str_mod=0,
+    dex_mod=0,
+    int_mod=2,
+    wis_mod=1,
+    social_class="Commoner",
+    sub_class="Laborer",
+    wealth_level="Moderate",
 )
 
 # Balanced character - can qualify for Ranger
 BALANCED_CHARACTER = MockCharacter(
-    str_mod=1, dex_mod=0, int_mod=1, wis_mod=0,
-    social_class="Commoner", sub_class="Laborer", wealth_level="Moderate"
+    str_mod=1,
+    dex_mod=0,
+    int_mod=1,
+    wis_mod=0,
+    social_class="Commoner",
+    sub_class="Laborer",
+    wealth_level="Moderate",
 )
 
 # Rich character - can be Officer
 RICH_CHARACTER = MockCharacter(
-    str_mod=0, dex_mod=0, int_mod=0, wis_mod=0,
-    social_class="Nobility", sub_class="Minor", wealth_level="Rich"
+    str_mod=0,
+    dex_mod=0,
+    int_mod=0,
+    wis_mod=0,
+    social_class="Nobility",
+    sub_class="Minor",
+    wealth_level="Rich",
 )
 
 # Poor character - harder merchant acceptance
 POOR_CHARACTER = MockCharacter(
-    str_mod=0, dex_mod=0, int_mod=0, wis_mod=0,
-    social_class="Commoner", sub_class="Laborer", wealth_level="Subsistence"
+    str_mod=0,
+    dex_mod=0,
+    int_mod=0,
+    wis_mod=0,
+    social_class="Commoner",
+    sub_class="Laborer",
+    wealth_level="Subsistence",
 )
 
 # Character with very negative modifiers
 WEAK_CHARACTER = MockCharacter(
-    str_mod=-2, dex_mod=-1, int_mod=-1, wis_mod=0,
-    social_class="Commoner", sub_class="Laborer", wealth_level="Moderate"
+    str_mod=-2,
+    dex_mod=-1,
+    int_mod=-1,
+    wis_mod=0,
+    social_class="Commoner",
+    sub_class="Laborer",
+    wealth_level="Moderate",
 )
 
 # Character with all positive modifiers - exceptional
 EXCEPTIONAL_CHARACTER = MockCharacter(
-    str_mod=2, dex_mod=2, int_mod=2, wis_mod=1,
-    social_class="Gentry", sub_class="Professional", wealth_level="Rich"
+    str_mod=2,
+    dex_mod=2,
+    int_mod=2,
+    wis_mod=1,
+    social_class="Gentry",
+    sub_class="Professional",
+    wealth_level="Rich",
 )
 
 
 # =============================================================================
 # TEST CLASSES
 # =============================================================================
+
 
 class TestTrackAvailability(unittest.TestCase):
     """Test get_track_availability correctly identifies track eligibility."""
@@ -137,105 +196,109 @@ class TestTrackAvailability(unittest.TestCase):
 
             for track in [TrackType.WORKER, TrackType.CRAFTS, TrackType.RANDOM]:
                 with self.subTest(char=char, track=track):
-                    self.assertTrue(availability[track]['available'])
-                    self.assertTrue(availability[track]['auto_accept'])
-                    self.assertFalse(availability[track]['impossible'])
-                    self.assertFalse(availability[track]['requires_roll'])
+                    self.assertTrue(availability[track]["available"])
+                    self.assertTrue(availability[track]["auto_accept"])
+                    self.assertFalse(availability[track]["impossible"])
+                    self.assertFalse(availability[track]["requires_roll"])
 
     def test_ranger_requires_physical_and_mental_bonus(self):
         """Ranger requires both STR/DEX bonus AND INT/WIS bonus."""
         # Baseline has neither - impossible
         avail = BASELINE_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.RANGER]['impossible'])
-        self.assertFalse(avail[TrackType.RANGER]['available'])
+        self.assertTrue(avail[TrackType.RANGER]["impossible"])
+        self.assertFalse(avail[TrackType.RANGER]["available"])
 
         # Strong has physical only - still impossible
         avail = STRONG_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.RANGER]['impossible'])
+        self.assertTrue(avail[TrackType.RANGER]["impossible"])
 
         # Smart has mental only - still impossible
         avail = SMART_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.RANGER]['impossible'])
+        self.assertTrue(avail[TrackType.RANGER]["impossible"])
 
         # Balanced has both - available
         avail = BALANCED_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.RANGER]['available'])
-        self.assertTrue(avail[TrackType.RANGER]['auto_accept'])
-        self.assertFalse(avail[TrackType.RANGER]['impossible'])
+        self.assertTrue(avail[TrackType.RANGER]["available"])
+        self.assertTrue(avail[TrackType.RANGER]["auto_accept"])
+        self.assertFalse(avail[TrackType.RANGER]["impossible"])
 
     def test_officer_requires_rich_or_promotion(self):
         """Officer requires Rich wealth or promotion."""
         # Baseline is not rich - impossible
         avail = BASELINE_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.OFFICER]['impossible'])
+        self.assertTrue(avail[TrackType.OFFICER]["impossible"])
 
         # Rich character - available
         avail = RICH_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.OFFICER]['available'])
-        self.assertTrue(avail[TrackType.OFFICER]['auto_accept'])
+        self.assertTrue(avail[TrackType.OFFICER]["available"])
+        self.assertTrue(avail[TrackType.OFFICER]["auto_accept"])
 
         # Promoted character (not rich) - available
         promoted = MockCharacter(
-            str_mod=0, dex_mod=0, int_mod=0, wis_mod=0,
-            wealth_level="Moderate", is_promoted=True
+            str_mod=0,
+            dex_mod=0,
+            int_mod=0,
+            wis_mod=0,
+            wealth_level="Moderate",
+            is_promoted=True,
         )
         avail = promoted.get_track_availability()
-        self.assertTrue(avail[TrackType.OFFICER]['available'])
+        self.assertTrue(avail[TrackType.OFFICER]["available"])
 
     def test_magic_requires_int_or_wis_bonus(self):
         """Magic track requires INT or WIS bonus."""
         # Baseline has no bonus - impossible
         avail = BASELINE_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.MAGIC]['impossible'])
+        self.assertTrue(avail[TrackType.MAGIC]["impossible"])
 
         # Strong (physical only) - impossible
         avail = STRONG_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.MAGIC]['impossible'])
+        self.assertTrue(avail[TrackType.MAGIC]["impossible"])
 
         # Smart (has INT bonus) - available
         avail = SMART_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.MAGIC]['available'])
-        self.assertTrue(avail[TrackType.MAGIC]['auto_accept'])
+        self.assertTrue(avail[TrackType.MAGIC]["available"])
+        self.assertTrue(avail[TrackType.MAGIC]["auto_accept"])
 
         # Character with only WIS bonus - also available
         wis_char = MockCharacter(str_mod=0, dex_mod=0, int_mod=0, wis_mod=1)
         avail = wis_char.get_track_availability()
-        self.assertTrue(avail[TrackType.MAGIC]['available'])
+        self.assertTrue(avail[TrackType.MAGIC]["available"])
 
     def test_army_requires_acceptance_roll(self):
         """Army always requires acceptance roll (2d6 + STR + DEX >= 8)."""
         avail = BASELINE_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.ARMY]['requires_roll'])
-        self.assertTrue(avail[TrackType.ARMY]['available'])  # Can attempt
+        self.assertTrue(avail[TrackType.ARMY]["requires_roll"])
+        self.assertTrue(avail[TrackType.ARMY]["available"])  # Can attempt
 
         # Character with very low modifiers may be impossible
         very_weak = MockCharacter(str_mod=-3, dex_mod=-3, int_mod=0, wis_mod=0)
         avail = very_weak.get_track_availability()
         # With -6 total, max roll is 12 + (-6) = 6, need 8+, so impossible
-        self.assertTrue(avail[TrackType.ARMY]['impossible'])
+        self.assertTrue(avail[TrackType.ARMY]["impossible"])
 
         # Strong character - easier acceptance
         avail = STRONG_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.ARMY]['available'])
+        self.assertTrue(avail[TrackType.ARMY]["available"])
         # With +3 modifier, min roll is 2 + 3 = 5, max is 15, so can succeed but not guaranteed
 
     def test_navy_requires_acceptance_roll(self):
         """Navy requires 2d6 + STR + DEX + INT >= 8."""
         avail = BASELINE_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.NAVY]['requires_roll'])
-        self.assertTrue(avail[TrackType.NAVY]['available'])
+        self.assertTrue(avail[TrackType.NAVY]["requires_roll"])
+        self.assertTrue(avail[TrackType.NAVY]["available"])
 
     def test_merchant_acceptance_varies_by_social_class(self):
         """Merchant target varies: poor=10, working class=8, above=6."""
         # All characters can attempt merchant (requires roll)
         avail = BASELINE_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.MERCHANT]['requires_roll'])
+        self.assertTrue(avail[TrackType.MERCHANT]["requires_roll"])
 
         avail = POOR_CHARACTER.get_track_availability()
-        self.assertIn("10", avail[TrackType.MERCHANT]['roll_info'])
+        self.assertIn("10", avail[TrackType.MERCHANT]["roll_info"])
 
         avail = RICH_CHARACTER.get_track_availability()
-        self.assertIn("6", avail[TrackType.MERCHANT]['roll_info'])
+        self.assertIn("6", avail[TrackType.MERCHANT]["roll_info"])
 
 
 class TestAcceptanceChecks(unittest.TestCase):
@@ -393,5 +456,5 @@ class TestCreateTrackEnforcesRequirements(unittest.TestCase):
                 self.assertEqual(track.track, TrackType.CRAFTS)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

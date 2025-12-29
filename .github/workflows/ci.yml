@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12"]
+      fail-fast: false
     
     services:
       postgres:
@@ -27,6 +28,12 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+    
+    env:
+      DATABASE_URL: postgres://test_user:test_pass@localhost:5432/test_db
+      DJANGO_SECRET_KEY: test-secret-key-for-ci
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
 
     steps:
     - uses: actions/checkout@v4
@@ -37,76 +44,94 @@ jobs:
         python-version: ${{ matrix.python-version }}
     
     - name: Install uv
-      run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "latest"
     
-    - name: Create virtual environment
+    - name: Cache uv dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/uv
+        key: ${{ runner.os }}-uv-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
+    
+    - name: Create virtual environment and install dependencies
       run: |
         uv venv
-    
-    - name: Install dependencies
-      run: |
-        . .venv/bin/activate
+        source .venv/bin/activate
         uv pip install -r requirements.txt
     
-    - name: Set up Chrome for Selenium
-      uses: browser-actions/setup-chrome@v1
-    
-    - name: Set up virtual display for E2E tests
+    - name: Install system dependencies
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
         sudo apt-get update
-        sudo apt-get install -y xvfb
+        # Install PostgreSQL client, chromium, chromedriver, and xvfb (only for E2E tests)
+        sudo apt-get install -y postgresql-client chromium-browser chromium-chromedriver xvfb || sudo apt-get install -y postgresql-client chromium chromium-driver xvfb
+        # Create symlink for chromedriver compatibility
+        if command -v chromium-browser >/dev/null 2>&1; then
+          sudo ln -sf $(which chromium-browser) /usr/bin/google-chrome
+        elif command -v chromium >/dev/null 2>&1; then
+          sudo ln -sf $(which chromium) /usr/bin/google-chrome
+        fi
+        # Ensure chromedriver is in PATH
+        if [ -f /usr/lib/chromium-browser/chromedriver ]; then
+          sudo ln -sf /usr/lib/chromium-browser/chromedriver /usr/local/bin/chromedriver
+        elif [ -f /usr/bin/chromedriver ]; then
+          sudo ln -sf /usr/bin/chromedriver /usr/local/bin/chromedriver
+        fi
+    
+    - name: Install PostgreSQL client (for non-E2E runs)
+      if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql-client
+    
+    - name: Wait for PostgreSQL
+      run: |
+        until pg_isready -h localhost -p 5432 -U test_user; do
+          echo "Waiting for PostgreSQL..."
+          sleep 2
+        done
+      env:
+        PGPASSWORD: test_pass
     
     - name: Run core library tests
       run: |
-        . .venv/bin/activate
+        source .venv/bin/activate
         python -m pytest tests/ -v
     
     - name: Run Django webapp tests
       run: |
-        . .venv/bin/activate
+        source .venv/bin/activate
         cd webapp
         python manage.py migrate
         python manage.py test --keepdb
         cd ..
-      env:
-        DATABASE_URL: postgres://test_user:test_pass@localhost:5432/test_db
-        DJANGO_SECRET_KEY: test-secret-key-for-ci
-        DJANGO_DEBUG: "False"
-        DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
     
     - name: Run E2E tests
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
-        . .venv/bin/activate
+        source .venv/bin/activate
         cd webapp
         python manage.py migrate
+        # Run tests with xvfb for headless browser
         xvfb-run -a python manage.py test webapp.generator.ui_tests --keepdb
         cd ..
-      env:
-        DATABASE_URL: postgres://test_user:test_pass@localhost:5432/test_db
-        DJANGO_SECRET_KEY: test-secret-key-for-ci
-        DJANGO_DEBUG: "False"
-        DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
-        DISPLAY: :99
     
     - name: Generate coverage report
       continue-on-error: true
       run: |
-        . .venv/bin/activate
+        source .venv/bin/activate
         python -m pytest tests/ --cov=pillars --cov-report=xml --cov-report=term
         cd webapp
         coverage run --source='webapp' manage.py test --keepdb
         coverage xml
         cd ..
-      env:
-        DATABASE_URL: postgres://test_user:test_pass@localhost:5432/test_db
-        DJANGO_SECRET_KEY: test-secret-key-for-ci
-        DJANGO_DEBUG: "False"
-        DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
     
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      continue-on-error: true
+      uses: codecov/codecov-action@v4
       with:
         files: ./coverage.xml,./webapp/coverage.xml
         flags: unittests
@@ -125,9 +150,9 @@ jobs:
         python-version: "3.11"
     
     - name: Install uv
-      run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "latest"
     
     - name: Create virtual environment
       run: |
@@ -136,16 +161,16 @@ jobs:
     
     - name: Install linting dependencies
       run: |
-        . .venv/bin/activate
+        source .venv/bin/activate
         uv pip install black ruff
     
     - name: Check code formatting with black
       run: |
-        . .venv/bin/activate
+        source .venv/bin/activate
         python -m black --check pillars/ tests/ webapp/ --exclude migrations
     
     - name: Lint with ruff
       run: |
-        . .venv/bin/activate
+        source .venv/bin/activate
         python -m ruff check pillars/ tests/ webapp/ --exclude migrations
 

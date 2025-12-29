@@ -17,48 +17,99 @@ from pillars.attributes import TrackType, MagicSchool
 MAGIC_SPELL_PROGRESSION = {
     # Elemental schools share the same progression
     MagicSchool.ELEMENTAL_FIRE: [
-        "Fire Missile", "Fire Ball", "Fire Bolt", "Fire Shield", "Fire Barrier", "Fire Elemental"
+        "Fire Missile",
+        "Fire Ball",
+        "Fire Bolt",
+        "Fire Shield",
+        "Fire Barrier",
+        "Fire Elemental",
     ],
     MagicSchool.ELEMENTAL_LIGHTNING: [
-        "Lightning Missile", "Lightning Ball", "Lightning Bolt", "Lightning Shield", "Lightning Barrier", "Lightning Elemental"
+        "Lightning Missile",
+        "Lightning Ball",
+        "Lightning Bolt",
+        "Lightning Shield",
+        "Lightning Barrier",
+        "Lightning Elemental",
     ],
     MagicSchool.ELEMENTAL_WATER: [
-        "Water Missile", "Water Ball", "Water Bolt", "Water Shield", "Water Barrier", "Water Elemental"
+        "Water Missile",
+        "Water Ball",
+        "Water Bolt",
+        "Water Shield",
+        "Water Barrier",
+        "Water Elemental",
     ],
     MagicSchool.ELEMENTAL_EARTH: [
-        "Earth Missile", "Earth Ball", "Earth Bolt", "Earth Shield", "Earth Barrier", "Earth Elemental"
+        "Earth Missile",
+        "Earth Ball",
+        "Earth Bolt",
+        "Earth Shield",
+        "Earth Barrier",
+        "Earth Elemental",
     ],
     MagicSchool.ELEMENTAL_WIND: [
-        "Wind Missile", "Wind Ball", "Wind Bolt", "Wind Shield", "Wind Barrier", "Wind Elemental"
+        "Wind Missile",
+        "Wind Ball",
+        "Wind Bolt",
+        "Wind Shield",
+        "Wind Barrier",
+        "Wind Elemental",
     ],
     MagicSchool.ALL_ELEMENTS: [
-        "Elemental Missile", "Elemental Ball", "Elemental Bolt", "Elemental Shield", "Elemental Barrier", "Summon Elemental"
+        "Elemental Missile",
+        "Elemental Ball",
+        "Elemental Bolt",
+        "Elemental Shield",
+        "Elemental Barrier",
+        "Summon Elemental",
     ],
     MagicSchool.PASSAGE: [
-        "Detect Magic/Light", "Knock/Hold/Blur", "Transparency/Detect Invisibility/Lock",
-        "Breathing", "Flying", "Pass Wall", "Shape Change"
+        "Detect Magic/Light",
+        "Knock/Hold/Blur",
+        "Transparency/Detect Invisibility/Lock",
+        "Breathing",
+        "Flying",
+        "Pass Wall",
+        "Shape Change",
     ],
     MagicSchool.PROTECTION: [
-        "Counter 1/Shield/Detect Magic", "Counter 2/Shield Wall/Knowledge",
-        "Counter 3/Minor Protection from Element", "Counter 4/Major Protection from Element",
-        "Counter 5/Encase"
+        "Counter 1/Shield/Detect Magic",
+        "Counter 2/Shield Wall/Knowledge",
+        "Counter 3/Minor Protection from Element",
+        "Counter 4/Major Protection from Element",
+        "Counter 5/Encase",
     ],
-    MagicSchool.MENDING: [
-        "Heal", "Cure", "Web", "Joining", "Breaking", "Shaping"
-    ],
+    MagicSchool.MENDING: ["Heal", "Cure", "Web", "Joining", "Breaking", "Shaping"],
     MagicSchool.WEATHER: [
-        "Detect Weather", "Wind/Wind Counter", "Rain/Rain Counter", "Storm/Storm Counter"
+        "Detect Weather",
+        "Wind/Wind Counter",
+        "Rain/Rain Counter",
+        "Storm/Storm Counter",
     ],
     MagicSchool.COUNTER: [
-        "Counter 1", "Counter 2", "Counter 3", "Counter 4", "Counter 5", "Counter 6"
+        "Counter 1",
+        "Counter 2",
+        "Counter 3",
+        "Counter 4",
+        "Counter 5",
+        "Counter 6",
     ],
     MagicSchool.ARCANE_HELP: [
-        "Wild Magic", "Any Level 2 spell", "Controlled Magic", "Summon/Control", "Bind", "Ask"
+        "Wild Magic",
+        "Any Level 2 spell",
+        "Controlled Magic",
+        "Summon/Control",
+        "Bind",
+        "Ask",
     ],
     MagicSchool.CONTROL: [
-        "Persuade Minor/Calm/Enrage", "Minor Illusion/Fatigue",
-        "Wound/Effect Mental State", "Persuade Major/Illusion",
-        "Major Illusion/Area/Effect Senses", "Force (Paralyze/Move/etc)"
+        "Persuade Minor/Calm/Enrage",
+        "Minor Illusion/Fatigue",
+        "Wound/Effect Mental State",
+        "Persuade Major/Illusion",
+        "Major Illusion/Area/Effect Senses",
+        "Force (Paralyze/Move/etc)",
     ],
 }
 
@@ -89,7 +140,14 @@ TRACK_SURVIVABILITY = {
 TRACK_INITIAL_SKILLS = {
     TrackType.ARMY: ["Sword +1 to hit", "Sword +1 parry"],
     TrackType.NAVY: ["Cutlass +1 to hit", "Cutlass +1 parry", "Swimming"],
-    TrackType.RANGER: ["Weapon hit", "Weapon parry", "Tracking", "Wood lore", "Ken", "Literacy"],
+    TrackType.RANGER: [
+        "Weapon hit",
+        "Weapon parry",
+        "Tracking",
+        "Wood lore",
+        "Ken",
+        "Literacy",
+    ],
     TrackType.OFFICER: ["Morale", "Ken", "Literacy", "Weapon hit", "Weapon parry"],
     TrackType.RANDOM: ["Random skill", "Swimming"],
     TrackType.WORKER: ["Laborer"],  # Additional Laborer if poor/working class
@@ -102,49 +160,128 @@ TRACK_INITIAL_SKILLS = {
 # These are representative skills; actual tables may vary
 TRACK_YEARLY_SKILLS = {
     TrackType.ARMY: [
-        "Sword +1 to hit", "Sword +1 parry", "Shield", "Tactics",
-        "Formation Fighting", "Polearm", "Archery", "Riding",
-        "Survival", "First Aid", "Intimidation", "Leadership"
+        "Sword +1 to hit",
+        "Sword +1 parry",
+        "Shield",
+        "Tactics",
+        "Formation Fighting",
+        "Polearm",
+        "Archery",
+        "Riding",
+        "Survival",
+        "First Aid",
+        "Intimidation",
+        "Leadership",
     ],
     TrackType.NAVY: [
-        "Cutlass +1 to hit", "Cutlass +1 parry", "Swimming", "Sailing",
-        "Navigation", "Rope Use", "Climbing", "Weather Sense",
-        "Ship Knowledge", "Trading", "Leadership"
+        "Cutlass +1 to hit",
+        "Cutlass +1 parry",
+        "Swimming",
+        "Sailing",
+        "Navigation",
+        "Rope Use",
+        "Climbing",
+        "Weather Sense",
+        "Ship Knowledge",
+        "Trading",
+        "Leadership",
     ],
     TrackType.RANGER: [
-        "Weapon hit", "Weapon parry", "Tracking", "Wood Lore",
-        "Survival", "Herb Lore", "Stealth", "Archery",
-        "Animal Handling", "Camouflage", "Trapping", "Ken"
+        "Weapon hit",
+        "Weapon parry",
+        "Tracking",
+        "Wood Lore",
+        "Survival",
+        "Herb Lore",
+        "Stealth",
+        "Archery",
+        "Animal Handling",
+        "Camouflage",
+        "Trapping",
+        "Ken",
     ],
     TrackType.OFFICER: [
-        "Morale", "Ken", "Tactics", "Leadership",
-        "Weapon hit", "Weapon parry", "Riding", "Etiquette",
-        "Strategy", "Logistics", "Diplomacy", "Command"
+        "Morale",
+        "Ken",
+        "Tactics",
+        "Leadership",
+        "Weapon hit",
+        "Weapon parry",
+        "Riding",
+        "Etiquette",
+        "Strategy",
+        "Logistics",
+        "Diplomacy",
+        "Command",
     ],
     TrackType.RANDOM: [
-        "Random Skill", "Swimming", "Gambling", "Streetwise",
-        "Brawling", "Running", "Climbing", "Persuasion",
-        "Observation", "Luck", "Contacts", "Survival"
+        "Random Skill",
+        "Swimming",
+        "Gambling",
+        "Streetwise",
+        "Brawling",
+        "Running",
+        "Climbing",
+        "Persuasion",
+        "Observation",
+        "Luck",
+        "Contacts",
+        "Survival",
     ],
     TrackType.WORKER: [
-        "Laborer", "Strength Training", "Endurance", "Hauling",
-        "Tool Use", "Construction", "Mining", "Farming",
-        "Animal Handling", "Repair", "Teamwork", "Fortitude"
+        "Laborer",
+        "Strength Training",
+        "Endurance",
+        "Hauling",
+        "Tool Use",
+        "Construction",
+        "Mining",
+        "Farming",
+        "Animal Handling",
+        "Repair",
+        "Teamwork",
+        "Fortitude",
     ],
     TrackType.CRAFTS: [
-        "Craft Skill", "Literacy", "Mathematics", "Drafting",
-        "Apprentice Work", "Journeyman Work", "Master Technique", "Teaching",
-        "Business", "Negotiation", "Quality Control", "Innovation"
+        "Craft Skill",
+        "Literacy",
+        "Mathematics",
+        "Drafting",
+        "Apprentice Work",
+        "Journeyman Work",
+        "Master Technique",
+        "Teaching",
+        "Business",
+        "Negotiation",
+        "Quality Control",
+        "Innovation",
     ],
     TrackType.MERCHANT: [
-        "Coins", "Literacy", "Negotiation", "Appraisal",
-        "Bookkeeping", "Contacts", "Trading", "Languages",
-        "Law", "Contracts", "Investment", "Management"
+        "Coins",
+        "Literacy",
+        "Negotiation",
+        "Appraisal",
+        "Bookkeeping",
+        "Contacts",
+        "Trading",
+        "Languages",
+        "Law",
+        "Contracts",
+        "Investment",
+        "Management",
     ],
     TrackType.MAGIC: [
-        "Spell", "Ritual", "Magical Theory", "Concentration",
-        "Meditation", "Arcane Lore", "Spell", "Component Knowledge",
-        "Enchanting", "Warding", "Spell", "Mastery"
+        "Spell",
+        "Ritual",
+        "Magical Theory",
+        "Concentration",
+        "Meditation",
+        "Arcane Lore",
+        "Spell",
+        "Component Knowledge",
+        "Enchanting",
+        "Warding",
+        "Spell",
+        "Mastery",
     ],
 }
-

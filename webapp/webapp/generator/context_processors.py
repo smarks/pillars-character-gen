@@ -17,26 +17,26 @@ def _load_git_info():
 
         # Get latest commit hash
         result = subprocess.run(
-            ['git', 'rev-parse', 'HEAD'],
+            ["git", "rev-parse", "HEAD"],
             cwd=project_root,
             capture_output=True,
             text=True,
-            timeout=5
+            timeout=5,
         )
         commit_hash = result.stdout.strip() if result.returncode == 0 else None
 
         # Get commit date
         result = subprocess.run(
-            ['git', 'log', '-1', '--format=%ci'],
+            ["git", "log", "-1", "--format=%ci"],
             cwd=project_root,
             capture_output=True,
             text=True,
-            timeout=5
+            timeout=5,
         )
         if result.returncode == 0:
             # Parse git date format: "2025-12-01 10:30:00 -0500"
             date_str = result.stdout.strip()
-            commit_date = datetime.strptime(date_str[:19], '%Y-%m-%d %H:%M:%S')
+            commit_date = datetime.strptime(date_str[:19], "%Y-%m-%d %H:%M:%S")
         else:
             commit_date = None
 
@@ -48,7 +48,7 @@ def _load_git_info():
 # Load git info once at startup
 _GIT_COMMIT_HASH, _GIT_COMMIT_DATE = _load_git_info()
 _GIT_COMMIT_SHORT = _GIT_COMMIT_HASH[:7] if _GIT_COMMIT_HASH else None
-_GIT_REPO_URL = 'https://github.com/smarks/pillars-character-gen'
+_GIT_REPO_URL = "https://github.com/smarks/pillars-character-gen"
 
 
 def git_info(request):
@@ -57,8 +57,8 @@ def git_info(request):
     Values are loaded once at server startup and reused for all requests.
     """
     return {
-        'git_commit_hash': _GIT_COMMIT_HASH,
-        'git_commit_short': _GIT_COMMIT_SHORT,
-        'git_commit_date': _GIT_COMMIT_DATE,
-        'git_repo_url': _GIT_REPO_URL,
+        "git_commit_hash": _GIT_COMMIT_HASH,
+        "git_commit_short": _GIT_COMMIT_SHORT,
+        "git_commit_date": _GIT_COMMIT_DATE,
+        "git_repo_url": _GIT_REPO_URL,
     }

@@ -56,8 +56,8 @@ def to_roman(num: int) -> str:
         return ""
 
     val = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1]
-    syms = ['M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I']
-    roman = ''
+    syms = ["M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"]
+    roman = ""
     for i, v in enumerate(val):
         while num >= v:
             roman += syms[i]
@@ -68,7 +68,7 @@ def to_roman(num: int) -> str:
 def normalize_skill_name(skill: str) -> str:
     """Normalize skill name for point tracking.
 
-    Groups skills by base name and type. 
+    Groups skills by base name and type.
     'Sword +1 to hit' and 'Sword +1 parry' are kept separate as 'Sword to hit' and 'Sword parry'.
     'Sword +1 to hit' and 'Sword +2 to hit' both become 'Sword to hit' (number stripped).
     """
@@ -79,23 +79,25 @@ def normalize_skill_name(skill: str) -> str:
 
     # Extract base name and suffix type, keeping them separate
     # Pattern: "BaseName +N suffix" -> "BaseName suffix"
-    match = re.match(r'^(.+?)\s*\+\d+\s+(to\s+hit|parry|damage)(\s*$)', skill, re.IGNORECASE)
+    match = re.match(
+        r"^(.+?)\s*\+\d+\s+(to\s+hit|parry|damage)(\s*$)", skill, re.IGNORECASE
+    )
     if match:
         base = match.group(1).strip()
         suffix = match.group(2).strip().lower()
         return f"{base} {suffix}"
-    
+
     # For skills with just +N (no specific suffix), strip the number
-    skill = re.sub(r'\s*\+\d+\s*$', '', skill, flags=re.IGNORECASE)
-    
+    skill = re.sub(r"\s*\+\d+\s*$", "", skill, flags=re.IGNORECASE)
+
     # Remove other patterns
     patterns = [
-        r'\s*\(x\d+\)\s*$',
-        r'\s+\d+\s*$',  # Trailing numbers with space
+        r"\s*\(x\d+\)\s*$",
+        r"\s+\d+\s*$",  # Trailing numbers with space
     ]
 
     for pattern in patterns:
-        skill = re.sub(pattern, '', skill, flags=re.IGNORECASE)
+        skill = re.sub(pattern, "", skill, flags=re.IGNORECASE)
 
     return skill.strip()
 
@@ -103,6 +105,7 @@ def normalize_skill_name(skill: str) -> str:
 @dataclass
 class SkillPoints:
     """Tracks points for a single skill."""
+
     automatic: int = 0  # Points from rolled skills during prior experience
     allocated: int = 0  # Points manually allocated by player
 
@@ -126,24 +129,24 @@ class SkillPoints:
         return {
             "automatic": self.automatic,
             "allocated": self.allocated,
-            "total": self.total
+            "total": self.total,
         }
 
     @classmethod
     def from_dict(cls, data: dict) -> "SkillPoints":
         """Create from dictionary (JSON deserialization)."""
         return cls(
-            automatic=data.get("automatic", 0),
-            allocated=data.get("allocated", 0)
+            automatic=data.get("automatic", 0), allocated=data.get("allocated", 0)
         )
 
 
 @dataclass
 class CharacterSkills:
     """Container for all character skills, free points, and XP."""
+
     skills: Dict[str, SkillPoints] = field(default_factory=dict)
     free_points: int = 0  # Unallocated free skill points
-    total_xp: int = 0     # Total experience points
+    total_xp: int = 0  # Total experience points
 
     def add_automatic_point(self, skill_name: str) -> None:
         """Add 1 automatic point from a rolled skill.
@@ -245,17 +248,19 @@ class CharacterSkills:
             level, excess = level_from_points(sp.total)
             points_needed = points_for_level(level + 1) - sp.total
 
-            result.append({
-                'name': name,
-                'display': self.get_skill_display(name),
-                'level': level,
-                'level_roman': to_roman(level) if level > 0 else '',
-                'total_points': sp.total,
-                'automatic_points': sp.automatic,
-                'allocated_points': sp.allocated,
-                'excess_points': excess,
-                'points_to_next_level': points_needed,
-            })
+            result.append(
+                {
+                    "name": name,
+                    "display": self.get_skill_display(name),
+                    "level": level,
+                    "level_roman": to_roman(level) if level > 0 else "",
+                    "total_points": sp.total,
+                    "automatic_points": sp.automatic,
+                    "allocated_points": sp.allocated,
+                    "excess_points": excess,
+                    "points_to_next_level": points_needed,
+                }
+            )
         return result
 
     def to_dict(self) -> dict:
@@ -263,7 +268,7 @@ class CharacterSkills:
         return {
             "skill_points": {name: sp.to_dict() for name, sp in self.skills.items()},
             "free_skill_points": self.free_points,
-            "total_xp": self.total_xp
+            "total_xp": self.total_xp,
         }
 
     @classmethod
@@ -276,11 +281,13 @@ class CharacterSkills:
         return cls(
             skills=skills,
             free_points=data.get("free_skill_points", 0),
-            total_xp=data.get("total_xp", 0)
+            total_xp=data.get("total_xp", 0),
         )
 
     @classmethod
-    def from_legacy_skills(cls, skill_list: List[str], years: int = 0) -> "CharacterSkills":
+    def from_legacy_skills(
+        cls, skill_list: List[str], years: int = 0
+    ) -> "CharacterSkills":
         """Create from legacy skill list format.
 
         Used for migrating existing characters.

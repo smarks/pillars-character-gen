@@ -9,7 +9,13 @@ from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 import random
-from pillars.dice import roll_dice, roll_with_drop_lowest, roll_demon_die, roll_percentile, roll_die
+from pillars.dice import (
+    roll_dice,
+    roll_with_drop_lowest,
+    roll_demon_die,
+    roll_percentile,
+    roll_die,
+)
 
 
 # Attribute names
@@ -22,12 +28,17 @@ ATTRIBUTE_MODIFIERS = {
     5: -3,
     6: -2,
     7: -1,
-    8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0,
+    8: 0,
+    9: 0,
+    10: 0,
+    11: 0,
+    12: 0,
+    13: 0,
     14: 1,
     15: 2,
     16: 3,
     17: 4,
-    18: 5
+    18: 5,
 }
 
 # Aging effects table: years of experience -> cumulative attribute penalties
@@ -35,21 +46,22 @@ ATTRIBUTE_MODIFIERS = {
 # Note: These are cumulative penalties applied at each threshold
 AGING_EFFECTS = {
     # 0-18 years (age 16-34): No penalties
-    19: {"STR": -1, "DEX": -1, "INT": 0, "WIS": 0, "CON": 0},   # Age 35-38 (term 5)
-    23: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": -1},    # Age 39-42 (term 6)
-    27: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},     # Age 43-46 (term 7)
-    31: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},     # Age 47-50 (term 8)
-    35: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},     # Age 51-54 (term 9)
-    39: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},     # Age 55-58 (term 10)
-    43: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},     # Age 59-62 (term 11)
-    47: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},     # Age 63-66 (term 12)
-    51: {"STR": -1, "DEX": -1, "INT": -1, "WIS": -1, "CON": -1}, # Age 67-70 (term 13)
+    19: {"STR": -1, "DEX": -1, "INT": 0, "WIS": 0, "CON": 0},  # Age 35-38 (term 5)
+    23: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": -1},  # Age 39-42 (term 6)
+    27: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},  # Age 43-46 (term 7)
+    31: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},  # Age 47-50 (term 8)
+    35: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},  # Age 51-54 (term 9)
+    39: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},  # Age 55-58 (term 10)
+    43: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},  # Age 59-62 (term 11)
+    47: {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0},  # Age 63-66 (term 12)
+    51: {"STR": -1, "DEX": -1, "INT": -1, "WIS": -1, "CON": -1},  # Age 67-70 (term 13)
 }
 
 
 @dataclass
 class AgingEffects:
     """Stores cumulative aging penalties for a character."""
+
     str_penalty: int = 0
     dex_penalty: int = 0
     int_penalty: int = 0
@@ -64,7 +76,7 @@ class AgingEffects:
             "INT": self.int_penalty,
             "WIS": self.wis_penalty,
             "CON": self.con_penalty,
-            "CHR": 0  # CHR is not affected by aging
+            "CHR": 0,  # CHR is not affected by aging
         }
 
     def apply_year(self, years_of_experience: int) -> Dict[str, int]:
@@ -87,11 +99,16 @@ class AgingEffects:
 
     def __str__(self) -> str:
         penalties = []
-        if self.str_penalty: penalties.append(f"STR {self.str_penalty:+d}")
-        if self.dex_penalty: penalties.append(f"DEX {self.dex_penalty:+d}")
-        if self.int_penalty: penalties.append(f"INT {self.int_penalty:+d}")
-        if self.wis_penalty: penalties.append(f"WIS {self.wis_penalty:+d}")
-        if self.con_penalty: penalties.append(f"CON {self.con_penalty:+d}")
+        if self.str_penalty:
+            penalties.append(f"STR {self.str_penalty:+d}")
+        if self.dex_penalty:
+            penalties.append(f"DEX {self.dex_penalty:+d}")
+        if self.int_penalty:
+            penalties.append(f"INT {self.int_penalty:+d}")
+        if self.wis_penalty:
+            penalties.append(f"WIS {self.wis_penalty:+d}")
+        if self.con_penalty:
+            penalties.append(f"CON {self.con_penalty:+d}")
 
         if penalties:
             return f"Aging Penalties: {', '.join(penalties)}"
@@ -121,6 +138,7 @@ def get_aging_effects_for_age(age: int) -> AgingEffects:
 @dataclass
 class AttributeRoll:
     """Stores the result of a single attribute roll."""
+
     attribute_name: str
     all_rolls: List[int]
     kept_rolls: List[int]
@@ -131,14 +149,19 @@ class AttributeRoll:
         """Format the roll result for display."""
         all_rolls_display = ", ".join(map(str, self.all_rolls))
         kept_rolls_display = ", ".join(map(str, self.kept_rolls))
-        modifier_display = f"+{self.modifier}" if self.modifier >= 0 else str(self.modifier)
-        return (f"{self.attribute_name}: {self.value} (modifier: {modifier_display})\n"
-                f"  Rolled: [{all_rolls_display}] → Kept: [{kept_rolls_display}]")
+        modifier_display = (
+            f"+{self.modifier}" if self.modifier >= 0 else str(self.modifier)
+        )
+        return (
+            f"{self.attribute_name}: {self.value} (modifier: {modifier_display})\n"
+            f"  Rolled: [{all_rolls_display}] → Kept: [{kept_rolls_display}]"
+        )
 
 
 @dataclass
 class CharacterAttributes:
     """Stores all character attributes and their modifiers."""
+
     STR: int
     DEX: int
     INT: int
@@ -201,7 +224,9 @@ class CharacterAttributes:
                 roll = roll_by_attr[attr]
                 all_str = ",".join(map(str, roll.all_rolls))
                 kept_str = ",".join(map(str, roll.kept_rolls))
-                lines.append(f"- {attr}: {value:2d} ({mod_str})  [rolled {all_str} → kept {kept_str}]")
+                lines.append(
+                    f"- {attr}: {value:2d} ({mod_str})  [rolled {all_str} → kept {kept_str}]"
+                )
             else:
                 lines.append(f"- {attr}: {value:2d} ({mod_str})")
 
@@ -212,15 +237,23 @@ class CharacterAttributes:
         wis_mod = self.get_modifier("WIS")
         int_mod_str = f"{int_mod:+d}" if int_mod != 0 else ""
         wis_mod_str = f"{wis_mod:+d}" if wis_mod != 0 else ""
-        mod_str = f"{int_mod_str}{wis_mod_str}" if (int_mod != 0 or wis_mod != 0) else ""
+        mod_str = (
+            f"{int_mod_str}{wis_mod_str}" if (int_mod != 0 or wis_mod != 0) else ""
+        )
 
         # Fatigue: CON + WIS + max(STR,DEX) + 1d6 + INT/WIS mods
-        fatigue_calc = f"{self.CON}+{self.WIS}+{higher_phys}+{self.fatigue_roll}{mod_str}"
-        lines.append(f"- Fatigue Points: {self.fatigue_points}  (CON+WIS+{higher_phys_name}+1d6 = {fatigue_calc})")
+        fatigue_calc = (
+            f"{self.CON}+{self.WIS}+{higher_phys}+{self.fatigue_roll}{mod_str}"
+        )
+        lines.append(
+            f"- Fatigue Points: {self.fatigue_points}  (CON+WIS+{higher_phys_name}+1d6 = {fatigue_calc})"
+        )
 
         # Body: CON + max(STR,DEX) + 1d6 + INT/WIS mods
         body_calc = f"{self.CON}+{higher_phys}+{self.body_roll}{mod_str}"
-        lines.append(f"- Body Points: {self.body_points}  (CON+{higher_phys_name}+1d6 = {body_calc})")
+        lines.append(
+            f"- Body Points: {self.body_points}  (CON+{higher_phys_name}+1d6 = {body_calc})"
+        )
 
         return "\n".join(lines)
 
@@ -228,10 +261,10 @@ class CharacterAttributes:
 def format_total_modifier(modifiers: Dict[str, int]) -> str:
     """
     Format total modifier as a string with sign.
-    
+
     Args:
         modifiers: Dictionary of attribute modifiers
-        
+
     Returns:
         Formatted string like "+5" or "-2"
     """
@@ -380,14 +413,12 @@ def generate_attributes_3d6() -> CharacterAttributes:
             all_rolls=rolls,
             kept_rolls=rolls,  # 3d6 keeps all rolls
             value=total,
-            modifier=get_attribute_modifier(total)
+            modifier=get_attribute_modifier(total),
         )
         roll_details.append(roll_detail)
 
     return CharacterAttributes(
-        **attributes,
-        generation_method="3d6",
-        roll_details=roll_details
+        **attributes, generation_method="3d6", roll_details=roll_details
     )
 
 
@@ -418,7 +449,7 @@ def generate_attributes_4d6_drop_lowest() -> CharacterAttributes:
             all_rolls=all_rolls,
             kept_rolls=kept_rolls,
             value=total,
-            modifier=get_attribute_modifier(total)
+            modifier=get_attribute_modifier(total),
         )
         roll_details.append(roll_detail)
 
@@ -437,7 +468,7 @@ def generate_attributes_4d6_drop_lowest() -> CharacterAttributes:
         dex=attributes["DEX"],
         int_mod=int_mod,
         wis_mod=wis_mod,
-        roll=fatigue_roll
+        roll=fatigue_roll,
     )
 
     body_points = calculate_body_points(
@@ -446,7 +477,7 @@ def generate_attributes_4d6_drop_lowest() -> CharacterAttributes:
         dex=attributes["DEX"],
         int_mod=int_mod,
         wis_mod=wis_mod,
-        roll=body_roll
+        roll=body_roll,
     )
 
     return CharacterAttributes(
@@ -456,7 +487,7 @@ def generate_attributes_4d6_drop_lowest() -> CharacterAttributes:
         fatigue_points=fatigue_points,
         body_points=body_points,
         fatigue_roll=fatigue_roll,
-        body_roll=body_roll
+        body_roll=body_roll,
     )
 
 
@@ -479,13 +510,13 @@ def generate_attributes_point_buy(points: int = 65) -> CharacterAttributes:
     attributes = {attr: min_value for attr in CORE_ATTRIBUTES}
 
     return CharacterAttributes(
-        **attributes,
-        generation_method=f"Point Buy ({points} points)",
-        roll_details=[]
+        **attributes, generation_method=f"Point Buy ({points} points)", roll_details=[]
     )
 
 
-def validate_point_buy(attributes: Dict[str, int], total_points: int = 65) -> Tuple[bool, str]:
+def validate_point_buy(
+    attributes: Dict[str, int], total_points: int = 65
+) -> Tuple[bool, str]:
     """
     Validate that point buy allocation is legal.
 
@@ -517,7 +548,10 @@ def validate_point_buy(attributes: Dict[str, int], total_points: int = 65) -> Tu
     # Check total points
     total_used = sum(attributes.values())
     if total_used != total_points:
-        return False, f"Total points ({total_used}) does not equal allowed points ({total_points})"
+        return (
+            False,
+            f"Total points ({total_used}) does not equal allowed points ({total_points})",
+        )
 
     return True, ""
 
@@ -551,6 +585,7 @@ def display_attribute_rolls(character: CharacterAttributes) -> None:
 @dataclass
 class Appearance:
     """Stores the result of an appearance roll using a demon die."""
+
     rolls: List[int]
     intensity: int
     description: str
@@ -622,16 +657,13 @@ def roll_appearance() -> Appearance:
     rolls, intensity = roll_demon_die()
     description = get_appearance_description(intensity)
 
-    return Appearance(
-        rolls=rolls,
-        intensity=intensity,
-        description=description
-    )
+    return Appearance(rolls=rolls, intensity=intensity, description=description)
 
 
 @dataclass
 class Height:
     """Stores the result of a height roll."""
+
     rolls: List[int]
     hands: int
     inches: int
@@ -658,12 +690,12 @@ class Height:
 
 # Height table: d6 value -> (hands, inches)
 HEIGHT_TABLE = {
-    1: (14, 56),   # 4'8"
-    2: (15, 60),   # 5'0"
-    3: (16, 64),   # 5'4"
-    4: (17, 68),   # 5'8"
-    5: (18, 72),   # 6'0"
-    6: (19, 76),   # 6'4"
+    1: (14, 56),  # 4'8"
+    2: (15, 60),  # 5'0"
+    3: (16, 64),  # 5'4"
+    4: (17, 68),  # 5'8"
+    5: (18, 72),  # 6'0"
+    6: (19, 76),  # 6'4"
 }
 
 
@@ -705,6 +737,7 @@ def roll_height() -> Height:
 @dataclass
 class Weight:
     """Stores the result of a weight roll."""
+
     rolls: List[int]
     base_stones: int
     str_bonus_stones: float
@@ -717,9 +750,11 @@ class Weight:
 
     def __str__(self) -> str:
         rolls_str = ", ".join(map(str, self.rolls))
-        return (f"Weight: {self.total_stones:.1f} stones ({self.total_pounds} lbs) "
-                f"(Base: {self.base_stones}, STR bonus: {self.str_bonus_stones:.1f}) "
-                f"(Rolled: [{rolls_str}])")
+        return (
+            f"Weight: {self.total_stones:.1f} stones ({self.total_pounds} lbs) "
+            f"(Base: {self.base_stones}, STR bonus: {self.str_bonus_stones:.1f}) "
+            f"(Rolled: [{rolls_str}])"
+        )
 
 
 # Weight table: d6 value -> base stones
@@ -773,13 +808,14 @@ def roll_weight(strength: int) -> Weight:
         rolls=rolls,
         base_stones=base_stones,
         str_bonus_stones=str_bonus,
-        total_stones=total_stones
+        total_stones=total_stones,
     )
 
 
 @dataclass
 class Provenance:
     """Stores the result of a provenance (social class) roll."""
+
     main_roll: int
     sub_roll: Optional[int]
     craft_roll: Optional[int]
@@ -928,7 +964,7 @@ def roll_provenance() -> Provenance:
         craft_roll=craft_roll,
         social_class=social_class,
         sub_class=sub_class,
-        craft_type=craft_type
+        craft_type=craft_type,
     )
 
 
@@ -939,6 +975,7 @@ SURVIVAL_SKILLS = ["Survival", "Hunting", "Tracking", "Wood Lore", "Herb Lore"]
 @dataclass
 class LiteracyCheck:
     """Stores the result of a literacy check using 3d6 roll-under."""
+
     roll: int
     int_value: int
     difficulty_modifier: int
@@ -953,7 +990,7 @@ class LiteracyCheck:
             diff_str = f"+{abs(self.difficulty_modifier)}"
 
         result = "Literate" if self.is_literate else "Illiterate"
-        return (f"Literacy: {result} (Rolled {self.roll} vs INT {self.int_value}{diff_str} = {self.target})")
+        return f"Literacy: {result} (Rolled {self.roll} vs INT {self.int_value}{diff_str} = {self.target})"
 
 
 def roll_literacy_check(int_value: int, difficulty_modifier: int = 0) -> LiteracyCheck:
@@ -981,19 +1018,24 @@ def roll_literacy_check(int_value: int, difficulty_modifier: int = 0) -> Literac
         int_value=int_value,
         difficulty_modifier=difficulty_modifier,
         target=target,
-        is_literate=is_literate
+        is_literate=is_literate,
     )
 
 
 @dataclass
 class Location:
     """Stores the result of a location roll."""
+
     roll: int
     location_type: str
     skills: List[str]
-    skill_roll: Optional[int]  # For Village skill selection (1-2 = Street Smarts, 3-6 = Survival)
+    skill_roll: Optional[
+        int
+    ]  # For Village skill selection (1-2 = Street Smarts, 3-6 = Survival)
     attribute_modifiers: Dict[str, int]
-    attribute_roll: Optional[int]  # For Village attribute selection (1=INT, 2=WIS, 3=STR, 4=DEX)
+    attribute_roll: Optional[
+        int
+    ]  # For Village attribute selection (1=INT, 2=WIS, 3=STR, 4=DEX)
     skill_rolls: Optional[List[int]]  # For Rural skill selection
     literacy_check_modifier: int
 
@@ -1007,7 +1049,10 @@ class Location:
                 lines.append(f"  Skill: {self.skills[0]} (Rolled: {self.skill_roll})")
             elif self.skill_rolls is not None:
                 # Rural: show the rolls for each skill
-                skills_with_rolls = [f"{skill} ({roll})" for skill, roll in zip(self.skills, self.skill_rolls)]
+                skills_with_rolls = [
+                    f"{skill} ({roll})"
+                    for skill, roll in zip(self.skills, self.skill_rolls)
+                ]
                 lines.append(f"  Skills: {', '.join(skills_with_rolls)}")
             else:
                 # City: fixed skill
@@ -1025,7 +1070,9 @@ class Location:
                     mods.append(f"{mod} {attr}")
             if self.attribute_roll is not None:
                 # Village: show the roll
-                lines.append(f"  Attribute Modifier: {', '.join(mods)} (Rolled: {self.attribute_roll})")
+                lines.append(
+                    f"  Attribute Modifier: {', '.join(mods)} (Rolled: {self.attribute_roll})"
+                )
             else:
                 # City/Rural: fixed modifiers
                 lines.append(f"  Attribute Modifiers: {', '.join(mods)}")
@@ -1108,13 +1155,14 @@ def roll_location() -> Location:
         attribute_modifiers=attribute_modifiers,
         attribute_roll=attribute_roll,
         skill_rolls=skill_rolls,
-        literacy_check_modifier=literacy_check_modifier
+        literacy_check_modifier=literacy_check_modifier,
     )
 
 
 @dataclass
 class Wealth:
     """Stores the result of a wealth roll."""
+
     roll: int
     wealth_level: str
     starting_coin: int
@@ -1202,7 +1250,7 @@ def roll_wealth(allow_rich: bool = True) -> Wealth:
         roll=roll,
         wealth_level=wealth_level,
         starting_coin=starting_coin,
-        bonus_roll=bonus_roll
+        bonus_roll=bonus_roll,
     )
 
 
@@ -1210,8 +1258,10 @@ def roll_wealth(allow_rich: bool = True) -> Wealth:
 # SKILL TRACKS
 # =============================================================================
 
+
 class TrackType(Enum):
     """Enumeration of available skill tracks."""
+
     ARMY = "Army"
     NAVY = "Navy"
     RANGER = "Ranger"
@@ -1225,6 +1275,7 @@ class TrackType(Enum):
 
 class CraftType(Enum):
     """Enumeration of craft specializations."""
+
     SMITH = "Smith"
     AGRICULTURE = "Agriculture"
     TAILOR = "Tailor"
@@ -1241,6 +1292,7 @@ class CraftType(Enum):
 
 class MagicSchool(Enum):
     """Enumeration of magic schools."""
+
     # Common Schools (0-70 percentile)
     ELEMENTAL_FIRE = "Elemental Fire"
     ELEMENTAL_LIGHTNING = "Elemental Lightning"
@@ -1272,12 +1324,10 @@ from pillars.constants import (
 
 
 @dataclass
-
-
-
 @dataclass
 class AcceptanceCheck:
     """Stores the result of a track acceptance check."""
+
     track: TrackType
     accepted: bool
     roll: Optional[int]
@@ -1289,26 +1339,26 @@ class AcceptanceCheck:
         if self.roll is not None:
             mod_parts = [f"{attr} {mod:+d}" for attr, mod in self.modifiers.items()]
             mod_str = " + ".join(mod_parts) if mod_parts else "no modifiers"
-            return (f"{self.track.value}: {'Accepted' if self.accepted else 'Rejected'} "
-                    f"(Rolled {self.roll} + {mod_str} vs {self.target}+) - {self.reason}")
+            return (
+                f"{self.track.value}: {'Accepted' if self.accepted else 'Rejected'} "
+                f"(Rolled {self.roll} + {mod_str} vs {self.target}+) - {self.reason}"
+            )
         return f"{self.track.value}: {'Accepted' if self.accepted else 'Rejected'} - {self.reason}"
 
 
-def create_auto_accept_check(track: TrackType, reason: str = "No requirements") -> AcceptanceCheck:
+def create_auto_accept_check(
+    track: TrackType, reason: str = "No requirements"
+) -> AcceptanceCheck:
     """Create an AcceptanceCheck for tracks that auto-accept."""
     return AcceptanceCheck(
-        track=track,
-        accepted=True,
-        roll=None,
-        target=None,
-        modifiers={},
-        reason=reason
+        track=track, accepted=True, roll=None, target=None, modifiers={}, reason=reason
     )
 
 
 @dataclass
 class SkillTrack:
     """Stores the selected skill track and related information."""
+
     track: TrackType
     acceptance_check: Optional[AcceptanceCheck]
     survivability: int
@@ -1316,18 +1366,24 @@ class SkillTrack:
     initial_skills: List[str]
     craft_type: Optional[CraftType]  # For Crafts track
     craft_rolls: Optional[List[int]]  # Rolls made to determine craft
-    magic_school: Optional['MagicSchool'] = None  # For Magic track
-    magic_school_rolls: Optional[Dict[str, int]] = None  # Rolls made to determine school
+    magic_school: Optional["MagicSchool"] = None  # For Magic track
+    magic_school_rolls: Optional[Dict[str, int]] = (
+        None  # Rolls made to determine school
+    )
 
     def __str__(self) -> str:
         lines = [f"Skill Track: {self.track.value}"]
         if self.survivability_roll is not None:
-            lines.append(f"  Survivability: {self.survivability} (Rolled: {self.survivability_roll})")
+            lines.append(
+                f"  Survivability: {self.survivability} (Rolled: {self.survivability_roll})"
+            )
         else:
             lines.append(f"  Survivability: {self.survivability}")
 
         if self.craft_type:
-            rolls_str = ", ".join(map(str, self.craft_rolls)) if self.craft_rolls else ""
+            rolls_str = (
+                ", ".join(map(str, self.craft_rolls)) if self.craft_rolls else ""
+            )
             lines.append(f"  Craft: {self.craft_type.value} (Rolled: [{rolls_str}])")
 
         if self.magic_school:
@@ -1415,12 +1471,12 @@ def roll_magic_school() -> Tuple[MagicSchool, Dict[str, int]]:
 
     # Roll percentile (1-100)
     percentile = roll_percentile()
-    rolls['percentile'] = percentile
+    rolls["percentile"] = percentile
 
     if percentile <= 70:
         # Common Schools - roll d12
         school_roll = roll_die(12)
-        rolls['school'] = school_roll
+        rolls["school"] = school_roll
 
         if school_roll <= 3:
             return MagicSchool.ELEMENTAL_FIRE, rolls
@@ -1443,7 +1499,7 @@ def roll_magic_school() -> Tuple[MagicSchool, Dict[str, int]]:
     else:
         # Less Common Schools - roll d6
         school_roll = roll_die(6)
-        rolls['school'] = school_roll
+        rolls["school"] = school_roll
 
         if school_roll <= 3:
             return MagicSchool.WEATHER, rolls
@@ -1474,7 +1530,7 @@ def check_magic_acceptance(int_mod: int, wis_mod: int) -> AcceptanceCheck:
         roll=None,
         target=None,
         modifiers={"INT": int_mod, "WIS": wis_mod},
-        reason=reason
+        reason=reason,
     )
 
 
@@ -1494,7 +1550,7 @@ def check_army_acceptance(str_mod: int, dex_mod: int) -> AcceptanceCheck:
         roll=roll,
         target=target,
         modifiers={"STR": str_mod, "DEX": dex_mod},
-        reason=f"Total {total} {'≥' if accepted else '<'} {target}"
+        reason=f"Total {total} {'≥' if accepted else '<'} {target}",
     )
 
 
@@ -1514,11 +1570,13 @@ def check_navy_acceptance(str_mod: int, dex_mod: int, int_mod: int) -> Acceptanc
         roll=roll,
         target=target,
         modifiers={"STR": str_mod, "DEX": dex_mod, "INT": int_mod},
-        reason=f"Total {total} {'≥' if accepted else '<'} {target}"
+        reason=f"Total {total} {'≥' if accepted else '<'} {target}",
     )
 
 
-def check_ranger_acceptance(str_mod: int, dex_mod: int, int_mod: int, wis_mod: int) -> AcceptanceCheck:
+def check_ranger_acceptance(
+    str_mod: int, dex_mod: int, int_mod: int, wis_mod: int
+) -> AcceptanceCheck:
     """
     Check if character meets Ranger track requirements.
     Requirement: STR or DEX bonus required AND INT or WIS bonus required
@@ -1543,11 +1601,13 @@ def check_ranger_acceptance(str_mod: int, dex_mod: int, int_mod: int, wis_mod: i
         roll=None,
         target=None,
         modifiers={"STR": str_mod, "DEX": dex_mod, "INT": int_mod, "WIS": wis_mod},
-        reason="; ".join(reason_parts)
+        reason="; ".join(reason_parts),
     )
 
 
-def check_officer_acceptance(wealth_level: str, is_promoted: bool = False) -> AcceptanceCheck:
+def check_officer_acceptance(
+    wealth_level: str, is_promoted: bool = False
+) -> AcceptanceCheck:
     """
     Check if character meets Officer track requirements.
     Requirement: Must be promoted OR be Rich
@@ -1568,7 +1628,7 @@ def check_officer_acceptance(wealth_level: str, is_promoted: bool = False) -> Ac
         roll=None,
         target=None,
         modifiers={},
-        reason=reason
+        reason=reason,
     )
 
 
@@ -1584,8 +1644,7 @@ def is_poor(wealth_level: str) -> bool:
 
 def is_working_class(wealth_level: str, social_class: str) -> bool:
     """Check if character is working class."""
-    return (wealth_level == "Moderate" and
-            social_class in ["Commoner", "Laborer"])
+    return wealth_level == "Moderate" and social_class in ["Commoner", "Laborer"]
 
 
 def check_merchant_acceptance(social_class: str, wealth_level: str) -> AcceptanceCheck:
@@ -1620,7 +1679,7 @@ def check_merchant_acceptance(social_class: str, wealth_level: str) -> Acceptanc
         roll=roll,
         target=target,
         modifiers={},
-        reason=f"Roll {roll} {'≥' if accepted else '<'} {target} ({class_desc})"
+        reason=f"Roll {roll} {'≥' if accepted else '<'} {target} ({class_desc})",
     )
 
 
@@ -1629,31 +1688,31 @@ def calculate_roll_availability(
     max_roll: int,
     total_modifier: int,
     target: int,
-    requirement_desc: str
+    requirement_desc: str,
 ) -> Dict:
     """
     Calculate track availability based on roll range and modifier.
-    
+
     Args:
         min_roll: Minimum possible roll (e.g., 2 for 2d6)
         max_roll: Maximum possible roll (e.g., 12 for 2d6)
         total_modifier: Total modifier to add to roll
         target: Target number to meet or exceed
         requirement_desc: Description of the requirement
-        
+
     Returns:
         Dictionary with availability information
     """
     min_total = min_roll + total_modifier
     max_total = max_roll + total_modifier
-    
+
     return {
-        'available': max_total >= target,
-        'requires_roll': True,
-        'auto_accept': min_total >= target,
-        'impossible': max_total < target,
-        'requirement': requirement_desc,
-        'roll_info': f"Need {target}+, your modifier: {total_modifier:+d}"
+        "available": max_total >= target,
+        "requires_roll": True,
+        "auto_accept": min_total >= target,
+        "impossible": max_total < target,
+        "requirement": requirement_desc,
+        "roll_info": f"Need {target}+, your modifier: {total_modifier:+d}",
     }
 
 
@@ -1664,7 +1723,7 @@ def get_track_availability(
     wis_mod: int,
     social_class: str,
     wealth_level: str,
-    is_promoted: bool = False
+    is_promoted: bool = False,
 ) -> Dict[TrackType, Dict]:
     """
     Get availability status for all tracks without rolling dice.
@@ -1686,12 +1745,12 @@ def get_track_availability(
     # Always available tracks (no requirements)
     for track in [TrackType.RANDOM, TrackType.WORKER, TrackType.CRAFTS]:
         availability[track] = {
-            'available': True,
-            'requires_roll': False,
-            'auto_accept': True,
-            'impossible': False,
-            'requirement': "No requirements",
-            'roll_info': None
+            "available": True,
+            "requires_roll": False,
+            "auto_accept": True,
+            "impossible": False,
+            "requirement": "No requirements",
+            "roll_info": None,
         }
 
     # Army: 8+ on 2d6 + STR + DEX
@@ -1701,7 +1760,7 @@ def get_track_availability(
         max_roll=12,
         total_modifier=total_mod,
         target=8,
-        requirement_desc=f"2d6 + STR({str_mod:+d}) + DEX({dex_mod:+d}) ≥ 8"
+        requirement_desc=f"2d6 + STR({str_mod:+d}) + DEX({dex_mod:+d}) ≥ 8",
     )
 
     # Navy: 8+ on 2d6 + STR + DEX + INT
@@ -1711,7 +1770,7 @@ def get_track_availability(
         max_roll=12,
         total_modifier=total_mod,
         target=8,
-        requirement_desc=f"2d6 + STR({str_mod:+d}) + DEX({dex_mod:+d}) + INT({int_mod:+d}) ≥ 8"
+        requirement_desc=f"2d6 + STR({str_mod:+d}) + DEX({dex_mod:+d}) + INT({int_mod:+d}) ≥ 8",
     )
 
     # Ranger: Need STR or DEX bonus AND INT or WIS bonus (no roll)
@@ -1719,23 +1778,23 @@ def get_track_availability(
     has_mental = int_mod > 0 or wis_mod > 0
     ranger_eligible = has_physical and has_mental
     availability[TrackType.RANGER] = {
-        'available': ranger_eligible,
-        'requires_roll': False,
-        'auto_accept': ranger_eligible,
-        'impossible': not ranger_eligible,
-        'requirement': "Requires STR or DEX bonus AND INT or WIS bonus",
-        'roll_info': None
+        "available": ranger_eligible,
+        "requires_roll": False,
+        "auto_accept": ranger_eligible,
+        "impossible": not ranger_eligible,
+        "requirement": "Requires STR or DEX bonus AND INT or WIS bonus",
+        "roll_info": None,
     }
 
     # Officer: Must be Rich or promoted (no roll)
     officer_eligible = is_rich(wealth_level) or is_promoted
     availability[TrackType.OFFICER] = {
-        'available': officer_eligible,
-        'requires_roll': False,
-        'auto_accept': officer_eligible,
-        'impossible': not officer_eligible,
-        'requirement': "Requires Rich wealth or promotion",
-        'roll_info': None
+        "available": officer_eligible,
+        "requires_roll": False,
+        "auto_accept": officer_eligible,
+        "impossible": not officer_eligible,
+        "requirement": "Requires Rich wealth or promotion",
+        "roll_info": None,
     }
 
     # Merchant: 2d6 vs variable target based on social standing
@@ -1754,18 +1813,18 @@ def get_track_availability(
         max_roll=12,
         total_modifier=0,  # No attribute modifiers for merchant
         target=target,
-        requirement_desc=f"2d6 ≥ {target} ({class_desc})"
+        requirement_desc=f"2d6 ≥ {target} ({class_desc})",
     )
 
     # Magic track: Requires INT or WIS bonus (no roll, just attribute check)
     has_mental = int_mod > 0 or wis_mod > 0
     availability[TrackType.MAGIC] = {
-        'available': has_mental,
-        'requires_roll': False,
-        'auto_accept': has_mental,
-        'impossible': not has_mental,
-        'requirement': "Requires INT or WIS bonus",
-        'roll_info': None
+        "available": has_mental,
+        "requires_roll": False,
+        "auto_accept": has_mental,
+        "impossible": not has_mental,
+        "requirement": "Requires INT or WIS bonus",
+        "roll_info": None,
     }
 
     return availability
@@ -1785,17 +1844,17 @@ def build_skill_track(
     track: TrackType,
     acceptance_check: AcceptanceCheck,
     sub_class: str,
-    wealth_level: str
+    wealth_level: str,
 ) -> SkillTrack:
     """
     Build a complete SkillTrack object from track type and acceptance check.
-    
+
     Args:
         track: The track type
         acceptance_check: The acceptance check result
         sub_class: Character's sub-class
         wealth_level: Character's wealth level
-        
+
     Returns:
         Complete SkillTrack object
     """
@@ -1808,9 +1867,9 @@ def build_skill_track(
             survivability_roll=None,
             initial_skills=[],
             craft_type=None,
-            craft_rolls=None
+            craft_rolls=None,
         )
-    
+
     # Determine survivability
     survivability_roll = None
     if track == TrackType.RANDOM:
@@ -1819,16 +1878,16 @@ def build_skill_track(
         survivability = TRACK_SURVIVABILITY.get(track, 5)
         if survivability is None:
             survivability = 5
-    
+
     # Get initial skills
     initial_skills = list(TRACK_INITIAL_SKILLS.get(track, []))
-    
+
     # Handle special cases
     craft_type = None
     craft_rolls = None
     magic_school = None
     magic_school_rolls = None
-    
+
     if track == TrackType.WORKER:
         if wealth_level == "Subsistence" or sub_class == "Laborer":
             initial_skills.append("Laborer (bonus)")
@@ -1838,7 +1897,7 @@ def build_skill_track(
     elif track == TrackType.MAGIC:
         magic_school, magic_school_rolls = roll_magic_school()
         initial_skills.extend(get_magic_initial_skills(magic_school))
-    
+
     return SkillTrack(
         track=track,
         acceptance_check=acceptance_check,
@@ -1848,7 +1907,7 @@ def build_skill_track(
         craft_type=craft_type,
         craft_rolls=craft_rolls,
         magic_school=magic_school,
-        magic_school_rolls=magic_school_rolls
+        magic_school_rolls=magic_school_rolls,
     )
 
 
@@ -1861,7 +1920,7 @@ def create_skill_track_for_choice(
     social_class: str,
     sub_class: str,
     wealth_level: str,
-    is_promoted: bool = False
+    is_promoted: bool = False,
 ) -> SkillTrack:
     """
     Create a skill track for a user-chosen track, rolling for acceptance if needed.
@@ -1897,8 +1956,12 @@ def create_skill_track_for_choice(
     else:
         # Unknown track
         acceptance_check = AcceptanceCheck(
-            track=chosen_track, accepted=False, roll=None, target=None,
-            modifiers={}, reason="Unknown track"
+            track=chosen_track,
+            accepted=False,
+            roll=None,
+            target=None,
+            modifiers={},
+            reason="Unknown track",
         )
 
     # Build the skill track using the helper function
@@ -1912,7 +1975,7 @@ def get_eligible_tracks(
     wis_mod: int,
     social_class: str,
     wealth_level: str,
-    is_promoted: bool = False
+    is_promoted: bool = False,
 ) -> List[Tuple[TrackType, AcceptanceCheck]]:
     """
     Determine which tracks a character is eligible for.
@@ -1964,7 +2027,7 @@ def select_optimal_track(
     social_class: str,
     wealth_level: str,
     sub_class: str,
-    is_promoted: bool = False
+    is_promoted: bool = False,
 ) -> Tuple[TrackType, AcceptanceCheck]:
     """
     Select the optimal track for a character based on their attributes.
@@ -1983,8 +2046,7 @@ def select_optimal_track(
         Tuple of (selected TrackType, AcceptanceCheck)
     """
     eligible = get_eligible_tracks(
-        str_mod, dex_mod, int_mod, wis_mod,
-        social_class, wealth_level, is_promoted
+        str_mod, dex_mod, int_mod, wis_mod, social_class, wealth_level, is_promoted
     )
 
     eligible_types = {t for t, _ in eligible}
@@ -2043,7 +2105,7 @@ def roll_skill_track(
     sub_class: str,
     wealth_level: str,
     is_promoted: bool = False,
-    optimize: bool = True
+    optimize: bool = True,
 ) -> SkillTrack:
     """
     Determine and roll for a character's skill track.
@@ -2064,13 +2126,18 @@ def roll_skill_track(
     """
     if optimize:
         track, acceptance_check = select_optimal_track(
-            str_mod, dex_mod, int_mod, wis_mod,
-            social_class, wealth_level, sub_class, is_promoted
+            str_mod,
+            dex_mod,
+            int_mod,
+            wis_mod,
+            social_class,
+            wealth_level,
+            sub_class,
+            is_promoted,
         )
     else:
         eligible = get_eligible_tracks(
-            str_mod, dex_mod, int_mod, wis_mod,
-            social_class, wealth_level, is_promoted
+            str_mod, dex_mod, int_mod, wis_mod, social_class, wealth_level, is_promoted
         )
         track, acceptance_check = random.choice(eligible)
 
@@ -2088,6 +2155,7 @@ def roll_skill_track(
 @dataclass
 class YearResult:
     """Result of a single year of prior experience."""
+
     year: int  # Age (16+)
     track: TrackType
     skill_gained: str
@@ -2098,19 +2166,29 @@ class YearResult:
     survivability_modifier: int  # Sum of all attribute modifiers
     survivability_total: int  # Roll + modifier
     survived: bool
-    aging_penalties: Optional[Dict[str, int]] = None  # Any new aging penalties this year
+    aging_penalties: Optional[Dict[str, int]] = (
+        None  # Any new aging penalties this year
+    )
     free_skill_points: int = 1  # Free point to allocate to any skill
     xp_gained: int = 1000  # Experience points gained this year
 
     def __str__(self) -> str:
         status = "Survived" if self.survived else "DIED"
-        mod_str = f"{self.survivability_modifier:+d}" if self.survivability_modifier != 0 else "+0"
-        result = (f"Year {self.year}: {self.skill_gained} (+1 SP, +1 free, +{self.xp_gained} XP) | "
-                  f"Survival: {self.survivability_roll}{mod_str}={self.survivability_total} vs {self.survivability_target}+ [{status}]")
+        mod_str = (
+            f"{self.survivability_modifier:+d}"
+            if self.survivability_modifier != 0
+            else "+0"
+        )
+        result = (
+            f"Year {self.year}: {self.skill_gained} (+1 SP, +1 free, +{self.xp_gained} XP) | "
+            f"Survival: {self.survivability_roll}{mod_str}={self.survivability_total} vs {self.survivability_target}+ [{status}]"
+        )
 
         # Show aging penalties if any were applied this year
         if self.aging_penalties:
-            penalties = [f"{k} {v:+d}" for k, v in self.aging_penalties.items() if v != 0]
+            penalties = [
+                f"{k} {v:+d}" for k, v in self.aging_penalties.items() if v != 0
+            ]
             if penalties:
                 result += f" | AGING: {', '.join(penalties)}"
 
@@ -2120,6 +2198,7 @@ class YearResult:
 @dataclass
 class PriorExperience:
     """Complete prior experience record for a character."""
+
     starting_age: int  # Always 16
     final_age: int  # Age at end (or death)
     years_served: int
@@ -2186,9 +2265,7 @@ class PriorExperience:
 
 
 def roll_yearly_skill(
-    track: TrackType,
-    year_index: int,
-    magic_school: Optional[MagicSchool] = None
+    track: TrackType, year_index: int, magic_school: Optional[MagicSchool] = None
 ) -> Tuple[str, int]:
     """
     Roll for a skill from the track's skill table.
@@ -2224,7 +2301,9 @@ def roll_yearly_skill(
     return skill, roll
 
 
-def roll_survivability_check(survivability: int, total_modifier: int = 0) -> Tuple[int, int, bool]:
+def roll_survivability_check(
+    survivability: int, total_modifier: int = 0
+) -> Tuple[int, int, bool]:
     """
     Roll a survivability check (3d6 + all attribute modifiers >= survivability target).
 
@@ -2245,7 +2324,7 @@ def roll_single_year(
     skill_track: SkillTrack,
     year_index: int,
     total_modifier: int,
-    aging_effects: AgingEffects
+    aging_effects: AgingEffects,
 ) -> YearResult:
     """
     Roll a single year of prior experience.
@@ -2277,7 +2356,9 @@ def roll_single_year(
     skill, skill_roll = roll_yearly_skill(track, year_index, skill_track.magic_school)
 
     # Survivability check (3d6 + all attribute modifiers >= target)
-    surv_roll, surv_total, survived = roll_survivability_check(survivability, adjusted_modifier)
+    surv_roll, surv_total, survived = roll_survivability_check(
+        survivability, adjusted_modifier
+    )
 
     return YearResult(
         year=current_age,
@@ -2290,7 +2371,7 @@ def roll_single_year(
         survivability_modifier=adjusted_modifier,
         survivability_total=surv_total,
         survived=survived,
-        aging_penalties=aging_this_year if has_aging else None
+        aging_penalties=aging_this_year if has_aging else None,
     )
 
 
@@ -2300,7 +2381,7 @@ def roll_prior_experience(
     total_modifier: int = 0,
     attribute_scores: Optional[Dict[str, int]] = None,
     attribute_modifiers: Optional[Dict[str, int]] = None,
-    allow_aging: bool = False
+    allow_aging: bool = False,
 ) -> PriorExperience:
     """
     Generate prior experience for a character.
@@ -2359,7 +2440,7 @@ def roll_prior_experience(
             skill_track=skill_track,
             year_index=year_index,
             total_modifier=total_modifier,
-            aging_effects=aging_effects
+            aging_effects=aging_effects,
         )
 
         # Grant initial skills after completing first year (age 17)
@@ -2395,5 +2476,5 @@ def roll_prior_experience(
         attribute_modifiers=attribute_modifiers,
         aging_effects=aging_effects if years_served > 18 else None,
         total_free_points=total_free_points,
-        total_xp=total_xp
+        total_xp=total_xp,
     )

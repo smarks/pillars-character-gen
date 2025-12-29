@@ -500,6 +500,7 @@
                     <div class="menu-section">Manage</div>
                     <div class="menu-sub">
                         <a href="{% url 'my_profile' %}">My Profile</a>
+                        <a href="{% url 'my_characters' %}">My Characters</a>
                         {% if user.profile.is_admin %}
                         <a href="{% url 'manage_users' %}">Users</a>
                         {% endif %}

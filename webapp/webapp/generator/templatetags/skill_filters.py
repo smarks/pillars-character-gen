@@ -8,15 +8,15 @@ register = template.Library()
 def consolidate_skills(skills):
     """
     Consolidate skills using the skill point system with triangular numbers.
-    
+
     Each skill occurrence = 1 skill point.
     Skills are grouped by base name (normalized).
     Display uses triangular numbers: Level 1 = 1pt, Level 2 = 3pts, Level 3 = 6pts, etc.
-    
+
     Examples:
-        ['Cutlass +1 to hit', 'Cutlass +1 to hit', 'Cutlass +1 to hit'] 
+        ['Cutlass +1 to hit', 'Cutlass +1 to hit', 'Cutlass +1 to hit']
         -> ['Cutlass II'] (3 points = Level 2)
-        
+
         ['Sword +1 to hit', 'Sword +1 to hit', 'Sword +1 to hit', 'Sword +1 to hit']
         -> ['Sword II (+1)'] (4 points = Level 2 with 1 point toward Level 3)
     """
@@ -36,7 +36,7 @@ def consolidate_skills(skills):
     for skill_name in sorted(skill_points.keys()):
         points = skill_points[skill_name]
         level, excess = level_from_points(points)
-        
+
         if level >= 1:
             roman = to_roman(level)
             if excess > 0:

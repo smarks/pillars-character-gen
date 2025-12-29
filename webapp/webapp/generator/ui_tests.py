@@ -7,6 +7,7 @@ Run with: python manage.py test webapp.generator.ui_tests
 Requirements:
     pip install selenium webdriver-manager
 """
+
 import time
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.contrib.auth.models import User
@@ -28,15 +29,16 @@ class BrowserTestCase(StaticLiveServerTestCase):
         super().setUpClass()
         # Set up Chrome in headless mode
         options = ChromeOptions()
-        options.add_argument('--headless=new')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-gpu')
-        options.add_argument('--window-size=1920,1080')
+        options.add_argument("--headless=new")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--window-size=1920,1080")
 
         try:
             # Try using webdriver-manager to get ChromeDriver
             from webdriver_manager.chrome import ChromeDriverManager
+
             service = ChromeService(ChromeDriverManager().install())
             cls.browser = webdriver.Chrome(service=service, options=options)
         except Exception:
@@ -54,13 +56,13 @@ class BrowserTestCase(StaticLiveServerTestCase):
         """Clear cookies before each test to ensure clean state."""
         super().setUp()
         # Navigate to the site first so we can clear cookies for the domain
-        self.browser.get(f'{self.live_server_url}/')
+        self.browser.get(f"{self.live_server_url}/")
         self.browser.delete_all_cookies()
 
     def wait_for_page_load(self, timeout=10):
         """Wait for page to fully load."""
         WebDriverWait(self.browser, timeout).until(
-            lambda d: d.execute_script('return document.readyState') == 'complete'
+            lambda d: d.execute_script("return document.readyState") == "complete"
         )
 
     def wait_for_element(self, by, value, timeout=10):
@@ -72,13 +74,15 @@ class BrowserTestCase(StaticLiveServerTestCase):
     def click_button(self, button_text):
         """Find and click a button by its text content."""
         # Try finding by exact text first
-        buttons = self.browser.find_elements(By.TAG_NAME, 'button')
+        buttons = self.browser.find_elements(By.TAG_NAME, "button")
         for button in buttons:
             if button_text in button.text:
                 button.click()
                 return
         # Try finding by value attribute (for submit buttons)
-        buttons = self.browser.find_elements(By.CSS_SELECTOR, f'button[value="{button_text}"]')
+        buttons = self.browser.find_elements(
+            By.CSS_SELECTOR, f'button[value="{button_text}"]'
+        )
         if buttons:
             buttons[0].click()
             return
@@ -86,31 +90,38 @@ class BrowserTestCase(StaticLiveServerTestCase):
 
     def login_user(self, username, password):
         """Login a user via the browser."""
-        self.browser.get(f'{self.live_server_url}/login/')
+        self.browser.get(f"{self.live_server_url}/login/")
         self.wait_for_page_load()
 
         # Fill in login form
-        username_field = self.browser.find_element(By.NAME, 'username')
-        password_field = self.browser.find_element(By.NAME, 'password')
+        username_field = self.browser.find_element(By.NAME, "username")
+        password_field = self.browser.find_element(By.NAME, "password")
         username_field.send_keys(username)
         password_field.send_keys(password)
 
         # Submit form
-        login_button = self.browser.find_element(By.CSS_SELECTOR, 'button[type="submit"]')
+        login_button = self.browser.find_element(
+            By.CSS_SELECTOR, 'button[type="submit"]'
+        )
         login_button.click()
 
         # Wait for redirect away from login page
         import time
+
         time.sleep(1)  # Give time for form submission and redirect
         self.wait_for_page_load()
 
         # Verify login succeeded - we should NOT still be on login page
-        if '/login' in self.browser.current_url:
+        if "/login" in self.browser.current_url:
             # Check for error messages
             page_source = self.browser.page_source
-            if 'Please correct the errors' in page_source:
-                raise AssertionError(f"Login failed for user '{username}': form has errors")
-            raise AssertionError(f"Login failed for user '{username}': still on login page")
+            if "Please correct the errors" in page_source:
+                raise AssertionError(
+                    f"Login failed for user '{username}': form has errors"
+                )
+            raise AssertionError(
+                f"Login failed for user '{username}': still on login page"
+            )
 
     def element_exists(self, by, value):
         """Check if an element exists on the page."""
@@ -142,51 +153,53 @@ class GeneratorUITests(BrowserTestCase):
 
     def test_welcome_to_generator(self):
         """Test navigating from welcome page to generator."""
-        self.browser.get(f'{self.live_server_url}/')
+        self.browser.get(f"{self.live_server_url}/")
         self.wait_for_page_load()
 
         # Should see welcome page
-        self.assertIn('Pillars', self.browser.title)
+        self.assertIn("Pillars", self.browser.title)
 
         # Click on Character Generator link (use partial link text since it includes icon)
-        generator_link = self.browser.find_element(By.PARTIAL_LINK_TEXT, 'Character Generator')
+        generator_link = self.browser.find_element(
+            By.PARTIAL_LINK_TEXT, "Character Generator"
+        )
         generator_link.click()
         self.wait_for_page_load()
 
         # Should be on generator page
-        self.assertIn('generator', self.browser.current_url)
-        self.assertIn('Character Generator', self.browser.page_source)
+        self.assertIn("generator", self.browser.current_url)
+        self.assertIn("Character Generator", self.browser.page_source)
 
     def test_copy_to_clipboard_button(self):
         """Test that Copy to Clipboard button exists on the generator page."""
         # Go directly to generator
-        self.browser.get(f'{self.live_server_url}/generator/')
+        self.browser.get(f"{self.live_server_url}/generator/")
         self.wait_for_page_load()
 
         # Verify we're on the generator page
-        self.assertIn('Character Generator', self.browser.page_source)
+        self.assertIn("Character Generator", self.browser.page_source)
 
         # Verify a character was generated (check for attributes)
         page_source = self.browser.page_source
-        self.assertTrue('STR' in page_source or 'DEX' in page_source)
+        self.assertTrue("STR" in page_source or "DEX" in page_source)
 
         # Find the Copy to Clipboard button
-        copy_button = self.browser.find_element(By.ID, 'copy-btn')
+        copy_button = self.browser.find_element(By.ID, "copy-btn")
         self.assertIsNotNone(copy_button)
-        self.assertIn('Copy', copy_button.text)
+        self.assertIn("Copy", copy_button.text)
 
     def test_add_experience_button(self):
         """Test that Add Experience button adds experience and stays on generator."""
         # Go directly to generator
-        self.browser.get(f'{self.live_server_url}/generator/')
+        self.browser.get(f"{self.live_server_url}/generator/")
         self.wait_for_page_load()
 
         # Verify we're on the generator page
-        self.assertIn('Character Generator', self.browser.page_source)
+        self.assertIn("Character Generator", self.browser.page_source)
 
         # Verify a character was generated (check for attributes)
         page_source = self.browser.page_source
-        self.assertTrue('STR' in page_source or 'DEX' in page_source)
+        self.assertTrue("STR" in page_source or "DEX" in page_source)
 
         # Find and click the Add Experience button
         add_exp_button = self.browser.find_element(
@@ -196,26 +209,28 @@ class GeneratorUITests(BrowserTestCase):
 
         # Wait for redirect to complete
         import time
+
         time.sleep(1)
         self.wait_for_page_load()
 
         # Should stay on generator page
-        self.assertIn('generator', self.browser.current_url)
+        self.assertIn("generator", self.browser.current_url)
         # Should see experience log
         self.assertTrue(
-            'Year-by-Year' in self.browser.page_source or 'Year 16' in self.browser.page_source,
-            "Generator should show experience log after adding experience"
+            "Year-by-Year" in self.browser.page_source
+            or "Year 16" in self.browser.page_source,
+            "Generator should show experience log after adding experience",
         )
 
     def test_reroll_buttons(self):
         """Test that re-roll buttons generate new characters."""
         # Go directly to generator
-        self.browser.get(f'{self.live_server_url}/generator/')
+        self.browser.get(f"{self.live_server_url}/generator/")
         self.wait_for_page_load()
 
         # Verify we're on the generator page with character attributes
         page_source = self.browser.page_source
-        self.assertTrue('STR' in page_source)
+        self.assertTrue("STR" in page_source)
 
         # Click Re-roll (No Focus)
         reroll_button = self.browser.find_element(
@@ -225,39 +240,45 @@ class GeneratorUITests(BrowserTestCase):
         self.wait_for_page_load()
 
         # Should still be on generator page
-        self.assertIn('generator', self.browser.current_url)
-        self.assertIn('Character Generator', self.browser.page_source)
+        self.assertIn("generator", self.browser.current_url)
+        self.assertIn("Character Generator", self.browser.page_source)
 
         # Character should have been regenerated (page still shows attributes)
-        self.assertTrue('STR' in self.browser.page_source)
+        self.assertTrue("STR" in self.browser.page_source)
 
     def test_full_flow_without_experience(self):
         """Test complete flow: welcome -> generator shows character."""
         # Start at welcome
-        self.browser.get(f'{self.live_server_url}/')
+        self.browser.get(f"{self.live_server_url}/")
         self.wait_for_page_load()
 
         # Go to generator
-        generator_link = self.browser.find_element(By.PARTIAL_LINK_TEXT, 'Character Generator')
+        generator_link = self.browser.find_element(
+            By.PARTIAL_LINK_TEXT, "Character Generator"
+        )
         generator_link.click()
         self.wait_for_page_load()
 
         # Should be on generator page
-        self.assertIn('generator', self.browser.current_url)
+        self.assertIn("generator", self.browser.current_url)
 
         # Should have character data displayed
         page_source = self.browser.page_source
-        self.assertTrue('STR' in page_source)
-        self.assertTrue('Add Experience' in page_source or 'add_experience' in page_source)
+        self.assertTrue("STR" in page_source)
+        self.assertTrue(
+            "Add Experience" in page_source or "add_experience" in page_source
+        )
 
     def test_full_flow_with_experience(self):
         """Test complete flow: welcome -> generator -> add experience."""
         # Start at welcome
-        self.browser.get(f'{self.live_server_url}/')
+        self.browser.get(f"{self.live_server_url}/")
         self.wait_for_page_load()
 
         # Go to generator
-        generator_link = self.browser.find_element(By.PARTIAL_LINK_TEXT, 'Character Generator')
+        generator_link = self.browser.find_element(
+            By.PARTIAL_LINK_TEXT, "Character Generator"
+        )
         generator_link.click()
         self.wait_for_page_load()
 
@@ -269,7 +290,7 @@ class GeneratorUITests(BrowserTestCase):
         self.wait_for_page_load()
 
         # Should stay on generator page
-        self.assertIn('generator', self.browser.current_url)
+        self.assertIn("generator", self.browser.current_url)
 
         # After adding experience, should see either:
         # - Prior Experience section (if survived at least one year)
@@ -277,15 +298,15 @@ class GeneratorUITests(BrowserTestCase):
         # - Or at minimum, the page should have a track selected
         page_source = self.browser.page_source
         has_experience_indicators = (
-            'Prior Experience' in page_source or
-            'Year-by-Year' in page_source or
-            'Year 17' in page_source or
-            'DIED' in page_source or
-            'Survived' in page_source
+            "Prior Experience" in page_source
+            or "Year-by-Year" in page_source
+            or "Year 17" in page_source
+            or "DIED" in page_source
+            or "Survived" in page_source
         )
         self.assertTrue(
             has_experience_indicators,
-            "Generator should show experience results after adding experience"
+            "Generator should show experience results after adding experience",
         )
 
 
@@ -295,7 +316,7 @@ class InteractiveFlowTests(BrowserTestCase):
     def test_add_experience_flow(self):
         """Test adding experience directly from the generator."""
         # Go to generator
-        self.browser.get(f'{self.live_server_url}/generator/')
+        self.browser.get(f"{self.live_server_url}/generator/")
         self.wait_for_page_load()
 
         # Click Add Experience - this now adds experience directly
@@ -306,20 +327,20 @@ class InteractiveFlowTests(BrowserTestCase):
         self.wait_for_page_load()
 
         # Should stay on generator page
-        self.assertIn('generator', self.browser.current_url)
+        self.assertIn("generator", self.browser.current_url)
 
         # After adding experience, should see either experience log or death notice
         page_source = self.browser.page_source
         has_experience_indicators = (
-            'Prior Experience' in page_source or
-            'Year-by-Year' in page_source or
-            'Year 17' in page_source or
-            'DIED' in page_source or
-            'Survived' in page_source
+            "Prior Experience" in page_source
+            or "Year-by-Year" in page_source
+            or "Year 17" in page_source
+            or "DIED" in page_source
+            or "Survived" in page_source
         )
         self.assertTrue(
             has_experience_indicators,
-            "Generator should show year-by-year log after adding experience"
+            "Generator should show year-by-year log after adding experience",
         )
 
         # Click Add Experience again to add more years
@@ -330,11 +351,11 @@ class InteractiveFlowTests(BrowserTestCase):
         self.wait_for_page_load()
 
         # Should still be on generator and show more experience
-        self.assertIn('generator', self.browser.current_url)
+        self.assertIn("generator", self.browser.current_url)
 
         # Character is ready - verify character data is still visible
         page_source = self.browser.page_source
-        self.assertTrue('STR' in page_source, "Character attributes should be visible")
+        self.assertTrue("STR" in page_source, "Character attributes should be visible")
 
 
 class SessionPersistenceTests(BrowserTestCase):
@@ -343,13 +364,15 @@ class SessionPersistenceTests(BrowserTestCase):
     def test_character_persists_after_page_refresh(self):
         """Test that character data persists when refreshing the page."""
         # Go to generator
-        self.browser.get(f'{self.live_server_url}/generator/')
+        self.browser.get(f"{self.live_server_url}/generator/")
         self.wait_for_page_load()
 
         # Get the character name from the page
         page_source = self.browser.page_source
         # Find the character name element
-        name_element = self.browser.find_element(By.CSS_SELECTOR, '.character-name, h2, h3')
+        name_element = self.browser.find_element(
+            By.CSS_SELECTOR, ".character-name, h2, h3"
+        )
         initial_name = name_element.text
 
         # Refresh the page
@@ -357,33 +380,37 @@ class SessionPersistenceTests(BrowserTestCase):
         self.wait_for_page_load()
 
         # Character should be the same (not regenerated)
-        name_element = self.browser.find_element(By.CSS_SELECTOR, '.character-name, h2, h3')
+        name_element = self.browser.find_element(
+            By.CSS_SELECTOR, ".character-name, h2, h3"
+        )
         refreshed_name = name_element.text
         self.assertEqual(initial_name, refreshed_name)
 
     def test_new_character_on_welcome_return(self):
         """Test that going back to welcome clears the character."""
         # Go to generator
-        self.browser.get(f'{self.live_server_url}/generator/')
+        self.browser.get(f"{self.live_server_url}/generator/")
         self.wait_for_page_load()
 
         # Verify we're on generator with character data
-        self.assertIn('generator', self.browser.current_url)
-        self.assertTrue('STR' in self.browser.page_source)
+        self.assertIn("generator", self.browser.current_url)
+        self.assertTrue("STR" in self.browser.page_source)
 
         # Go back to welcome
-        self.browser.get(f'{self.live_server_url}/')
+        self.browser.get(f"{self.live_server_url}/")
         self.wait_for_page_load()
 
         # Go to generator again
-        generator_link = self.browser.find_element(By.PARTIAL_LINK_TEXT, 'Character Generator')
+        generator_link = self.browser.find_element(
+            By.PARTIAL_LINK_TEXT, "Character Generator"
+        )
         generator_link.click()
         self.wait_for_page_load()
 
         # Should have a new character generated
-        self.assertIn('generator', self.browser.current_url)
+        self.assertIn("generator", self.browser.current_url)
         # Both visits should show valid character data (STR attribute)
-        self.assertTrue('STR' in self.browser.page_source)
+        self.assertTrue("STR" in self.browser.page_source)
 
 
 class RoleUITests(BrowserTestCase):
@@ -395,180 +422,186 @@ class RoleUITests(BrowserTestCase):
         # Create test users with different roles
         # These need to be created in setUp (not setUpClass) because
         # TransactionTestCase flushes the database between tests
-        self.player_user = User.objects.create_user('player_ui_test', password='testpass123')
-        UserProfile.objects.create(user=self.player_user, roles=['player'])
+        self.player_user = User.objects.create_user(
+            "player_ui_test", password="testpass123"
+        )
+        UserProfile.objects.create(user=self.player_user, roles=["player"])
 
-        self.dm_user = User.objects.create_user('dm_ui_test', password='testpass123')
-        UserProfile.objects.create(user=self.dm_user, roles=['dm'])
+        self.dm_user = User.objects.create_user("dm_ui_test", password="testpass123")
+        UserProfile.objects.create(user=self.dm_user, roles=["dm"])
 
-        self.admin_user = User.objects.create_user('admin_ui_test', password='testpass123')
-        UserProfile.objects.create(user=self.admin_user, roles=['admin'])
+        self.admin_user = User.objects.create_user(
+            "admin_ui_test", password="testpass123"
+        )
+        UserProfile.objects.create(user=self.admin_user, roles=["admin"])
 
-        self.admin_dm_user = User.objects.create_user('admin_dm_ui_test', password='testpass123')
-        UserProfile.objects.create(user=self.admin_dm_user, roles=['admin', 'dm'])
+        self.admin_dm_user = User.objects.create_user(
+            "admin_dm_ui_test", password="testpass123"
+        )
+        UserProfile.objects.create(user=self.admin_dm_user, roles=["admin", "dm"])
 
     def test_unauthenticated_user_sees_no_dm_links(self):
         """Test that unauthenticated users don't see DM or admin links."""
-        self.browser.get(f'{self.live_server_url}/')
+        self.browser.get(f"{self.live_server_url}/")
         self.wait_for_page_load()
 
         # Should NOT see DM Handbook or Manage Users links
         self.assertFalse(
-            self.partial_link_exists('DM Handbook'),
-            "Unauthenticated user should NOT see DM Handbook link"
+            self.partial_link_exists("DM Handbook"),
+            "Unauthenticated user should NOT see DM Handbook link",
         )
         self.assertFalse(
-            self.partial_link_exists('Manage Users'),
-            "Unauthenticated user should NOT see Manage Users link"
+            self.partial_link_exists("Manage Users"),
+            "Unauthenticated user should NOT see Manage Users link",
         )
 
     def test_player_sees_no_dm_links(self):
         """Test that player role users don't see DM or admin links."""
-        self.login_user('player_ui_test', 'testpass123')
+        self.login_user("player_ui_test", "testpass123")
 
         # Go to welcome page
-        self.browser.get(f'{self.live_server_url}/')
+        self.browser.get(f"{self.live_server_url}/")
         self.wait_for_page_load()
 
         # Should NOT see DM Handbook or Manage Users links
         self.assertFalse(
-            self.partial_link_exists('DM Handbook'),
-            "Player should NOT see DM Handbook link"
+            self.partial_link_exists("DM Handbook"),
+            "Player should NOT see DM Handbook link",
         )
         self.assertFalse(
-            self.partial_link_exists('Manage Users'),
-            "Player should NOT see Manage Users link"
+            self.partial_link_exists("Manage Users"),
+            "Player should NOT see Manage Users link",
         )
 
     def test_dm_sees_dm_link_but_not_manage_users(self):
         """Test that DM role users see DM link but not Manage Users."""
-        self.login_user('dm_ui_test', 'testpass123')
+        self.login_user("dm_ui_test", "testpass123")
 
         # Go to welcome page
-        self.browser.get(f'{self.live_server_url}/')
+        self.browser.get(f"{self.live_server_url}/")
         self.wait_for_page_load()
 
         # Should see DM link (the link text is just "DM" not "DM Handbook")
         self.assertTrue(
             self.element_exists(By.CSS_SELECTOR, 'a[href*="/dm"]'),
-            "DM should see DM link"
+            "DM should see DM link",
         )
         # Should NOT see Manage Users
         self.assertFalse(
-            self.partial_link_exists('Manage Users'),
-            "DM should NOT see Manage Users link"
+            self.partial_link_exists("Manage Users"),
+            "DM should NOT see Manage Users link",
         )
 
     def test_admin_sees_all_links(self):
         """Test that admin role users see all links including Manage Users."""
-        self.login_user('admin_ui_test', 'testpass123')
+        self.login_user("admin_ui_test", "testpass123")
 
         # Go to welcome page
-        self.browser.get(f'{self.live_server_url}/')
+        self.browser.get(f"{self.live_server_url}/")
         self.wait_for_page_load()
 
         # Should see DM link (the link text is just "DM" not "DM Handbook")
         self.assertTrue(
             self.element_exists(By.CSS_SELECTOR, 'a[href*="/dm"]'),
-            "Admin should see DM link"
+            "Admin should see DM link",
         )
         # Should see Manage Users
         self.assertTrue(
-            self.partial_link_exists('Manage Users'),
-            "Admin should see Manage Users link"
+            self.partial_link_exists("Manage Users"),
+            "Admin should see Manage Users link",
         )
 
     def test_admin_can_access_manage_users_page(self):
         """Test that admin can access the manage users page."""
-        self.login_user('admin_ui_test', 'testpass123')
+        self.login_user("admin_ui_test", "testpass123")
 
         # Navigate to manage users
-        self.browser.get(f'{self.live_server_url}/manage-users/')
+        self.browser.get(f"{self.live_server_url}/manage-users/")
         self.wait_for_page_load()
 
         # Should be on the manage users page (not redirected)
-        self.assertIn('Manage Users', self.browser.page_source)
-        self.assertIn('manage-users', self.browser.current_url)
+        self.assertIn("Manage Users", self.browser.page_source)
+        self.assertIn("manage-users", self.browser.current_url)
 
     def test_player_cannot_access_manage_users_page(self):
         """Test that player is redirected when trying to access manage users."""
-        self.login_user('player_ui_test', 'testpass123')
+        self.login_user("player_ui_test", "testpass123")
 
         # Try to navigate to manage users
-        self.browser.get(f'{self.live_server_url}/manage-users/')
+        self.browser.get(f"{self.live_server_url}/manage-users/")
         self.wait_for_page_load()
 
         # Should be redirected to welcome page
-        self.assertNotIn('manage-users', self.browser.current_url)
+        self.assertNotIn("manage-users", self.browser.current_url)
         # Should see the welcome page
-        self.assertIn('PILLARS', self.browser.page_source)
+        self.assertIn("PILLARS", self.browser.page_source)
 
     def test_dm_cannot_access_manage_users_page(self):
         """Test that DM is redirected when trying to access manage users."""
-        self.login_user('dm_ui_test', 'testpass123')
+        self.login_user("dm_ui_test", "testpass123")
 
         # Try to navigate to manage users
-        self.browser.get(f'{self.live_server_url}/manage-users/')
+        self.browser.get(f"{self.live_server_url}/manage-users/")
         self.wait_for_page_load()
 
         # Should be redirected to welcome page
-        self.assertNotIn('manage-users', self.browser.current_url)
+        self.assertNotIn("manage-users", self.browser.current_url)
         # Should see the welcome page
-        self.assertIn('PILLARS', self.browser.page_source)
+        self.assertIn("PILLARS", self.browser.page_source)
 
     def test_dm_can_access_dm_handbook(self):
         """Test that DM can access the DM handbook."""
-        self.login_user('dm_ui_test', 'testpass123')
+        self.login_user("dm_ui_test", "testpass123")
 
         # Navigate to DM handbook
-        self.browser.get(f'{self.live_server_url}/dm/')
+        self.browser.get(f"{self.live_server_url}/dm/")
         self.wait_for_page_load()
 
         # Should be on the DM page (not redirected)
-        self.assertIn('/dm', self.browser.current_url)
+        self.assertIn("/dm", self.browser.current_url)
 
     def test_player_cannot_access_dm_handbook(self):
         """Test that player is redirected when trying to access DM handbook."""
-        self.login_user('player_ui_test', 'testpass123')
+        self.login_user("player_ui_test", "testpass123")
 
         # Try to navigate to DM handbook
-        self.browser.get(f'{self.live_server_url}/dm/')
+        self.browser.get(f"{self.live_server_url}/dm/")
         self.wait_for_page_load()
 
         # Should be redirected away from DM page
         # Either redirected to welcome or login
         self.assertFalse(
-            self.browser.current_url.endswith('/dm/'),
-            "Player should be redirected away from DM handbook"
+            self.browser.current_url.endswith("/dm/"),
+            "Player should be redirected away from DM handbook",
         )
 
     def test_admin_dm_can_access_everything(self):
         """Test that user with both admin and DM roles can access everything."""
-        self.login_user('admin_dm_ui_test', 'testpass123')
+        self.login_user("admin_dm_ui_test", "testpass123")
 
         # Go to welcome page
-        self.browser.get(f'{self.live_server_url}/')
+        self.browser.get(f"{self.live_server_url}/")
         self.wait_for_page_load()
 
         # Should see both links (DM link text is just "DM" not "DM Handbook")
         self.assertTrue(
             self.element_exists(By.CSS_SELECTOR, 'a[href*="/dm"]'),
-            "Admin+DM should see DM link"
+            "Admin+DM should see DM link",
         )
         self.assertTrue(
-            self.partial_link_exists('Manage Users'),
-            "Admin+DM should see Manage Users link"
+            self.partial_link_exists("Manage Users"),
+            "Admin+DM should see Manage Users link",
         )
 
         # Should be able to access DM handbook
-        self.browser.get(f'{self.live_server_url}/dm/')
+        self.browser.get(f"{self.live_server_url}/dm/")
         self.wait_for_page_load()
-        self.assertIn('/dm', self.browser.current_url)
+        self.assertIn("/dm", self.browser.current_url)
 
         # Should be able to access manage users
-        self.browser.get(f'{self.live_server_url}/manage-users/')
+        self.browser.get(f"{self.live_server_url}/manage-users/")
         self.wait_for_page_load()
-        self.assertIn('manage-users', self.browser.current_url)
+        self.assertIn("manage-users", self.browser.current_url)
 
 
 class SessionCharacterLoginUITests(BrowserTestCase):
@@ -580,51 +613,54 @@ class SessionCharacterLoginUITests(BrowserTestCase):
         # Create a test user for login tests
         from django.contrib.auth.models import User
         from webapp.generator.models import UserProfile
+
         cls.test_user = User.objects.create_user(
-            username='session_ui_test',
-            password='testpass123'
+            username="session_ui_test", password="testpass123"
         )
-        UserProfile.objects.create(user=cls.test_user, roles=['player'])
+        UserProfile.objects.create(user=cls.test_user, roles=["player"])
 
     def test_login_preserves_character_and_redirects_to_generator(self):
         """Test that logging in with a session character redirects to generator."""
         # First, create a character as anonymous user
-        self.browser.get(f'{self.live_server_url}/generator/')
+        self.browser.get(f"{self.live_server_url}/generator/")
         self.wait_for_page_load()
 
         # Verify we're on generator and see character data
-        self.assertIn('generator', self.browser.current_url)
+        self.assertIn("generator", self.browser.current_url)
         page_source = self.browser.page_source
         self.assertTrue(
-            'STR' in page_source or 'DEX' in page_source,
-            "Generator page should show character attributes"
+            "STR" in page_source or "DEX" in page_source,
+            "Generator page should show character attributes",
         )
 
         # Now go to login
-        self.browser.get(f'{self.live_server_url}/login/')
+        self.browser.get(f"{self.live_server_url}/login/")
         self.wait_for_page_load()
 
         # Fill in login form
-        username_field = self.browser.find_element(By.NAME, 'username')
-        password_field = self.browser.find_element(By.NAME, 'password')
-        username_field.send_keys('session_ui_test')
-        password_field.send_keys('testpass123')
+        username_field = self.browser.find_element(By.NAME, "username")
+        password_field = self.browser.find_element(By.NAME, "password")
+        username_field.send_keys("session_ui_test")
+        password_field.send_keys("testpass123")
 
         # Submit form
-        login_button = self.browser.find_element(By.CSS_SELECTOR, 'button[type="submit"]')
+        login_button = self.browser.find_element(
+            By.CSS_SELECTOR, 'button[type="submit"]'
+        )
         login_button.click()
 
         import time
+
         time.sleep(1)  # Wait for redirect
 
         # Should be redirected to generator (because we had a character)
-        self.assertIn('generator', self.browser.current_url)
+        self.assertIn("generator", self.browser.current_url)
 
         # Character should still be visible
         page_source = self.browser.page_source
         self.assertTrue(
-            'STR' in page_source or 'DEX' in page_source,
-            "Generator page should still show the character after login"
+            "STR" in page_source or "DEX" in page_source,
+            "Generator page should still show the character after login",
         )
 
 
@@ -637,39 +673,39 @@ class GeneratorUnifiedFlowUITests(BrowserTestCase):
         # Create a test user for this test
         from django.contrib.auth.models import User
         from webapp.generator.models import UserProfile
+
         self.test_user = User.objects.create_user(
-            username='unified_ui_test',
-            password='testpass123'
+            username="unified_ui_test", password="testpass123"
         )
-        UserProfile.objects.create(user=self.test_user, roles=['player'])
+        UserProfile.objects.create(user=self.test_user, roles=["player"])
 
     def test_logged_in_user_stays_on_generator(self):
         """Test that logged-in users stay on generator page."""
         # Login first
-        self.login_user('unified_ui_test', 'testpass123')
+        self.login_user("unified_ui_test", "testpass123")
 
         # Go to generator
-        self.browser.get(f'{self.live_server_url}/generator/')
+        self.browser.get(f"{self.live_server_url}/generator/")
         self.wait_for_page_load()
 
         # Should be on generator (not redirected to character sheet)
-        self.assertIn('generator', self.browser.current_url)
-        self.assertNotIn('character/', self.browser.current_url)
+        self.assertIn("generator", self.browser.current_url)
+        self.assertNotIn("character/", self.browser.current_url)
 
         # Should see the generator page content
         page_source = self.browser.page_source
         self.assertTrue(
-            'Re-roll' in page_source or 'reroll' in page_source.lower(),
-            "Generator page should have re-roll buttons"
+            "Re-roll" in page_source or "reroll" in page_source.lower(),
+            "Generator page should have re-roll buttons",
         )
 
     def test_logged_in_add_experience_shows_on_generator(self):
         """Test that adding experience shows results on generator page."""
         # Login first
-        self.login_user('unified_ui_test', 'testpass123')
+        self.login_user("unified_ui_test", "testpass123")
 
         # Go to generator
-        self.browser.get(f'{self.live_server_url}/generator/')
+        self.browser.get(f"{self.live_server_url}/generator/")
         self.wait_for_page_load()
 
         # Click Add Experience button
@@ -680,20 +716,20 @@ class GeneratorUnifiedFlowUITests(BrowserTestCase):
         self.wait_for_page_load()
 
         # Should still be on generator
-        self.assertIn('generator', self.browser.current_url)
+        self.assertIn("generator", self.browser.current_url)
 
         # After adding experience, should see experience indicators
         page_source = self.browser.page_source
         has_experience_indicators = (
-            'Prior Experience' in page_source or
-            'Year-by-Year' in page_source or
-            'Year 17' in page_source or
-            'DIED' in page_source or
-            'Survived' in page_source
+            "Prior Experience" in page_source
+            or "Year-by-Year" in page_source
+            or "Year 17" in page_source
+            or "DIED" in page_source
+            or "Survived" in page_source
         )
         self.assertTrue(
             has_experience_indicators,
-            "Generator page should show experience log after adding experience"
+            "Generator page should show experience log after adding experience",
         )
 
 
@@ -702,24 +738,24 @@ class CombatPageImageTests(BrowserTestCase):
 
     def test_combat_page_loads(self):
         """Test that the combat page loads successfully."""
-        self.browser.get(f'{self.live_server_url}/combat/')
+        self.browser.get(f"{self.live_server_url}/combat/")
         self.wait_for_page_load()
 
         # Check page title/heading
         page_source = self.browser.page_source
-        self.assertIn('Combat', page_source)
+        self.assertIn("Combat", page_source)
 
     def test_megahex_image_loads(self):
         """Test that the megahex image loads correctly in the browser."""
-        self.browser.get(f'{self.live_server_url}/combat/')
+        self.browser.get(f"{self.live_server_url}/combat/")
         self.wait_for_page_load()
 
         # Find the megahex image
-        images = self.browser.find_elements(By.TAG_NAME, 'img')
+        images = self.browser.find_elements(By.TAG_NAME, "img")
         megahex_img = None
         for img in images:
-            src = img.get_attribute('src')
-            if 'megahex' in src:
+            src = img.get_attribute("src")
+            if "megahex" in src:
                 megahex_img = img
                 break
 
@@ -730,49 +766,54 @@ class CombatPageImageTests(BrowserTestCase):
             "return arguments[0].naturalWidth;", megahex_img
         )
         self.assertGreater(
-            natural_width, 0,
-            "Megahex image should load successfully (naturalWidth > 0)"
+            natural_width,
+            0,
+            "Megahex image should load successfully (naturalWidth > 0)",
         )
 
     def test_facing_image_loads(self):
         """Test that the facing diagram image loads correctly in the browser."""
-        self.browser.get(f'{self.live_server_url}/combat/')
+        self.browser.get(f"{self.live_server_url}/combat/")
         self.wait_for_page_load()
 
         # Find the facing image
-        images = self.browser.find_elements(By.TAG_NAME, 'img')
+        images = self.browser.find_elements(By.TAG_NAME, "img")
         facing_img = None
         for img in images:
-            src = img.get_attribute('src')
-            if 'facing' in src:
+            src = img.get_attribute("src")
+            if "facing" in src:
                 facing_img = img
                 break
 
-        self.assertIsNotNone(facing_img, "Facing diagram image should be present on the page")
+        self.assertIsNotNone(
+            facing_img, "Facing diagram image should be present on the page"
+        )
 
         # Verify the image actually loaded (naturalWidth > 0 means it loaded)
         natural_width = self.browser.execute_script(
             "return arguments[0].naturalWidth;", facing_img
         )
         self.assertGreater(
-            natural_width, 0,
-            "Facing diagram image should load successfully (naturalWidth > 0)"
+            natural_width,
+            0,
+            "Facing diagram image should load successfully (naturalWidth > 0)",
         )
 
     def test_all_images_load(self):
         """Test that all images on the combat page load successfully."""
-        self.browser.get(f'{self.live_server_url}/combat/')
+        self.browser.get(f"{self.live_server_url}/combat/")
         self.wait_for_page_load()
 
-        images = self.browser.find_elements(By.TAG_NAME, 'img')
+        images = self.browser.find_elements(By.TAG_NAME, "img")
         self.assertGreater(len(images), 0, "Combat page should have at least one image")
 
         for img in images:
-            src = img.get_attribute('src')
+            src = img.get_attribute("src")
             natural_width = self.browser.execute_script(
                 "return arguments[0].naturalWidth;", img
             )
             self.assertGreater(
-                natural_width, 0,
-                f"Image {src} should load successfully (naturalWidth > 0)"
+                natural_width,
+                0,
+                f"Image {src} should load successfully (naturalWidth > 0)",
             )

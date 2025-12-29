@@ -40,8 +40,7 @@ SECRET_KEY = _secret_key
 ALLOWED_HOSTS = [
     h.strip()
     for h in os.environ.get(
-        "DJANGO_ALLOWED_HOSTS",
-        "localhost,127.0.0.1,192.168.4.163"
+        "DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,192.168.4.163"
     ).split(",")
     if h.strip()
 ]
@@ -57,8 +56,7 @@ for host in ALLOWED_HOSTS:
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.environ.get(
-        "DJANGO_CSRF_TRUSTED_ORIGINS",
-        ",".join(_default_csrf_origins)
+        "DJANGO_CSRF_TRUSTED_ORIGINS", ",".join(_default_csrf_origins)
     ).split(",")
     if origin.strip()
 ]
@@ -116,7 +114,8 @@ if DATABASE_URL:
     # Parse DATABASE_URL for PostgreSQL
     # Format: postgres://user:password@host:port/dbname
     import re
-    match = re.match(r'postgres://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)', DATABASE_URL)
+
+    match = re.match(r"postgres://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)", DATABASE_URL)
     if match:
         DATABASES = {
             "default": {
@@ -147,7 +146,9 @@ if DEBUG:
     AUTH_PASSWORD_VALIDATORS = []
 else:
     AUTH_PASSWORD_VALIDATORS = [
-        {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+        {
+            "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+        },
         {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
         {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
         {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -184,9 +185,9 @@ REFERENCES_IMAGES_DIR = BASE_DIR / ".." / "references" / "images"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Authentication settings
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'welcome'
-LOGOUT_REDIRECT_URL = 'welcome'
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "welcome"
+LOGOUT_REDIRECT_URL = "welcome"
 
 # Security settings for production
 if not DEBUG:
@@ -204,5 +205,5 @@ if not DEBUG:
         CSRF_COOKIE_SECURE = False
         SESSION_COOKIE_SECURE = False
         # Allow CSRF cookies to work on HTTP for development/testing
-        CSRF_COOKIE_SAMESITE = 'Lax'
-        SESSION_COOKIE_SAMESITE = 'Lax'
+        CSRF_COOKIE_SAMESITE = "Lax"
+        SESSION_COOKIE_SAMESITE = "Lax"

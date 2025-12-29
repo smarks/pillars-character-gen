@@ -12,7 +12,7 @@ from pillars.dice import (
     roll_with_drop_highest,
     roll_percentile,
     roll_demon_die,
-    format_dice_notation
+    format_dice_notation,
 )
 
 
@@ -341,5 +341,5 @@ class TestDiceStatistics(unittest.TestCase):
         self.assertGreaterEqual(min(rolls), 3)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
