@@ -3345,6 +3345,11 @@ class HamburgerMenuLinksTests(TestCase):
     def setUp(self):
         self.client = Client()
 
+        # Delete any existing users to avoid conflicts with --keepdb
+        User.objects.filter(
+            username__in=["regular", "dm", "admin", "admin_dm"]
+        ).delete()
+
         # Create users with different roles
         self.regular_user = User.objects.create_user("regular", password="testpass")
         UserProfile.objects.create(user=self.regular_user, roles=["player"])

@@ -101,6 +101,13 @@ jobs:
         source .venv/bin/activate
         python -m pytest tests/ -v
     
+    - name: Collect static files
+      run: |
+        source .venv/bin/activate
+        cd webapp
+        python manage.py collectstatic --noinput --clear
+        cd ..
+    
     - name: Run Django webapp tests
       run: |
         source .venv/bin/activate
@@ -115,6 +122,7 @@ jobs:
         source .venv/bin/activate
         cd webapp
         python manage.py migrate
+        python manage.py collectstatic --noinput --clear
         # Run tests with xvfb for headless browser
         xvfb-run -a python manage.py test webapp.generator.ui_tests --keepdb
         cd ..
