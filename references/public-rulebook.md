@@ -1,8 +1,3 @@
-# PILLARS
-
-
-
-*This section is for all players*
 
 ## Contents
 
