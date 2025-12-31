@@ -17,6 +17,19 @@ NC='\033[0m' # No Color
 echo -e "${GREEN}Running pre-commit checks (same as CI/CD pipeline)...${NC}"
 echo ""
 
+# Check if only non-code files are being committed (markdown, images, etc.)
+# If so, skip all code-related checks for faster commits
+STAGED_CODE_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(py|js|html|css)$' || true)
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$STAGED_CODE_FILES" ] && [ -n "$STAGED_FILES" ]; then
+    echo -e "${GREEN}Only non-code files staged (markdown, images, etc.)${NC}"
+    echo -e "${GREEN}Skipping code checks for faster commit.${NC}"
+    echo ""
+    echo -e "${GREEN}✅ Pre-commit checks skipped (no code changes)${NC}"
+    exit 0
+fi
+
 # Check if .venv exists
 if [ ! -d ".venv" ]; then
     echo -e "${RED}Error: Virtual environment not found.${NC}"
