@@ -1,8 +1,11 @@
 # PILLARS
+*A Fantasy Role-Playing Game*
 
-*A Role-Playing Game*
+**Many RPGs funnel you toward a destination. Pillars hands you a compass and a world.** 
 
-**Many RPGs funnel you toward a destination. Pillars hands you a compass and a world.** [Learn more about Pillars](/html/about/)
+*Standing on the shoulders of Steve Jackson, Gary Gygax, Paul Gazis, the overly prescient Iain Banks, the equally acute Ursula K. Le Guin, 
+1980s-era members of MIT SGS, and, of course, the incomparable J.R.R. Tolkien, and with the help of Stan Heckman (and hopefully, at some point, ... well, you know who you are)—I cobbled together, err, crafted the world of Pillars. If any of those names spark joy—or even if they don't—I encourage you to check it out.*
+
 
 **Go anywhere. Become anyone.** There's no plot to follow, no balance to maintain, no invisible walls. The system doesn't care if you burn down the tavern, befriend the villain, or abandon the quest to become a merchant. It just asks: what happens next?
 
@@ -14,7 +17,8 @@
 
 **Mechanics serve the moment.** Rules tighten around decisions that matter and dissolve everywhere else. If a rule doesn't create interesting choices, it shouldn't exist.
 
-Pillars is D&D homebrew, with some mechanics borrowed from The Fantasy Trip—Steve Jackson's 1977 system (that is the precursor to GURPS). However, there are other mechanics both public and private that is a original (or at least tries to be) content. Read the [public rulebook](/html/public-rulebook/) or [create a character](/generator/).    
+Pillars is D&D homebrew by Spencer Marks with lots of play testing, patience and valuable insights from Stan Heckman.
 
-Special thanks to Stan Heckman for lot of play testing and valuable insights. 
+### [Learn more about Pillars](/html/about/)
+
 
