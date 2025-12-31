@@ -77,10 +77,21 @@ class UserNotes(models.Model):
 class SavedCharacter(models.Model):
     """Stores a saved character for a user."""
 
+    RACE_CHOICES = [
+        ("human", "Human"),
+        ("elf", "Elf"),
+        ("dwarf", "Dwarf"),
+        ("giant", "Giant"),
+        ("other", "Other"),
+    ]
+
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="saved_characters"
     )
     name = models.CharField(max_length=200)
+    age = models.IntegerField(null=True, blank=True)
+    race = models.CharField(max_length=100, blank=True, default="")
+    description = models.TextField(blank=True, default="")
     character_data = models.JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

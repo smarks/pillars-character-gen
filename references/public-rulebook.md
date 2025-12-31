@@ -1,7 +1,7 @@
 # PILLARS
 
 *A Fantasy Role-Playing Game*
-by Spencer Marks standing on the shoulders of Steve Jackson, Gary Gygax, Paul Gazis, the early members of MIT SGS, Ursula K. Le Guin, and, of course, J.R.R. Tolkien and with the help of Stan Heckman.  
+by Spencer Marks standing on the shoulders of Steve Jackson, Gary Gygax, Paul Gazis, the overly prescient Ian Banks,  the early members of MIT SGS, Ursula K. Le Guin, and, of course, J.R.R. Tolkien and with the help of Stan Heckman (and hopefully, at some point, ... well, you know who you are).  
 
 ---- 
 
@@ -532,7 +532,7 @@ A turn represents approximately **five seconds** of action. Nothing happens simu
 
 **Megahex:** 7 hexes (1 center + 6 surrounding). Used for missile range.
 
-![Megahex diagram](images/megahex.png)
+![Megahex diagram](/images/megahex.png)
 
 **Movement Modifier:** CON modifier + STR modifier + DEX modifier
 
@@ -568,7 +568,7 @@ Based on weight carried compared to STR:
 
 Each figure faces one hex side, determining front, side, and rear hexes.
 
-![Facing diagram](images/facing.png)
+![Facing diagram](/images/facing.png)
 
 - Physical attacks: Only into your front hexes
 - Spells: Your hex, adjacent hexes, or any hex "in front"

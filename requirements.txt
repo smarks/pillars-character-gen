@@ -16,3 +16,6 @@ psycopg2-binary>=2.9
 
 # Production server
 gunicorn>=21.0
+
+# PDF generation
+reportlab>=4.0.0

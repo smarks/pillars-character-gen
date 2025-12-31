@@ -74,6 +74,26 @@ urlpatterns = [
         views.add_experience_to_character,
         name="add_experience_to_character",
     ),
+    path(
+        "character/<int:char_id>/export/markdown/",
+        views.export_character_markdown,
+        name="export_character_markdown",
+    ),
+    path(
+        "character/<int:char_id>/export/pdf/",
+        views.export_character_pdf,
+        name="export_character_pdf",
+    ),
+    path(
+        "export-session/markdown/",
+        views.export_session_character_markdown,
+        name="export_session_character_markdown",
+    ),
+    path(
+        "export-session/pdf/",
+        views.export_session_character_pdf,
+        name="export_session_character_pdf",
+    ),
     # Admin/DM management
     path("manage-users/", views.manage_users, name="manage_users"),
     path("manage-characters/", views.manage_characters, name="manage_characters"),

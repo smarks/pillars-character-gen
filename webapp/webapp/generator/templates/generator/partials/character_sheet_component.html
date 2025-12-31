@@ -33,6 +33,37 @@ Attribute display variables (computed by view):
         <input type="text" name="char_name" id="char-name" data-field="name" 
                value="{{ char_data.name|default:'' }}" placeholder="Enter character name">
     </div>
+    <!-- Age and Race (only shown in generator view) -->
+    <div class="editable-field" style="margin-bottom: 15px; display: flex; gap: 25px; align-items: flex-start;">
+        <div style="flex: 0 0 100px;">
+            <label>Age:</label>
+            <input type="number" name="char_age" id="char-age" data-field="age" 
+                   value="{{ char_data.age|default:'' }}" placeholder="Age" 
+                   min="0" inputmode="numeric" style="width: 100%; padding: 6px 8px; font-family: inherit; font-size: 14px; border: 1px solid #ccc;">
+        </div>
+        <div style="flex: 0 0 200px;">
+            <label>Race:</label>
+            <select name="char_race" id="char-race" data-field="race" 
+                    style="width: 100%; padding: 6px 8px; font-family: inherit; font-size: 14px; border: 1px solid #ccc; margin-bottom: 5px;">
+                <option value="">-- Select Race --</option>
+                <option value="human" {% if char_data.race == 'human' %}selected{% endif %}>Human</option>
+                <option value="elf" {% if char_data.race == 'elf' %}selected{% endif %}>Elf</option>
+                <option value="dwarf" {% if char_data.race == 'dwarf' %}selected{% endif %}>Dwarf</option>
+                <option value="giant" {% if char_data.race == 'giant' %}selected{% endif %}>Giant</option>
+                <option value="other" {% if char_data.race and char_data.race != 'human' and char_data.race != 'elf' and char_data.race != 'dwarf' and char_data.race != 'giant' %}selected{% endif %}>Other</option>
+            </select>
+            <input type="text" name="char_race_other" id="char-race-other" data-field="race" 
+                   value="{% if char_data.race and char_data.race != 'human' and char_data.race != 'elf' and char_data.race != 'dwarf' and char_data.race != 'giant' %}{{ char_data.race }}{% endif %}" 
+                   placeholder="Enter custom race" 
+                   style="width: 100%; padding: 6px 8px; font-family: inherit; font-size: 14px; border: 1px solid #ccc; display: none;">
+        </div>
+    </div>
+    <!-- Description (only shown in generator view) -->
+    <div class="editable-field" style="margin-bottom: 15px;">
+        <label>Description:</label>
+        <textarea name="char_description" id="char-description" data-field="description" 
+                  placeholder="Enter character description" rows="3" style="width: 100%; padding: 6px 8px; font-family: inherit; font-size: 14px; border: 1px solid #ccc; resize: vertical;">{{ char_data.description|default:'' }}</textarea>
+    </div>
     {% endif %}
     
     <!-- Attributes Section -->
@@ -1736,6 +1767,66 @@ var CharacterSheet = (function() {
                 saveField(this, componentId);
             });
         });
+
+        // Handle race dropdown with "other" option
+        var raceSelect = container.querySelector('#char-race');
+        var raceOtherInput = container.querySelector('#char-race-other');
+        if (raceSelect && raceOtherInput) {
+            // Check if we have a custom race value (not one of the standard options)
+            var standardRaces = ['human', 'elf', 'dwarf', 'giant'];
+            var currentRace = raceOtherInput.value.trim();
+            if (currentRace && standardRaces.indexOf(currentRace) === -1) {
+                // Custom race is stored - set dropdown to "other" and show input
+                raceSelect.value = 'other';
+                raceOtherInput.style.display = 'block';
+            }
+
+            // Show/hide "other" text input based on selection
+            function updateRaceOtherVisibility() {
+                if (raceSelect.value === 'other') {
+                    raceOtherInput.style.display = 'block';
+                    // If "other" is selected but input is empty, focus it
+                    if (!raceOtherInput.value.trim()) {
+                        raceOtherInput.focus();
+                    }
+                } else {
+                    raceOtherInput.style.display = 'none';
+                    // Clear the "other" input when a standard race is selected
+                    if (raceSelect.value && raceSelect.value !== 'other') {
+                        raceOtherInput.value = '';
+                    }
+                }
+            }
+
+            // Check initial state (in case "other" is pre-selected)
+            updateRaceOtherVisibility();
+
+            // Handle dropdown change
+            raceSelect.addEventListener('change', function() {
+                updateRaceOtherVisibility();
+                if (this.value === 'other') {
+                    // Don't save "other" - wait for user to type in the text field
+                    return;
+                } else if (this.value) {
+                    // Save the standard race value immediately
+                    saveField(this, componentId);
+                }
+            });
+
+            // Handle "other" text input
+            raceOtherInput.addEventListener('input', function() {
+                debounceSave(this, componentId);
+            });
+
+            raceOtherInput.addEventListener('blur', function() {
+                var key = componentId + '-' + this.dataset.field;
+                if (saveTimeouts[key]) {
+                    clearTimeout(saveTimeouts[key]);
+                    saveTimeouts[key] = null;
+                }
+                saveField(this, componentId);
+            });
+        }
     }
 
     return {

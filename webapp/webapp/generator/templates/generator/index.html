@@ -380,6 +380,10 @@
         <!-- Action buttons -->
         <div class="sidebar-section">
             <button type="button" id="copy-btn" class="btn" onclick="copyToClipboard()">Copy to Clipboard</button>
+            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                <a href="{% url 'export_session_character_pdf' %}" class="btn" style="text-decoration: none; text-align: center; display: block;">Save as PDF</a>
+                <a href="{% url 'export_session_character_markdown' %}" class="btn" style="text-decoration: none; text-align: center; display: block;">Save as MD</a>
+            </div>
         </div>
 
         {% if died %}

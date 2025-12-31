@@ -45,6 +45,7 @@ from django import forms
 from django.contrib.auth.models import User
 from .models import UserProfile
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 
 
 class RegistrationForm(UserCreationForm):
@@ -870,7 +871,10 @@ def store_current_character(request, character, preserve_data=None):
         # Create a new saved character
         char_count = SavedCharacter.objects.filter(user=request.user).count() + 1
         saved_char = SavedCharacter.objects.create(
-            user=request.user, name=f"Character {char_count}", character_data=char_data
+            user=request.user,
+            name=f"Character {char_count}",
+            description=char_data.get("description", ""),
+            character_data=char_data,
         )
         saved_char_id = saved_char.id
         request.session["current_saved_character_id"] = saved_char_id
@@ -1824,10 +1828,17 @@ def handbook_section(request, section: str):
             content, extensions=["tables", "fenced_code", "toc"]
         )
 
-        # Rewrite relative image paths to absolute paths for the web app
+        # Rewrite relative image paths to Django URL paths for the web app
         # This allows markdown files to work both standalone and in the browser
         # e.g., src="images/foo.png" becomes src="/images/foo.png"
-        html_content = re.sub(r'src="images/', 'src="/images/', html_content)
+        # Use a function to generate proper Django URLs
+        def replace_image_path(match):
+            filename = match.group(1)
+            # Generate the Django URL for the image
+            image_url = reverse("reference_image", args=[filename])
+            return f'src="{image_url}"'
+
+        html_content = re.sub(r'src="images/([^"]+)"', replace_image_path, html_content)
     except FileNotFoundError:
         html_content = f"<p>Section '{section}' not found.</p>"
 
@@ -2006,6 +2017,9 @@ def save_session_character_for_user(request, user):
     saved_char = SavedCharacter.objects.create(
         user=user,
         name=char_data.get("name") or f"Character {char_count}",
+        age=char_data.get("age"),
+        race=char_data.get("race", ""),
+        description=char_data.get("description", ""),
         character_data=char_data,
     )
     request.session["current_saved_character_id"] = saved_char.id
@@ -2128,6 +2142,11 @@ def save_character(request):
             f"Character {SavedCharacter.objects.filter(user=request.user).count() + 1}"
         )
 
+    # Get description, age, and race from the data
+    description = char_data.get("description", "")
+    age = char_data.get("age")
+    race = char_data.get("race", "")
+
     # Include experience data if present
     save_data = dict(char_data)
     save_data["interactive_years"] = request.session.get("interactive_years", 0)
@@ -2140,7 +2159,12 @@ def save_character(request):
 
     # Create or update the saved character
     saved_char = SavedCharacter.objects.create(
-        user=request.user, name=name, character_data=save_data
+        user=request.user,
+        name=name,
+        age=age,
+        race=race,
+        description=description,
+        character_data=save_data,
     )
 
     return JsonResponse({"success": True, "id": saved_char.id, "name": saved_char.name})
@@ -2172,7 +2196,12 @@ def load_character(request, char_id):
         return redirect("my_characters")
 
     # Load character data into session
-    char_data = saved_char.character_data
+    char_data = saved_char.character_data.copy()
+    # Include model fields (name, age, race, description) in session
+    char_data["name"] = saved_char.name
+    char_data["age"] = saved_char.age
+    char_data["race"] = saved_char.race
+    char_data["description"] = saved_char.description
     request.session["current_character"] = {
         k: v for k, v in char_data.items() if not k.startswith("interactive_")
     }
@@ -2708,7 +2737,10 @@ def character_sheet(request, char_id):
     # Check if this is the owner or a DM viewing someone else's character
     is_owner = character.user == request.user
 
-    char_data = character.character_data
+    char_data = character.character_data.copy()
+    # Include model fields (name, description) in char_data for template
+    char_data["name"] = character.name
+    char_data["description"] = character.description
     attrs = char_data.get("attributes", {})
 
     # Build skill points data (migrates legacy if needed)
@@ -2819,6 +2851,21 @@ def update_character(request, char_id):
     if field == "name":
         # Update the model's name field
         character.name = value
+    elif field == "age":
+        # Update the model's age field (convert to int if provided)
+        if value:
+            try:
+                character.age = int(value)
+            except (ValueError, TypeError):
+                character.age = None
+        else:
+            character.age = None
+    elif field == "race":
+        # Update the model's race field
+        character.race = value or ""
+    elif field == "description":
+        # Update the model's description field
+        character.description = value
     elif field == "skills":
         # Handle skills list operations using skill points system
         if action == "add":
@@ -3402,3 +3449,359 @@ def admin_delete_note(request, note_id):
         messages.error(request, "Note not found.")
 
     return redirect("admin_notes")
+
+
+# =============================================================================
+# Export Views
+# =============================================================================
+
+
+def _generate_markdown_from_char_data(char_data, character_name="Unnamed Character"):
+    """Generate markdown representation of character data."""
+    md = f"# {character_name}\n\n"
+
+    # Attributes
+    md += "## Attributes\n\n"
+    md += "| Attr | Value | Mod |\n"
+    md += "|------|-------|-----|\n"
+
+    attrs = char_data.get("attributes", {})
+    attr_names = ["STR", "DEX", "INT", "WIS", "CON", "CHR"]
+    for attr in attr_names:
+        val = attrs.get(attr, "-")
+        mod = get_attribute_modifier(val)
+        mod_str = f"({mod:+d})" if mod != 0 else "(0)"
+        md += f"| {attr} | {val} | {mod_str} |\n"
+
+    fatigue = attrs.get("fatigue_points", "-")
+    body = attrs.get("body_points", "-")
+    md += f"\n**Fatigue Points:** {fatigue}\n"
+    md += f"**Body Points:** {body}\n\n"
+
+    # Biographical
+    md += "## Biographical\n\n"
+    bio_fields = ["appearance", "height", "weight"]
+    for field in bio_fields:
+        val = char_data.get(field, "")
+        if val:
+            label = field.capitalize()
+            md += f"**{label}:** {val}\n"
+    md += "\n"
+
+    # Background
+    md += "## Background\n\n"
+    background_fields = {
+        "provenance": "Provenance",
+        "location": "Location",
+        "literacy": "Literacy",
+        "wealth_level": "Wealth Level",
+    }
+    for field, label in background_fields.items():
+        val = char_data.get(field, "")
+        if val:
+            md += f"**{label}:** {val}\n"
+    md += "\n"
+
+    # Skills
+    md += "## Skills\n\n"
+    char_skills = build_skill_points_from_char_data(char_data)
+    skills_list = char_skills.get_display_list()
+    if skills_list:
+        for skill in skills_list:
+            md += f"- {skill}\n"
+    else:
+        md += "_No skills_\n"
+    md += "\n"
+
+    # Notes
+    notes = char_data.get("notes", "")
+    if notes and notes.strip():
+        md += f"## Notes\n\n{notes}\n"
+
+    # Prior Experience
+    years_served = char_data.get("interactive_years", 0)
+    if years_served > 0:
+        md += f"\n## Prior Experience\n\n"
+        md += f"**Years Served:** {years_served}\n"
+        md += f"**Current Age:** {16 + years_served}\n"
+        if char_data.get("skill_track"):
+            track = char_data["skill_track"].get("track", "")
+            survivability = char_data["skill_track"].get("survivability", "")
+            if track:
+                md += f"**Track:** {track}\n"
+            if survivability:
+                md += f"**Survivability:** {survivability}+\n"
+
+    return md
+
+
+def _generate_pdf_from_char_data(char_data, character_name="Unnamed Character"):
+    """Generate PDF representation of character data using reportlab."""
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.platypus import (
+        SimpleDocTemplate,
+        Paragraph,
+        Spacer,
+        Table,
+        TableStyle,
+    )
+    from reportlab.lib import colors
+    from io import BytesIO
+    from xml.sax.saxutils import escape
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    story = []
+    styles = getSampleStyleSheet()
+
+    # Custom styles
+    title_style = ParagraphStyle(
+        "CustomTitle",
+        parent=styles["Heading1"],
+        fontSize=24,
+        textColor=colors.HexColor("#1a1a1a"),
+        spaceAfter=12,
+    )
+    heading_style = ParagraphStyle(
+        "CustomHeading",
+        parent=styles["Heading2"],
+        fontSize=16,
+        textColor=colors.HexColor("#333333"),
+        spaceAfter=8,
+        spaceBefore=12,
+    )
+
+    # Title - escape special characters for XML/HTML
+    safe_character_name = escape(str(character_name or "Unnamed Character"))
+    story.append(Paragraph(safe_character_name, title_style))
+    story.append(Spacer(1, 0.2 * inch))
+
+    # Attributes
+    story.append(Paragraph("Attributes", heading_style))
+    attrs = char_data.get("attributes", {})
+    attr_data = [["Attribute", "Value", "Modifier"]]
+    attr_names = ["STR", "DEX", "INT", "WIS", "CON", "CHR"]
+    for attr in attr_names:
+        val = attrs.get(attr, "-")
+        mod = get_attribute_modifier(val)
+        mod_str = f"{mod:+d}" if mod != 0 else "0"
+        attr_data.append([attr, str(val), mod_str])
+
+    attr_table = Table(attr_data, colWidths=[1.5 * inch, 1 * inch, 1 * inch])
+    attr_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 12),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.lightgrey),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+            ]
+        )
+    )
+    story.append(attr_table)
+    story.append(Spacer(1, 0.1 * inch))
+
+    fatigue = attrs.get("fatigue_points", "-")
+    body = attrs.get("body_points", "-")
+    story.append(Paragraph(f"<b>Fatigue Points:</b> {fatigue}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Body Points:</b> {body}", styles["Normal"]))
+    story.append(Spacer(1, 0.2 * inch))
+
+    # Biographical
+    story.append(Paragraph("Biographical", heading_style))
+    bio_fields = ["appearance", "height", "weight"]
+    for field in bio_fields:
+        val = char_data.get(field, "")
+        if val:
+            label = field.capitalize()
+            safe_val = escape(str(val))
+            story.append(Paragraph(f"<b>{label}:</b> {safe_val}", styles["Normal"]))
+    story.append(Spacer(1, 0.2 * inch))
+
+    # Background
+    story.append(Paragraph("Background", heading_style))
+    background_fields = {
+        "provenance": "Provenance",
+        "location": "Location",
+        "literacy": "Literacy",
+        "wealth_level": "Wealth Level",
+    }
+    for field, label in background_fields.items():
+        val = char_data.get(field, "")
+        if val:
+            safe_val = escape(str(val))
+            story.append(Paragraph(f"<b>{label}:</b> {safe_val}", styles["Normal"]))
+    story.append(Spacer(1, 0.2 * inch))
+
+    # Skills
+    story.append(Paragraph("Skills", heading_style))
+    char_skills = build_skill_points_from_char_data(char_data)
+    skills_list = char_skills.get_display_list()
+    if skills_list:
+        for skill in skills_list:
+            safe_skill = escape(str(skill))
+            story.append(Paragraph(f"• {safe_skill}", styles["Normal"]))
+    else:
+        story.append(Paragraph("<i>No skills</i>", styles["Normal"]))
+    story.append(Spacer(1, 0.2 * inch))
+
+    # Notes
+    notes = char_data.get("notes", "")
+    if notes and notes.strip():
+        story.append(Paragraph("Notes", heading_style))
+        safe_notes = escape(str(notes))
+        story.append(Paragraph(safe_notes, styles["Normal"]))
+        story.append(Spacer(1, 0.2 * inch))
+
+    # Prior Experience
+    years_served = char_data.get("interactive_years", 0)
+    if years_served > 0:
+        story.append(Paragraph("Prior Experience", heading_style))
+        story.append(
+            Paragraph(f"<b>Years Served:</b> {years_served}", styles["Normal"])
+        )
+        story.append(
+            Paragraph(f"<b>Current Age:</b> {16 + years_served}", styles["Normal"])
+        )
+        if char_data.get("skill_track"):
+            track = char_data["skill_track"].get("track", "")
+            survivability = char_data["skill_track"].get("survivability", "")
+            if track:
+                safe_track = escape(str(track))
+                story.append(Paragraph(f"<b>Track:</b> {safe_track}", styles["Normal"]))
+            if survivability:
+                story.append(
+                    Paragraph(
+                        f"<b>Survivability:</b> {survivability}+", styles["Normal"]
+                    )
+                )
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+
+def export_session_character_markdown(request):
+    """Export current session character as Markdown file."""
+    try:
+        char_data = request.session.get("current_character")
+        if not char_data:
+            return HttpResponse(
+                "No character data found in session. Please generate a character first.",
+                status=404,
+                content_type="text/plain",
+            )
+
+        character_name = char_data.get("name", "Unnamed Character")
+        md_content = _generate_markdown_from_char_data(char_data, character_name)
+
+        response = HttpResponse(md_content, content_type="text/markdown; charset=utf-8")
+        # Sanitize filename
+        safe_name = re.sub(r"[^\w\s-]", "", character_name).strip()
+        safe_name = re.sub(r"[-\s]+", "_", safe_name)
+        filename = f"{safe_name or 'Unnamed_Character'}.md"
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+    except Exception as e:
+        import traceback
+
+        error_msg = f"Error generating Markdown: {str(e)}\n\n{traceback.format_exc()}"
+        return HttpResponse(error_msg, status=500, content_type="text/plain")
+
+
+def export_session_character_pdf(request):
+    """Export current session character as PDF file."""
+    try:
+        char_data = request.session.get("current_character")
+        if not char_data:
+            return HttpResponse(
+                "No character data found in session. Please generate a character first.",
+                status=404,
+                content_type="text/plain",
+            )
+
+        character_name = char_data.get("name", "Unnamed Character")
+        pdf_buffer = _generate_pdf_from_char_data(char_data, character_name)
+
+        response = HttpResponse(pdf_buffer.read(), content_type="application/pdf")
+        # Sanitize filename
+        safe_name = re.sub(r"[^\w\s-]", "", character_name).strip()
+        safe_name = re.sub(r"[-\s]+", "_", safe_name)
+        filename = f"{safe_name or 'Unnamed_Character'}.pdf"
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+    except Exception as e:
+        import traceback
+
+        error_msg = f"Error generating PDF: {str(e)}\n\n{traceback.format_exc()}"
+        return HttpResponse(error_msg, status=500, content_type="text/plain")
+
+
+@login_required
+def export_character_markdown(request, char_id):
+    """Export saved character as Markdown file."""
+    profile = getattr(request.user, "profile", None)
+    is_dm_or_admin = (
+        profile and (profile.is_dm or profile.is_admin) if profile else False
+    )
+
+    try:
+        if is_dm_or_admin:
+            character = SavedCharacter.objects.get(id=char_id)
+        else:
+            character = SavedCharacter.objects.get(id=char_id, user=request.user)
+    except SavedCharacter.DoesNotExist:
+        messages.error(request, "Character not found.")
+        return redirect("my_characters")
+
+    char_data = character.character_data.copy()
+    char_data["name"] = character.name
+    char_data["notes"] = character.description or char_data.get("notes", "")
+
+    md_content = _generate_markdown_from_char_data(char_data, character.name)
+
+    response = HttpResponse(md_content, content_type="text/markdown; charset=utf-8")
+    # Sanitize filename
+    safe_name = re.sub(r"[^\w\s-]", "", character.name).strip()
+    safe_name = re.sub(r"[-\s]+", "_", safe_name)
+    filename = f"{safe_name or 'Unnamed_Character'}.md"
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
+@login_required
+def export_character_pdf(request, char_id):
+    """Export saved character as PDF file."""
+    profile = getattr(request.user, "profile", None)
+    is_dm_or_admin = (
+        profile and (profile.is_dm or profile.is_admin) if profile else False
+    )
+
+    try:
+        if is_dm_or_admin:
+            character = SavedCharacter.objects.get(id=char_id)
+        else:
+            character = SavedCharacter.objects.get(id=char_id, user=request.user)
+    except SavedCharacter.DoesNotExist:
+        messages.error(request, "Character not found.")
+        return redirect("my_characters")
+
+    char_data = character.character_data.copy()
+    char_data["name"] = character.name
+    char_data["notes"] = character.description or char_data.get("notes", "")
+
+    pdf_buffer = _generate_pdf_from_char_data(char_data, character.name)
+
+    response = HttpResponse(pdf_buffer.read(), content_type="application/pdf")
+    # Sanitize filename
+    safe_name = re.sub(r"[^\w\s-]", "", character.name).strip()
+    safe_name = re.sub(r"[-\s]+", "_", safe_name)
+    filename = f"{safe_name or 'Unnamed_Character'}.pdf"
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response

@@ -13,7 +13,7 @@ The Pillars RPG Character Generator uses Django's built-in authentication system
 - **User Model**: Standard Django User model (username/password)
 - **Extended Profile**: Custom `UserProfile` model with role management
 - **Session Management**: Session-based authentication (no tokens)
-- **Database**: SQLite (`webapp/db.sqlite3`)
+- **Database**: SQLite (`webapp/db.sqlite3`) and Postgress
 
 ### Data Models
 

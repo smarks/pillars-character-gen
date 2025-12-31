@@ -597,7 +597,11 @@ input.error, textarea.error {
 
         <div class="sidebar-section">
             <h3>Export</h3>
-            <button type="button" class="btn" style="width: 100%;" onclick="exportMarkdown()">Copy as Markdown</button>
+            <button type="button" class="btn" style="width: 100%; margin-bottom: 8px;" onclick="exportMarkdown()">Copy as Markdown</button>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <a href="{% url 'export_character_pdf' character.id %}" class="btn" style="text-decoration: none; text-align: center; display: block; width: 100%;">Save as PDF</a>
+                <a href="{% url 'export_character_markdown' character.id %}" class="btn" style="text-decoration: none; text-align: center; display: block; width: 100%;">Save as MD</a>
+            </div>
         </div>
 
         {% if died %}
