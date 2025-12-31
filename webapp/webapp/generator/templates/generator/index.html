@@ -377,13 +377,16 @@
         </div>
         {% endif %}
 
-        <!-- Action buttons -->
+        <!-- Export dropdown -->
         <div class="sidebar-section">
-            <button type="button" id="copy-btn" class="btn" onclick="copyToClipboard()">Copy to Clipboard</button>
-            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
-                <a href="{% url 'export_session_character_pdf' %}" class="btn" style="text-decoration: none; text-align: center; display: block;">Save as PDF</a>
-                <a href="{% url 'export_session_character_markdown' %}" class="btn" style="text-decoration: none; text-align: center; display: block;">Save as MD</a>
-            </div>
+            <h3>Export Character</h3>
+            <select id="export-select" onchange="handleExport(this.value)" style="width: 100%; padding: 8px; font-family: monospace;">
+                <option value="">-- Choose Export Format --</option>
+                <option value="clipboard">Copy to Clipboard</option>
+                <option value="markdown">Download as Markdown (.md)</option>
+                <option value="pdf">Download as PDF</option>
+            </select>
+            <p id="export-status" style="margin-top: 8px; font-size: 0.85em; color: #666;"></p>
         </div>
 
         {% if died %}
@@ -406,9 +409,6 @@
     </div>
 </div>
 </form>
-
-<!-- Hidden textarea for clipboard -->
-<textarea id="clipboard-content" style="position: absolute; left: -9999px;">{{ character }}</textarea>
 
 <script>
 // Initialize CharacterSheet component for editing
@@ -521,26 +521,62 @@ document.addEventListener('DOMContentLoaded', function() {
     updateAgingWarning();
 })();
 
-function copyToClipboard() {
-    var content = document.getElementById('clipboard-content').value;
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(content).then(function() {
-            var btn = document.getElementById('copy-btn');
-            btn.textContent = 'Copied!';
-            setTimeout(function() { btn.textContent = 'Copy to Clipboard'; }, 2000);
-        });
-    } else {
-        // Fallback
-        var textarea = document.getElementById('clipboard-content');
-        textarea.style.position = 'fixed';
-        textarea.style.left = '0';
-        textarea.select();
-        document.execCommand('copy');
-        textarea.style.position = 'absolute';
-        textarea.style.left = '-9999px';
-        var btn = document.getElementById('copy-btn');
-        btn.textContent = 'Copied!';
-        setTimeout(function() { btn.textContent = 'Copy to Clipboard'; }, 2000);
+function handleExport(format) {
+    var select = document.getElementById('export-select');
+    var status = document.getElementById('export-status');
+
+    if (!format) return;
+
+    if (format === 'clipboard') {
+        // Fetch full character data as markdown for clipboard
+        fetch('{% url "export_session_character_markdown" %}')
+            .then(response => response.text())
+            .then(content => {
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(content).then(function() {
+                        status.textContent = 'Copied to clipboard!';
+                        status.style.color = 'green';
+                        setTimeout(function() {
+                            status.textContent = '';
+                            select.value = '';
+                        }, 2000);
+                    });
+                } else {
+                    // Fallback for older browsers
+                    var textarea = document.createElement('textarea');
+                    textarea.value = content;
+                    textarea.style.position = 'fixed';
+                    textarea.style.left = '-9999px';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    status.textContent = 'Copied to clipboard!';
+                    status.style.color = 'green';
+                    setTimeout(function() {
+                        status.textContent = '';
+                        select.value = '';
+                    }, 2000);
+                }
+            })
+            .catch(function(err) {
+                status.textContent = 'Error copying: ' + err;
+                status.style.color = 'red';
+            });
+    } else if (format === 'markdown') {
+        window.location.href = '{% url "export_session_character_markdown" %}';
+        status.textContent = 'Downloading...';
+        setTimeout(function() {
+            status.textContent = '';
+            select.value = '';
+        }, 2000);
+    } else if (format === 'pdf') {
+        window.location.href = '{% url "export_session_character_pdf" %}';
+        status.textContent = 'Downloading...';
+        setTimeout(function() {
+            status.textContent = '';
+            select.value = '';
+        }, 2000);
     }
 }
 

@@ -3,7 +3,7 @@
 
 **Many RPGs funnel you toward a destination. Pillars hands you a compass and a world.** 
 
-*Standing on the shoulders of Steve Jackson, Gary Gygax, Paul Gazis, the overly prescient Iain Banks, the equally acute Ursula K. Le Guin, 
+*Standing on the shoulders of Steve Jackson, Gary Gygax, Paul Gazis, the overly prescient Iain Banks, the equally acute Ursula K. Le Guin, the fauna of Roger Zelazny, 
 1980s-era members of MIT SGS, and, of course, the incomparable J.R.R. Tolkien, and with the help of Stan Heckman (and hopefully, at some point, ... well, you know who you are)—I cobbled together, err, crafted the world of Pillars. If any of those names spark joy—or even if they don't—I encourage you to check it out.*
 
 

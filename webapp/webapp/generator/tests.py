@@ -3904,3 +3904,320 @@ class HamburgerMenuLinkTests(TestCase):
         """Test Turn Sequence link in menu works."""
         response = self.client.get(reverse("turn_sequence"))
         self.assertEqual(response.status_code, 200)
+
+
+# =============================================================================
+# Export Functionality Tests
+# =============================================================================
+
+
+class ExportFunctionalityTests(TestCase):
+    """Tests for character export functionality (markdown, PDF, clipboard)."""
+
+    def setUp(self):
+        """Set up test user and character data."""
+        self.user = User.objects.create_user(
+            username="export_tester", password="testpass123"
+        )
+        UserProfile.objects.create(user=self.user, roles=["player"])
+
+        # Create a saved character with comprehensive data
+        self.char_data = {
+            "name": "Test Hero",
+            "attributes": {
+                "STR": 14,
+                "DEX": 12,
+                "INT": 16,
+                "WIS": 10,
+                "CON": 13,
+                "CHR": 11,
+                "fatigue_points": 15,
+                "body_points": 12,
+                "fatigue_roll": 5,
+                "body_roll": 3,
+                "generation_method": "4d6_drop_lowest",
+            },
+            "appearance": "Average",
+            "height": "5'10\"",
+            "weight": "170 lbs",
+            "provenance": "Local Villager",
+            "provenance_social_class": "Commoner",
+            "provenance_sub_class": "Farmer",
+            "location": "Rural Farmlands",
+            "location_skills": ["Farming", "Animal Husbandry"],
+            "literacy": "Literate",
+            "wealth": "Moderate",
+            "wealth_level": "Moderate",
+            "notes": "A brave adventurer with a mysterious past.",
+            "skill_track": {
+                "track": "Warrior",
+                "survivability": 10,
+                "initial_skills": ["Sword", "Shield"],
+            },
+            "interactive_years": 3,
+            "interactive_skills": ["Sword", "Shield", "Tactics", "Tracking"],
+            "interactive_yearly_results": [
+                {
+                    "survival_roll": 15,
+                    "survived": True,
+                    "skills": ["Sword"],
+                    "rewards": "Minor coin",
+                    "aging": {},
+                },
+                {
+                    "survival_roll": 12,
+                    "survived": True,
+                    "skills": ["Shield", "Tactics"],
+                    "rewards": "",
+                    "aging": {},
+                },
+                {
+                    "survival_roll": 8,
+                    "survived": True,
+                    "skills": ["Tracking"],
+                    "rewards": "Family sword",
+                    "aging": {},
+                },
+            ],
+            "interactive_aging": {"str": 0, "dex": 0, "int": 0, "wis": 0, "con": 0},
+            "interactive_died": False,
+            "equipment": [
+                {"name": "Longsword", "quantity": 1, "weight": 4},
+                {"name": "Shield", "quantity": 1, "weight": 6},
+                {"name": "Rations", "quantity": 5, "weight": 1},
+            ],
+        }
+
+        self.saved_char = SavedCharacter.objects.create(
+            user=self.user, name="Test Hero", character_data=self.char_data
+        )
+
+    def test_generator_has_export_dropdown(self):
+        """Test that generator page has export dropdown menu."""
+        # First need to generate a character
+        response = self.client.get(reverse("generator"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="export-select"')
+        self.assertContains(response, "Copy to Clipboard")
+        self.assertContains(response, "Download as Markdown")
+        self.assertContains(response, "Download as PDF")
+
+    def test_session_export_markdown_no_character(self):
+        """Test markdown export returns 404 when no session character."""
+        response = self.client.get(reverse("export_session_character_markdown"))
+        self.assertEqual(response.status_code, 404)
+
+    def test_session_export_pdf_no_character(self):
+        """Test PDF export returns 404 when no session character."""
+        response = self.client.get(reverse("export_session_character_pdf"))
+        self.assertEqual(response.status_code, 404)
+
+    def test_session_export_markdown_with_character(self):
+        """Test markdown export works with session character."""
+        # Create a session character
+        session = self.client.session
+        session["current_character"] = self.char_data
+        session.save()
+
+        response = self.client.get(reverse("export_session_character_markdown"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/markdown; charset=utf-8")
+        self.assertIn("attachment", response["Content-Disposition"])
+
+    def test_session_export_pdf_with_character(self):
+        """Test PDF export works with session character."""
+        session = self.client.session
+        session["current_character"] = self.char_data
+        session.save()
+
+        response = self.client.get(reverse("export_session_character_pdf"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn("attachment", response["Content-Disposition"])
+
+    def test_markdown_export_contains_all_attributes(self):
+        """Test markdown export includes all character attributes."""
+        session = self.client.session
+        session["current_character"] = self.char_data
+        session.save()
+
+        response = self.client.get(reverse("export_session_character_markdown"))
+        content = response.content.decode("utf-8")
+
+        # Check attributes
+        self.assertIn("STR", content)
+        self.assertIn("DEX", content)
+        self.assertIn("INT", content)
+        self.assertIn("14", content)  # STR value
+        self.assertIn("16", content)  # INT value
+
+    def test_markdown_export_contains_derived_stats(self):
+        """Test markdown export includes fatigue and body points."""
+        session = self.client.session
+        session["current_character"] = self.char_data
+        session.save()
+
+        response = self.client.get(reverse("export_session_character_markdown"))
+        content = response.content.decode("utf-8")
+
+        self.assertIn("Fatigue Points", content)
+        self.assertIn("Body Points", content)
+        self.assertIn("15", content)  # fatigue
+        self.assertIn("12", content)  # body
+
+    def test_markdown_export_contains_background(self):
+        """Test markdown export includes background info."""
+        session = self.client.session
+        session["current_character"] = self.char_data
+        session.save()
+
+        response = self.client.get(reverse("export_session_character_markdown"))
+        content = response.content.decode("utf-8")
+
+        self.assertIn("Background", content)
+        self.assertIn("Local Villager", content)
+        self.assertIn("Commoner", content)
+        self.assertIn("Rural Farmlands", content)
+
+    def test_markdown_export_contains_skills_with_levels(self):
+        """Test markdown export includes skills with level details."""
+        session = self.client.session
+        session["current_character"] = self.char_data
+        session.save()
+
+        response = self.client.get(reverse("export_session_character_markdown"))
+        content = response.content.decode("utf-8")
+
+        self.assertIn("Skills", content)
+        self.assertIn("Sword", content)
+        self.assertIn("Level", content)
+        self.assertIn("Points", content)
+
+    def test_markdown_export_contains_prior_experience(self):
+        """Test markdown export includes prior experience history."""
+        session = self.client.session
+        session["current_character"] = self.char_data
+        session.save()
+
+        response = self.client.get(reverse("export_session_character_markdown"))
+        content = response.content.decode("utf-8")
+
+        self.assertIn("Prior Experience", content)
+        self.assertIn("Years of Experience", content)
+        self.assertIn("3", content)  # years
+        self.assertIn("Warrior", content)  # track
+        self.assertIn("Year 1", content)
+        self.assertIn("Year 2", content)
+        self.assertIn("Year 3", content)
+
+    def test_markdown_export_contains_equipment(self):
+        """Test markdown export includes equipment."""
+        session = self.client.session
+        session["current_character"] = self.char_data
+        session.save()
+
+        response = self.client.get(reverse("export_session_character_markdown"))
+        content = response.content.decode("utf-8")
+
+        self.assertIn("Equipment", content)
+        self.assertIn("Longsword", content)
+        self.assertIn("Shield", content)
+
+    def test_markdown_export_contains_notes(self):
+        """Test markdown export includes notes."""
+        session = self.client.session
+        session["current_character"] = self.char_data
+        session.save()
+
+        response = self.client.get(reverse("export_session_character_markdown"))
+        content = response.content.decode("utf-8")
+
+        self.assertIn("Notes", content)
+        self.assertIn("brave adventurer", content)
+
+    def test_saved_character_export_markdown(self):
+        """Test markdown export for saved character."""
+        self.client.login(username="export_tester", password="testpass123")
+        response = self.client.get(
+            reverse("export_character_markdown", args=[self.saved_char.id])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/markdown; charset=utf-8")
+
+    def test_saved_character_export_pdf(self):
+        """Test PDF export for saved character."""
+        self.client.login(username="export_tester", password="testpass123")
+        response = self.client.get(
+            reverse("export_character_pdf", args=[self.saved_char.id])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+
+    def test_saved_character_export_requires_login(self):
+        """Test that saved character export requires login."""
+        response = self.client.get(
+            reverse("export_character_markdown", args=[self.saved_char.id])
+        )
+        # Should redirect to login
+        self.assertEqual(response.status_code, 302)
+
+    def test_saved_character_export_requires_ownership(self):
+        """Test that user can only export their own characters."""
+        other_user = User.objects.create_user(
+            username="other_user", password="testpass123"
+        )
+        UserProfile.objects.create(user=other_user, roles=["player"])
+
+        self.client.login(username="other_user", password="testpass123")
+        response = self.client.get(
+            reverse("export_character_markdown", args=[self.saved_char.id])
+        )
+        # Should redirect (character not found for this user)
+        self.assertEqual(response.status_code, 302)
+
+    def test_markdown_export_footer(self):
+        """Test markdown export includes footer."""
+        session = self.client.session
+        session["current_character"] = self.char_data
+        session.save()
+
+        response = self.client.get(reverse("export_session_character_markdown"))
+        content = response.content.decode("utf-8")
+
+        self.assertIn("Exported from Pillars Character Generator", content)
+
+    def test_markdown_export_deceased_character(self):
+        """Test markdown export handles deceased character."""
+        deceased_data = self.char_data.copy()
+        deceased_data["interactive_died"] = True
+
+        session = self.client.session
+        session["current_character"] = deceased_data
+        session.save()
+
+        response = self.client.get(reverse("export_session_character_markdown"))
+        content = response.content.decode("utf-8")
+
+        self.assertIn("DECEASED", content)
+
+    def test_markdown_export_aging_penalties(self):
+        """Test markdown export includes aging penalties."""
+        aged_data = self.char_data.copy()
+        aged_data["interactive_aging"] = {
+            "str": -1,
+            "dex": -2,
+            "int": 0,
+            "wis": 0,
+            "con": -1,
+        }
+
+        session = self.client.session
+        session["current_character"] = aged_data
+        session.save()
+
+        response = self.client.get(reverse("export_session_character_markdown"))
+        content = response.content.decode("utf-8")
+
+        self.assertIn("Aging", content)
+        self.assertIn("-1", content)
+        self.assertIn("-2", content)
