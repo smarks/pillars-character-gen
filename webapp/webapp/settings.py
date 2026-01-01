@@ -111,20 +111,21 @@ WSGI_APPLICATION = "webapp.wsgi.application"
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
-    # Parse DATABASE_URL for PostgreSQL
+    # Parse DATABASE_URL for PostgreSQL using urllib.parse
+    # This correctly handles special characters in passwords
     # Format: postgres://user:password@host:port/dbname
-    import re
+    from urllib.parse import urlparse
 
-    match = re.match(r"postgres://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)", DATABASE_URL)
-    if match:
+    db_url = urlparse(DATABASE_URL.replace("postgres://", "postgresql://"))
+    if db_url.scheme == "postgresql" and db_url.hostname:
         DATABASES = {
             "default": {
                 "ENGINE": "django.db.backends.postgresql",
-                "NAME": match.group(5),
-                "USER": match.group(1),
-                "PASSWORD": match.group(2),
-                "HOST": match.group(3),
-                "PORT": match.group(4),
+                "NAME": db_url.path.lstrip("/"),
+                "USER": db_url.username or "",
+                "PASSWORD": db_url.password or "",
+                "HOST": db_url.hostname,
+                "PORT": str(db_url.port) if db_url.port else "5432",
             }
         }
     else:

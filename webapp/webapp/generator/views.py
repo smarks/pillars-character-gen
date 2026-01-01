@@ -1795,7 +1795,12 @@ def serve_reference_html(request, filename):
     if ".." in filename or filename.startswith("/"):
         raise Http404("Invalid filename")
 
-    html_path = os.path.join(settings.BASE_DIR, "..", "references", filename)
+    references_dir = os.path.realpath(os.path.join(settings.BASE_DIR, "..", "references"))
+    html_path = os.path.realpath(os.path.join(references_dir, filename))
+
+    # Ensure resolved path is still within references directory
+    if not html_path.startswith(references_dir + os.sep):
+        raise Http404("Invalid filename")
 
     if not os.path.exists(html_path):
         raise Http404("File not found")
@@ -1846,7 +1851,12 @@ def reference_html(request, name):
 
     # Read the markdown file
     filename = f"{name}.md"
-    md_path = os.path.join(settings.BASE_DIR, "..", "references", filename)
+    references_dir = os.path.realpath(os.path.join(settings.BASE_DIR, "..", "references"))
+    md_path = os.path.realpath(os.path.join(references_dir, filename))
+
+    # Ensure resolved path is still within references directory
+    if not md_path.startswith(references_dir + os.sep):
+        raise Http404("Invalid name")
 
     if not os.path.exists(md_path):
         raise Http404("File not found")
@@ -1864,6 +1874,27 @@ def reference_html(request, name):
     # Convert markdown to HTML with extensions for tables and fenced code
     content = markdown.markdown(md_content, extensions=["tables", "fenced_code", "toc"])
 
+    # Sanitize HTML to prevent XSS attacks
+    import bleach
+
+    allowed_tags = [
+        "p", "br", "strong", "em", "b", "i", "u",
+        "h1", "h2", "h3", "h4", "h5", "h6",
+        "ul", "ol", "li",
+        "table", "thead", "tbody", "tr", "th", "td",
+        "code", "pre",
+        "blockquote", "hr",
+        "a", "img",
+        "div", "span",
+    ]
+    allowed_attrs = {
+        "a": ["href", "title"],
+        "img": ["src", "alt", "title"],
+        "th": ["align"],
+        "td": ["align"],
+    }
+    content = bleach.clean(content, tags=allowed_tags, attributes=allowed_attrs)
+
     return render(
         request,
         "generator/handbook_section.html",
@@ -1878,10 +1909,15 @@ def serve_reference_image(request, filename):
     """Serve images from the references/images directory."""
     import mimetypes
 
-    image_path = os.path.join(settings.REFERENCES_IMAGES_DIR, filename)
-
     # Security: prevent directory traversal
     if ".." in filename or filename.startswith("/"):
+        raise Http404("Invalid filename")
+
+    images_dir = os.path.realpath(settings.REFERENCES_IMAGES_DIR)
+    image_path = os.path.realpath(os.path.join(images_dir, filename))
+
+    # Ensure resolved path is still within images directory
+    if not image_path.startswith(images_dir + os.sep):
         raise Http404("Invalid filename")
 
     if not os.path.exists(image_path):
@@ -1904,7 +1940,12 @@ def serve_reference_file(request, filename):
     if not any(filename.endswith(ext) for ext in allowed_extensions):
         raise Http404("Invalid file type")
 
-    file_path = os.path.join(settings.BASE_DIR, "..", "references", filename)
+    references_dir = os.path.realpath(os.path.join(settings.BASE_DIR, "..", "references"))
+    file_path = os.path.realpath(os.path.join(references_dir, filename))
+
+    # Ensure resolved path is still within references directory
+    if not file_path.startswith(references_dir + os.sep):
+        raise Http404("Invalid filename")
 
     if not os.path.exists(file_path):
         raise Http404("File not found")
@@ -2206,9 +2247,64 @@ def admin_required(view_func):
 
 
 @dm_required
-def dm_handbook(request):
-    """DM Handbook - requires DM or Admin role."""
-    return handbook_section(request, "dm_handbook")
+def dm_handbook(request, chapter=None):
+    """DM Handbook - requires DM or Admin role. Supports chapter navigation."""
+    # Chapter mapping
+    CHAPTERS = {
+        None: ("dm-handbook-00-intro.md", "DM Handbook", "Introduction"),
+        "00-intro": ("dm-handbook-00-intro.md", "DM Handbook", "Introduction"),
+        "01-magic-mechanics": ("dm-handbook-01-magic-mechanics.md", "Magic Mechanics", "Magic Mechanics (GM Reference)"),
+        "02-the-world": ("dm-handbook-02-the-world.md", "The World", "The World"),
+        "03-gm-tools": ("dm-handbook-03-gm-tools.md", "GM Tools", "GM Tools"),
+        "04-scenario-seeds": ("dm-handbook-04-scenario-seeds.md", "Scenario Seeds", "Scenario Seeds"),
+        "05-using-tables": ("dm-handbook-05-using-tables.md", "Using These Tables", "Using These Tables"),
+        "06-nobility-titles": ("dm-handbook-06-nobility-titles.md", "Nobility Titles", "Complete Guide to Nobility Titles"),
+    }
+    
+    # Get chapter info
+    chapter_key = chapter if chapter else None
+    chapter_info = CHAPTERS.get(chapter_key)
+    
+    if not chapter_info:
+        from django.http import Http404
+        raise Http404("Chapter not found")
+    
+    filename, section_title, page_title = chapter_info
+    
+    # Build file path
+    section_path = os.path.join(
+        settings.BASE_DIR, "..", "references", filename
+    )
+    
+    try:
+        with open(section_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        html_content = markdown.markdown(
+            content, extensions=["tables", "fenced_code", "toc"]
+        )
+
+        # Rewrite relative image paths to Django URL paths
+        def replace_image_path(match):
+            filename = match.group(1)
+            image_url = reverse("reference_image", args=[filename])
+            return f'src="{image_url}"'
+
+        html_content = re.sub(r'src="images/([^"]+)"', replace_image_path, html_content)
+    except FileNotFoundError:
+        html_content = f"<p>Chapter '{chapter}' not found.</p>"
+
+    return render(
+        request,
+        "generator/dm_handbook.html",
+        {
+            "content": html_content,
+            "title": page_title,
+            "section_title": section_title,
+            "chapters": CHAPTERS,
+            "current_chapter": chapter_key,
+        },
+    )
 
 
 @admin_required

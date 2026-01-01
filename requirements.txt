@@ -6,6 +6,7 @@ coverage>=7.3.0
 # Web app (optional - only needed for webapp/)
 django>=5.0
 markdown>=3.5
+bleach>=6.0  # HTML sanitization for user-facing content
 
 # E2E testing (optional - only needed for UI tests)
 selenium>=4.15.0
