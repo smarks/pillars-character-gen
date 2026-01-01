@@ -67,14 +67,87 @@
 .handbook-content th {
     background: #f4f4f4;
 }
+
+.dm-handbook-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+.dm-handbook-sidebar {
+    width: 250px;
+    flex-shrink: 0;
+    background: #f9f9f9;
+    border: 1px solid #ccc;
+    padding: 15px;
+}
+.dm-handbook-sidebar h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #999;
+    padding-bottom: 5px;
+    font-size: 1em;
+}
+.dm-handbook-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.dm-handbook-sidebar li {
+    margin: 5px 0;
+}
+.dm-handbook-sidebar a {
+    display: block;
+    padding: 5px 8px;
+    text-decoration: none;
+    color: #333;
+    border-left: 3px solid transparent;
+}
+.dm-handbook-sidebar a:hover {
+    background: #e8f0ff;
+    border-left-color: #36c;
+}
+.dm-handbook-sidebar a.active {
+    background: #e8f0ff;
+    border-left-color: #36c;
+    font-weight: bold;
+}
+.dm-handbook-main {
+    flex: 1;
+    max-width: 800px;
+}
+@media (max-width: 900px) {
+    .dm-handbook-layout {
+        flex-direction: column;
+    }
+    .dm-handbook-sidebar {
+        width: 100%;
+        order: -1;
+    }
+}
 {% endblock %}
 
 {% block content %}
 <div class="top-bar">
-    <h1>DM Handbook</h1>
+    <h1>{{ section_title }}</h1>
 </div>
 
-<div class="handbook-content">
-    {{ content|safe }}
+<div class="dm-handbook-layout">
+    <div class="dm-handbook-sidebar">
+        <h3>Chapters</h3>
+        <ul>
+            {% for key, title, full_title in chapters %}
+                {% if key is not None %}
+                    <li><a href="{% url 'dm_chapter' key %}" {% if key == current_chapter %}class="active"{% endif %}>{{ title }}</a></li>
+                {% else %}
+                    <li><a href="{% url 'dm' %}" {% if current_chapter is None %}class="active"{% endif %}>{{ title }}</a></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <div class="dm-handbook-main">
+        <div class="handbook-content">
+            {{ content|safe }}
+        </div>
+    </div>
 </div>
 {% endblock %}

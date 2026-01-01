@@ -1849,6 +1849,80 @@ def reference_html(request, name):
     if ".." in name or "/" in name:
         raise Http404("Invalid name")
 
+    # Special handling for dm-handbook - serve the intro chapter
+    # This maintains backward compatibility with /html/dm-handbook/ URLs
+    if name == "dm-handbook":
+        # Check DM access first
+        profile = getattr(request.user, "profile", None)
+        is_dm_or_admin = (
+            profile and (profile.is_dm or profile.is_admin) if profile else False
+        )
+        if not is_dm_or_admin:
+            from django.contrib.auth.decorators import login_required
+            # Redirect to login if not authenticated, or show access denied
+            if not request.user.is_authenticated:
+                return redirect("login")
+            else:
+                from django.http import HttpResponseForbidden
+                return HttpResponseForbidden("DM access required")
+        
+        # Serve the intro chapter file
+        filename = "dm-handbook-00-intro.md"
+        references_dir = os.path.realpath(os.path.join(settings.BASE_DIR, "..", "references"))
+        md_path = os.path.realpath(os.path.join(references_dir, filename))
+        
+        if not md_path.startswith(references_dir + os.sep) or not os.path.exists(md_path):
+            raise Http404("File not found")
+        
+        with open(md_path, "r", encoding="utf-8") as f:
+            md_content = f.read()
+        
+        # Extract title
+        title = "DM Handbook"
+        for line in md_content.split("\n"):
+            if line.startswith("# "):
+                title = line[2:].strip()
+                break
+        
+        # Convert markdown to HTML
+        content = markdown.markdown(md_content, extensions=["tables", "fenced_code", "toc"])
+        
+        # Rewrite chapter links to use the new chapter system
+        content = re.sub(
+            r'href="(/dm/chapter/([^"]+))"',
+            lambda m: f'href="{reverse("dm_chapter", args=[m.group(2)])}"',
+            content
+        )
+        
+        # Sanitize HTML to prevent XSS attacks
+        import bleach
+        allowed_tags = [
+            "p", "br", "strong", "em", "b", "i", "u",
+            "h1", "h2", "h3", "h4", "h5", "h6",
+            "ul", "ol", "li",
+            "table", "thead", "tbody", "tr", "th", "td",
+            "code", "pre",
+            "blockquote", "hr",
+            "a", "img",
+            "div", "span",
+        ]
+        allowed_attrs = {
+            "a": ["href", "title"],
+            "img": ["src", "alt", "title"],
+            "th": ["align"],
+            "td": ["align"],
+        }
+        content = bleach.clean(content, tags=allowed_tags, attributes=allowed_attrs)
+        
+        return render(
+            request,
+            "generator/handbook_section.html",
+            {
+                "content": content,
+                "title": title,
+            },
+        )
+
     # Read the markdown file
     filename = f"{name}.md"
     references_dir = os.path.realpath(os.path.join(settings.BASE_DIR, "..", "references"))
@@ -1876,7 +1950,6 @@ def reference_html(request, name):
 
     # Sanitize HTML to prevent XSS attacks
     import bleach
-
     allowed_tags = [
         "p", "br", "strong", "em", "b", "i", "u",
         "h1", "h2", "h3", "h4", "h5", "h6",
@@ -2294,6 +2367,14 @@ def dm_handbook(request, chapter=None):
     except FileNotFoundError:
         html_content = f"<p>Chapter '{chapter}' not found.</p>"
 
+    # Build chapter list for navigation (excluding None key for display)
+    chapter_list = [
+        (key, info[1], info[2]) for key, info in CHAPTERS.items() if key is not None
+    ]
+    # Add intro at the beginning
+    intro_info = CHAPTERS[None]
+    chapter_list.insert(0, (None, intro_info[1], intro_info[2]))
+    
     return render(
         request,
         "generator/dm_handbook.html",
@@ -2301,7 +2382,7 @@ def dm_handbook(request, chapter=None):
             "content": html_content,
             "title": page_title,
             "section_title": section_title,
-            "chapters": CHAPTERS,
+            "chapters": chapter_list,
             "current_chapter": chapter_key,
         },
     )
