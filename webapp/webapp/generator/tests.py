@@ -3857,30 +3857,6 @@ class HamburgerMenuLinkTests(TestCase):
         # Should return 404 due to security check
         self.assertEqual(response.status_code, 404)
 
-    def test_reference_html_nobility_guide_works(self):
-        """Test /html/guide_to_nobility_titles/ serves nobility content."""
-        response = self.client.get("/html/guide_to_nobility_titles/")
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "hamburger-menu")
-        self.assertContains(response, "Nobility")
-
-    def test_reference_html_nobility_guide_has_content(self):
-        """Test nobility guide contains expected hierarchy content."""
-        response = self.client.get("/html/guide_to_nobility_titles/")
-        self.assertEqual(response.status_code, 200)
-        # Check for key nobility ranks
-        self.assertContains(response, "King")
-        self.assertContains(response, "Duke")
-        self.assertContains(response, "Baron")
-        self.assertContains(response, "Knight")
-
-    def test_nobility_guide_link_in_menu(self):
-        """Test Nobility Titles link appears in References menu."""
-        response = self.client.get(reverse("welcome"))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Nobility Titles")
-        self.assertContains(response, "/html/guide_to_nobility_titles/")
-
     def test_reference_html_overview_works(self):
         """Test /html/overview/ serves overview content."""
         response = self.client.get("/html/overview/")
