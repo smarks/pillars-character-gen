@@ -15,7 +15,7 @@ class WelcomePageTests(TestCase):
         """Test that welcome page loads successfully."""
         response = self.client.get(reverse("welcome"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "PILLARS")
+        self.assertContains(response, "Pillars")
 
 
 class LorePageTests(TestCase):
@@ -95,6 +95,15 @@ class TurnSequencePageTests(TestCase):
         response = self.client.get(reverse("turn_sequence"))
         self.assertContains(response, "Turn Sequence")
         self.assertContains(response, "INITIATIVE")
+
+    def test_turn_sequence_has_hamburger_menu(self):
+        """Test that turn sequence page has hamburger menu for navigation."""
+        response = self.client.get(reverse("turn_sequence"))
+        self.assertContains(response, "hamburger-menu")
+        self.assertContains(response, "hamburger-btn")
+        # Check for navigation links
+        self.assertContains(response, 'href="/"')
+        self.assertContains(response, 'href="/html/about/"')
 
 
 class ReferenceImageTests(TestCase):

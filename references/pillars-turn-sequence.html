@@ -12,26 +12,26 @@
             z-index: 1000;
         }
         .hamburger-btn {
-            background: #16213e;
-            border: 1px solid #2a3a5e;
+            background: white;
+            border: 1px solid #ccc;
             cursor: pointer;
             padding: 8px 12px;
             font-size: 1.5em;
             line-height: 1;
-            color: #d4a857;
+            color: #333;
             border-radius: 4px;
         }
         .hamburger-btn:hover {
-            background: #1a2a4e;
+            background: #f4f4f4;
         }
         .hamburger-dropdown {
             display: none;
             position: absolute;
             top: 100%;
             left: 0;
-            background: #16213e;
-            border: 1px solid #2a3a5e;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             min-width: 180px;
             margin-top: 5px;
             border-radius: 4px;
@@ -42,22 +42,33 @@
         .hamburger-dropdown a {
             display: block;
             padding: 10px 15px;
-            color: #e8e8e8;
+            color: #36c;
             text-decoration: none;
-            border-bottom: 1px solid #2a3a5e;
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            border-bottom: 1px solid #eee;
+            font-family: monospace;
             font-size: 14px;
         }
         .hamburger-dropdown a:last-child {
             border-bottom: none;
         }
         .hamburger-dropdown a:hover {
-            background: #1a2a4e;
-            color: #d4a857;
+            background: #f4f4f4;
+            color: #14a;
         }
     </style>
 </head>
 <body>
+
+<div class="hamburger-menu">
+    <button class="hamburger-btn" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menu">&#9776;</button>
+    <div class="hamburger-dropdown">
+        <a href="/">Home</a>
+        <a href="/html/about/">About</a>
+        <a href="/html/public-rulebook/">Public Rules</a>
+        <a href="/html/guide_to_nobility_titles/">Nobility Titles</a>
+        <a href="/generator/">Character Generator</a>
+    </div>
+</div>
 
 <script>
 // ╔════════════════════════════════════════════════════════════════════════════╗
@@ -364,25 +375,26 @@ const CONTENT = {
 
 <style>
 :root {
-    --bg: #1a1a2e;
-    --card: #16213e;
-    --border: #2a3a5e;
-    --text: #e8e8e8;
-    --muted: #8a8a9a;
-    --gold: #d4a857;
-    --red: #c45c5c;
-    --green: #5c9a5c;
-    --blue: #5c8ac4;
-    --purple: #8a5cc4;
+    --bg: #f8f8f8;
+    --card: #ffffff;
+    --border: #ccc;
+    --text: #333;
+    --muted: #666;
+    --gold: #885500;
+    --red: #a04040;
+    --green: #408040;
+    --blue: #4070a0;
+    --purple: #705090;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-family: monospace;
     background: var(--bg);
     color: var(--text);
     padding: 10px;
+    padding-top: 50px;
     font-size: 9px;
     line-height: 1.2;
 }
