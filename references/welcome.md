@@ -17,7 +17,9 @@ find that something reaches back.
 The world has secrets. Most people never learn them. 
 
 You might.
+
 ---
+
 **Many RPGs funnel you toward a destination. Pillars hands you a compass and a world.** 
 
 *Standing on the shoulders of Steve Jackson, Gary Gygax, Paul Gazis, the overly prescient Iain Banks, the equally acute Ursula K. Le Guin, the fauna of Roger Zelazny, 

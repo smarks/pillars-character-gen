@@ -26,7 +26,7 @@ A while ago I decided to stop missing the kind of D&D I loved and started doing 
 
 ## What is Pillars?
 
-Pillars is a homebrew fantasy role-playing game designed to be easy to play but rich with details and possibilities. See the [public rulebook](#) for the rules or [create a character](#).
+Pillars is a homebrew fantasy role-playing game designed to be easy to play but rich with details and possibilities. See the [public rulebook](/html/public-rulebook/) for the rules or [create a character](/generator/).
 
 Similar to original D&D (which always had a fair amount of homebrew baked in), you might hear me referring to Pillars as "D&D." This will make sense to older players but may confuse—or even ruffle—players familiar with the current D&D system, which has evolved tremendously over the years.
 
@@ -91,7 +91,7 @@ Pillars is designed to reward creative problem-solving, strategic thinking, and 
 
 The rules are intentionally accessible—you don't need to master hundreds of pages before your first session. Jump in, experiment, and discover what your character can become. 
 
-**No prior gaming experience needed.** [Create your first character](#).
+**No prior gaming experience needed.** [Create your first character](/generator/).
 
 ---
 
@@ -202,4 +202,4 @@ The world has secrets. Most people never learn them.
 
 You might.
 
-[Create your first character](#) | [Read the public rulebook](#)
+[Create your first character](/generator/) | [Read the public rulebook](/html/public-rulebook/)
