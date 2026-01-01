@@ -490,6 +490,7 @@
                         {% if user.is_authenticated and user.profile.is_dm or user.is_authenticated and user.profile.is_admin %}
                         <a href="{% url 'reference_html' 'dm-handbook' %}">Private Rules</a>
                         {% endif %}
+                        <a href="{% url 'reference_html' 'guide_to_nobility_titles' %}">Nobility Titles</a>
                         <a href="{% url 'turn_sequence' %}">Turn Sequence</a>
                         {% if user.is_authenticated %}
                         <a href="{% url 'notes' %}">Notes</a>
