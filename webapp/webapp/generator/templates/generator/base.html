@@ -486,6 +486,8 @@
                     <div class="menu-section">References</div>
                     <div class="menu-sub">
                         <a href="{% url 'reference_html' 'about' %}">About</a>
+                        <a href="{% url 'reference_html' 'overview' %}">Overview</a>
+                        <a href="{% url 'reference_html' 'hitchhikers_guide' %}">Traveler's Guide</a>
                         <a href="{% url 'reference_html' 'public-rulebook' %}">Public Rules</a>
                         {% if user.is_authenticated and user.profile.is_dm or user.is_authenticated and user.profile.is_admin %}
                         <a href="{% url 'reference_html' 'dm-handbook' %}">Private Rules</a>

@@ -3881,6 +3881,29 @@ class HamburgerMenuLinkTests(TestCase):
         self.assertContains(response, "Nobility Titles")
         self.assertContains(response, "/html/guide_to_nobility_titles/")
 
+    def test_reference_html_overview_works(self):
+        """Test /html/overview/ serves overview content."""
+        response = self.client.get("/html/overview/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Pillars")
+        self.assertContains(response, "God King Emperor")
+
+    def test_reference_html_hitchhikers_guide_works(self):
+        """Test /html/hitchhikers_guide/ serves traveler's guide content."""
+        response = self.client.get("/html/hitchhikers_guide/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Traveler")
+        self.assertContains(response, "God King Emperor")
+
+    def test_overview_and_hitchhikers_links_in_menu(self):
+        """Test Overview and Traveler's Guide links appear in menu."""
+        response = self.client.get(reverse("welcome"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Overview")
+        self.assertContains(response, "/html/overview/")
+        self.assertContains(response, "Traveler")
+        self.assertContains(response, "/html/hitchhikers_guide/")
+
     # === My Profile view tests ===
 
     def test_my_profile_requires_login(self):
