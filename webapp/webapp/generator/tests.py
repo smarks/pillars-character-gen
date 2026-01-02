@@ -4250,3 +4250,297 @@ class ExportFunctionalityTests(TestCase):
         self.assertIn("Aging", content)
         self.assertIn("-1", content)
         self.assertIn("-2", content)
+
+
+# ============================================================================
+# Helpers Module Tests
+# ============================================================================
+
+
+class ValidateExperienceYearsTests(TestCase):
+    """Tests for validate_experience_years helper."""
+
+    def test_valid_integer_string(self):
+        """Valid integer string is parsed."""
+        from webapp.generator.views.helpers import validate_experience_years
+
+        self.assertEqual(validate_experience_years("5"), 5)
+        self.assertEqual(validate_experience_years("10"), 10)
+        self.assertEqual(validate_experience_years("1"), 1)
+
+    def test_clamps_to_minimum(self):
+        """Values below minimum are clamped."""
+        from webapp.generator.views.helpers import validate_experience_years
+
+        self.assertEqual(validate_experience_years("0"), 1)
+        self.assertEqual(validate_experience_years("-5"), 1)
+
+    def test_clamps_to_maximum(self):
+        """Values above maximum are clamped."""
+        from webapp.generator.views.helpers import validate_experience_years
+
+        self.assertEqual(validate_experience_years("100"), 50)
+        self.assertEqual(validate_experience_years("999"), 50)
+
+    def test_invalid_string_returns_default(self):
+        """Invalid strings return default value."""
+        from webapp.generator.views.helpers import validate_experience_years
+
+        self.assertEqual(validate_experience_years("abc"), 5)
+        self.assertEqual(validate_experience_years(""), 5)
+        self.assertEqual(validate_experience_years("abc", default=10), 10)
+
+    def test_none_returns_default(self):
+        """None returns default value."""
+        from webapp.generator.views.helpers import validate_experience_years
+
+        self.assertEqual(validate_experience_years(None), 5)
+
+
+class NormalizeSkillNameTests(TestCase):
+    """Tests for normalize_skill_name helper."""
+
+    def test_empty_string(self):
+        """Empty strings pass through."""
+        from webapp.generator.views.helpers import normalize_skill_name
+
+        self.assertEqual(normalize_skill_name(""), "")
+        self.assertEqual(normalize_skill_name(None), None)
+
+    def test_simple_name_title_cased(self):
+        """Simple names are title-cased."""
+        from webapp.generator.views.helpers import normalize_skill_name
+
+        self.assertEqual(normalize_skill_name("sword"), "Sword")
+        self.assertEqual(normalize_skill_name("TRACKING"), "Tracking")
+
+    def test_strips_whitespace(self):
+        """Whitespace is stripped."""
+        from webapp.generator.views.helpers import normalize_skill_name
+
+        self.assertEqual(normalize_skill_name("  sword  "), "Sword")
+
+    def test_modifier_preserved(self):
+        """Skill modifiers are preserved."""
+        from webapp.generator.views.helpers import normalize_skill_name
+
+        self.assertEqual(normalize_skill_name("sword +1 to hit"), "Sword +1 to hit")
+        self.assertEqual(normalize_skill_name("bow +2 damage"), "Bow +2 damage")
+
+
+class ConsolidateSkillsHelperTests(TestCase):
+    """Tests for consolidate_skills helper function edge cases."""
+
+    def test_empty_list(self):
+        """Empty list returns empty."""
+        from webapp.generator.views.helpers import consolidate_skills
+
+        self.assertEqual(consolidate_skills([]), [])
+        self.assertEqual(consolidate_skills(None), [])
+
+    def test_single_skill(self):
+        """Single skill returns level I."""
+        from webapp.generator.views.helpers import consolidate_skills
+
+        result = consolidate_skills(["Sword"])
+        self.assertEqual(len(result), 1)
+        self.assertIn("I", result[0])  # Level I
+
+    def test_multiple_same_skill_consolidates(self):
+        """Multiple occurrences consolidate using triangular numbers."""
+        from webapp.generator.views.helpers import consolidate_skills
+
+        # 3 points = Level II
+        result = consolidate_skills(["Sword", "Sword", "Sword"])
+        self.assertEqual(len(result), 1)
+        self.assertIn("II", result[0])
+
+    def test_excess_points_shown(self):
+        """Excess points toward next level are shown."""
+        from webapp.generator.views.helpers import consolidate_skills
+
+        # 4 points = Level II (+1)
+        result = consolidate_skills(["Sword", "Sword", "Sword", "Sword"])
+        self.assertEqual(len(result), 1)
+        self.assertIn("II", result[0])
+        self.assertIn("+1", result[0])
+
+    def test_different_skills_kept_separate(self):
+        """Different skills remain separate entries."""
+        from webapp.generator.views.helpers import consolidate_skills
+
+        result = consolidate_skills(["Sword", "Bow", "Tracking"])
+        self.assertEqual(len(result), 3)
+
+    def test_sorted_alphabetically(self):
+        """Results are sorted alphabetically."""
+        from webapp.generator.views.helpers import consolidate_skills
+
+        result = consolidate_skills(["Tracking", "Bow", "Sword"])
+        self.assertEqual(result[0].split()[0].lower(), "bow")
+        self.assertEqual(result[1].split()[0].lower(), "sword")
+        self.assertEqual(result[2].split()[0].lower(), "tracking")
+
+
+class GetModifierForValueTests(TestCase):
+    """Tests for get_modifier_for_value helper."""
+
+    def test_standard_values(self):
+        """Standard attribute values return correct modifiers."""
+        from webapp.generator.views.helpers import get_modifier_for_value
+
+        self.assertEqual(get_modifier_for_value(3), -5)
+        self.assertEqual(get_modifier_for_value(10), 0)
+        self.assertEqual(get_modifier_for_value(18), 5)
+
+
+class FormatAttributeDisplayTests(TestCase):
+    """Tests for format_attribute_display helper."""
+
+    def test_integer_to_string(self):
+        """Integer values become strings."""
+        from webapp.generator.views.helpers import format_attribute_display
+
+        self.assertEqual(format_attribute_display(14), "14")
+
+    def test_string_unchanged(self):
+        """String values pass through."""
+        from webapp.generator.views.helpers import format_attribute_display
+
+        self.assertEqual(format_attribute_display("18.50"), "18.50")
+
+
+class GetAttributeModifierTests(TestCase):
+    """Tests for get_attribute_modifier helper."""
+
+    def test_integer_value(self):
+        """Integer values use modifier table."""
+        from webapp.generator.views.helpers import get_attribute_modifier
+
+        self.assertEqual(get_attribute_modifier(10), 0)
+        self.assertEqual(get_attribute_modifier(18), 5)
+
+    def test_decimal_notation(self):
+        """Decimal notation parses correctly."""
+        from webapp.generator.views.helpers import get_attribute_modifier
+
+        self.assertEqual(get_attribute_modifier("18.50"), 5)
+        self.assertEqual(get_attribute_modifier("19.10"), 6)
+        self.assertEqual(get_attribute_modifier("20.00"), 7)
+
+    def test_invalid_value_returns_zero(self):
+        """Invalid values return 0."""
+        from webapp.generator.views.helpers import get_attribute_modifier
+
+        self.assertEqual(get_attribute_modifier("invalid"), 0)
+        self.assertEqual(get_attribute_modifier(None), 0)
+
+
+class GetAttributeBaseValueTests(TestCase):
+    """Tests for get_attribute_base_value helper."""
+
+    def test_integer_value(self):
+        """Integer values return as-is."""
+        from webapp.generator.views.helpers import get_attribute_base_value
+
+        self.assertEqual(get_attribute_base_value(14), 14)
+
+    def test_string_integer(self):
+        """String integers are parsed."""
+        from webapp.generator.views.helpers import get_attribute_base_value
+
+        self.assertEqual(get_attribute_base_value("14"), 14)
+
+    def test_decimal_notation(self):
+        """Decimal notation returns base value."""
+        from webapp.generator.views.helpers import get_attribute_base_value
+
+        self.assertEqual(get_attribute_base_value("18.50"), 18)
+        self.assertEqual(get_attribute_base_value("19.10"), 19)
+
+    def test_dict_with_value_key(self):
+        """Dict with 'value' key extracts value."""
+        from webapp.generator.views.helpers import get_attribute_base_value
+
+        self.assertEqual(get_attribute_base_value({"value": 15}), 15)
+        self.assertEqual(get_attribute_base_value({"value": "18.50"}), 18)
+
+    def test_dict_with_base_key(self):
+        """Dict with 'base' key extracts base."""
+        from webapp.generator.views.helpers import get_attribute_base_value
+
+        self.assertEqual(get_attribute_base_value({"base": 16}), 16)
+
+    def test_dict_with_total_key(self):
+        """Dict with 'total' key extracts total."""
+        from webapp.generator.views.helpers import get_attribute_base_value
+
+        self.assertEqual(get_attribute_base_value({"total": 12}), 12)
+
+    def test_invalid_value_returns_default(self):
+        """Invalid values return default of 10."""
+        from webapp.generator.views.helpers import get_attribute_base_value
+
+        self.assertEqual(get_attribute_base_value("invalid"), 10)
+        self.assertEqual(get_attribute_base_value({}), 10)
+
+
+class BuildTrackInfoTests(TestCase):
+    """Tests for build_track_info helper."""
+
+    def test_empty_availability(self):
+        """Empty availability returns empty list."""
+        from webapp.generator.views.helpers import build_track_info
+
+        result = build_track_info({})
+        self.assertEqual(result, [])
+
+    def test_includes_track_fields(self):
+        """Track info includes all required fields."""
+        from webapp.generator.views.helpers import build_track_info
+
+        availability = {
+            TrackType.ARMY: {
+                "requires_roll": True,
+                "impossible": False,
+                "requirement": "STR/DEX bonus",
+            }
+        }
+
+        result = build_track_info(availability)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["track"], "Army")
+        self.assertEqual(result[0]["track_key"], "army")
+        self.assertTrue(result[0]["requires_roll"])
+        self.assertFalse(result[0]["impossible"])
+        self.assertIn("survivability", result[0])
+
+    def test_sorted_by_display_order(self):
+        """Tracks are sorted by TRACK_DISPLAY_ORDER."""
+        from webapp.generator.views.helpers import build_track_info
+
+        availability = {
+            TrackType.WORKER: {
+                "requires_roll": False,
+                "impossible": False,
+                "requirement": "",
+            },
+            TrackType.OFFICER: {
+                "requires_roll": False,
+                "impossible": True,
+                "requirement": "Rich or promoted",
+            },
+            TrackType.ARMY: {
+                "requires_roll": True,
+                "impossible": False,
+                "requirement": "",
+            },
+        }
+
+        result = build_track_info(availability)
+        self.assertEqual(len(result), 3)
+        # Officer should come first (highest priority)
+        self.assertEqual(result[0]["track"], "Officer")
+        # Army before Worker
+        self.assertEqual(result[1]["track"], "Army")
+        self.assertEqual(result[2]["track"], "Worker")
