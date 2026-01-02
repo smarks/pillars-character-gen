@@ -12,7 +12,7 @@ jobs:
     outputs:
       docs-only: ${{ steps.filter.outputs.docs-only }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v2
         id: filter
         with:
@@ -51,7 +51,7 @@ jobs:
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v6
@@ -177,7 +177,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     
     - name: Set up Python
       uses: actions/setup-python@v6
