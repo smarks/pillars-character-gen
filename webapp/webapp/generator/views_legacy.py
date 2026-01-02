@@ -1964,12 +1964,16 @@ def reference_html(request, name):
     with open(md_path, "r", encoding="utf-8") as f:
         md_content = f.read()
 
-    # Extract title from first # heading
+    # Extract title from first # heading and remove it from content to avoid duplication
     title = name.replace("-", " ").replace("_", " ").title()
-    for line in md_content.split("\n"):
+    lines = md_content.split("\n")
+    for i, line in enumerate(lines):
         if line.startswith("# "):
             title = line[2:].strip()
+            # Remove the H1 line to prevent duplicate title
+            lines[i] = ""
             break
+    md_content = "\n".join(lines)
 
     # Convert markdown to HTML with extensions for tables and fenced code
     content = markdown.markdown(md_content, extensions=["tables", "fenced_code", "toc"])
@@ -2444,6 +2448,14 @@ def dm_handbook(request, chapter=None):
     try:
         with open(section_path, "r", encoding="utf-8") as f:
             content = f.read()
+
+        # Remove H1 title from content to avoid duplication with section_title
+        lines = content.split("\n")
+        for i, line in enumerate(lines):
+            if line.startswith("# "):
+                lines[i] = ""
+                break
+        content = "\n".join(lines)
 
         html_content = markdown.markdown(
             content, extensions=["tables", "fenced_code", "toc"]
