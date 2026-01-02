@@ -202,7 +202,11 @@ class GeneratorUITests(BrowserTestCase):
         # Verify "Copy to Clipboard" option exists
         select = Select(export_select)
         options = [opt.text for opt in select.options]
-        self.assertIn("Copy to Clipboard", options, "Export dropdown should have 'Copy to Clipboard' option")
+        self.assertIn(
+            "Copy to Clipboard",
+            options,
+            "Export dropdown should have 'Copy to Clipboard' option",
+        )
 
     def test_add_experience_button(self):
         """Test that Add Experience button adds experience and stays on generator."""
