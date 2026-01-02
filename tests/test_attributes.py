@@ -41,7 +41,6 @@ from pillars.attributes import (
     CORE_ATTRIBUTES,
     HEIGHT_TABLE,
     WEIGHT_TABLE,
-    WEALTH_TABLE,
     SURVIVAL_SKILLS,
     TRACK_SURVIVABILITY,
     TRACK_INITIAL_SKILLS,
@@ -62,6 +61,7 @@ from pillars.attributes import (
     YearResult,
     PriorExperience,
 )
+from pillars.config import WEALTH_TABLE
 
 
 class TestAttributeModifier(unittest.TestCase):

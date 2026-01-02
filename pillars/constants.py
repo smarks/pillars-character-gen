@@ -3,15 +3,9 @@ Constants for Pillars RPG character generation.
 
 This module contains all the large data tables and configuration constants
 used throughout the character generation system.
-
-Note: TrackType and MagicSchool are imported here. This creates a circular
-import, but Python handles it correctly as long as attributes.py imports
-this module after defining the enums.
 """
 
-# Import enums - must be done after they're defined in attributes.py
-# This is safe because attributes.py imports this module after defining TrackType and MagicSchool
-from pillars.attributes import TrackType, MagicSchool
+from pillars.enums import TrackType, MagicSchool
 
 # Magic school spell progressions
 MAGIC_SPELL_PROGRESSION = {

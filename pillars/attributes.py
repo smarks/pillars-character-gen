@@ -7,7 +7,6 @@ various methods (dice rolling or point allocation).
 
 from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass, field
-from enum import Enum
 import random
 from pillars.dice import (
     roll_dice,
@@ -15,6 +14,37 @@ from pillars.dice import (
     roll_demon_die,
     roll_percentile,
     roll_die,
+)
+from pillars.enums import TrackType, CraftType, MagicSchool
+from pillars.constants import (
+    MAGIC_SPELL_PROGRESSION,
+    SPELL_SKILL_MASTERY,
+    TRACK_SURVIVABILITY,
+    TRACK_INITIAL_SKILLS,
+    TRACK_YEARLY_SKILLS,
+)
+from pillars.config import (
+    ATTRIBUTE_MIN,
+    ATTRIBUTE_MAX,
+    MODIFIER_FLOOR,
+    MODIFIER_CEILING,
+    POINT_BUY_DEFAULT,
+    ARMY_ACCEPTANCE_TARGET,
+    NAVY_ACCEPTANCE_TARGET,
+    MERCHANT_ACCEPTANCE_TARGETS,
+    NOBILITY_THRESHOLD,
+    MERCHANT_THRESHOLD,
+    WEALTH_SUBSISTENCE_MAX,
+    WEALTH_MODERATE_MAX,
+    WEALTH_MERCHANT_MAX,
+    LOCATION_CITY_MAX,
+    LOCATION_VILLAGE_MAX,
+    LOCATION_RURAL_MAX,
+    LITERACY_MODIFIERS,
+    VILLAGE_SKILL_THRESHOLD,
+    RURAL_SKILL_COUNT,
+    HEIGHT_INCREMENT_INCHES,
+    MAGIC_COMMON_THRESHOLD,
 )
 
 
@@ -294,11 +324,11 @@ def get_attribute_modifier(value: int) -> int:
         return ATTRIBUTE_MODIFIERS[value]
 
     # Handle values outside the standard range
-    if value < 3:
-        return -5  # Floor at -5
-    elif value > 18:
-        # Extend the pattern: each point above 18 adds +1
-        return 5 + (value - 18)
+    if value < ATTRIBUTE_MIN:
+        return MODIFIER_FLOOR
+    elif value > ATTRIBUTE_MAX:
+        # Extend the pattern: each point above max adds +1
+        return MODIFIER_CEILING + (value - ATTRIBUTE_MAX)
     else:
         # Should not happen with standard table
         return 0
@@ -491,7 +521,9 @@ def generate_attributes_4d6_drop_lowest() -> CharacterAttributes:
     )
 
 
-def generate_attributes_point_buy(points: int = 65) -> CharacterAttributes:
+def generate_attributes_point_buy(
+    points: int = POINT_BUY_DEFAULT,
+) -> CharacterAttributes:
     """
     Create attributes using point buy system.
 
@@ -499,15 +531,14 @@ def generate_attributes_point_buy(points: int = 65) -> CharacterAttributes:
     The actual allocation should be done interactively or via input.
 
     Args:
-        points: Total points to allocate (default: 65)
+        points: Total points to allocate (default: POINT_BUY_DEFAULT)
 
     Returns:
         CharacterAttributes object with placeholder values
     """
     # For point buy, we start with a base template
     # This would need interactive input to complete
-    min_value = 3
-    attributes = {attr: min_value for attr in CORE_ATTRIBUTES}
+    attributes = {attr: ATTRIBUTE_MIN for attr in CORE_ATTRIBUTES}
 
     return CharacterAttributes(
         **attributes, generation_method=f"Point Buy ({points} points)", roll_details=[]
@@ -515,7 +546,7 @@ def generate_attributes_point_buy(points: int = 65) -> CharacterAttributes:
 
 
 def validate_point_buy(
-    attributes: Dict[str, int], total_points: int = 65
+    attributes: Dict[str, int], total_points: int = POINT_BUY_DEFAULT
 ) -> Tuple[bool, str]:
     """
     Validate that point buy allocation is legal.
@@ -538,12 +569,12 @@ def validate_point_buy(
         if attr not in attributes:
             return False, f"Missing attribute: {attr}"
 
-    # Check values are reasonable (assuming min 3, max 18 for starting)
+    # Check values are reasonable
     for attr, value in attributes.items():
-        if value < 3:
-            return False, f"{attr} value ({value}) is below minimum (3)"
-        if value > 18:
-            return False, f"{attr} value ({value}) exceeds maximum (18)"
+        if value < ATTRIBUTE_MIN:
+            return False, f"{attr} value ({value}) is below minimum ({ATTRIBUTE_MIN})"
+        if value > ATTRIBUTE_MAX:
+            return False, f"{attr} value ({value}) exceeds maximum ({ATTRIBUTE_MAX})"
 
     # Check total points
     total_used = sum(attributes.values())
@@ -719,17 +750,17 @@ def roll_height() -> Height:
         # Standard roll, use table directly
         hands, inches = HEIGHT_TABLE[first_roll]
     elif first_roll == 1:
-        # Short: start at 14 hands (56"), subtract 4" per 1
+        # Short: start at 14 hands (56"), subtract HEIGHT_INCREMENT_INCHES per 1
         base_hands, base_inches = HEIGHT_TABLE[1]
         ones_count = abs(intensity)  # intensity is negative for 1s
-        inches = base_inches - (4 * (ones_count - 1))  # -1 because first 1 is base
-        hands = inches // 4
+        inches = base_inches - (HEIGHT_INCREMENT_INCHES * (ones_count - 1))
+        hands = inches // HEIGHT_INCREMENT_INCHES
     else:  # first_roll == 6
-        # Tall: start at 19 hands (76"), add 4" per 6
+        # Tall: start at 19 hands (76"), add HEIGHT_INCREMENT_INCHES per 6
         base_hands, base_inches = HEIGHT_TABLE[6]
         sixes_count = intensity  # intensity is positive for 6s
-        inches = base_inches + (4 * (sixes_count - 1))  # -1 because first 6 is base
-        hands = inches // 4
+        inches = base_inches + (HEIGHT_INCREMENT_INCHES * (sixes_count - 1))
+        hands = inches // HEIGHT_INCREMENT_INCHES
 
     return Height(rolls=rolls, hands=hands, inches=inches)
 
@@ -937,12 +968,12 @@ def roll_provenance() -> Provenance:
     craft_roll = None
     craft_type = None
 
-    if main_roll <= 10:
+    if main_roll <= NOBILITY_THRESHOLD:
         # Nobility
         social_class = "Nobility"
         sub_roll = roll_percentile()
         sub_class = get_nobility_rank(sub_roll)
-    elif main_roll <= 30:
+    elif main_roll <= MERCHANT_THRESHOLD:
         # Merchant
         social_class = "Merchant"
         sub_roll = roll_percentile()
@@ -1100,19 +1131,19 @@ def roll_location() -> Location:
     attribute_roll = None
     skill_rolls = None
 
-    if roll <= 20:
+    if roll <= LOCATION_CITY_MAX:
         # City
         location_type = "City"
         skills = ["Street Smarts"]
         attribute_modifiers = {"CON": -1, "INT": 1}
-        literacy_check_modifier = 0
+        literacy_check_modifier = LITERACY_MODIFIERS["city"]
 
-    elif roll <= 70:
+    elif roll <= LOCATION_VILLAGE_MAX:
         # Village
         location_type = "Village"
         # Random: Street Smarts OR Survival (d6: 1-3 = Street Smarts, 4-6 = Survival)
         skill_roll = roll_die(6)
-        if skill_roll <= 3:
+        if skill_roll <= VILLAGE_SKILL_THRESHOLD:
             skills = ["Street Smarts"]
         else:
             skills = ["Survival"]
@@ -1121,15 +1152,15 @@ def roll_location() -> Location:
         attr_options = ["INT", "WIS", "STR", "DEX"]
         bonus_attr = attr_options[attribute_roll - 1]
         attribute_modifiers = {bonus_attr: 1}
-        literacy_check_modifier = 2
+        literacy_check_modifier = LITERACY_MODIFIERS["village"]
 
-    elif roll <= 99:
+    elif roll <= LOCATION_RURAL_MAX:
         # Rural
         location_type = "Rural"
         # Pick 2 random survival skills using d5 (d6, reroll 6)
         skill_rolls = []
         selected_indices = []
-        while len(selected_indices) < 2:
+        while len(selected_indices) < RURAL_SKILL_COUNT:
             skill_die = roll_die(6)
             while skill_die == 6:  # Reroll 6s for d5
                 skill_die = roll_die(6)
@@ -1138,14 +1169,14 @@ def roll_location() -> Location:
                 skill_rolls.append(skill_die)
         skills = [SURVIVAL_SKILLS[i] for i in selected_indices]
         attribute_modifiers = {"STR": 1, "DEX": 1}
-        literacy_check_modifier = 4
+        literacy_check_modifier = LITERACY_MODIFIERS["rural"]
 
     else:
         # Special (100)
         location_type = "Special (Off-lander)"
         skills = []
         attribute_modifiers = {}
-        literacy_check_modifier = 0
+        literacy_check_modifier = LITERACY_MODIFIERS["special"]
 
     return Location(
         roll=roll,
@@ -1177,15 +1208,6 @@ class Wealth:
         return result
 
 
-# Wealth table: percentile range -> (wealth_level, base_coin)
-WEALTH_TABLE = {
-    (0, 15): ("Subsistence", 10),
-    (16, 70): ("Moderate", 100),
-    (71, 95): ("Merchant", 100),  # Plus additional percentile roll
-    (96, 100): ("Rich", None),  # Consult DM
-}
-
-
 def get_wealth_level(roll: int) -> str:
     """
     Get wealth level from percentile roll.
@@ -1196,11 +1218,11 @@ def get_wealth_level(roll: int) -> str:
     Returns:
         Wealth level string
     """
-    if roll <= 15:
+    if roll <= WEALTH_SUBSISTENCE_MAX:
         return "Subsistence"
-    elif roll <= 70:
+    elif roll <= WEALTH_MODERATE_MAX:
         return "Moderate"
-    elif roll <= 95:
+    elif roll <= WEALTH_MERCHANT_MAX:
         return "Merchant"
     else:
         return "Rich"
@@ -1257,70 +1279,6 @@ def roll_wealth(allow_rich: bool = True) -> Wealth:
 # =============================================================================
 # SKILL TRACKS
 # =============================================================================
-
-
-class TrackType(Enum):
-    """Enumeration of available skill tracks."""
-
-    ARMY = "Army"
-    NAVY = "Navy"
-    RANGER = "Ranger"
-    OFFICER = "Officer"
-    RANDOM = "Random"
-    WORKER = "Worker"
-    CRAFTS = "Crafts"
-    MERCHANT = "Merchant"
-    MAGIC = "Magic"
-
-
-class CraftType(Enum):
-    """Enumeration of craft specializations."""
-
-    SMITH = "Smith"
-    AGRICULTURE = "Agriculture"
-    TAILOR = "Tailor"
-    SCIENCE_MAPS = "Science (Maps/Logistics/Accounting)"
-    SCIENCE_POTIONS = "Science (Potions/Medicine)"
-    SCIENCE_PHYSICS = "Science (Physics/Engineering)"
-    BUILDER_WAINWRIGHT = "Builder (Wainwright)"
-    BUILDER_SHIPWRIGHT = "Builder (Shipwright)"
-    BUILDER_MASON = "Builder (Mason)"
-    BUILDER_STRUCTURES = "Builder (Structures)"
-    MEDICAL = "Medical"
-    MAGIC = "Magic"
-
-
-class MagicSchool(Enum):
-    """Enumeration of magic schools."""
-
-    # Common Schools (0-70 percentile)
-    ELEMENTAL_FIRE = "Elemental Fire"
-    ELEMENTAL_LIGHTNING = "Elemental Lightning"
-    ELEMENTAL_WATER = "Elemental Water"
-    ELEMENTAL_EARTH = "Elemental Earth"
-    ELEMENTAL_WIND = "Elemental Wind"
-    ALL_ELEMENTS = "All Elements"
-    PASSAGE = "Passage"
-    PROTECTION = "Protection"
-    MENDING = "Mending"
-    # Less Common Schools (71-100 percentile)
-    WEATHER = "Weather"
-    COUNTER = "Counter"
-    ARCANE_HELP = "Arcane Help"
-    CONTROL = "Control"
-
-
-# Import constants from constants module
-# This is done after TrackType and MagicSchool are defined to avoid circular imports
-from pillars.constants import (  # noqa: E402
-    MAGIC_SPELL_PROGRESSION,
-    SPELL_SKILL_MASTERY,
-    TRACK_SURVIVABILITY,
-    TRACK_INITIAL_SKILLS,
-    TRACK_YEARLY_SKILLS,
-)
-
-# All constants are now imported from pillars.constants above
 
 
 @dataclass
@@ -1472,7 +1430,7 @@ def roll_magic_school() -> Tuple[MagicSchool, Dict[str, int]]:
     percentile = roll_percentile()
     rolls["percentile"] = percentile
 
-    if percentile <= 70:
+    if percentile <= MAGIC_COMMON_THRESHOLD:
         # Common Schools - roll d12
         school_roll = roll_die(12)
         rolls["school"] = school_roll
@@ -1536,11 +1494,11 @@ def check_magic_acceptance(int_mod: int, wis_mod: int) -> AcceptanceCheck:
 def check_army_acceptance(str_mod: int, dex_mod: int) -> AcceptanceCheck:
     """
     Check if character meets Army track requirements.
-    Requirement: 8+ on 2d6 + STR/DEX modifiers
+    Requirement: ARMY_ACCEPTANCE_TARGET+ on 2d6 + STR/DEX modifiers
     """
     roll = sum(roll_dice(2, 6))
     total = roll + str_mod + dex_mod
-    target = 8
+    target = ARMY_ACCEPTANCE_TARGET
     accepted = total >= target
 
     return AcceptanceCheck(
@@ -1556,11 +1514,11 @@ def check_army_acceptance(str_mod: int, dex_mod: int) -> AcceptanceCheck:
 def check_navy_acceptance(str_mod: int, dex_mod: int, int_mod: int) -> AcceptanceCheck:
     """
     Check if character meets Navy track requirements.
-    Requirement: 8+ on 2d6 + STR/DEX/INT modifiers
+    Requirement: NAVY_ACCEPTANCE_TARGET+ on 2d6 + STR/DEX/INT modifiers
     """
     roll = sum(roll_dice(2, 6))
     total = roll + str_mod + dex_mod + int_mod
-    target = 8
+    target = NAVY_ACCEPTANCE_TARGET
     accepted = total >= target
 
     return AcceptanceCheck(
@@ -1649,10 +1607,7 @@ def is_working_class(wealth_level: str, social_class: str) -> bool:
 def check_merchant_acceptance(social_class: str, wealth_level: str) -> AcceptanceCheck:
     """
     Check if character meets Merchant track requirements.
-    Requirements based on social standing:
-    - 10+ on 2d6 if poor (Subsistence)
-    - 8+ on 2d6 if working class (Moderate + Commoner/Laborer)
-    - 6+ on 2d6 if above working class
+    Requirements based on social standing (see MERCHANT_ACCEPTANCE_TARGETS).
     """
     roll = sum(roll_dice(2, 6))
 
@@ -1661,13 +1616,13 @@ def check_merchant_acceptance(social_class: str, wealth_level: str) -> Acceptanc
     is_working_class_val = is_working_class(wealth_level, social_class)
 
     if is_poor_val:
-        target = 10
+        target = MERCHANT_ACCEPTANCE_TARGETS["poor"]
         class_desc = "poor"
     elif is_working_class_val:
-        target = 8
+        target = MERCHANT_ACCEPTANCE_TARGETS["working"]
         class_desc = "working class"
     else:
-        target = 6
+        target = MERCHANT_ACCEPTANCE_TARGETS["above"]
         class_desc = "above working class"
 
     accepted = roll >= target
@@ -1798,13 +1753,13 @@ def get_track_availability(
 
     # Merchant: 2d6 vs variable target based on social standing
     if is_poor(wealth_level):
-        target = 10
+        target = MERCHANT_ACCEPTANCE_TARGETS["poor"]
         class_desc = "poor"
     elif is_working_class(wealth_level, social_class):
-        target = 8
+        target = MERCHANT_ACCEPTANCE_TARGETS["working"]
         class_desc = "working class"
     else:
-        target = 6
+        target = MERCHANT_ACCEPTANCE_TARGETS["above"]
         class_desc = "above working class"
 
     availability[TrackType.MERCHANT] = calculate_roll_availability(

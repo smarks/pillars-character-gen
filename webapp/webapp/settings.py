@@ -13,15 +13,41 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# =============================================================================
+# ENVIRONMENT VARIABLE HELPERS
+# =============================================================================
+
+
+def parse_bool_env(key: str, default: bool = False) -> bool:
+    """
+    Parse boolean environment variable with validation.
+
+    Accepts: true, 1, yes, false, 0, no (case-insensitive)
+    Empty string or missing variable returns the default.
+    """
+    value = os.environ.get(key, "").strip().lower()
+    if not value:
+        return default
+    if value in ("true", "1", "yes"):
+        return True
+    if value in ("false", "0", "no"):
+        return False
+    raise ImproperlyConfigured(
+        f"{key} must be a boolean value (true/false, 1/0, yes/no), got '{value}'"
+    )
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() in ("true", "1", "yes")
+DEBUG = parse_bool_env("DJANGO_DEBUG", default=False)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # In production, DJANGO_SECRET_KEY must be set. In debug mode, use an insecure default.
@@ -44,6 +70,13 @@ ALLOWED_HOSTS = [
     ).split(",")
     if h.strip()
 ]
+
+# Validate ALLOWED_HOSTS in production
+if not DEBUG and (not ALLOWED_HOSTS or ALLOWED_HOSTS == [""]):
+    raise ImproperlyConfigured(
+        "DJANGO_ALLOWED_HOSTS must be set in production. "
+        "Set to comma-separated hostnames/IPs that can serve this site."
+    )
 
 # CSRF trusted origins for form submissions (required for Django 4.0+)
 # Format: http://domain:port or https://domain:port
@@ -198,7 +231,7 @@ if not DEBUG:
 
     # Only enable secure cookies if using HTTPS
     # Set DJANGO_USE_HTTPS=True in .env if you have SSL/TLS configured
-    USE_HTTPS = os.environ.get("DJANGO_USE_HTTPS", "False").lower() == "true"
+    USE_HTTPS = parse_bool_env("DJANGO_USE_HTTPS", default=False)
     if USE_HTTPS:
         CSRF_COOKIE_SECURE = True
         SESSION_COOKIE_SECURE = True
