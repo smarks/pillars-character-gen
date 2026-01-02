@@ -1324,7 +1324,6 @@ from pillars.constants import (  # noqa: E402
 
 
 @dataclass
-@dataclass
 class AcceptanceCheck:
     """Stores the result of a track acceptance check."""
 
