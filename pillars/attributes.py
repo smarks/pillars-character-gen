@@ -1312,7 +1312,7 @@ class MagicSchool(Enum):
 
 # Import constants from constants module
 # This is done after TrackType and MagicSchool are defined to avoid circular imports
-from pillars.constants import (
+from pillars.constants import (  # noqa: E402
     MAGIC_SPELL_PROGRESSION,
     SPELL_SKILL_MASTERY,
     TRACK_SURVIVABILITY,
