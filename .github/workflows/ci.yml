@@ -7,7 +7,22 @@ on:
     branches: [ main, master, develop ]
 
 jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      docs-only: ${{ steps.filter.outputs.docs-only }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            docs-only:
+              - '**/*.md'
+
   test:
+    needs: check-changes
+    if: needs.check-changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -147,6 +162,8 @@ jobs:
         fail_ci_if_error: false
 
   lint:
+    needs: check-changes
+    if: needs.check-changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
     
     steps:
@@ -181,4 +198,12 @@ jobs:
       run: |
         source .venv/bin/activate
         python -m ruff check pillars/ tests/ webapp/ --exclude migrations
+
+  docs-only:
+    needs: check-changes
+    if: needs.check-changes.outputs.docs-only == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip CI for documentation-only changes
+        run: echo "Only documentation files (.md) were changed. Skipping tests and linting."
 
