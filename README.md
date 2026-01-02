@@ -161,14 +161,39 @@ The app uses SQLite by default. See `.env.example` for all configuration options
 
 ## CI/CD
 
-The project includes GitHub Actions workflows (`.github/workflows/ci.yml`) that:
-- Run tests on Python 3.10, 3.11, and 3.12
+The project includes GitHub Actions workflows that:
+- Run tests on Python 3.11 and 3.12 (`.github/workflows/ci.yml`)
 - Run core library tests, Django tests, and E2E tests
 - Check code formatting and linting
 - Generate coverage reports
 - Test against PostgreSQL database
 
 Tests run automatically on push and pull requests.
+
+## Security & Code Scanning
+
+The project uses GitHub Advanced Security features:
+
+### CodeQL Code Scanning
+- **Workflow**: `.github/workflows/codeql.yml`
+- **Languages**: Python
+- **Triggers**: 
+  - Push to main/master/develop branches
+  - Pull requests to main/master/develop branches
+  - Weekly scheduled scan (Mondays at 6:00 AM UTC)
+- **Features**: Analyzes code for security vulnerabilities and code quality issues
+- **Results**: Available in the Security tab > Code scanning alerts
+
+### Dependabot
+- **Configuration**: `.github/dependabot.yml`
+- **Package Ecosystems**:
+  - Python (pip) - Weekly updates on Mondays
+  - GitHub Actions - Weekly updates on Mondays
+- **Features**:
+  - Automated dependency updates
+  - Security vulnerability alerts
+  - Grouped updates for related dependencies
+- **Results**: Available in the Security tab > Dependabot alerts
 
 ## Project Structure
 
@@ -181,9 +206,11 @@ character_gen/
 ├── pillars/          # Core library
 ├── docs/             # Documentation
 ├── references/       # Reference materials
-├── .github/          # GitHub Actions workflows
-│   └── workflows/
-│       └── ci.yml    # CI/CD pipeline
+├── .github/          # GitHub configuration
+│   ├── workflows/
+│   │   ├── ci.yml       # CI/CD pipeline
+│   │   └── codeql.yml   # CodeQL code scanning
+│   └── dependabot.yml   # Dependabot configuration
 ├── .coveragerc       # Coverage configuration
 └── requirements.txt
 ```
