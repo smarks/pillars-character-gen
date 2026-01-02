@@ -300,7 +300,6 @@ class MagicTrackTests(TestCase):
         from pillars.attributes import (
             create_skill_track_for_choice,
             roll_yearly_skill,
-            MAGIC_SPELL_PROGRESSION,
         )
 
         track = create_skill_track_for_choice(
@@ -747,7 +746,7 @@ class DMHandbookContentTests(TestCase):
         self.assertContains(response, "Scenario Seeds")
 
         # Verify the actual content is in the chapter
-        response = self.client.get(reverse("dm_chapter", args=["04-scenario-seeds"]))
+        response = self.client.get(reverse("dm_chapter", args=["06-scenario-seeds"]))
         self.assertContains(response, "The Weregild Appraiser")
 
 

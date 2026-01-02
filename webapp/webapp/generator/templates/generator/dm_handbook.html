@@ -110,6 +110,22 @@
     border-left-color: #36c;
     font-weight: bold;
 }
+.dm-handbook-sidebar .section-header {
+    font-weight: bold;
+    color: #333;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    padding: 5px 8px;
+    font-size: 0.95em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.dm-handbook-sidebar .section-header:first-child {
+    margin-top: 0;
+}
+.dm-handbook-sidebar .section-items {
+    padding-left: 10px;
+}
 .dm-handbook-main {
     flex: 1;
     max-width: 800px;
@@ -132,13 +148,24 @@
 
 <div class="dm-handbook-layout">
     <div class="dm-handbook-sidebar">
-        <h3>Chapters</h3>
+        <h3>DM Handbook</h3>
         <ul>
-            {% for key, title, full_title in chapters %}
-                {% if key is not None %}
-                    <li><a href="{% url 'dm_chapter' key %}" {% if key == current_chapter %}class="active"{% endif %}>{{ title }}</a></li>
-                {% else %}
-                    <li><a href="{% url 'dm' %}" {% if current_chapter is None %}class="active"{% endif %}>{{ title }}</a></li>
+            {% for item in menu_structure %}
+                {% if item.type == "link" %}
+                    {% if item.key is None %}
+                        <li><a href="{% url 'dm' %}" {% if current_chapter is None %}class="active"{% endif %}>{{ item.title }}</a></li>
+                    {% else %}
+                        <li><a href="{% url 'dm_chapter' item.key %}" {% if item.key == current_chapter %}class="active"{% endif %}>{{ item.title }}</a></li>
+                    {% endif %}
+                {% elif item.type == "section" %}
+                    <li class="section-header">{{ item.title }}</li>
+                    <li class="section-items">
+                        <ul>
+                            {% for subitem in item.items %}
+                                <li><a href="{% url 'dm_chapter' subitem.key %}" {% if subitem.key == current_chapter %}class="active"{% endif %}>{{ subitem.title }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
                 {% endif %}
             {% endfor %}
         </ul>

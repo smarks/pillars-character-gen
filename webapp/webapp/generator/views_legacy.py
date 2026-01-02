@@ -2373,33 +2373,60 @@ def admin_required(view_func):
 @dm_required
 def dm_handbook(request, chapter=None):
     """DM Handbook - requires DM or Admin role. Supports chapter navigation."""
-    # Chapter mapping
+    # Chapter mapping: key -> (filename, sidebar_title, page_title)
     CHAPTERS = {
-        None: ("dm-handbook-00-intro.md", "DM Handbook", "Introduction"),
-        "00-intro": ("dm-handbook-00-intro.md", "DM Handbook", "Introduction"),
+        None: ("dm-handbook-00-intro.md", "Table of Contents", "DM Handbook"),
+        "00-intro": ("dm-handbook-00-intro.md", "Table of Contents", "DM Handbook"),
         "01-magic-mechanics": (
             "dm-handbook-01-magic-mechanics.md",
+            "Mechanics",
             "Magic Mechanics",
-            "Magic Mechanics (GM Reference)",
         ),
-        "02-the-world": ("dm-handbook-02-the-world.md", "The World", "The World"),
+        "02-spells": ("dm-handbook-02-spells.md", "Spells", "Spell Compendium"),
         "03-gm-tools": ("dm-handbook-03-gm-tools.md", "GM Tools", "GM Tools"),
-        "04-scenario-seeds": (
-            "dm-handbook-04-scenario-seeds.md",
-            "Scenario Seeds",
-            "Scenario Seeds",
-        ),
-        "05-using-tables": (
+        "04-using-tables": (
             "dm-handbook-05-using-tables.md",
             "Using These Tables",
             "Using These Tables",
         ),
-        "06-nobility-titles": (
+        "05-the-world": ("dm-handbook-02-the-world.md", "The World", "The World"),
+        "06-scenario-seeds": (
+            "dm-handbook-04-scenario-seeds.md",
+            "Scenario Seeds",
+            "Scenario Seeds",
+        ),
+        "07-nobility-titles": (
             "dm-handbook-06-nobility-titles.md",
             "Nobility Titles",
-            "Complete Guide to Nobility Titles",
+            "Nobility Titles",
         ),
+        "08-names": ("dm-handbook-09-names.md", "Names", "Names"),
     }
+
+    # Hierarchical menu structure for sidebar
+    MENU_STRUCTURE = [
+        {"type": "link", "key": None, "title": "Table of Contents"},
+        {
+            "type": "section",
+            "title": "Magic",
+            "items": [
+                {"key": "01-magic-mechanics", "title": "Mechanics"},
+                {"key": "02-spells", "title": "Spells"},
+            ],
+        },
+        {
+            "type": "section",
+            "title": "GM Tools",
+            "items": [
+                {"key": "03-gm-tools", "title": "GM Tools"},
+                {"key": "04-using-tables", "title": "Using These Tables"},
+                {"key": "05-the-world", "title": "The World"},
+                {"key": "06-scenario-seeds", "title": "Scenario Seeds"},
+                {"key": "07-nobility-titles", "title": "Nobility Titles"},
+                {"key": "08-names", "title": "Names"},
+            ],
+        },
+    ]
 
     # Get chapter info
     chapter_key = chapter if chapter else None
@@ -2433,17 +2460,6 @@ def dm_handbook(request, chapter=None):
     except FileNotFoundError:
         html_content = f"<p>Chapter '{chapter}' not found.</p>"
 
-    # Build chapter list for navigation
-    # Exclude None (added separately) and 00-intro (duplicate of None)
-    chapter_list = [
-        (key, info[1], info[2])
-        for key, info in CHAPTERS.items()
-        if key is not None and key != "00-intro"
-    ]
-    # Add intro at the beginning (using None key for the main intro link)
-    intro_info = CHAPTERS[None]
-    chapter_list.insert(0, (None, intro_info[1], intro_info[2]))
-
     return render(
         request,
         "generator/dm_handbook.html",
@@ -2451,7 +2467,7 @@ def dm_handbook(request, chapter=None):
             "content": html_content,
             "title": page_title,
             "section_title": section_title,
-            "chapters": chapter_list,
+            "menu_structure": MENU_STRUCTURE,
             "current_chapter": chapter_key,
         },
     )
