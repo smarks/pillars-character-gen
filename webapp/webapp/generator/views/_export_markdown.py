@@ -2,8 +2,36 @@
 Markdown export generation for character data.
 """
 
-from .helpers import get_attribute_modifier
+from .helpers import get_attribute_modifier, get_attribute_base_value
 from ._character_helpers import build_skill_points_from_char_data
+
+
+# Movement and encumbrance constants (same as core.py)
+MIN_BASE_MOVEMENT = 4
+LIGHT_ENCUMBRANCE_MULTIPLIER = 1.5
+MEDIUM_ENCUMBRANCE_MULTIPLIER = 2
+HEAVY_ENCUMBRANCE_MULTIPLIER = 2.5
+
+
+def _calculate_movement_encumbrance(char_data):
+    """Calculate movement allowance and encumbrance thresholds."""
+    attrs = char_data.get("attributes", {})
+    str_val = get_attribute_base_value(attrs.get("STR", 10))
+    dex_val = get_attribute_base_value(attrs.get("DEX", 10))
+
+    base_ma = max(MIN_BASE_MOVEMENT, dex_val - 2)
+    return {
+        "base_ma": base_ma,
+        "jog_hexes": base_ma // 2,
+        "fatigue_pool": str_val,
+        "enc_unenc_max": str_val,
+        "enc_light_min": str_val + 1,
+        "enc_light_max": int(str_val * LIGHT_ENCUMBRANCE_MULTIPLIER),
+        "enc_med_min": int(str_val * LIGHT_ENCUMBRANCE_MULTIPLIER) + 1,
+        "enc_med_max": str_val * int(MEDIUM_ENCUMBRANCE_MULTIPLIER),
+        "enc_heavy_min": str_val * int(MEDIUM_ENCUMBRANCE_MULTIPLIER) + 1,
+        "enc_heavy_max": int(str_val * HEAVY_ENCUMBRANCE_MULTIPLIER),
+    }
 
 
 def generate_markdown_from_char_data(char_data, character_name="Unnamed Character"):
@@ -130,24 +158,82 @@ def generate_markdown_from_char_data(char_data, character_name="Unnamed Characte
         md += "_No skills acquired_\n"
     md += "\n"
 
-    # Equipment
-    equipment = char_data.get("equipment", [])
-    if equipment:
-        md += "## Equipment\n\n"
-        for item in equipment:
+    # Movement & Encumbrance
+    movement = _calculate_movement_encumbrance(char_data)
+    md += "## Movement & Encumbrance\n\n"
+    md += f"**Base MA:** {movement['base_ma']} (DEX − 2, min 4)\n"
+    md += f"**Fatigue Pool:** {movement['fatigue_pool']} (= STR)\n\n"
+
+    md += "### Encumbrance Thresholds\n\n"
+    md += "| Load Level | Weight (lbs) | MA Mod | Restrictions |\n"
+    md += "|------------|--------------|--------|-------------|\n"
+    md += f"| Unencumbered | 0–{movement['enc_unenc_max']} | 0 | — |\n"
+    md += f"| Light | {movement['enc_light_min']}–{movement['enc_light_max']} | −1 | — |\n"
+    md += f"| Medium | {movement['enc_med_min']}–{movement['enc_med_max']} | −2 | Cannot Run |\n"
+    md += f"| Heavy | {movement['enc_heavy_min']}–{movement['enc_heavy_max']} | −4 | Cannot Run/Jog |\n"
+    md += f"| Overloaded | >{movement['enc_heavy_max']} | Walk only | 1 hex max |\n"
+    md += "\n"
+
+    md += "### Movement Speeds\n\n"
+    md += "| Speed | Hexes | Fatigue | Actions |\n"
+    md += "|-------|-------|---------|--------|\n"
+    md += f"| Run | {movement['base_ma']} | 1/turn | None |\n"
+    md += f"| Jog | {movement['jog_hexes']} | 1/4 turns | Charge, Dodge, Drop |\n"
+    md += "| Walk | ≤2 | None | Ready Weapon |\n"
+    md += "| Walk (slow) | ≤1 | None | Cast, Missile, Disbelieve |\n"
+    md += "| Stand Still | 0 | None | Stand Up, Pick Up |\n"
+    md += "\n"
+
+    md += "**Engaged:** Can only Shift (1 hex, stay adjacent) or Stand Still.\n"
+    md += "**Exhausted (fatigue = ST):** MA halved, −2 DX, cannot Run.\n\n"
+
+    # Equipment & Encumbrance
+    md += "## Equipment & Encumbrance\n\n"
+    equipment = char_data.get("equipment", {})
+    weapons = equipment.get("weapons", []) if isinstance(equipment, dict) else []
+    armour = equipment.get("armour", []) if isinstance(equipment, dict) else []
+    misc = equipment.get("misc", []) if isinstance(equipment, dict) else []
+
+    # Handle legacy format (list of items)
+    if isinstance(equipment, list):
+        misc = equipment
+        weapons = []
+        armour = []
+
+    md += "### Weapons\n\n"
+    md += "| Name | Description | Hit | Crit | Dmg | Wt | Value | Notes |\n"
+    md += "|------|-------------|-----|------|-----|----|----- |-------|\n"
+    if weapons:
+        for item in weapons:
             if isinstance(item, dict):
-                name = item.get("name", "Unknown")
-                qty = item.get("quantity", 1)
-                weight = item.get("weight", 0)
-                md += f"- {name}"
-                if qty > 1:
-                    md += f" (x{qty})"
-                if weight:
-                    md += f" [{weight} lbs]"
-                md += "\n"
+                md += f"| {item.get('name', '')} | {item.get('description', '')} | {item.get('hit', '')} | {item.get('crit', '')} | {item.get('damage', '')} | {item.get('weight', '')} | {item.get('value', '')} | {item.get('notes', '')} |\n"
+    else:
+        md += "| | | | | | | | |\n"
+    md += "\n"
+
+    md += "### Armour\n\n"
+    md += "| Name | Description | Absorb | Wt | Value | Notes |\n"
+    md += "|------|-------------|--------|----|----- |-------|\n"
+    if armour:
+        for item in armour:
+            if isinstance(item, dict):
+                md += f"| {item.get('name', '')} | {item.get('description', '')} | {item.get('absorb', '')} | {item.get('weight', '')} | {item.get('value', '')} | {item.get('notes', '')} |\n"
+    else:
+        md += "| | | | | | |\n"
+    md += "\n"
+
+    md += "### Miscellaneous\n\n"
+    md += "| Name | Description | Attr Mod | Wt | Value |\n"
+    md += "|------|-------------|----------|----|----- |\n"
+    if misc:
+        for item in misc:
+            if isinstance(item, dict):
+                md += f"| {item.get('name', '')} | {item.get('description', '')} | {item.get('attr_mod', '')} | {item.get('weight', '')} | {item.get('value', '')} |\n"
             else:
-                md += f"- {item}\n"
-        md += "\n"
+                md += f"| {item} | | | | |\n"
+    else:
+        md += "| | | | | |\n"
+    md += "\n"
 
     # Prior Experience - Full History
     yearly_results = char_data.get("interactive_yearly_results", [])
@@ -212,11 +298,13 @@ def generate_markdown_from_char_data(char_data, character_name="Unnamed Characte
 
                 md += "\n"
 
-    # Notes
+    # Notes (always include section)
+    md += "## Notes\n\n"
     notes = char_data.get("notes", "")
     if notes and notes.strip():
-        md += "## Notes\n\n"
         md += f"{notes}\n\n"
+    else:
+        md += "_No notes_\n\n"
 
     # Manual skills (if any separate from computed)
     manual_skills = char_data.get("manual_skills", [])

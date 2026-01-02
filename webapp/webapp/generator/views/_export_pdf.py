@@ -5,8 +5,36 @@ PDF export generation for character data.
 from io import BytesIO
 from xml.sax.saxutils import escape
 
-from .helpers import get_attribute_modifier
+from .helpers import get_attribute_modifier, get_attribute_base_value
 from ._character_helpers import build_skill_points_from_char_data
+
+
+# Movement and encumbrance constants (same as core.py)
+MIN_BASE_MOVEMENT = 4
+LIGHT_ENCUMBRANCE_MULTIPLIER = 1.5
+MEDIUM_ENCUMBRANCE_MULTIPLIER = 2
+HEAVY_ENCUMBRANCE_MULTIPLIER = 2.5
+
+
+def _calculate_movement_encumbrance(char_data):
+    """Calculate movement allowance and encumbrance thresholds."""
+    attrs = char_data.get("attributes", {})
+    str_val = get_attribute_base_value(attrs.get("STR", 10))
+    dex_val = get_attribute_base_value(attrs.get("DEX", 10))
+
+    base_ma = max(MIN_BASE_MOVEMENT, dex_val - 2)
+    return {
+        "base_ma": base_ma,
+        "jog_hexes": base_ma // 2,
+        "fatigue_pool": str_val,
+        "enc_unenc_max": str_val,
+        "enc_light_min": str_val + 1,
+        "enc_light_max": int(str_val * LIGHT_ENCUMBRANCE_MULTIPLIER),
+        "enc_med_min": int(str_val * LIGHT_ENCUMBRANCE_MULTIPLIER) + 1,
+        "enc_med_max": str_val * int(MEDIUM_ENCUMBRANCE_MULTIPLIER),
+        "enc_heavy_min": str_val * int(MEDIUM_ENCUMBRANCE_MULTIPLIER) + 1,
+        "enc_heavy_max": int(str_val * HEAVY_ENCUMBRANCE_MULTIPLIER),
+    }
 
 
 def generate_pdf_from_char_data(char_data, character_name="Unnamed Character"):
@@ -229,24 +257,229 @@ def generate_pdf_from_char_data(char_data, character_name="Unnamed Character"):
         story.append(Paragraph("<i>No skills acquired</i>", styles["Normal"]))
     story.append(Spacer(1, 0.1 * inch))
 
-    # Equipment
-    equipment = char_data.get("equipment", [])
-    if equipment:
-        story.append(Paragraph("Equipment", heading_style))
-        for item in equipment:
+    # Movement & Encumbrance
+    movement = _calculate_movement_encumbrance(char_data)
+    story.append(Paragraph("Movement &amp; Encumbrance", heading_style))
+    story.append(
+        Paragraph(
+            f"<b>Base MA:</b> {movement['base_ma']} (DEX − 2, min 4) | "
+            f"<b>Fatigue Pool:</b> {movement['fatigue_pool']} (= STR)",
+            styles["Normal"],
+        )
+    )
+
+    story.append(Paragraph("Encumbrance Thresholds", subheading_style))
+    enc_data = [
+        ["Load Level", "Weight (lbs)", "MA Mod", "Restrictions"],
+        ["Unencumbered", f"0–{movement['enc_unenc_max']}", "0", "—"],
+        [
+            "Light",
+            f"{movement['enc_light_min']}–{movement['enc_light_max']}",
+            "−1",
+            "—",
+        ],
+        [
+            "Medium",
+            f"{movement['enc_med_min']}–{movement['enc_med_max']}",
+            "−2",
+            "Cannot Run",
+        ],
+        [
+            "Heavy",
+            f"{movement['enc_heavy_min']}–{movement['enc_heavy_max']}",
+            "−4",
+            "Cannot Run/Jog",
+        ],
+        ["Overloaded", f">{movement['enc_heavy_max']}", "Walk only", "1 hex max"],
+    ]
+    enc_table = Table(
+        enc_data, colWidths=[1.2 * inch, 1.1 * inch, 0.7 * inch, 1.2 * inch]
+    )
+    enc_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.lightgrey),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+            ]
+        )
+    )
+    story.append(enc_table)
+
+    story.append(Paragraph("Movement Speeds", subheading_style))
+    move_data = [
+        ["Speed", "Hexes", "Fatigue", "Actions"],
+        ["Run", str(movement["base_ma"]), "1/turn", "None"],
+        ["Jog", str(movement["jog_hexes"]), "1/4 turns", "Charge, Dodge, Drop"],
+        ["Walk", "≤2", "None", "Ready Weapon"],
+        ["Walk (slow)", "≤1", "None", "Cast, Missile, Disbelieve"],
+        ["Stand Still", "0", "None", "Stand Up, Pick Up"],
+    ]
+    move_table = Table(
+        move_data, colWidths=[1 * inch, 0.7 * inch, 0.8 * inch, 1.8 * inch]
+    )
+    move_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.lightgrey),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+            ]
+        )
+    )
+    story.append(move_table)
+    story.append(
+        Paragraph(
+            "<b>Engaged:</b> Can only Shift (1 hex, stay adjacent) or Stand Still. "
+            "<b>Exhausted:</b> MA halved, −2 DX, cannot Run.",
+            styles["Normal"],
+        )
+    )
+    story.append(Spacer(1, 0.1 * inch))
+
+    # Equipment & Encumbrance
+    story.append(Paragraph("Equipment &amp; Encumbrance", heading_style))
+    equipment = char_data.get("equipment", {})
+    weapons = equipment.get("weapons", []) if isinstance(equipment, dict) else []
+    armour = equipment.get("armour", []) if isinstance(equipment, dict) else []
+    misc = equipment.get("misc", []) if isinstance(equipment, dict) else []
+
+    # Handle legacy format (list of items)
+    if isinstance(equipment, list):
+        misc = equipment
+        weapons = []
+        armour = []
+
+    # Weapons table
+    story.append(Paragraph("Weapons", subheading_style))
+    weapon_data = [["Name", "Desc", "Hit", "Crit", "Dmg", "Wt", "Value"]]
+    if weapons:
+        for item in weapons:
             if isinstance(item, dict):
-                name = item.get("name", "Unknown")
-                qty = item.get("quantity", 1)
-                weight = item.get("weight", 0)
-                item_str = f"• {escape(name)}"
-                if qty > 1:
-                    item_str += f" (x{qty})"
-                if weight:
-                    item_str += f" [{weight} lbs]"
-                story.append(Paragraph(item_str, styles["Normal"]))
+                weapon_data.append(
+                    [
+                        item.get("name", ""),
+                        item.get("description", ""),
+                        item.get("hit", ""),
+                        item.get("crit", ""),
+                        item.get("damage", ""),
+                        item.get("weight", ""),
+                        item.get("value", ""),
+                    ]
+                )
+    else:
+        weapon_data.append(["", "", "", "", "", "", ""])
+    weapon_table = Table(
+        weapon_data,
+        colWidths=[
+            1.2 * inch,
+            1.2 * inch,
+            0.5 * inch,
+            0.5 * inch,
+            0.5 * inch,
+            0.4 * inch,
+            0.5 * inch,
+        ],
+    )
+    weapon_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("ALIGN", (2, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+            ]
+        )
+    )
+    story.append(weapon_table)
+
+    # Armour table
+    story.append(Paragraph("Armour", subheading_style))
+    armour_data = [["Name", "Description", "Absorb", "Wt", "Value"]]
+    if armour:
+        for item in armour:
+            if isinstance(item, dict):
+                armour_data.append(
+                    [
+                        item.get("name", ""),
+                        item.get("description", ""),
+                        item.get("absorb", ""),
+                        item.get("weight", ""),
+                        item.get("value", ""),
+                    ]
+                )
+    else:
+        armour_data.append(["", "", "", "", ""])
+    armour_table = Table(
+        armour_data,
+        colWidths=[1.2 * inch, 1.8 * inch, 0.6 * inch, 0.5 * inch, 0.6 * inch],
+    )
+    armour_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("ALIGN", (2, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+            ]
+        )
+    )
+    story.append(armour_table)
+
+    # Miscellaneous table
+    story.append(Paragraph("Miscellaneous", subheading_style))
+    misc_data = [["Name", "Description", "Attr Mod", "Wt", "Value"]]
+    if misc:
+        for item in misc:
+            if isinstance(item, dict):
+                misc_data.append(
+                    [
+                        item.get("name", ""),
+                        item.get("description", ""),
+                        item.get("attr_mod", ""),
+                        item.get("weight", ""),
+                        item.get("value", ""),
+                    ]
+                )
             else:
-                story.append(Paragraph(f"• {escape(str(item))}", styles["Normal"]))
-        story.append(Spacer(1, 0.1 * inch))
+                misc_data.append([str(item), "", "", "", ""])
+    else:
+        misc_data.append(["", "", "", "", ""])
+    misc_table = Table(
+        misc_data,
+        colWidths=[1.2 * inch, 1.8 * inch, 0.7 * inch, 0.5 * inch, 0.5 * inch],
+    )
+    misc_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("ALIGN", (2, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+            ]
+        )
+    )
+    story.append(misc_table)
+    story.append(Spacer(1, 0.1 * inch))
 
     # Prior Experience
     yearly_results = char_data.get("interactive_yearly_results", [])
@@ -323,13 +556,15 @@ def generate_pdf_from_char_data(char_data, character_name="Unnamed Character"):
                 story.append(Paragraph(year_str, styles["Normal"]))
         story.append(Spacer(1, 0.1 * inch))
 
-    # Notes
+    # Notes (always include section)
+    story.append(Paragraph("Notes", heading_style))
     notes = char_data.get("notes", "")
     if notes and notes.strip():
-        story.append(Paragraph("Notes", heading_style))
         safe_notes = escape(str(notes))
         story.append(Paragraph(safe_notes, styles["Normal"]))
-        story.append(Spacer(1, 0.1 * inch))
+    else:
+        story.append(Paragraph("<i>No notes</i>", styles["Normal"]))
+    story.append(Spacer(1, 0.1 * inch))
 
     # Footer
     footer_style = ParagraphStyle(
