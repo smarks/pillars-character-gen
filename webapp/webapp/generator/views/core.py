@@ -180,12 +180,37 @@ def _build_index_context(request, character, char_data):
     # Late import to avoid circular dependency
     from .character_sheet import build_skill_points_from_char_data
 
-    years_completed = request.session.get("interactive_years", 0)
-    skills = request.session.get("interactive_skills", [])
-    yearly_results = request.session.get("interactive_yearly_results", [])
-    aging_data = request.session.get("interactive_aging", {})
-    died = request.session.get("interactive_died", False)
-    track_name = request.session.get("interactive_track_name", "")
+    # Prefer char_data values over session (char_data persists across refreshes)
+    years_completed = (
+        char_data.get("interactive_years")
+        if char_data and char_data.get("interactive_years") is not None
+        else request.session.get("interactive_years", 0)
+    )
+    skills = (
+        char_data.get("interactive_skills")
+        if char_data and char_data.get("interactive_skills") is not None
+        else request.session.get("interactive_skills", [])
+    )
+    yearly_results = (
+        char_data.get("interactive_yearly_results")
+        if char_data and char_data.get("interactive_yearly_results") is not None
+        else request.session.get("interactive_yearly_results", [])
+    )
+    aging_data = (
+        char_data.get("interactive_aging")
+        if char_data and char_data.get("interactive_aging") is not None
+        else request.session.get("interactive_aging", {})
+    )
+    died = (
+        char_data.get("interactive_died")
+        if char_data and char_data.get("interactive_died") is not None
+        else request.session.get("interactive_died", False)
+    )
+    track_name = (
+        char_data.get("skill_track", {}).get("track", "")
+        if char_data and char_data.get("skill_track")
+        else request.session.get("interactive_track_name", "")
+    )
 
     # Build complete str_repr if there's prior experience
     if years_completed > 0 and char_data:
