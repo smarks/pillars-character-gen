@@ -1888,9 +1888,10 @@ def reference_html(request, name):
         content = markdown.markdown(md_content, extensions=["tables", "fenced_code", "toc"])
         
         # Rewrite chapter links to use the new chapter system
+        # Strip trailing slash from chapter name since URL pattern doesn't expect it
         content = re.sub(
             r'href="(/dm/chapter/([^"]+))"',
-            lambda m: f'href="{reverse("dm_chapter", args=[m.group(2)])}"',
+            lambda m: f'href="{reverse("dm_chapter", args=[m.group(2).rstrip("/")])}"',
             content
         )
         
