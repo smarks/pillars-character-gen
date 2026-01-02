@@ -197,6 +197,37 @@ class IndexViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Character Sheet")
 
+    def test_age_persists_after_refresh(self):
+        """Test that age persists correctly after page refresh (bug fix test)."""
+        # First load to create character
+        response = self.client.get(reverse("generator"))
+        self.assertEqual(response.context["current_age"], 16)
+        self.assertEqual(response.context["years_completed"], 0)
+
+        # Add experience
+        response = self.client.post(
+            reverse("generator"),
+            {
+                "action": "add_experience",
+                "years": 5,
+                "track_mode": "auto",
+            },
+            follow=True,
+        )
+
+        # Check that age increased
+        years_added = response.context["years_completed"]
+        expected_age = 16 + years_added
+        self.assertEqual(response.context["current_age"], expected_age)
+        self.assertGreater(years_added, 0)
+
+        # Refresh the page (GET request) - this is where the bug was
+        response = self.client.get(reverse("generator"))
+
+        # Age should still be correct after refresh
+        self.assertEqual(response.context["current_age"], expected_age)
+        self.assertEqual(response.context["years_completed"], years_added)
+
 
 class SelectTrackViewTests(TestCase):
     """Tests for the track selection view (legacy - not used in new UI)."""
