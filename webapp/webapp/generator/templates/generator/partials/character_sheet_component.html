@@ -37,8 +37,8 @@ Attribute display variables (computed by view):
     <div class="editable-field" style="margin-bottom: 15px; display: flex; gap: 25px; align-items: flex-start;">
         <div style="flex: 0 0 100px;">
             <label>Age:</label>
-            <input type="number" name="char_age" id="char-age" data-field="age" 
-                   value="{{ char_data.age|default:'' }}" placeholder="Age" 
+            <input type="number" name="char_age" id="char-age" data-field="age"
+                   value="{{ char_data.age|default:current_age|default:16 }}" placeholder="Age" 
                    min="0" inputmode="numeric" style="width: 100%; padding: 6px 8px; font-family: inherit; font-size: 14px; border: 1px solid #ccc;">
         </div>
         <div style="flex: 0 0 200px;">
