@@ -30,8 +30,12 @@ echo "Activating virtual environment..."
 source .venv/bin/activate
 
 echo ""
+echo "Installing dependencies..."
+pip install -r requirements.txt
+
+echo ""
 echo "Running migrations..."
-DATABASE_URL=postgres://pillars:pillars@localhost:5432/pillars_db python webapp/manage.py migrate
+DJANGO_DEBUG=True DATABASE_URL=postgres://pillars:pillars@localhost:5432/pillars_db python webapp/manage.py migrate
 
 echo ""
 echo "Updating systemd service file..."
