@@ -5,7 +5,8 @@ This module handles the generation of physical characteristics
 including appearance, height, and weight.
 """
 
-from typing import List
+from typing import List, Tuple
+
 from dataclasses import dataclass
 from pillars.dice import roll_demon_die
 from pillars.config import HEIGHT_INCREMENT_INCHES

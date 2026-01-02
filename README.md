@@ -86,6 +86,7 @@ python manage.py runserver
 - **`e2e.sh`** - End-to-end (Selenium) browser tests
 - **`lint.sh`** - Code quality checks and formatting
 - **`db.sh`** - Database management (migrations, reset, etc.)
+- **`act.sh`** - Run GitHub Actions workflows locally (requires Docker)
 
 All scripts automatically handle environment variables and database selection.
 
@@ -170,30 +171,28 @@ The project includes GitHub Actions workflows that:
 
 Tests run automatically on push and pull requests.
 
-## Security & Code Scanning
+### Running CI Locally
 
-The project uses GitHub Advanced Security features:
+You can test the CI workflow locally using `act`:
 
-### CodeQL Code Scanning
-- **Workflow**: `.github/workflows/codeql.yml`
-- **Languages**: Python
-- **Triggers**: 
-  - Push to main/master/develop branches
-  - Pull requests to main/master/develop branches
-  - Weekly scheduled scan (Mondays at 6:00 AM UTC)
-- **Features**: Analyzes code for security vulnerabilities and code quality issues
-- **Results**: Available in the Security tab > Code scanning alerts
+```bash
+# List available workflows
+./act.sh list
 
-### Dependabot
-- **Configuration**: `.github/dependabot.yml`
-- **Package Ecosystems**:
-  - Python (pip) - Weekly updates on Mondays
-  - GitHub Actions - Weekly updates on Mondays
-- **Features**:
-  - Automated dependency updates
-  - Security vulnerability alerts
-  - Grouped updates for related dependencies
-- **Results**: Available in the Security tab > Dependabot alerts
+# Run test job
+./act.sh test
+
+# Run lint job
+./act.sh lint
+
+# Simulate a push event (runs all jobs)
+./act.sh push
+
+# Run with verbose output
+./act.sh push -v
+```
+
+See `docs/GITHUB_ACTIONS_LOCAL.md` for detailed instructions.
 
 ## Project Structure
 
