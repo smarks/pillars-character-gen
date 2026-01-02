@@ -12,14 +12,6 @@
 - [Spells](/dm/chapter/02-spells/)
 
 ### GM Tools
-- [GM Tools](/dm/chapter/03-gm-tools/)
-  - [Universal NPC Tables](/dm/chapter/03-gm-tools/#universal-npc-tables)
-  - [Job Generator](/dm/chapter/03-gm-tools/#job-generator)
-  - [Dungeons & Ruins](/dm/chapter/03-gm-tools/#dungeons-ruins)
-  - [Urban Intrigue](/dm/chapter/03-gm-tools/#urban-intrigue)
-  - [Faction Generator](/dm/chapter/03-gm-tools/#faction-generator)
-  - [Trade & Economics](/dm/chapter/03-gm-tools/#trade-economics)
-  - [Hook Introduction](/dm/chapter/03-gm-tools/#hook-introduction)
 - [Using These Tables](/dm/chapter/04-using-tables/)
 - [The World](/dm/chapter/05-the-world/)
   - [The Splinterings](/dm/chapter/05-the-world/#the-splinterings)

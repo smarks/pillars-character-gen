@@ -2418,7 +2418,6 @@ def dm_handbook(request, chapter=None):
             "type": "section",
             "title": "GM Tools",
             "items": [
-                {"key": "03-gm-tools", "title": "GM Tools"},
                 {"key": "04-using-tables", "title": "Using These Tables"},
                 {"key": "05-the-world", "title": "The World"},
                 {"key": "06-scenario-seeds", "title": "Scenario Seeds"},
