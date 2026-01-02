@@ -39,7 +39,7 @@ import functools
 import markdown
 from django.shortcuts import render, redirect
 from django.conf import settings
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django import forms
 from django.contrib.auth.models import User
@@ -165,16 +165,12 @@ from pillars.attributes import (
     roll_single_year,
     SkillTrack,
     TrackType,
-    YearResult,
     AgingEffects,
-    PriorExperience,
-    AcceptanceCheck,
     CraftType,
     MagicSchool,
     get_track_availability,
     roll_skill_track,
     create_skill_track_for_choice,
-    roll_prior_experience,
     TRACK_SURVIVABILITY,
     TRACK_INITIAL_SKILLS,
 )
@@ -1434,10 +1430,6 @@ def serialize_character(character, preserve_data=None):
 
 def deserialize_character(data):
     """Deserialize character from session data."""
-    from pillars.attributes import (
-        CharacterAttributes,
-        generate_attributes_4d6_drop_lowest,
-    )
 
     # Create a minimal character object for display purposes
     # We mainly need the skill_track for rolling more years
@@ -1795,7 +1787,9 @@ def serve_reference_html(request, filename):
     if ".." in filename or filename.startswith("/"):
         raise Http404("Invalid filename")
 
-    references_dir = os.path.realpath(os.path.join(settings.BASE_DIR, "..", "references"))
+    references_dir = os.path.realpath(
+        os.path.join(settings.BASE_DIR, "..", "references")
+    )
     html_path = os.path.realpath(os.path.join(references_dir, filename))
 
     # Ensure resolved path is still within references directory
@@ -1858,54 +1852,83 @@ def reference_html(request, name):
             profile and (profile.is_dm or profile.is_admin) if profile else False
         )
         if not is_dm_or_admin:
-            from django.contrib.auth.decorators import login_required
             # Redirect to login if not authenticated, or show access denied
             if not request.user.is_authenticated:
                 return redirect("login")
             else:
                 from django.http import HttpResponseForbidden
+
                 return HttpResponseForbidden("DM access required")
-        
+
         # Serve the intro chapter file
         filename = "dm-handbook-00-intro.md"
-        references_dir = os.path.realpath(os.path.join(settings.BASE_DIR, "..", "references"))
+        references_dir = os.path.realpath(
+            os.path.join(settings.BASE_DIR, "..", "references")
+        )
         md_path = os.path.realpath(os.path.join(references_dir, filename))
-        
-        if not md_path.startswith(references_dir + os.sep) or not os.path.exists(md_path):
+
+        if not md_path.startswith(references_dir + os.sep) or not os.path.exists(
+            md_path
+        ):
             raise Http404("File not found")
-        
+
         with open(md_path, "r", encoding="utf-8") as f:
             md_content = f.read()
-        
+
         # Extract title
         title = "DM Handbook"
         for line in md_content.split("\n"):
             if line.startswith("# "):
                 title = line[2:].strip()
                 break
-        
+
         # Convert markdown to HTML
-        content = markdown.markdown(md_content, extensions=["tables", "fenced_code", "toc"])
-        
-        # Rewrite chapter links to use the new chapter system
-        # Strip trailing slash from chapter name since URL pattern doesn't expect it
-        content = re.sub(
-            r'href="(/dm/chapter/([^"]+))"',
-            lambda m: f'href="{reverse("dm_chapter", args=[m.group(2).rstrip("/")])}"',
-            content
+        content = markdown.markdown(
+            md_content, extensions=["tables", "fenced_code", "toc"]
         )
-        
+
+        # Rewrite chapter links to use the new chapter system
+        # Handle chapter name with optional trailing slash and optional anchor fragment
+        content = re.sub(
+            r'href="/dm/chapter/([^"/#]+)/?(#[^"]*)?"',
+            lambda m: f'href="{reverse("dm_chapter", args=[m.group(1)])}{m.group(2) or ""}"',
+            content,
+        )
+
         # Sanitize HTML to prevent XSS attacks
         import bleach
+
         allowed_tags = [
-            "p", "br", "strong", "em", "b", "i", "u",
-            "h1", "h2", "h3", "h4", "h5", "h6",
-            "ul", "ol", "li",
-            "table", "thead", "tbody", "tr", "th", "td",
-            "code", "pre",
-            "blockquote", "hr",
-            "a", "img",
-            "div", "span",
+            "p",
+            "br",
+            "strong",
+            "em",
+            "b",
+            "i",
+            "u",
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
+            "ul",
+            "ol",
+            "li",
+            "table",
+            "thead",
+            "tbody",
+            "tr",
+            "th",
+            "td",
+            "code",
+            "pre",
+            "blockquote",
+            "hr",
+            "a",
+            "img",
+            "div",
+            "span",
         ]
         allowed_attrs = {
             "a": ["href", "title"],
@@ -1914,7 +1937,7 @@ def reference_html(request, name):
             "td": ["align"],
         }
         content = bleach.clean(content, tags=allowed_tags, attributes=allowed_attrs)
-        
+
         return render(
             request,
             "generator/handbook_section.html",
@@ -1926,7 +1949,9 @@ def reference_html(request, name):
 
     # Read the markdown file
     filename = f"{name}.md"
-    references_dir = os.path.realpath(os.path.join(settings.BASE_DIR, "..", "references"))
+    references_dir = os.path.realpath(
+        os.path.join(settings.BASE_DIR, "..", "references")
+    )
     md_path = os.path.realpath(os.path.join(references_dir, filename))
 
     # Ensure resolved path is still within references directory
@@ -1951,15 +1976,38 @@ def reference_html(request, name):
 
     # Sanitize HTML to prevent XSS attacks
     import bleach
+
     allowed_tags = [
-        "p", "br", "strong", "em", "b", "i", "u",
-        "h1", "h2", "h3", "h4", "h5", "h6",
-        "ul", "ol", "li",
-        "table", "thead", "tbody", "tr", "th", "td",
-        "code", "pre",
-        "blockquote", "hr",
-        "a", "img",
-        "div", "span",
+        "p",
+        "br",
+        "strong",
+        "em",
+        "b",
+        "i",
+        "u",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "ul",
+        "ol",
+        "li",
+        "table",
+        "thead",
+        "tbody",
+        "tr",
+        "th",
+        "td",
+        "code",
+        "pre",
+        "blockquote",
+        "hr",
+        "a",
+        "img",
+        "div",
+        "span",
     ]
     allowed_attrs = {
         "a": ["href", "title"],
@@ -2014,7 +2062,9 @@ def serve_reference_file(request, filename):
     if not any(filename.endswith(ext) for ext in allowed_extensions):
         raise Http404("Invalid file type")
 
-    references_dir = os.path.realpath(os.path.join(settings.BASE_DIR, "..", "references"))
+    references_dir = os.path.realpath(
+        os.path.join(settings.BASE_DIR, "..", "references")
+    )
     file_path = os.path.realpath(os.path.join(references_dir, filename))
 
     # Ensure resolved path is still within references directory
@@ -2327,29 +2377,44 @@ def dm_handbook(request, chapter=None):
     CHAPTERS = {
         None: ("dm-handbook-00-intro.md", "DM Handbook", "Introduction"),
         "00-intro": ("dm-handbook-00-intro.md", "DM Handbook", "Introduction"),
-        "01-magic-mechanics": ("dm-handbook-01-magic-mechanics.md", "Magic Mechanics", "Magic Mechanics (GM Reference)"),
+        "01-magic-mechanics": (
+            "dm-handbook-01-magic-mechanics.md",
+            "Magic Mechanics",
+            "Magic Mechanics (GM Reference)",
+        ),
         "02-the-world": ("dm-handbook-02-the-world.md", "The World", "The World"),
         "03-gm-tools": ("dm-handbook-03-gm-tools.md", "GM Tools", "GM Tools"),
-        "04-scenario-seeds": ("dm-handbook-04-scenario-seeds.md", "Scenario Seeds", "Scenario Seeds"),
-        "05-using-tables": ("dm-handbook-05-using-tables.md", "Using These Tables", "Using These Tables"),
-        "06-nobility-titles": ("dm-handbook-06-nobility-titles.md", "Nobility Titles", "Complete Guide to Nobility Titles"),
+        "04-scenario-seeds": (
+            "dm-handbook-04-scenario-seeds.md",
+            "Scenario Seeds",
+            "Scenario Seeds",
+        ),
+        "05-using-tables": (
+            "dm-handbook-05-using-tables.md",
+            "Using These Tables",
+            "Using These Tables",
+        ),
+        "06-nobility-titles": (
+            "dm-handbook-06-nobility-titles.md",
+            "Nobility Titles",
+            "Complete Guide to Nobility Titles",
+        ),
     }
-    
+
     # Get chapter info
     chapter_key = chapter if chapter else None
     chapter_info = CHAPTERS.get(chapter_key)
-    
+
     if not chapter_info:
         from django.http import Http404
+
         raise Http404("Chapter not found")
-    
+
     filename, section_title, page_title = chapter_info
-    
+
     # Build file path
-    section_path = os.path.join(
-        settings.BASE_DIR, "..", "references", filename
-    )
-    
+    section_path = os.path.join(settings.BASE_DIR, "..", "references", filename)
+
     try:
         with open(section_path, "r", encoding="utf-8") as f:
             content = f.read()
@@ -2371,13 +2436,14 @@ def dm_handbook(request, chapter=None):
     # Build chapter list for navigation
     # Exclude None (added separately) and 00-intro (duplicate of None)
     chapter_list = [
-        (key, info[1], info[2]) for key, info in CHAPTERS.items()
+        (key, info[1], info[2])
+        for key, info in CHAPTERS.items()
         if key is not None and key != "00-intro"
     ]
     # Add intro at the beginning (using None key for the main intro link)
     intro_info = CHAPTERS[None]
     chapter_list.insert(0, (None, intro_info[1], intro_info[2]))
-    
+
     return render(
         request,
         "generator/dm_handbook.html",
@@ -2668,7 +2734,6 @@ def consolidate_skills(skills):
             skill_points[key] += 1
 
     # Build consolidated list using skill point system with triangular numbers
-    from pillars.skills import level_from_points, to_roman
 
     consolidated = []
     for key, points in skill_points.items():
@@ -2699,7 +2764,7 @@ def build_skill_points_from_char_data(char_data):
     Returns:
         CharacterSkills object with all skill point data
     """
-    from pillars.skills import CharacterSkills, normalize_skill_name
+    from pillars.skills import CharacterSkills
 
     # Check if already migrated
     if char_data.get("skill_points_data"):
@@ -2732,7 +2797,6 @@ def allocate_skill_point(char_data, skill_name):
     Returns:
         (success: bool, error: str or None, updated_skills: list)
     """
-    from pillars.skills import CharacterSkills
 
     char_skills = build_skill_points_from_char_data(char_data)
 
@@ -2959,7 +3023,6 @@ def update_character(request, char_id):
         # Handle skills list operations using skill points system
         if action == "add":
             # Use skill points system to add the skill
-            from pillars.skills import CharacterSkills
 
             char_skills = build_skill_points_from_char_data(char_data)
 
@@ -2982,7 +3045,6 @@ def update_character(request, char_id):
             computed["total_xp"] = char_skills.total_xp
         elif action == "remove":
             # Handle skill removal - deallocate points if possible
-            from pillars.skills import CharacterSkills
 
             char_skills = build_skill_points_from_char_data(char_data)
             skill_name = normalize_skill_name(value)
@@ -3110,7 +3172,6 @@ def update_session_character(request):
     elif field == "skills":
         # Handle skills list operations using skill points system
         if action == "add":
-            from pillars.skills import CharacterSkills
 
             char_skills = build_skill_points_from_char_data(char_data)
             normalized_skill = normalize_skill_name(value)
@@ -3695,7 +3756,7 @@ def _generate_markdown_from_char_data(char_data, character_name="Unnamed Charact
 
         # Summary
         md += f"**Years of Experience:** {years_served}\n"
-        md += f"**Starting Age:** 16\n"
+        md += "**Starting Age:** 16\n"
         md += f"**Current Age:** {current_age}\n"
 
         if char_data.get("skill_track"):
@@ -3767,7 +3828,7 @@ def _generate_markdown_from_char_data(char_data, character_name="Unnamed Charact
 
     # Footer
     md += "---\n"
-    md += f"*Exported from Pillars Character Generator*\n"
+    md += "*Exported from Pillars Character Generator*\n"
 
     return md
 
