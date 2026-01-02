@@ -1963,7 +1963,7 @@ class AddExperienceTests(TestCase):
         mock_skill_track.track = None  # This is the edge case that was crashing
 
         with patch(
-            "webapp.generator.views.create_skill_track_for_choice",
+            "webapp.generator.views.character_sheet.create_skill_track_for_choice",
             return_value=mock_skill_track,
         ):
             response = self.client.post(
