@@ -111,3 +111,4 @@ When a caster loses control, the spell begins feeding on them.
 - Defender chooses: oppose (pay mana again) or let spell succeed
 - Ends when: caster succeeds, caster stops, defender stops, or Runaway
 
+

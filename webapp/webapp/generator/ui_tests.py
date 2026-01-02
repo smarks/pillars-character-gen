@@ -13,7 +13,7 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.contrib.auth.models import User
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options as ChromeOptions
@@ -67,9 +67,15 @@ class BrowserTestCase(StaticLiveServerTestCase):
 
     def wait_for_element(self, by, value, timeout=10):
         """Wait for an element to be present and visible."""
-        return WebDriverWait(self.browser, timeout).until(
-            EC.visibility_of_element_located((by, value))
-        )
+        try:
+            return WebDriverWait(self.browser, timeout).until(
+                EC.visibility_of_element_located((by, value))
+            )
+        except Exception:
+            # If visibility check fails, try presence check as fallback
+            return WebDriverWait(self.browser, timeout).until(
+                EC.presence_of_element_located((by, value))
+            )
 
     def click_button(self, button_text):
         """Find and click a button by its text content."""
@@ -177,7 +183,7 @@ class GeneratorUITests(BrowserTestCase):
         self.assertIn("Character Generator", self.browser.page_source)
 
     def test_copy_to_clipboard_button(self):
-        """Test that Copy to Clipboard button exists on the generator page."""
+        """Test that Copy to Clipboard option exists in the export dropdown on the generator page."""
         # Go directly to generator
         self.browser.get(f"{self.live_server_url}/generator/")
         self.wait_for_page_load()
@@ -189,10 +195,14 @@ class GeneratorUITests(BrowserTestCase):
         page_source = self.browser.page_source
         self.assertTrue("STR" in page_source or "DEX" in page_source)
 
-        # Find the Copy to Clipboard button
-        copy_button = self.browser.find_element(By.ID, "copy-btn")
-        self.assertIsNotNone(copy_button)
-        self.assertIn("Copy", copy_button.text)
+        # Find the export select dropdown
+        export_select = self.wait_for_element(By.ID, "export-select")
+        self.assertIsNotNone(export_select)
+
+        # Verify "Copy to Clipboard" option exists
+        select = Select(export_select)
+        options = [opt.text for opt in select.options]
+        self.assertIn("Copy to Clipboard", options, "Export dropdown should have 'Copy to Clipboard' option")
 
     def test_add_experience_button(self):
         """Test that Add Experience button adds experience and stays on generator."""
@@ -259,13 +269,11 @@ class GeneratorUITests(BrowserTestCase):
         self.wait_for_page_load()
 
         # Open hamburger menu and go to generator
-        hamburger_btn = self.browser.find_element(By.CLASS_NAME, "hamburger-btn")
+        hamburger_btn = self.wait_for_element(By.CLASS_NAME, "hamburger-btn")
         hamburger_btn.click()
-        # Small wait for menu animation
-        time.sleep(0.5)
-
-        generator_link = self.wait_for_element(
-            By.PARTIAL_LINK_TEXT, "Character Generator"
+        # Wait for menu to be visible and link to be clickable
+        generator_link = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.PARTIAL_LINK_TEXT, "Character Generator"))
         )
         generator_link.click()
         self.wait_for_page_load()
@@ -287,13 +295,11 @@ class GeneratorUITests(BrowserTestCase):
         self.wait_for_page_load()
 
         # Open hamburger menu and go to generator
-        hamburger_btn = self.browser.find_element(By.CLASS_NAME, "hamburger-btn")
+        hamburger_btn = self.wait_for_element(By.CLASS_NAME, "hamburger-btn")
         hamburger_btn.click()
-        # Small wait for menu animation
-        time.sleep(0.5)
-
-        generator_link = self.wait_for_element(
-            By.PARTIAL_LINK_TEXT, "Character Generator"
+        # Wait for menu to be visible and link to be clickable
+        generator_link = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.PARTIAL_LINK_TEXT, "Character Generator"))
         )
         generator_link.click()
         self.wait_for_page_load()

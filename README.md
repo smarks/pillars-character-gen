@@ -86,6 +86,7 @@ python manage.py runserver
 - **`e2e.sh`** - End-to-end (Selenium) browser tests
 - **`lint.sh`** - Code quality checks and formatting
 - **`db.sh`** - Database management (migrations, reset, etc.)
+- **`act.sh`** - Run GitHub Actions workflows locally (requires Docker)
 
 All scripts automatically handle environment variables and database selection.
 
@@ -169,6 +170,29 @@ The project includes GitHub Actions workflows (`.github/workflows/ci.yml`) that:
 - Test against PostgreSQL database
 
 Tests run automatically on push and pull requests.
+
+### Running CI Locally
+
+You can test the CI workflow locally using `act`:
+
+```bash
+# List available workflows
+./act.sh list
+
+# Run test job
+./act.sh test
+
+# Run lint job
+./act.sh lint
+
+# Simulate a push event (runs all jobs)
+./act.sh push
+
+# Run with verbose output
+./act.sh push -v
+```
+
+See `docs/GITHUB_ACTIONS_LOCAL.md` for detailed instructions.
 
 ## Project Structure
 
