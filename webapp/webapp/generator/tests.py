@@ -739,12 +739,15 @@ class DMHandbookContentTests(TestCase):
         self.assertNotContains(response, "Determine Prior Experience")
 
     def test_dm_handbook_has_scenario_seeds(self):
-        """Test that DM handbook contains the scenario seeds section."""
+        """Test that DM handbook TOC links to scenario seeds chapter."""
         self.client.login(username="dm_content_test", password="testpass")
         response = self.client.get(reverse("dm"))
 
-        # Verify key sections from the handbook are present
+        # Verify Scenario Seeds is linked in the TOC
         self.assertContains(response, "Scenario Seeds")
+
+        # Verify the actual content is in the chapter
+        response = self.client.get(reverse("dm_chapter", args=["04-scenario-seeds"]))
         self.assertContains(response, "The Weregild Appraiser")
 
 

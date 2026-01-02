@@ -2368,11 +2368,13 @@ def dm_handbook(request, chapter=None):
     except FileNotFoundError:
         html_content = f"<p>Chapter '{chapter}' not found.</p>"
 
-    # Build chapter list for navigation (excluding None key for display)
+    # Build chapter list for navigation
+    # Exclude None (added separately) and 00-intro (duplicate of None)
     chapter_list = [
-        (key, info[1], info[2]) for key, info in CHAPTERS.items() if key is not None
+        (key, info[1], info[2]) for key, info in CHAPTERS.items()
+        if key is not None and key != "00-intro"
     ]
-    # Add intro at the beginning
+    # Add intro at the beginning (using None key for the main intro link)
     intro_info = CHAPTERS[None]
     chapter_list.insert(0, (None, intro_info[1], intro_info[2]))
     

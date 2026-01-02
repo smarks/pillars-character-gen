@@ -25,6 +25,7 @@ urlpatterns = [
         name="handbook",
     ),
     path("combat/", views.handbook_section, {"section": "combat"}, name="combat"),
+    path("dm/chapter/<str:chapter>/", views.dm_handbook, name="dm_chapter"),
     path("dm/", views.dm_handbook, name="dm"),
     path(
         "rulebook/",
