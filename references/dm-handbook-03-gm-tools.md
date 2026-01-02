@@ -1,5 +1,19 @@
 # GM Tools
 
+### Contents
+
+- [Universal NPC Tables](#universal-npc-tables)
+- [Job Generator](#job-generator)
+- [Escalation](#escalation)
+- [Rumor Truth Level](#rumor-truth-level)
+- [Dungeons & Ruins](#dungeons--ruins)
+- [Urban Intrigue](#urban-intrigue)
+- [Faction Generator](#faction-generator)
+- [Trade & Economics](#trade--economics)
+- [Hook Introduction](#hook-introduction)
+
+---
+
 ### Universal NPC Tables
 
 #### NPC Motivation

@@ -2,6 +2,22 @@
 
 A comprehensive reference of noble ranks and their responsibilities, organized by hierarchical rank.
 
+### Contents
+
+- [Rank 1: Monarch](#rank-1-monarch)
+- [Rank 2: Royal Family](#rank-2-royal-family)
+- [Rank 3: Duke](#rank-3-duke)
+- [Rank 4: March/Border Lords](#rank-4-marchborder-lords)
+- [Rank 5: Count/Earl](#rank-5-countearl)
+- [Rank 6: Special Counts](#rank-6-special-counts)
+- [Rank 7: Viscount](#rank-7-viscount)
+- [Rank 8: Baron](#rank-8-baron)
+- [Rank 9: Baronet](#rank-9-baronet)
+- [Rank 10: Knights and Warrior Nobility](#rank-10-knights-and-warrior-nobility)
+- [Special Ecclesiastical Position](#special-ecclesiastical-position)
+
+---
+
 ### Rank 1: Monarch
 
 **King/Queen**

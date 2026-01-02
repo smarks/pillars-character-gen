@@ -2,6 +2,20 @@
 
 This chapter contains the specific mechanical details players don't see. The [public rulebook](/html/public-rulebook/#magic) describes magic in general terms; here are the exact numbers.
 
+### Contents
+
+- [Mana Pool](#mana-pool)
+- [Casting Roll](#casting-roll)
+- [Special Casting Rolls](#special-casting-rolls)
+- [Push](#push)
+- [Control Results](#control-results)
+- [Borrowing Mechanics](#borrowing-mechanics)
+- [Channel](#channel)
+- [Runaway](#runaway)
+- [Counterspell Mechanics](#counterspell-mechanics)
+
+---
+
 ## Mana Pool
 
 **Roll:** 3d6 at character creation (secret from player)

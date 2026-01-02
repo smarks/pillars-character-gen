@@ -1,5 +1,14 @@
 # The World
 
+### Contents
+
+- [The Splinterings](#the-splinterings)
+- [The Navel](#the-navel)
+- [Dragon Isles](#dragon-isles)
+- [Old Emporium](#old-emporium)
+
+---
+
 ### The Splinterings
 
 The northeastern archipelago of tribal clans. Fierce independence, blood feuds, and raiding culture.

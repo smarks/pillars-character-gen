@@ -1,5 +1,15 @@
 # Using These Tables
 
+### Contents
+
+- [Running a Seed](#running-a-seed)
+- [Connecting Seeds](#connecting-seeds)
+- [Improvising from Seeds](#improvising-from-seeds)
+- [Combining Hooks](#combining-hooks)
+- [Hook Strength Assessment](#hook-strength-assessment)
+
+---
+
 ### Running a Seed
 
 1. Roll or choose variable elements
