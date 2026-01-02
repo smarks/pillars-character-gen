@@ -12,6 +12,8 @@ import re
 from django.test import TestCase, Client
 from django.urls import reverse, NoReverseMatch, resolve, Resolver404
 from django.conf import settings
+from django.template import Context
+from django.template.loader import get_template
 
 
 class MarkdownLinkValidationTests(TestCase):
@@ -152,7 +154,7 @@ class MarkdownLinkValidationTests(TestCase):
                             )
 
         if broken_links:
-            self.fail(f"Found broken links in about.md:\n" + "\n".join(broken_links))
+            self.fail("Found broken links in about.md:\n" + "\n".join(broken_links))
 
     def test_public_rulebook_md_links_are_valid(self):
         """Test that all links in public-rulebook.md point to valid URLs."""
@@ -211,7 +213,7 @@ class MarkdownLinkValidationTests(TestCase):
 
         if broken_links:
             self.fail(
-                f"Found broken links in public-rulebook.md:\n" + "\n".join(broken_links)
+                "Found broken links in public-rulebook.md:\n" + "\n".join(broken_links)
             )
 
     def test_no_root_links_to_generator(self):
@@ -297,8 +299,6 @@ class TemplateLinkValidationTests(TestCase):
 
     def test_all_url_names_exist(self):
         """Test that all URL names used in templates actually exist."""
-        from django.template import Engine, Context
-        from django.template.loader import get_template
 
         # Common URL names used in templates
         url_names = [
@@ -343,7 +343,7 @@ class TemplateLinkValidationTests(TestCase):
             template.render(context)
         except NoReverseMatch as e:
             self.fail(f"URL name in base.html does not exist: {e}")
-        except Exception as e:
+        except Exception:
             # Other template errors are okay for this test
             pass
 
@@ -389,7 +389,7 @@ class URLResolutionTests(TestCase):
         broken_urls = []
         for name in reference_names:
             try:
-                url = reverse("reference_html", kwargs={"name": name})
+                reverse("reference_html", kwargs={"name": name})
                 # Check if file exists
                 md_file = os.path.join(
                     settings.BASE_DIR, "..", "references", f"{name}.md"

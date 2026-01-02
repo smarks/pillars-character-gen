@@ -198,11 +198,9 @@ class TestCharacterDisplay:
 
     def test_character_str_with_craft_type(self):
         """Test Character.__str__ with craft type."""
-        from pillars.generator import generate_character, Character
+        from pillars.generator import generate_character
         from pillars.attributes import (
             TrackType,
-            CraftType,
-            create_skill_track_for_choice,
         )
 
         # Create a character with Crafts track

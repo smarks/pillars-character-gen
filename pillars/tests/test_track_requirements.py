@@ -6,18 +6,15 @@ Uses mock character data to verify that track requirements are properly enforced
 
 import unittest
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
+from typing import Dict
 
 from pillars.attributes import (
     TrackType,
     get_track_availability,
     create_skill_track_for_choice,
     select_optimal_track,
-    check_army_acceptance,
-    check_navy_acceptance,
     check_ranger_acceptance,
     check_officer_acceptance,
-    check_merchant_acceptance,
     check_magic_acceptance,
     get_eligible_tracks,
 )

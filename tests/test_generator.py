@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 from io import StringIO
 
-from pillars.generator import Character, generate_character, main
+from pillars.generator import generate_character, main
 from pillars.attributes import (
     TrackType,
     CharacterAttributes,

@@ -17,7 +17,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options as ChromeOptions
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException
 from webapp.generator.models import UserProfile
 
 
@@ -383,8 +383,6 @@ class SessionPersistenceTests(BrowserTestCase):
         self.browser.get(f"{self.live_server_url}/generator/")
         self.wait_for_page_load()
 
-        # Get the character name from the page
-        page_source = self.browser.page_source
         # Find the character name element
         name_element = self.browser.find_element(
             By.CSS_SELECTOR, ".character-name, h2, h3"

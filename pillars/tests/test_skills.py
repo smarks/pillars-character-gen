@@ -1,6 +1,5 @@
 """Tests for skill points and level calculation system."""
 
-import pytest
 from pillars.skills import (
     points_for_level,
     level_from_points,

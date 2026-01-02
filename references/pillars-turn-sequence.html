@@ -75,6 +75,15 @@
             border-top: 1px solid #ddd;
             margin: 5px 0;
         }
+        .hamburger-dropdown .menu-current {
+            display: block;
+            padding: 10px 15px;
+            color: #999;
+            font-family: monospace;
+            font-size: 1.05em;
+            border-bottom: 1px solid #eee;
+            cursor: default;
+        }
     </style>
 </head>
 <body>
@@ -91,7 +100,7 @@
             <a href="/html/overview/">Overview</a>
             <a href="/html/hitchhikers_guide/">Traveler's Guide</a>
             <a href="/html/public-rulebook/">Public Rules</a>
-            <a href="/turn-sequence/">Turn Sequence</a>
+            <span class="menu-current">Turn Sequence</span>
         </div>
         <div class="menu-divider"></div>
         <a href="/login/">Login</a>

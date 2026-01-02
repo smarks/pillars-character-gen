@@ -2236,7 +2236,7 @@ class PriorExperience:
             total_str = format_total_modifier(self.attribute_modifiers)
             lines.append(f"Total Modifier: {total_str}")
 
-        lines.append(f"\n**Year-by-Year**")
+        lines.append("\n**Year-by-Year**")
 
         for result in self.yearly_results:
             lines.append(str(result))

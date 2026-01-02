@@ -15,7 +15,7 @@ Display format: "Sword II (+2)" means Level 2 with 2 extra points toward Level 3
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, Tuple, List, Optional
+from typing import Dict, Tuple, List
 import re
 
 

@@ -6,8 +6,6 @@ This module provides the generate_character function that creates
 a complete character with all attributes, skills, and prior experience.
 """
 
-import re
-from collections import Counter
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
@@ -23,8 +21,6 @@ from pillars.attributes import (
     roll_wealth,
     roll_skill_track,
     roll_prior_experience,
-    roll_single_year,
-    get_track_availability,
     create_skill_track_for_choice,
     format_total_modifier,
     CharacterAttributes,
@@ -37,8 +33,6 @@ from pillars.attributes import (
     Wealth,
     SkillTrack,
     PriorExperience,
-    YearResult,
-    AgingEffects,
     TrackType,
 )
 
@@ -210,7 +204,7 @@ class Character:
         if self.prior_experience is not None:
             pe = self.prior_experience
             lines.append("")
-            lines.append(f"**Prior Experience**")
+            lines.append("**Prior Experience**")
             lines.append(f"Starting Age: {pe.starting_age}")
             if pe.died:
                 lines.append(f"DIED at age {pe.death_year}!")

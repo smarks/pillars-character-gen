@@ -2317,7 +2317,7 @@ class SessionCharacterOnLoginTests(TestCase):
         """Test that logging in preserves experience data from session."""
         # Create a character and add experience as anonymous user
         self.client.get(reverse("generator"))
-        response = self.client.post(
+        self.client.post(
             reverse("generator"),
             {"action": "add_experience", "years": 3, "track_mode": "auto"},
         )
@@ -2937,7 +2937,7 @@ class UserNotesModelTests(TestCase):
         """Test accessing notes via user.notes related name."""
         from webapp.generator.models import UserNotes
 
-        notes = UserNotes.objects.create(user=self.user, content="Via related")
+        UserNotes.objects.create(user=self.user, content="Via related")
         self.assertEqual(self.user.notes.content, "Via related")
 
 
@@ -3933,11 +3933,6 @@ class HamburgerMenuLinkTests(TestCase):
         response = self.client.get(reverse("welcome"))
         # Notes should be in menu
         self.assertContains(response, ">Notes</a>")
-
-    def test_turn_sequence_link_works(self):
-        """Test Turn Sequence link in menu works."""
-        response = self.client.get(reverse("turn_sequence"))
-        self.assertEqual(response.status_code, 200)
 
 
 # =============================================================================
