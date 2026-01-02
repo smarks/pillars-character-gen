@@ -277,7 +277,7 @@ def index(request):
     See helper functions above for implementation details.
     """
     # Late import to avoid circular dependency
-    from .prior_experience import _handle_add_experience
+    from ._experience_helpers import handle_add_experience as _handle_add_experience
 
     action = request.POST.get("action", "") if request.method == "POST" else ""
 
