@@ -168,6 +168,14 @@
             background: #f4f4f4;
             color: #14a;
         }
+        .hamburger-dropdown a.current-page {
+            color: #999;
+            cursor: default;
+            pointer-events: none;
+        }
+        .hamburger-dropdown a.current-page:hover {
+            background: transparent;
+        }
         .hamburger-dropdown .menu-section {
             font-weight: bold;
             color: #666;
@@ -477,41 +485,41 @@
             <div class="hamburger-menu">
                 <button class="hamburger-btn" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menu">&#9776;</button>
                 <div class="hamburger-dropdown">
-                    <a href="{% url 'welcome' %}">Home</a>
+                    <a href="{% url 'welcome' %}"{% if request.resolver_match.url_name == 'welcome' %} class="current-page"{% endif %}>Home</a>
                     <div class="menu-divider"></div>
                     {% if user.is_authenticated %}
-                    <a href="{% url 'generator' %}">Character Editor</a>
+                    <a href="{% url 'generator' %}"{% if request.resolver_match.url_name == 'generator' %} class="current-page"{% endif %}>Character Editor</a>
                     {% endif %}
 
                     <div class="menu-section">References</div>
                     <div class="menu-sub">
-                        <a href="{% url 'reference_html' 'about' %}">About</a>
-                        <a href="{% url 'reference_html' 'overview' %}">Overview</a>
-                        <a href="{% url 'reference_html' 'hitchhikers_guide' %}">Traveler's Guide</a>
-                        <a href="{% url 'reference_html' 'public-rulebook' %}">Public Rules</a>
+                        <a href="{% url 'reference_html' 'about' %}"{% if request.resolver_match.url_name == 'reference_html' and request.resolver_match.kwargs.name == 'about' %} class="current-page"{% endif %}>About</a>
+                        <a href="{% url 'reference_html' 'overview' %}"{% if request.resolver_match.url_name == 'reference_html' and request.resolver_match.kwargs.name == 'overview' %} class="current-page"{% endif %}>Overview</a>
+                        <a href="{% url 'reference_html' 'hitchhikers_guide' %}"{% if request.resolver_match.url_name == 'reference_html' and request.resolver_match.kwargs.name == 'hitchhikers_guide' %} class="current-page"{% endif %}>Traveler's Guide</a>
+                        <a href="{% url 'reference_html' 'public-rulebook' %}"{% if request.resolver_match.url_name == 'reference_html' and request.resolver_match.kwargs.name == 'public-rulebook' %} class="current-page"{% endif %}>Public Rules</a>
                         {% if user.is_authenticated and user.profile.is_dm or user.is_authenticated and user.profile.is_admin %}
-                        <a href="{% url 'reference_html' 'dm-handbook' %}">Private Rules</a>
-                        <a href="{% url 'reference_html' 'spells' %}">Spells</a>
+                        <a href="{% url 'reference_html' 'dm-handbook' %}"{% if request.resolver_match.url_name == 'reference_html' and request.resolver_match.kwargs.name == 'dm-handbook' or request.resolver_match.url_name == 'dm_chapter' %} class="current-page"{% endif %}>Private Rules</a>
+                        <a href="{% url 'reference_html' 'spells' %}"{% if request.resolver_match.url_name == 'reference_html' and request.resolver_match.kwargs.name == 'spells' %} class="current-page"{% endif %}>Spells</a>
                         {% endif %}
-                        <a href="{% url 'turn_sequence' %}">Turn Sequence</a>
+                        <a href="{% url 'turn_sequence' %}"{% if request.resolver_match.url_name == 'turn_sequence' %} class="current-page"{% endif %}>Turn Sequence</a>
                         {% if user.is_authenticated %}
-                        <a href="{% url 'notes' %}">Notes</a>
+                        <a href="{% url 'notes' %}"{% if request.resolver_match.url_name == 'notes' %} class="current-page"{% endif %}>Notes</a>
                         {% endif %}
                     </div>
 
                     {% if user.is_authenticated %}
                     <div class="menu-section">Manage</div>
                     <div class="menu-sub">
-                        <a href="{% url 'my_profile' %}">My Profile</a>
-                        <a href="{% url 'my_characters' %}">My Characters</a>
+                        <a href="{% url 'my_profile' %}"{% if request.resolver_match.url_name == 'my_profile' %} class="current-page"{% endif %}>My Profile</a>
+                        <a href="{% url 'my_characters' %}"{% if request.resolver_match.url_name == 'my_characters' %} class="current-page"{% endif %}>My Characters</a>
                         {% if user.profile.is_admin %}
-                        <a href="{% url 'manage_users' %}">Users</a>
+                        <a href="{% url 'manage_users' %}"{% if request.resolver_match.url_name == 'manage_users' %} class="current-page"{% endif %}>Users</a>
                         {% endif %}
                         {% if user.profile.is_dm or user.profile.is_admin %}
-                        <a href="{% url 'manage_characters' %}">Characters</a>
+                        <a href="{% url 'manage_characters' %}"{% if request.resolver_match.url_name == 'manage_characters' %} class="current-page"{% endif %}>Characters</a>
                         {% endif %}
                         {% if user.profile.is_admin %}
-                        <a href="{% url 'admin_notes' %}">Notes</a>
+                        <a href="{% url 'admin_notes' %}"{% if request.resolver_match.url_name == 'admin_notes' %} class="current-page"{% endif %}>Notes</a>
                         {% endif %}
                     </div>
                     {% endif %}
@@ -520,8 +528,8 @@
                     {% if user.is_authenticated %}
                     <a href="{% url 'logout' %}">Logout</a>
                     {% else %}
-                    <a href="{% url 'login' %}">Login</a>
-                    <a href="{% url 'register' %}">Register</a>
+                    <a href="{% url 'login' %}"{% if request.resolver_match.url_name == 'login' %} class="current-page"{% endif %}>Login</a>
+                    <a href="{% url 'register' %}"{% if request.resolver_match.url_name == 'register' %} class="current-page"{% endif %}>Register</a>
                     {% endif %}
                 </div>
             </div>

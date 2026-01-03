@@ -564,6 +564,24 @@ def add_experience_to_character(request, char_id):
         "con": aging_effects.con_penalty,
     }
 
+    # Update skill_points_data with new skills from experience
+    # This is needed because build_skill_points_from_char_data returns early
+    # if skill_points_data already exists
+    if new_skills:
+        char_skills = build_skill_points_from_char_data(char_data)
+        for skill in new_skills:
+            char_skills.add_automatic_point(skill)
+        char_data["skill_points_data"] = char_skills.to_dict()
+
+    # Also add initial skills if this was the first experience
+    if existing_years == 0 and skill_track.initial_skills:
+        char_skills = build_skill_points_from_char_data(char_data)
+        for skill in skill_track.initial_skills:
+            # Only add if not already present (avoid duplicates)
+            if skill not in [s["name"] for s in char_skills.get_skills_with_details()]:
+                char_skills.add_automatic_point(skill)
+        char_data["skill_points_data"] = char_skills.to_dict()
+
     # Save character
     character.character_data = char_data
     character.save()

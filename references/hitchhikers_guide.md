@@ -1,5 +1,4 @@
-
-## A Traveler's Guide to the Mysteries of the World
+# Traveler's Guide
 
 *What follows is common knowledge among the educated peoples of Pillars—scholars, merchants, well-traveled adventurers, and those who frequent temple libraries. Much of it is legend. Some of it is theology. All of it is believed by someone.*
 

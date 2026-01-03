@@ -1,5 +1,4 @@
-
-## Contents
+# Public Rulebook
 
 - [Characters](#characters)
   - [Attributes](#attributes)

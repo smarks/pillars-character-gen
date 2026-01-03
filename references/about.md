@@ -1,12 +1,4 @@
-- [About the Author](#about-the-author)
-- [What is Pillars?](#what-is-pillars)
-- [System Foundation](#system-foundation)
-- [Design Philosophy](#design-philosophy)
-- [Core Mechanics](#core-mechanics)
-- [Gameplay](#gameplay)
-- [Roles](#roles)
-- [The Setting](#the-setting)
-- [Starting Out](#starting-out)
+# About
 
 ---
 

@@ -1,4 +1,4 @@
- ## Overview 
+# Overview
 
 **Pillars** is a fantasy world built for exploration and discovery. It runs on a system evolved from The Fantasy Trip, emphasizing tactical combat, meaningful choices, and characters who grow through play rather than through accumulating numbers.
 
