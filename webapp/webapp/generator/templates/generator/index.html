@@ -338,26 +338,14 @@
                 <p style="margin: 5px 0;">Adding <span id="aging-years"></span> years will result in aging penalties.</p>
             </div>
 
-            <!-- Show all tracks toggle -->
-            <div class="toggle-row">
-                <input type="checkbox" id="show-all-tracks" name="show_all_tracks" {% if show_all_tracks %}checked{% endif %}>
-                <label for="show-all-tracks">Show all tracks</label>
-            </div>
-
-            <!-- Auto Select Track toggle -->
-            <div class="toggle-row">
-                <input type="checkbox" id="auto-select-track" name="auto_select_track" checked>
-                <label for="auto-select-track">Auto Select Track</label>
-            </div>
-
-            <!-- Track panels -->
-            <div id="track-panels" style="{% if not show_all_tracks %}display: none;{% endif %}">
+            <!-- Track selection -->
+            <div id="track-panels">
                 {% for track in track_info %}
-                <div class="track-panel {% if track.impossible %}unavailable{% elif track.requires_roll %}requires-roll{% elif selected_track == track.track_key %}selected{% else %}available{% endif %}"
+                <div class="track-panel {% if track.impossible %}unavailable{% elif track.requires_roll %}requires-roll{% elif track.recommended and not selected_track %}selected{% elif selected_track == track.track_key %}selected{% else %}available{% endif %}"
                      data-track="{{ track.track_key }}">
                     {% if not track.impossible %}
                     <input type="radio" name="chosen_track" value="{{ track.track_key }}" class="track-checkbox"
-                           {% if selected_track == track.track_key %}checked{% endif %}>
+                           {% if track.recommended and not selected_track %}checked{% elif selected_track == track.track_key %}checked{% endif %}>
                     {% endif %}
                     <div class="track-name">{{ track.track }}</div>
                     <div class="track-details">
@@ -368,8 +356,6 @@
                 </div>
                 {% endfor %}
             </div>
-
-            <input type="hidden" name="track_mode" id="track-mode" value="auto">
 
             <button type="submit" name="action" value="add_experience" class="btn primary" style="margin-top: 10px;">
                 Add {% if has_experience %}More {% endif %}Experience
@@ -444,10 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var yearsSelect = document.getElementById('years-select');
     var agingWarning = document.getElementById('aging-warning');
     var agingYearsSpan = document.getElementById('aging-years');
-    var showAllTracksCheckbox = document.getElementById('show-all-tracks');
-    var autoSelectCheckbox = document.getElementById('auto-select-track');
     var trackPanels = document.getElementById('track-panels');
-    var trackModeInput = document.getElementById('track-mode');
 
     // Current age from context
     var currentAge = {{ current_age|default:16 }};
@@ -465,45 +448,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Show/hide track panels based on checkbox
-    if (showAllTracksCheckbox && trackPanels) {
-        showAllTracksCheckbox.addEventListener('change', function() {
-            trackPanels.style.display = this.checked ? 'block' : 'none';
-        });
-    }
-
-    // Auto-select track toggle
-    if (autoSelectCheckbox && trackPanels) {
-        autoSelectCheckbox.addEventListener('change', function() {
-            var trackCheckboxes = trackPanels.querySelectorAll('input[type="radio"]');
-            trackCheckboxes.forEach(function(cb) {
-                cb.disabled = autoSelectCheckbox.checked;
-            });
-            trackModeInput.value = this.checked ? 'auto' : 'manual';
-
-            // If turning off auto-select, show track panels
-            if (!this.checked && showAllTracksCheckbox) {
-                showAllTracksCheckbox.checked = true;
-                trackPanels.style.display = 'block';
-            }
-        });
-
-        // Initial state
-        if (autoSelectCheckbox.checked) {
-            var trackCheckboxes = trackPanels.querySelectorAll('input[type="radio"]');
-            trackCheckboxes.forEach(function(cb) {
-                cb.disabled = true;
-            });
-        }
-    }
-
-    // Track panel click handling
+    // Track panel click handling - select track on click
     document.querySelectorAll('.track-panel:not(.unavailable)').forEach(function(panel) {
         panel.addEventListener('click', function() {
-            if (autoSelectCheckbox && autoSelectCheckbox.checked) return;
-
             var radio = this.querySelector('input[type="radio"]');
-            if (radio && !radio.disabled) {
+            if (radio) {
                 radio.checked = true;
                 // Update visual state
                 document.querySelectorAll('.track-panel').forEach(function(p) {
@@ -584,7 +533,6 @@ function handleExport(format) {
 document.addEventListener('trackInfoUpdated', function(e) {
     var trackInfo = e.detail.trackInfo;
     var trackPanels = document.getElementById('track-panels');
-    var autoSelectCheckbox = document.getElementById('auto-select-track');
 
     if (!trackPanels || !trackInfo) return;
 
@@ -597,6 +545,8 @@ document.addEventListener('trackInfoUpdated', function(e) {
             panelClass += 'unavailable';
         } else if (track.requires_roll) {
             panelClass += 'requires-roll';
+        } else if (track.recommended) {
+            panelClass += 'available selected';
         } else {
             panelClass += 'available';
         }
@@ -607,8 +557,8 @@ document.addEventListener('trackInfoUpdated', function(e) {
 
         var html = '';
         if (!track.impossible) {
-            var disabled = autoSelectCheckbox && autoSelectCheckbox.checked ? 'disabled' : '';
-            html += '<input type="radio" name="chosen_track" value="' + track.track_key + '" class="track-checkbox" ' + disabled + '>';
+            var checked = track.recommended ? 'checked' : '';
+            html += '<input type="radio" name="chosen_track" value="' + track.track_key + '" class="track-checkbox" ' + checked + '>';
         }
         html += '<div class="track-name">' + track.track + '</div>';
         html += '<div class="track-details">';
@@ -628,10 +578,8 @@ document.addEventListener('trackInfoUpdated', function(e) {
         // Add click handler for non-unavailable panels
         if (!track.impossible) {
             panel.addEventListener('click', function() {
-                if (autoSelectCheckbox && autoSelectCheckbox.checked) return;
-
                 var radio = this.querySelector('input[type="radio"]');
-                if (radio && !radio.disabled) {
+                if (radio) {
                     radio.checked = true;
                     // Update visual state
                     trackPanels.querySelectorAll('.track-panel').forEach(function(p) {

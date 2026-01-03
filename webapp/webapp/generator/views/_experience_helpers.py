@@ -28,7 +28,7 @@ from .serialization import (
 )
 
 
-def get_or_create_skill_track(char_data, character, track_mode, chosen_track_name):
+def get_or_create_skill_track(char_data, character, chosen_track_name):
     """Get existing skill track or create a new one based on user selection.
 
     Returns:
@@ -67,8 +67,8 @@ def get_or_create_skill_track(char_data, character, track_mode, chosen_track_nam
         )
         return skill_track, char_data, None
 
-    # Create new track
-    if track_mode == "manual" and chosen_track_name:
+    # Create new track - use selected track from radio button if provided
+    if chosen_track_name:
         try:
             chosen_track = TrackType[chosen_track_name]
         except KeyError:
@@ -300,12 +300,11 @@ def handle_add_experience(request):
 
     # Get form parameters
     years = validate_experience_years(request.POST.get("years"), default=5)
-    track_mode = request.POST.get("track_mode", "auto")
     chosen_track_name = request.POST.get("chosen_track", "")
 
     # Get or create skill track
     skill_track, char_data, error = get_or_create_skill_track(
-        char_data, character, track_mode, chosen_track_name
+        char_data, character, chosen_track_name
     )
     if error:
         messages.error(request, error)
