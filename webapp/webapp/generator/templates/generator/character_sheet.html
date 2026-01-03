@@ -614,7 +614,7 @@ input.error, textarea.error {
 
     <!-- Main Character Sheet -->
     <div class="character-main">
-        {% with component_id="charsheet" editable=is_owner show_experience=True %}
+        {% with component_id="character_sheet" editable=is_owner show_experience=True %}
         {% include "generator/partials/character_sheet_component.html" %}
         {% endwith %}
     </div><!-- end character-main -->
@@ -631,7 +631,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize CharacterSheet component if we're the owner
     {% if is_owner %}
     if (typeof CharacterSheet !== 'undefined') {
-        CharacterSheet.init('charsheet', UPDATE_URL, CSRF_TOKEN);
+        CharacterSheet.init('character_sheet', UPDATE_URL, CSRF_TOKEN);
     }
     {% endif %}
 
@@ -750,7 +750,7 @@ function exportMarkdown() {
 
     // Skills
     md += '## Skills\n\n';
-    var skillItems = document.querySelectorAll('#charsheet-skills-list .skill-tag');
+    var skillItems = document.querySelectorAll('#character_sheet-skills-list .skill-tag');
     if (skillItems.length > 0) {
         skillItems.forEach(function(item) {
             md += '- ' + item.textContent + '\n';
