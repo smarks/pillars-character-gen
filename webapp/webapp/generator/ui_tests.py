@@ -1,5 +1,5 @@
 """
-Selenium-based UI tests for the Pillars Character Generator.
+Selenium-based UI tests for the Pillars Character Editor.
 
 These tests drive a real browser to verify the UI works correctly.
 Run with: python manage.py test webapp.generator.ui_tests
@@ -165,22 +165,20 @@ class GeneratorUITests(BrowserTestCase):
         # Should see welcome page
         self.assertIn("Pillars", self.browser.title)
 
-        # Character Generator link is in the hamburger menu - open it first
+        # Character Editor link is in the hamburger menu - open it first
         hamburger_btn = self.browser.find_element(By.CLASS_NAME, "hamburger-btn")
         hamburger_btn.click()
         # Small wait for menu animation
         time.sleep(0.5)
 
-        # Wait for menu to open and find the Character Generator link
-        generator_link = self.wait_for_element(
-            By.PARTIAL_LINK_TEXT, "Character Generator"
-        )
+        # Wait for menu to open and find the Character Editor link
+        generator_link = self.wait_for_element(By.PARTIAL_LINK_TEXT, "Character Editor")
         generator_link.click()
         self.wait_for_page_load()
 
         # Should be on generator page
         self.assertIn("generator", self.browser.current_url)
-        self.assertIn("Character Generator", self.browser.page_source)
+        self.assertIn("Character Editor", self.browser.page_source)
 
     def test_copy_to_clipboard_button(self):
         """Test that Copy to Clipboard option exists in the export dropdown on the generator page."""
@@ -189,7 +187,7 @@ class GeneratorUITests(BrowserTestCase):
         self.wait_for_page_load()
 
         # Verify we're on the generator page
-        self.assertIn("Character Generator", self.browser.page_source)
+        self.assertIn("Character Editor", self.browser.page_source)
 
         # Verify a character was generated (check for attributes)
         page_source = self.browser.page_source
@@ -215,7 +213,7 @@ class GeneratorUITests(BrowserTestCase):
         self.wait_for_page_load()
 
         # Verify we're on the generator page
-        self.assertIn("Character Generator", self.browser.page_source)
+        self.assertIn("Character Editor", self.browser.page_source)
 
         # Verify a character was generated (check for attributes)
         page_source = self.browser.page_source
@@ -261,7 +259,7 @@ class GeneratorUITests(BrowserTestCase):
 
         # Should still be on generator page
         self.assertIn("generator", self.browser.current_url)
-        self.assertIn("Character Generator", self.browser.page_source)
+        self.assertIn("Character Editor", self.browser.page_source)
 
         # Character should have been regenerated (page still shows attributes)
         self.assertTrue("STR" in self.browser.page_source)
@@ -277,7 +275,7 @@ class GeneratorUITests(BrowserTestCase):
         hamburger_btn.click()
         # Wait for menu to be visible and link to be clickable
         generator_link = WebDriverWait(self.browser, 10).until(
-            EC.element_to_be_clickable((By.PARTIAL_LINK_TEXT, "Character Generator"))
+            EC.element_to_be_clickable((By.PARTIAL_LINK_TEXT, "Character Editor"))
         )
         generator_link.click()
         self.wait_for_page_load()
@@ -303,7 +301,7 @@ class GeneratorUITests(BrowserTestCase):
         hamburger_btn.click()
         # Wait for menu to be visible and link to be clickable
         generator_link = WebDriverWait(self.browser, 10).until(
-            EC.element_to_be_clickable((By.PARTIAL_LINK_TEXT, "Character Generator"))
+            EC.element_to_be_clickable((By.PARTIAL_LINK_TEXT, "Character Editor"))
         )
         generator_link.click()
         self.wait_for_page_load()
@@ -430,9 +428,7 @@ class SessionPersistenceTests(BrowserTestCase):
         # Small wait for menu animation
         time.sleep(0.5)
 
-        generator_link = self.wait_for_element(
-            By.PARTIAL_LINK_TEXT, "Character Generator"
-        )
+        generator_link = self.wait_for_element(By.PARTIAL_LINK_TEXT, "Character Editor")
         generator_link.click()
         self.wait_for_page_load()
 

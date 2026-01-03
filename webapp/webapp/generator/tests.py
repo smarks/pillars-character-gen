@@ -4664,8 +4664,8 @@ class BuildTrackInfoTests(TestCase):
         self.assertFalse(result[0]["impossible"])
         self.assertIn("survivability", result[0])
 
-    def test_sorted_by_display_order(self):
-        """Tracks are sorted by TRACK_DISPLAY_ORDER."""
+    def test_sorted_by_availability_status(self):
+        """Tracks are sorted by availability: available, roll-required, impossible."""
         from webapp.generator.views.helpers import build_track_info
 
         availability = {
@@ -4688,11 +4688,12 @@ class BuildTrackInfoTests(TestCase):
 
         result = build_track_info(availability)
         self.assertEqual(len(result), 3)
-        # Officer should come first (highest priority)
-        self.assertEqual(result[0]["track"], "Officer")
-        # Army before Worker
+        # Available tracks first (Worker - no roll, not impossible)
+        self.assertEqual(result[0]["track"], "Worker")
+        # Roll-required tracks second (Army - requires roll)
         self.assertEqual(result[1]["track"], "Army")
-        self.assertEqual(result[2]["track"], "Worker")
+        # Impossible tracks last (Officer - impossible)
+        self.assertEqual(result[2]["track"], "Officer")
 
 
 class ContentNegotiationTests(TestCase):
