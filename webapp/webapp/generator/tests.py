@@ -542,7 +542,7 @@ class UIFlowTests(TestCase):
         # Step 3: Generator should show experience info
         response = self.client.get(reverse("generator"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Year-by-Year Log")
+        self.assertContains(response, "Prior Experience Log")
         # Check session has experience (1-5 years - character may die before completing all)
         years_added = self.client.session.get("interactive_years")
         self.assertIsNotNone(years_added)
@@ -868,7 +868,7 @@ class ReturnToGeneratorTests(TestCase):
         response = self.client.get(reverse("generator"))
 
         # Should show experience section
-        self.assertContains(response, "Year-by-Year Log")
+        self.assertContains(response, "Prior Experience Log")
         self.assertContains(response, "Year 16")  # First year is age 16
 
 
@@ -1026,7 +1026,7 @@ class CharacterSheetTests(TestCase):
         self.assertIn("yearly_results", response.context)
         self.assertEqual(len(response.context["yearly_results"]), 3)
         # Check that the year-by-year log section appears
-        self.assertContains(response, "Year-by-Year Log")
+        self.assertContains(response, "Prior Experience Log")
         # Check that specific year entries appear
         self.assertContains(response, "Year 16")
         self.assertContains(response, "Sword")
@@ -1927,8 +1927,9 @@ class AddExperienceTests(TestCase):
         self.assertIn("skill_track", char_data)
         self.assertEqual(char_data["skill_track"]["track"], "Campaigner")
 
-        # Should have years of experience
-        self.assertEqual(char_data["interactive_years"], 3)
+        # Should have years of experience (may be less than 3 if character died)
+        self.assertGreaterEqual(char_data["interactive_years"], 1)
+        self.assertLessEqual(char_data["interactive_years"], 3)
 
         # Should have skills from experience
         self.assertIn("interactive_skills", char_data)
@@ -1978,8 +1979,8 @@ class AddExperienceTests(TestCase):
         self.assertEqual(response.context["current_age"], 16)
         # Should have empty yearly_results
         self.assertEqual(len(response.context["yearly_results"]), 0)
-        # Year-by-Year Log should NOT appear (no results)
-        self.assertNotContains(response, "Year-by-Year Log")
+        # Prior Experience Log should NOT appear (no results)
+        self.assertNotContains(response, "Prior Experience Log")
 
         # Add 3 years of experience
         add_response = self.client.post(
@@ -1998,7 +1999,7 @@ class AddExperienceTests(TestCase):
         self.assertEqual(len(add_response.context["yearly_results"]), 3)
 
         # Check the HTML content shows the experience
-        self.assertContains(add_response, "Year-by-Year Log")
+        self.assertContains(add_response, "Prior Experience Log")
         self.assertContains(add_response, "Year 16")  # First year of experience
         self.assertContains(add_response, "Year 17")
         self.assertContains(add_response, "Year 18")
@@ -2564,7 +2565,7 @@ class GeneratorUnifiedFlowTests(TestCase):
         self.assertTemplateUsed(response, "generator/index.html")
 
         # Experience should be visible
-        self.assertContains(response, "Year-by-Year Log")
+        self.assertContains(response, "Prior Experience Log")
 
     def test_anonymous_and_logged_in_see_same_ui_elements(self):
         """Test that both anonymous and logged-in users see the same UI elements."""

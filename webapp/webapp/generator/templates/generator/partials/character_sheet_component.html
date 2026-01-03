@@ -276,33 +276,6 @@ Attribute display variables (computed by view):
         </div>
     </div>
 
-    {% if char_data.generation_log %}
-    <!-- Generation Log Section (Character Creation Rolls) -->
-    <div class="sheet-section generation-log-section">
-        <h2>Character Generation Log</h2>
-        <div class="generation-log">
-            {% regroup char_data.generation_log by type as log_by_type %}
-            {% for type_group in log_by_type %}
-            <div class="log-group">
-                <h3>{{ type_group.grouper|title }}</h3>
-                <ul class="log-entries">
-                    {% for entry in type_group.list %}
-                    <li class="log-entry">
-                        <span class="log-name">{{ entry.name }}:</span>
-                        <span class="log-rolls">
-                            {% for roll in entry.rolls %}{{ roll }}{% if not forloop.last %}, {% endif %}{% endfor %}
-                        </span>
-                        <span class="log-arrow">&rarr;</span>
-                        <span class="log-result">{{ entry.result }}</span>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
     <!-- Skills Section (separate div as requested) -->
     <div class="sheet-section skills-section">
         <h2>Skills</h2>
@@ -380,48 +353,6 @@ Attribute display variables (computed by view):
             <span class="field-value">{{ char_data.skill_track.magic_school }}</span>
         </div>
         {% endif %}
-    </div>
-    {% endif %}
-
-    {% if show_experience and yearly_results %}
-    <!-- Prior Experience Section -->
-    <div class="sheet-section experience-section">
-        <h2>Prior Experience</h2>
-        <div class="experience-summary">
-            <div class="field-row">
-                <label>Starting Age:</label>
-                <span class="field-value">16</span>
-            </div>
-            <div class="field-row">
-                <label>Current Age:</label>
-                <span class="field-value">{{ current_age|default:16 }}</span>
-            </div>
-            <div class="field-row">
-                <label>Years Served:</label>
-                <span class="field-value">{{ years_served|default:0 }}</span>
-            </div>
-            {% if died %}
-            <div class="field-row died-notice">
-                <span class="died-text">DIED DURING PRIOR EXPERIENCE</span>
-            </div>
-            {% endif %}
-        </div>
-
-        <h3>Year-by-Year Log</h3>
-        <div class="experience-log">
-            {% for yr in yearly_results %}
-            <div class="year-entry {% if not yr.survived %}died{% endif %}">
-                <strong>Year {{ yr.year }}:</strong> {{ yr.skill }} |
-                Survival: {{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+
-                [{% if yr.survived %}<span class="survived">Survived</span>{% else %}<span class="died-text">DIED</span>{% endif %}]
-                {% if yr.aging %}
-                    {% for attr, penalty in yr.aging.items %}
-                        {% if penalty %}| <span class="aging-penalty">{{ attr|upper }} {{ penalty }}</span>{% endif %}
-                    {% endfor %}
-                {% endif %}
-            </div>
-            {% endfor %}
-        </div>
     </div>
     {% endif %}
 
@@ -761,6 +692,71 @@ Attribute display variables (computed by view):
         <div class="notes-display">{{ char_data.notes|default:"No notes"|linebreaks }}</div>
         {% endif %}
     </div>
+
+    {% if char_data.generation_log or yearly_results %}
+    <!-- Combined Character Log Section -->
+    <div class="sheet-section character-log-section">
+        <h2>Character Log</h2>
+
+        {% if show_experience and yearly_results %}
+        <!-- Prior Experience Summary -->
+        <div class="experience-summary">
+            <div class="summary-row">
+                <span class="summary-label">Prior Experience:</span>
+                <span class="summary-value">{{ years_served|default:0 }} years as {{ track_name|default:"Unknown" }}</span>
+                <span class="summary-ages">(Age 16 → {{ current_age|default:16 }})</span>
+                {% if died %}
+                <span class="died-badge">DECEASED</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if char_data.generation_log %}
+        <!-- Character Generation Rolls -->
+        <h3>Character Generation</h3>
+        <div class="generation-log">
+            {% regroup char_data.generation_log by type as log_by_type %}
+            {% for type_group in log_by_type %}
+            <div class="log-group">
+                <h4>{{ type_group.grouper|title }}</h4>
+                <ul class="log-entries">
+                    {% for entry in type_group.list %}
+                    <li class="log-entry">
+                        <span class="log-name">{{ entry.name }}:</span>
+                        <span class="log-rolls">
+                            {% for roll in entry.rolls %}{{ roll }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                        </span>
+                        <span class="log-arrow">&rarr;</span>
+                        <span class="log-result">{{ entry.result }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if show_experience and yearly_results %}
+        <!-- Year-by-Year Experience Log -->
+        <h3>Prior Experience Log</h3>
+        <div class="experience-log">
+            {% for yr in yearly_results %}
+            <div class="year-entry {% if not yr.survived %}died{% endif %}">
+                <strong>Year {{ yr.year }}:</strong> {{ yr.skill }} |
+                Survival: {{ yr.surv_roll }}{% if yr.surv_mod >= 0 %}+{% endif %}{{ yr.surv_mod }}={{ yr.surv_total }} vs {{ yr.surv_target }}+
+                [{% if yr.survived %}<span class="survived">Survived</span>{% else %}<span class="died-text">DIED</span>{% endif %}]
+                {% if yr.aging %}
+                    {% for attr, penalty in yr.aging.items %}
+                        {% if penalty %}| <span class="aging-penalty">{{ attr|upper }} {{ penalty }}</span>{% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
 
 <style>
@@ -1102,7 +1098,66 @@ Attribute display variables (computed by view):
     margin-top: 2px;
 }
 
-/* Generation Log Section */
+/* Combined Character Log Section */
+.character-log-section {
+    background: #f8f9fa;
+}
+
+.character-log-section h3 {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+}
+
+.character-log-section h3:first-of-type {
+    margin-top: 10px;
+    padding-top: 0;
+    border-top: none;
+}
+
+.character-log-section h4 {
+    font-size: 0.9em;
+    color: #666;
+    margin: 8px 0 4px 0;
+}
+
+.character-log-section .experience-summary {
+    background: #eef;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.character-log-section .summary-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.character-log-section .summary-label {
+    font-weight: 600;
+}
+
+.character-log-section .summary-value {
+    color: #2a6496;
+}
+
+.character-log-section .summary-ages {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.character-log-section .died-badge {
+    background: #c44;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+/* Legacy class for backwards compat */
 .generation-log-section {
     background: #fafafa;
 }
