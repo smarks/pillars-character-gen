@@ -253,71 +253,49 @@ For every year of prior experience:
 
 ### Survivability
 
-Roll 3d6 higher than the listed value. STR, DEX, INT, WIS modifiers apply.
-
-| Track  | Army | Rangers | Navy | Officer | Random  | Worker | Crafts | Merchant |
-| ------ | ---- | ------- | ---- | ------- | ------- | ------ | ------ | -------- |
-| Target | 5    | 6       | 5    | 5       | roll d8 | 4      | 3      | 3        |
-
 ### Skill Tracks
 
-**Army** — 8+ on 2d6 (+ STR, DEX modifiers)
-- Provides: Sword +1 hit, Sword +1 parry
-- Rewards: 100 MU + percentile dice/year
+| Track | Requirements | Survival (2d6) |
+| ----- | ------------ | -------------- |
+| Merchant | None | 4+ |
+| Campaigner | None | 5+ |
+| Laborer | None | 3+ |
+| Magic | INT or WIS bonus | 7+ |
+| Underworld | None | 7+ |
+| Civil Service | INT, CHR or WIS bonus | 4+ |
+| Craft | None | 3+ |
+| Hunter/Gatherer | None | 5+ |
+| Random | None | Per track |
 
-**Navy** — 8+ on 2d6 (+ STR, DEX, INT modifiers)
-- Provides: Cutlass +1 hit, Cutlass +1 parry, Swimming, Coins
-- Rewards: 110 MU + percentile dice/year
-
-**Officer** — Must be promoted or Rich
-- Provides: Morale, Ken, Literacy, Weapon hit/parry
-- Rewards: Rank × 100 MU + (percentile × 2)/year
-
-**Rangers** — Requires STR, DEX, INT or WIS bonuses; 8+ on 2d6
-- Provides: Weapon hit/parry, Tracking, Wood lore, Ken, Literacy
-- Rewards: Varies (see GM)
-
-**Random** — Any character
-- Provides: Random skills, Swimming
-- Rewards: Varies (see GM)
-
-**Worker** — Any character
-- Provides: Laborer (additional if poor/working class)
-- Rewards: 100 MU + 10 MU per skill/level used
-
-**Crafts** — Covers traditional crafts, academic, medical, scientific/magical pursuits
-- Provides: Laborer, Literacy
-- Rewards: 100 MU + 50 MU per skill/level used
-
-Roll 1d6 or choose craft type:
-1. Smith (armorer/weapon smith)
-2. Agriculture
-3. Tailor
-4. Science (maps/logistics/accounting, potions/meds, physics, builder)
-5. Medical
-6. Magic
-
-**Merchant** — Must be merchant class, or roll: 10+ (poor), 8+ (working), 6+ (above working)
-- Provides: Coins, Literacy
+Apply a single attribute bonus or malus to survival rolls.
 
 ### Prior Experience Skills Table
 
-For each year in a track, roll 1d12:
+For each year in a track, use the year number or roll 1d20:
 
-| 1d12   | Army            | Rangers                     | Navy             | Officer   | Random             | Worker             | Crafts             | Merchant             |
-| ------ | --------------- | --------------------------- | ---------------- | --------- | ------------------ | ------------------ | ------------------ | -------------------- |
-| **1**  | Sword           | Sword                       | Cutlass          | Morale    | Climbing & Running | Laborer (STR, DEX) | Smith              | Coins                |
-| **2**  | Archery         | Archery                     | Sailing          | Morale    | Medic              | Morale             | Smith              | Literacy             |
-| **3**  | Morale          | Archery                     | Ropes & climbing | Tactics   | Stealth            | Growing            | Builder            | Persuade             |
-| **4**  | Running         | Tracking                    | Swimming         | Tactics   | −1 STR             | Wood Lore          | Arts & Crafts      | Persuade             |
-| **5**  | Literacy        | Course / Path               | Medic            | Logistics | −1 DEX             | Portage            | Potions/Herbs      | Weather, Course/Path |
-| **6**  | Medic           | Wood lore                   | Weather          | Medic     | Persuade           | Builder            | Medic              | Ken                  |
-| **7**  | Climbing        | Medic & Herb Lore           | Literacy         | Persuade  | Potions/Herbs      | Mining             | Literacy           | Ken                  |
-| **8**  | STR             | STR                         | STR              | STR       | STR                | STR                | STR                | −1 STR               |
-| **9**  | DEX             | DEX                         | DEX              | DEX       | DEX                | DEX                | DEX                | −1 DEX               |
-| **10** | Medic           | INT                         | INT              | INT       | Crafts Skill       | INT                | INT                | Talent               |
-| **11** | Ranger Skill    | Stealth, weather, wood lore | Officer Skill    | Promotion | Jack of All Trades | Random             | Merchant Skill     | Random               |
-| **12** | Field Promotion | Talent                      | Field Promotion  | Random    | Random             | Crafts skill       | Jack of All Trades | Jack of All Trades   |
+| Year | Merchant | Campaigner | Laborer | Magic | Underworld | Civil Service | Craft | Hunter/Gatherer | Random |
+| ---- | -------- | ---------- | ------- | ----- | ---------- | ------------- | ----- | --------------- | ------ |
+| 1 | Weapon | Weapon Parry | Weapon | Deceit | Weapon | Dagger | Weapon | Weapon | — |
+| 2 | Weapon Parry | Weapon | Weapon Parry | Persuasion | Weapon Parry | Deceit | Weapon Parry | Weapon Parry | — |
+| 3 | Coins | Weapon Parry | Coins | Literacy | Weapon | Persuasion | Enchanting | Weapon | — |
+| 4 | Deceit | Weapon | Literacy | Literacy | Weapon Parry | Detect Truth | Enchanting | Weapon Parry | — |
+| 5 | Persuasion | Weapon Parry | Knowledge | Sleight of Hand | Deceit | Detect Truth | Arts | Archery | — |
+| 6 | Sleight of Hand | Weapon | Maker Skill | Perception | Persuasion | Knowledge | Herb Lore | Archery | — |
+| 7 | Literacy | Weapon Parry | Maker Skill | Skill Point | Persuasion | Knowledge | Herb Lore | Archery | — |
+| 8 | Street Smarts | Tracker | Portage | Spell Point | Literacy | Weather/Path | Literacy | Tracker | — |
+| 9 | Weather/Path | Medic | Portage | Spell Point | Street Smarts | Diplomacy | Logistics | Tracker | — |
+| 10 | Morale | Hunter | +1 STR | Spell Point | Stealth | Logistics | Appraise | Herbs | — |
+| 11 | Diplomacy | Coins | +1 DEX | Coins | Sleight of Hand | Barter | Knowledge | Herbs | — |
+| 12 | Logistics | Literacy | +1 CON | Medic | Bribery | Bribery | Coins | Knowledge | — |
+| 13 | Barter | Knowledge | +1 STR | Herb Lore | Appraise | Coins | Maker Skill | Survival | — |
+| 14 | Bribery | Alert | +1 DEX | Knowledge | Perception | Coins | Maker Skill | Alert | — |
+| 15 | Appraise | Alert | +1 CON | Knowledge | Poison | Literacy | Maker Skill | Alert | — |
+| 16 | Perception | Perception | Gamble | Bluff | Gamble | Literacy | Maker Skill | Poison | — |
+| 17 | Knowledge | Stealth | Miner | Diplomacy | Bluff | Contracts/Law | Maker Skill | Stealth | — |
+| 18 | Bluff | Barter | Sailor | Enchanting | Diplomacy | Estimate | Estimate | Perception | — |
+| 19 | Luck | Weather/Path | Luck | Enchanting | Coins | Street Smarts | Street Smarts | Hunting | — |
+| 20 | Alert | Survival | Herb Lore | Alert | Alert | Sleight of Hand | Barter | Hunting | — |
+| 21 | Jack of Trades | Jack of Trades | Jack of Trades | Jack of Trades | Jack of Trades | Jack of Trades | Jack of Trades | Jack of Trades | — |
 
 If you already have a skill and roll it again, you get +1 toward the next skill level.
 

@@ -1,0 +1,26 @@
+Table 1
+,,,,,,,,,
+Skill track ,Merchant,Campaigner,Laborer,Magic,Underworld,Civil Service,Craft,hunter/gather,Random
+requirements,None,None,None,Int or Wis bonus,None,"Int, Chr or WIs bonus",None,None,None
+"survival role (apply single attribute malus, bonus) 2d6",4,5,3,7,7,4,3,5,Per track
+,Weapon ,Weapon Parry,Weapon ,Deceit,Weapon ,Dagger,Weapon ,Weapon ,
+,Weapon Parry,Weapon ,Weapon Parry,Persuasion ,Weapon Parry,Deceit,Weapon Parry,Weapon Parry,
+,Coins,Weapon Parry,Coins,Literacy ,Weapon ,Persuasion ,Enchanting,Weapon ,
+,Deceit,Weapon ,Literacy,Literacy ,Weapon Parry,Detect Truth,Enchanting,Weapon Parry,
+,Persuasion ,Weapon Parry,Knowledge,Slight of Hand,Deceit,Detect Truth,Arts,Archery,
+,Slight of Hand,Weapon ,Maker Skill,Perception,Persuasion ,Knowledge,Herb lore ,Archery,
+,Literacy ,Weapon Parry,Maker Skill,Skill Point,Persuasion ,Knowledge,Herb lore ,Archery,
+,Street Smarts,Tracker,Portage,Spell Point,Literacy ,Weather/Path,Literacy,Tracker,
+,Weather/Path,Medic,Portage,Spell Point,Street Smarts,Diplomacy ,Logistics,Tracker,
+,Moral ,Hunter,+1 Str,Spell Point,Stealth,Logistics,Appraise,Herbs,
+,Diplomacy ,Coins,+1 Dex,Coins,Slight of Hand,Barter,Knowledge,Herbs ,
+,Logistics,Literacy,+1 Con,Medic,Bribery,Bribery,Coins,Knowledge,
+,Barter,Knowledge,+1 Str,Herb lore,Appraise,Coins,Maker Skill,Survival,
+,Bribery,Alert,+1 Dex,Knowledge,Perception,Coins,Maker Skill,Alert,
+,Appraise,Alert,+1 Con,Knowledge,Poison ,Literacy ,Maker Skill,Alert,
+,Perception,Perception,Gamble,Bluff,Gamble,Literacy ,Maker Skill,Poison ,
+,Knowledge,Stealth,Miner,Diplomacy ,Bluff,Contracts/Law,Maker Skill,Stealth,
+,Bluff,Barter,Sailor,Enchanting,Diplomacy ,Estimate,Estimate,Perception,
+,Luck,Weather/Path,Luck,Enchanting,Coins,Street Smarts,Street Smarts,Hunting ,
+,Alert,Survival,Herblore,Alert,Alert,Slight of Hand,Barter,Hunting,
+,Jack of Trades,Jack of Trades,Jack of Trades,Jack of Trades,Jack of Trades,Jack of Trades,Jack of Trades,Jack of Trades,
