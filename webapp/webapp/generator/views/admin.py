@@ -108,38 +108,16 @@ def manage_users(request):
 
 @dm_required
 def manage_characters(request):
-    """DM/Admin view to manage all characters with filtering by player."""
-    # Get filter parameter
+    """Redirect to unified my_characters view.
+
+    This view is kept for backwards compatibility with existing URLs.
+    The my_characters view now handles both regular users and DMs/admins.
+    """
+    # Preserve any query parameters
     player_filter = request.GET.get("player", "")
-
-    # Get all users who have characters for the dropdown
-    users_with_characters = (
-        User.objects.filter(saved_characters__isnull=False)
-        .distinct()
-        .order_by("username")
-    )
-
-    # Get characters, optionally filtered by player
     if player_filter:
-        characters = (
-            SavedCharacter.objects.filter(user__username=player_filter)
-            .select_related("user")
-            .order_by("-updated_at")
-        )
-    else:
-        characters = (
-            SavedCharacter.objects.all().select_related("user").order_by("-updated_at")
-        )
-
-    return render(
-        request,
-        "generator/manage_characters.html",
-        {
-            "characters": characters,
-            "users_with_characters": users_with_characters,
-            "player_filter": player_filter,
-        },
-    )
+        return redirect(f"/my-characters/?player={player_filter}")
+    return redirect("my_characters")
 
 
 @dm_required

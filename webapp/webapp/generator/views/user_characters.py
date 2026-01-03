@@ -3,7 +3,7 @@ User character management views for the Pillars Character Generator.
 
 This module handles user's saved characters:
 - save_character: AJAX save current character
-- my_characters: List saved characters
+- my_characters: List saved characters (unified view for players and DMs/admins)
 - load_character: Load character into session
 - delete_character: Delete a saved character
 """
@@ -11,6 +11,7 @@ This module handles user's saved characters:
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
@@ -65,16 +66,59 @@ def save_character(request):
 
 @login_required
 def my_characters(request):
-    """List saved characters for the logged-in user only."""
-    characters = SavedCharacter.objects.filter(user=request.user).order_by(
-        "-updated_at"
+    """List saved characters - unified view for players and DMs/admins.
+
+    - DMs/Admins see all players in dropdown and can view all characters
+    - Regular players see only themselves in dropdown (their characters only)
+    """
+    # Check if user is DM or admin
+    is_privileged = hasattr(request.user, "profile") and (
+        request.user.profile.is_dm or request.user.profile.is_admin
     )
+
+    # Get filter parameter
+    player_filter = request.GET.get("player", "")
+
+    # Build the list of users for the dropdown
+    if is_privileged:
+        # DMs/admins see all users who have characters
+        users_with_characters = (
+            User.objects.filter(saved_characters__isnull=False)
+            .distinct()
+            .order_by("username")
+        )
+    else:
+        # Regular players only see themselves
+        users_with_characters = User.objects.filter(id=request.user.id)
+        # Force filter to current user for non-privileged users
+        player_filter = request.user.username
+
+    # Get characters based on filter
+    if player_filter:
+        characters = (
+            SavedCharacter.objects.filter(user__username=player_filter)
+            .select_related("user")
+            .order_by("-updated_at")
+        )
+    elif is_privileged:
+        # DMs/admins with no filter see all characters
+        characters = (
+            SavedCharacter.objects.all().select_related("user").order_by("-updated_at")
+        )
+    else:
+        # Regular players see only their own
+        characters = SavedCharacter.objects.filter(user=request.user).order_by(
+            "-updated_at"
+        )
 
     return render(
         request,
         "generator/my_characters.html",
         {
             "characters": characters,
+            "users_with_characters": users_with_characters,
+            "player_filter": player_filter,
+            "is_privileged": is_privileged,
         },
     )
 

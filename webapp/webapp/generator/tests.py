@@ -1694,7 +1694,7 @@ class AdminViewAllCharactersTests(TestCase):
         response = self.client.get(reverse("my_characters"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "My Saved Characters")
+        self.assertContains(response, "My Characters")
         # Should not have show_owner in context
         self.assertNotIn("show_owner", response.context)
 
@@ -3560,7 +3560,6 @@ class HamburgerMenuLinksTests(TestCase):
         self.client.login(username="regular", password="testpass")
         response = self.client.get(reverse("welcome"))
         self.assertNotContains(response, ">Private Rules</a>")
-        self.assertNotContains(response, reverse("manage_characters"))
 
     def test_regular_user_does_not_see_admin_links(self):
         """Test that regular authenticated users don't see admin links."""
@@ -3577,11 +3576,12 @@ class HamburgerMenuLinksTests(TestCase):
         response = self.client.get(reverse("dm"))
         self.assertEqual(response.status_code, 200)
 
-    def test_manage_characters_accessible_for_dm(self):
-        """Test that manage characters link works for DM users."""
+    def test_manage_characters_redirects_for_dm(self):
+        """Test that manage characters redirects to my_characters for DM users."""
         self.client.login(username="dm", password="testpass")
         response = self.client.get(reverse("manage_characters"))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("my_characters"))
 
     def test_dm_sees_dm_links_in_menu(self):
         """Test that DM users see DM-only links in hamburger menu."""
@@ -3589,9 +3589,9 @@ class HamburgerMenuLinksTests(TestCase):
         response = self.client.get(reverse("welcome"))
         self.assertContains(response, ">Private Rules</a>")
         self.assertContains(response, "/html/dm-handbook/")
-        self.assertContains(response, ">Characters</a>")
-        self.assertContains(response, reverse("manage_characters"))
         self.assertContains(response, ">Manage</div>")
+        # DMs use the unified My Characters view (which shows all players for them)
+        self.assertContains(response, ">My Characters</a>")
 
     def test_dm_does_not_see_admin_only_links(self):
         """Test that DM users don't see admin-only links."""
@@ -3620,11 +3620,12 @@ class HamburgerMenuLinksTests(TestCase):
         response = self.client.get(reverse("dm"))
         self.assertEqual(response.status_code, 200)
 
-    def test_manage_characters_accessible_for_admin(self):
-        """Test that manage characters link also works for admin users."""
+    def test_manage_characters_redirects_for_admin(self):
+        """Test that manage characters redirects to my_characters for admin users."""
         self.client.login(username="admin", password="testpass")
         response = self.client.get(reverse("manage_characters"))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("my_characters"))
 
     def test_admin_sees_all_admin_links_in_menu(self):
         """Test that admin users see all admin links in hamburger menu."""
@@ -3634,8 +3635,9 @@ class HamburgerMenuLinksTests(TestCase):
         self.assertContains(response, reverse("manage_users"))
         self.assertContains(response, reverse("admin_notes"))
         self.assertContains(response, ">Private Rules</a>")
-        self.assertContains(response, ">Characters</a>")
         self.assertContains(response, ">Manage</div>")
+        # Admins use the unified My Characters view
+        self.assertContains(response, ">My Characters</a>")
 
     # ========== ADMIN+DM USER LINKS ==========
 
@@ -3645,10 +3647,11 @@ class HamburgerMenuLinksTests(TestCase):
         response = self.client.get(reverse("welcome"))
         # All DM links
         self.assertContains(response, ">Private Rules</a>")
-        self.assertContains(response, ">Characters</a>")
         # All admin links
         self.assertContains(response, ">Users</a>")
         self.assertContains(response, reverse("admin_notes"))
+        # Unified My Characters view
+        self.assertContains(response, ">My Characters</a>")
 
     # ========== ACCESS CONTROL TESTS ==========
 
@@ -3808,11 +3811,12 @@ class HamburgerMenuLinkTests(TestCase):
         response = self.client.get(reverse("dm"))
         self.assertEqual(response.status_code, 200)
 
-    def test_manage_characters_link_works_for_dm(self):
-        """Test Manage Characters link works for DM."""
+    def test_manage_characters_redirects_for_dm(self):
+        """Test Manage Characters link redirects to my_characters for DM."""
         self.client.login(username="dungeonmaster", password="testpass")
         response = self.client.get(reverse("manage_characters"))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("my_characters"))
 
     # === Django URL Tests (Admin only) ===
 

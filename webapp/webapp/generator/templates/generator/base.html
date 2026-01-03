@@ -514,11 +514,6 @@
                         <a href="{% url 'my_characters' %}"{% if request.resolver_match.url_name == 'my_characters' %} class="current-page"{% endif %}>My Characters</a>
                         {% if user.profile.is_admin %}
                         <a href="{% url 'manage_users' %}"{% if request.resolver_match.url_name == 'manage_users' %} class="current-page"{% endif %}>Users</a>
-                        {% endif %}
-                        {% if user.profile.is_dm or user.profile.is_admin %}
-                        <a href="{% url 'manage_characters' %}"{% if request.resolver_match.url_name == 'manage_characters' %} class="current-page"{% endif %}>Characters</a>
-                        {% endif %}
-                        {% if user.profile.is_admin %}
                         <a href="{% url 'admin_notes' %}"{% if request.resolver_match.url_name == 'admin_notes' %} class="current-page"{% endif %}>Notes</a>
                         {% endif %}
                     </div>
