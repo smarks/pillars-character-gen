@@ -189,15 +189,19 @@ def serialize_character(character, preserve_data=None):
             "fatigue_roll": character.attributes.fatigue_roll,
             "body_roll": character.attributes.body_roll,
         },
-        "appearance": str(character.appearance),
-        # Store just the usable height/weight values, not full description strings
+        # Store just the clean values, not full description strings with roll info
+        "appearance": (
+            character.appearance.description
+            if hasattr(character.appearance, "description")
+            else str(character.appearance)
+        ),
         "height": (
             character.height.imperial
             if hasattr(character.height, "imperial")
             else str(character.height)
         ),
         "weight": (
-            f"{character.weight.total_pounds} lbs"
+            str(int(character.weight.total_pounds))
             if hasattr(character.weight, "total_pounds")
             else str(character.weight)
         ),

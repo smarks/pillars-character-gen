@@ -213,8 +213,7 @@ Attribute display variables (computed by view):
             <label>Height:</label>
             {% if editable %}
             <input type="text" data-field="height" value="{{ char_data.height|default:'' }}"
-                   inputmode="numeric" pattern="[0-9'\".\s]+" class="numeric-field"
-                   placeholder="e.g., 5'8&quot; or 68">
+                   class="numeric-field" placeholder="e.g., 5'8&quot; or 68">
             {% else %}
             <span class="field-value">{{ char_data.height|default:'-' }}</span>
             {% endif %}
@@ -223,8 +222,7 @@ Attribute display variables (computed by view):
             <label>Weight:</label>
             {% if editable %}
             <input type="text" data-field="weight" value="{{ char_data.weight|default:'' }}"
-                   inputmode="numeric" pattern="[0-9.\s]+" class="numeric-field"
-                   placeholder="e.g., 150 or 10.5">
+                   class="numeric-field" placeholder="e.g., 150">
             {% else %}
             <span class="field-value">{{ char_data.weight|default:'-' }}</span>
             {% endif %}
