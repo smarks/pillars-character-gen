@@ -107,40 +107,97 @@ class SavedCharacter(models.Model):
 
     @property
     def auto_description(self):
-        """Generate a brief auto-description based on character data.
+        """Generate a brief auto-description based on character strengths and skills.
 
-        Format: "Age X, [Provenance] from [Location], [Track]"
-        Example: "Age 23, Noble from the City, Ranger"
+        Focuses on high/low attributes and primary skills.
+        Example: "Strong and wise, skilled in Sword. Weak DEX."
         """
         if not self.character_data:
             return "New character"
 
-        parts = []
         char_data = self.character_data
+        attrs = char_data.get("attributes", {})
 
-        # Age
+        # Get base attribute values (handle both int and dict formats)
+        def get_val(attr_name):
+            val = attrs.get(attr_name, 10)
+            if isinstance(val, dict):
+                return val.get("value", 10)
+            return val if isinstance(val, int) else 10
+
+        attr_values = {
+            "STR": get_val("STR"),
+            "DEX": get_val("DEX"),
+            "INT": get_val("INT"),
+            "WIS": get_val("WIS"),
+            "CON": get_val("CON"),
+            "CHR": get_val("CHR"),
+        }
+
+        # Descriptive words for attributes
+        attr_words = {
+            "STR": "strong",
+            "DEX": "agile",
+            "INT": "intelligent",
+            "WIS": "wise",
+            "CON": "hardy",
+            "CHR": "charismatic",
+        }
+
+        # Find strengths (13+) and weaknesses (8-)
+        strengths = [attr_words[a] for a, v in attr_values.items() if v >= 13]
+        weaknesses = [a for a, v in attr_values.items() if v <= 8]
+
+        parts = []
+
+        # Strengths
+        if strengths:
+            if len(strengths) == 1:
+                parts.append(strengths[0].capitalize())
+            elif len(strengths) == 2:
+                parts.append(f"{strengths[0].capitalize()} and {strengths[1]}")
+            else:
+                parts.append(
+                    f"{strengths[0].capitalize()}, {strengths[1]}, {strengths[2]}"
+                )
+
+        # Skills - get top skills from skill_points_data or interactive_skills
+        top_skills = []
+        skill_data = char_data.get("skill_points_data", {})
+        if skill_data and skill_data.get("skills"):
+            # Sort by total points, get top 2
+            skills_list = [
+                (name, data.get("automatic", 0) + data.get("allocated", 0))
+                for name, data in skill_data.get("skills", {}).items()
+            ]
+            skills_list.sort(key=lambda x: x[1], reverse=True)
+            top_skills = [s[0] for s in skills_list[:2] if s[1] > 0]
+        elif char_data.get("interactive_skills"):
+            # Fallback to interactive_skills
+            from collections import Counter
+
+            skill_counts = Counter(char_data.get("interactive_skills", []))
+            top_skills = [s for s, _ in skill_counts.most_common(2)]
+
+        if top_skills:
+            skills_str = " & ".join(top_skills)
+            parts.append(f"skilled in {skills_str}")
+
+        # Weaknesses
+        if weaknesses:
+            weak_str = ", ".join(weaknesses)
+            parts.append(f"weak {weak_str}")
+
+        # Age and fatigue
         base_age = char_data.get("base_age", 16)
         years = char_data.get("interactive_years", 0)
         age = base_age + years
-        parts.append(f"Age {age}")
+        fatigue = attrs.get("fatigue_points", "?")
 
-        # Provenance (social class or sub-class if available)
-        provenance = char_data.get("provenance_sub_class") or char_data.get(
-            "provenance_social_class"
-        )
-        if provenance:
-            parts.append(provenance)
+        # Build final description
+        desc_parts = [f"Age {age}"]
+        if parts:
+            desc_parts.append(". ".join(parts))
+        desc_parts.append(f"FP {fatigue}")
 
-        # Location
-        location = char_data.get("location")
-        if location:
-            parts.append(f"from {location}")
-
-        # Track (if has prior experience)
-        skill_track = char_data.get("skill_track", {})
-        if skill_track:
-            track_name = skill_track.get("track")
-            if track_name:
-                parts.append(track_name)
-
-        return ", ".join(parts) if parts else "New character"
+        return ", ".join(desc_parts)
