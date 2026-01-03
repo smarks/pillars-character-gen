@@ -284,7 +284,11 @@ Attribute display variables (computed by view):
         <ul class="skills-list" id="{{ component_id|default:'cs' }}-skills-list">
             {% for skill in skills %}
             <li class="skill-item" data-skill-name="{{ skill.name|default:skill }}">
+                {% if editable %}
+                <span class="skill-tag editable" onclick="CharacterSheet.startRenameSkill('{{ component_id|default:'cs' }}', this)" title="Click to rename">{{ skill.display|default:skill }}</span>
+                {% else %}
                 <span class="skill-tag">{{ skill.display|default:skill }}</span>
+                {% endif %}
                 {% if editable and free_skill_points > 0 %}
                 <button type="button" class="btn-allocate" onclick="CharacterSheet.allocatePoint('{{ component_id|default:'cs' }}', '{{ skill.name|default:skill }}')" title="Allocate 1 free point">+1</button>
                 {% endif %}
@@ -841,6 +845,25 @@ Attribute display variables (computed by view):
     padding: 5px 12px;
     font-size: 0.9em;
     display: inline-block;
+}
+
+.skill-tag.editable {
+    cursor: pointer;
+}
+
+.skill-tag.editable:hover {
+    background: #444;
+    outline: 1px dashed #666;
+}
+
+.skill-rename-input {
+    font-family: inherit;
+    font-size: 0.9em;
+    padding: 4px 10px;
+    border: 1px solid #666;
+    background: #222;
+    color: white;
+    min-width: 100px;
 }
 
 .skill-item.no-skills-msg {
@@ -1672,7 +1695,8 @@ var CharacterSheet = (function() {
             var skillName = skill.name || skill;
             var skillDisplay = skill.display || skill;
             li.dataset.skillName = skillName;
-            var html = '<span class="skill-tag">' + escapeHtml(skillDisplay) + '</span>';
+            // Add editable class and click handler for renaming
+            var html = '<span class="skill-tag editable" onclick="CharacterSheet.startRenameSkill(\'' + componentId + '\', this)" title="Click to rename">' + escapeHtml(skillDisplay) + '</span>';
             if (freePoints > 0) {
                 html += ' <button type="button" class="btn-allocate" onclick="CharacterSheet.allocatePoint(\'' + componentId + '\', \'' + escapeHtml(skillName).replace(/'/g, "\\'") + '\')" title="Allocate 1 free point">+1</button>';
             }
@@ -1739,6 +1763,96 @@ var CharacterSheet = (function() {
         })
         .catch(function(error) {
             console.error('Allocate point error:', error);
+        });
+    }
+
+    function startRenameSkill(componentId, skillTagElement) {
+        // Get the skill name from the parent li element
+        var li = skillTagElement.closest('.skill-item');
+        var skillName = li.dataset.skillName;
+        var currentDisplay = skillTagElement.textContent;
+
+        // Extract just the base name (remove roman numerals and excess points)
+        // e.g., "Sword II (+1)" -> "Sword"
+        var baseName = currentDisplay.replace(/\s+[IVX]+(\s+\(\+\d+\))?$/, '').trim();
+
+        // Create input element
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'skill-rename-input';
+        input.value = baseName;
+        input.dataset.originalSkillName = skillName;
+        input.dataset.componentId = componentId;
+
+        // Replace the span with the input
+        skillTagElement.style.display = 'none';
+        li.insertBefore(input, skillTagElement);
+        input.focus();
+        input.select();
+
+        // Handle blur and enter key
+        input.addEventListener('blur', function() {
+            finishRenameSkill(componentId, input, skillTagElement, li);
+        });
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                input.blur();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                cancelRenameSkill(input, skillTagElement);
+            }
+        });
+    }
+
+    function cancelRenameSkill(input, skillTagElement) {
+        input.remove();
+        skillTagElement.style.display = '';
+    }
+
+    function finishRenameSkill(componentId, input, skillTagElement, li) {
+        var newName = input.value.trim();
+        var oldName = input.dataset.originalSkillName;
+
+        if (!newName || newName === oldName) {
+            // No change, just restore the span
+            cancelRenameSkill(input, skillTagElement);
+            return;
+        }
+
+        var container = document.getElementById(componentId + '-container');
+        var saveUrl = container.dataset.saveUrl;
+        var csrfToken = container.dataset.csrfToken;
+
+        fetch(saveUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                field: 'skills',
+                action: 'rename',
+                old_name: oldName,
+                new_name: newName
+            })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(result) {
+            if (result.success) {
+                // Rebuild skills list with updated data
+                if (result.computed && result.computed.skills) {
+                    rebuildSkillsList(componentId, result.computed.skills, result.computed.free_skill_points || 0);
+                }
+            } else {
+                console.error('Rename skill failed:', result.error);
+                alert('Failed to rename skill: ' + result.error);
+                cancelRenameSkill(input, skillTagElement);
+            }
+        })
+        .catch(function(error) {
+            console.error('Rename skill error:', error);
+            cancelRenameSkill(input, skillTagElement);
         });
     }
 
@@ -1848,6 +1962,7 @@ var CharacterSheet = (function() {
         init: init,
         addSkill: addSkill,
         allocatePoint: allocatePoint,
+        startRenameSkill: startRenameSkill,
         parseAttributeValue: parseAttributeValue
     };
 })();

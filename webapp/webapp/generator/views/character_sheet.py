@@ -230,9 +230,26 @@ def update_character(request, char_id):
             char_data["skill_points_data"] = char_skills.to_dict()
             computed["skills"] = char_skills.get_skills_with_details()
             computed["free_skill_points"] = char_skills.free_points
-        elif action == "edit":
-            # Edit not supported in skill points system
-            pass
+        elif action == "rename":
+            # Rename a skill's display name
+            old_name = data.get("old_name", "")
+            new_name = data.get("new_name", "")
+            if not old_name or not new_name:
+                return JsonResponse(
+                    {"success": False, "error": "old_name and new_name required"},
+                    status=400,
+                )
+            char_skills = build_skill_points_from_char_data(char_data)
+            success = char_skills.rename_skill(old_name, new_name)
+            if success:
+                char_data["skill_points_data"] = char_skills.to_dict()
+                computed["skills"] = char_skills.get_skills_with_details()
+                computed["free_skill_points"] = char_skills.free_points
+            else:
+                return JsonResponse(
+                    {"success": False, "error": f"Skill '{old_name}' not found"},
+                    status=400,
+                )
     elif field.startswith("attributes."):
         # Handle nested attribute fields
         attr_name = field.split(".")[1]
@@ -349,6 +366,26 @@ def update_session_character(request):
             computed["skills"] = char_skills.get_skills_with_details()
             computed["free_skill_points"] = char_skills.free_points
             computed["total_xp"] = char_skills.total_xp
+        elif action == "rename":
+            # Rename a skill's display name
+            old_name = data.get("old_name", "")
+            new_name = data.get("new_name", "")
+            if not old_name or not new_name:
+                return JsonResponse(
+                    {"success": False, "error": "old_name and new_name required"},
+                    status=400,
+                )
+            char_skills = build_skill_points_from_char_data(char_data)
+            success = char_skills.rename_skill(old_name, new_name)
+            if success:
+                char_data["skill_points_data"] = char_skills.to_dict()
+                computed["skills"] = char_skills.get_skills_with_details()
+                computed["free_skill_points"] = char_skills.free_points
+            else:
+                return JsonResponse(
+                    {"success": False, "error": f"Skill '{old_name}' not found"},
+                    status=400,
+                )
     elif field.startswith("attributes."):
         attr_name = field.split(".")[1]
         if attr_name in ["STR", "DEX", "INT", "WIS", "CON", "CHR"]:

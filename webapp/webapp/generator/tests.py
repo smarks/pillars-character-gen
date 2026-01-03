@@ -1248,6 +1248,76 @@ class UpdateCharacterAPITests(TestCase):
         self.assertEqual(skill_points_data["skill_points"]["sword"]["allocated"], 1)
         self.assertEqual(skill_points_data["free_skill_points"], 1)
 
+    def test_rename_skill(self):
+        """Test renaming a skill's display name."""
+        import json
+
+        # Set up with a skill (lowercase key)
+        self.saved_char.character_data["skill_points_data"] = {
+            "skill_points": {
+                "sword": {"automatic": 2, "allocated": 0, "display_name": "Sword"}
+            },
+            "free_skill_points": 0,
+            "total_xp": 0,
+        }
+        self.saved_char.save()
+
+        self.client.login(username="api_test", password="testpass")
+        response = self.client.post(
+            reverse("update_character", args=[self.saved_char.id]),
+            data=json.dumps(
+                {
+                    "field": "skills",
+                    "action": "rename",
+                    "old_name": "sword",
+                    "new_name": "Longsword",
+                }
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data["success"])
+
+        # Verify in database - display_name updated
+        self.saved_char.refresh_from_db()
+        skill_points_data = self.saved_char.character_data.get("skill_points_data", {})
+        # Key is normalized to lowercase
+        self.assertIn("longsword", skill_points_data["skill_points"])
+        self.assertEqual(
+            skill_points_data["skill_points"]["longsword"]["display_name"], "Longsword"
+        )
+        self.assertEqual(skill_points_data["skill_points"]["longsword"]["automatic"], 2)
+
+    def test_rename_skill_not_found(self):
+        """Test renaming a nonexistent skill returns error."""
+        import json
+
+        self.saved_char.character_data["skill_points_data"] = {
+            "skill_points": {},
+            "free_skill_points": 0,
+            "total_xp": 0,
+        }
+        self.saved_char.save()
+
+        self.client.login(username="api_test", password="testpass")
+        response = self.client.post(
+            reverse("update_character", args=[self.saved_char.id]),
+            data=json.dumps(
+                {
+                    "field": "skills",
+                    "action": "rename",
+                    "old_name": "nonexistent",
+                    "new_name": "NewSkill",
+                }
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertFalse(data["success"])
+        self.assertIn("not found", data["error"])
+
     def test_update_notes(self):
         """Test updating notes field."""
         import json
