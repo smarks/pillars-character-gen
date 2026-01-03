@@ -30,17 +30,25 @@ def build_track_info(track_availability):
         track_availability: Dict from get_track_availability() mapping TrackType to availability info
 
     Returns:
-        List of dicts with track info sorted by TRACK_DISPLAY_ORDER
+        List of dicts with track info sorted by TRACK_DISPLAY_ORDER.
+        The first available (non-impossible) track is marked as recommended.
     """
     from pillars.attributes import TRACK_SURVIVABILITY
 
     track_info = []
+    recommended_found = False
+
     for track_type in TRACK_DISPLAY_ORDER:
         if track_type not in track_availability:
             continue
 
         avail = track_availability[track_type]
         survivability = TRACK_SURVIVABILITY.get(track_type, 6)
+
+        # First non-impossible track is recommended (priority order)
+        is_recommended = not avail["impossible"] and not recommended_found
+        if is_recommended:
+            recommended_found = True
 
         track_info.append(
             {
@@ -50,6 +58,7 @@ def build_track_info(track_availability):
                 "requires_roll": avail["requires_roll"],
                 "impossible": avail["impossible"],
                 "requirement": avail["requirement"],
+                "recommended": is_recommended,
             }
         )
 

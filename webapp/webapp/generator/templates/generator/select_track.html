@@ -48,8 +48,6 @@
 .status-badge.guaranteed { background: #4a4; color: white; }
 .status-badge.roll-required { background: #fa0; color: black; }
 .status-badge.impossible { background: #c44; color: white; }
-.manual-track-section { display: none; }
-.manual-track-section.show { display: block; }
 {% endblock %}
 
 {% block content %}
@@ -125,10 +123,10 @@
     {% endif %}
 
     {% if not has_experience %}
-    <!-- Manual Track Selection (shown when manual mode selected) -->
-    <div class="section manual-track-section" id="manual-track-section">
+    <!-- Track Selection -->
+    <div class="section" id="track-section">
         <h3>Select Your Track</h3>
-        <p>Choose a track for your character. Some tracks require meeting certain requirements or passing an acceptance roll.</p>
+        <p>Choose a track for your character. The recommended track is pre-selected based on your attributes.</p>
 
         <div class="info-box">
             <strong>Legend:</strong>
@@ -139,7 +137,7 @@
 
         <div class="track-list">
             {% for track in track_info %}
-            <div class="track-card {% if track.impossible %}impossible{% elif track.requires_roll %}requires-roll{% else %}available{% endif %}">
+            <div class="track-card {% if track.impossible %}impossible{% elif track.requires_roll %}requires-roll{% else %}available{% endif %}{% if track.recommended %} selected{% endif %}">
                 <label>
                     <h4>
                         {{ track.track }}
@@ -152,7 +150,7 @@
                         {% endif %}
                     </h4>
                     {% if not track.impossible %}
-                    <input type="radio" name="chosen_track" value="{{ track.track_key }}">
+                    <input type="radio" name="chosen_track" value="{{ track.track_key }}"{% if track.recommended %} checked{% endif %}>
                     {% endif %}
                     <div class="details">
                         <p class="requirement"><strong>Requirement:</strong> {{ track.requirement }}</p>
@@ -174,90 +172,12 @@
             {% endfor %}
         </div>
     </div>
-
-    <!-- Track Reference (shown when auto mode) -->
-    <div class="section" id="track-reference-section">
-        <h3>Available Skill Tracks (Reference)</h3>
-        <p>The system will auto-select the best available track for your character based on their attributes.</p>
-
-        <div class="info-box">
-            <strong>Legend:</strong>
-            <span class="status-badge guaranteed">Guaranteed</span> - No requirements
-            <span class="status-badge roll-required">Roll Required</span> - Must pass dice roll
-            <span class="status-badge impossible">Impossible</span> - Cannot qualify
-        </div>
-
-        <div class="track-list">
-            {% for track in track_info %}
-            <div class="track-card {% if track.impossible %}impossible{% elif track.requires_roll %}requires-roll{% else %}available{% endif %}">
-                <h4>
-                    {{ track.track }}
-                    {% if track.impossible %}
-                    <span class="status-badge impossible">Impossible</span>
-                    {% elif track.requires_roll %}
-                    <span class="status-badge roll-required">Roll Required</span>
-                    {% else %}
-                    <span class="status-badge guaranteed">Guaranteed</span>
-                    {% endif %}
-                </h4>
-                <div class="details">
-                    <p class="requirement"><strong>Requirement:</strong> {{ track.requirement }}</p>
-                    {% if track.roll_info and not track.auto_accept %}
-                    <p class="roll-info">{{ track.roll_info }}</p>
-                    {% endif %}
-                    <p><strong>Survivability:</strong> {{ track.survivability }}+</p>
-                    <div class="skills">
-                        <strong>Initial Skills:</strong>
-                        {% if track.initial_skills %}
-                        {{ track.initial_skills|join:", " }}
-                        {% else %}
-                        <em>None</em>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
     {% endif %}
 
     {% include "generator/partials/control_section.html" %}
-
-    {% if not has_experience %}
-    <div class="section">
-        <div class="control-row">
-            <label>Track Selection:</label>
-            <div class="radio-group">
-                <label>
-                    <input type="radio" name="track_mode" value="auto" checked>
-                    Auto-select best track
-                </label>
-                <label>
-                    <input type="radio" name="track_mode" value="manual">
-                    Manually select track
-                </label>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </form>
 
 <script>
-// Toggle between auto and manual track selection display
-document.querySelectorAll('input[name="track_mode"]').forEach(function(radio) {
-    radio.addEventListener('change', function() {
-        var manualSection = document.getElementById('manual-track-section');
-        var referenceSection = document.getElementById('track-reference-section');
-        if (this.value === 'manual') {
-            manualSection.classList.add('show');
-            referenceSection.style.display = 'none';
-        } else {
-            manualSection.classList.remove('show');
-            referenceSection.style.display = 'block';
-        }
-    });
-});
-
 // Make clicking on track cards select the radio button
 document.querySelectorAll('.track-card').forEach(function(card) {
     card.addEventListener('click', function(e) {

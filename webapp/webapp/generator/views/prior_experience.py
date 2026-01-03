@@ -67,7 +67,6 @@ def select_track(request):
         elif action == "add_experience":
             # Get form data
             interactive_mode = request.POST.get("interactive_mode") == "on"
-            track_mode = request.POST.get("track_mode", "auto")
             years = (
                 validate_experience_years(request.POST.get("years"), default=5)
                 if not interactive_mode
@@ -75,20 +74,9 @@ def select_track(request):
             )
             chosen_track_name = request.POST.get("chosen_track", "")
 
-            # Determine the track to use
+            # Determine the track to use (always use selected track)
             chosen_track = None
-            if track_mode == "manual":
-                if not chosen_track_name:
-                    return render(
-                        request,
-                        "generator/select_track.html",
-                        {
-                            "character": character,
-                            "track_info": track_info,
-                            "current_age": 16,
-                            "error": "Please select a track when using manual selection",
-                        },
-                    )
+            if chosen_track_name:
                 try:
                     chosen_track = TrackType[chosen_track_name]
                 except KeyError:
@@ -103,7 +91,7 @@ def select_track(request):
                         },
                     )
 
-                # Check acceptance for manual track
+                # Check acceptance for chosen track
                 skill_track = create_skill_track_for_choice(
                     chosen_track=chosen_track,
                     str_mod=str_mod,
