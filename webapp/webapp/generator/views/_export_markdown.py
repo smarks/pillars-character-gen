@@ -317,6 +317,6 @@ def generate_markdown_from_char_data(char_data, character_name="Unnamed Characte
 
     # Footer
     md += "---\n"
-    md += "*Exported from Pillars Character Generator*\n"
+    md += "*Exported from Pillars Character Editor*\n"
 
     return md

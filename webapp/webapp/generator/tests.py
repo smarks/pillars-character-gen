@@ -142,7 +142,7 @@ class IndexViewTests(TestCase):
         """Test that the index page loads with auto-generated character."""
         response = self.client.get(reverse("generator"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Character Generator")
+        self.assertContains(response, "Character Editor")
         # Character should be auto-generated and displayed
         self.assertContains(response, "Pillars Character")
 
@@ -508,7 +508,7 @@ class UIFlowTests(TestCase):
         # Step 1: Load index page - character auto-generated
         response = self.client.get(reverse("generator"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Character Generator")
+        self.assertContains(response, "Character Editor")
         self.assertContains(response, "Pillars Character")
 
         # Step 2: Finish the character
@@ -3512,7 +3512,7 @@ class HamburgerMenuLinksTests(TestCase):
     # ========== AUTHENTICATED USER LINKS ==========
 
     def test_my_characters_link_accessible_for_authenticated(self):
-        """Test that Character Generator link works for authenticated users."""
+        """Test that Character Editor link works for authenticated users."""
         self.client.login(username="regular", password="testpass")
         response = self.client.get(reverse("my_characters"))
         self.assertEqual(response.status_code, 200)
@@ -3535,7 +3535,7 @@ class HamburgerMenuLinksTests(TestCase):
         self.client.login(username="regular", password="testpass")
         response = self.client.get(reverse("welcome"))
         self.assertContains(response, reverse("my_characters"))
-        self.assertContains(response, ">Character Generator</a>")
+        self.assertContains(response, ">Character Editor</a>")
         self.assertContains(response, reverse("notes"))
         self.assertContains(response, ">Logout</a>")
 
@@ -3783,7 +3783,7 @@ class HamburgerMenuLinkTests(TestCase):
     # === Django URL Tests (authenticated users) ===
 
     def test_character_generator_link_works_authenticated(self):
-        """Test Character Generator link works for authenticated user."""
+        """Test Character Editor link works for authenticated user."""
         self.client.login(username="player", password="testpass")
         response = self.client.get(reverse("my_characters"))
         self.assertEqual(response.status_code, 200)
@@ -3861,7 +3861,7 @@ class HamburgerMenuLinkTests(TestCase):
         """Test hamburger menu shows auth links for logged in users."""
         self.client.login(username="player", password="testpass")
         response = self.client.get(reverse("welcome"))
-        self.assertContains(response, "Character Generator")
+        self.assertContains(response, "Character Editor")
         self.assertContains(response, "Notes")
         self.assertContains(response, "Logout")
 
@@ -4284,7 +4284,7 @@ class ExportFunctionalityTests(TestCase):
         response = self.client.get(reverse("export_session_character_markdown"))
         content = response.content.decode("utf-8")
 
-        self.assertIn("Exported from Pillars Character Generator", content)
+        self.assertIn("Exported from Pillars Character Editor", content)
 
     def test_markdown_export_deceased_character(self):
         """Test markdown export handles deceased character."""

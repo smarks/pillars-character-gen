@@ -575,7 +575,7 @@ def generate_pdf_from_char_data(char_data, character_name="Unnamed Character"):
         textColor=colors.grey,
         spaceBefore=20,
     )
-    story.append(Paragraph("Exported from Pillars Character Generator", footer_style))
+    story.append(Paragraph("Exported from Pillars Character Editor", footer_style))
 
     doc.build(story)
     buffer.seek(0)
