@@ -137,3 +137,39 @@ def calculate_track_info(char_data):
         str_mod, dex_mod, int_mod, wis_mod, social_class, wealth_level
     )
     return build_track_info(track_availability)
+
+
+def generate_brief_description(char_data):
+    """Generate a brief auto-description for a character.
+
+    Format: "Age X, [Provenance] from [Location], [Track]"
+    Example: "Age 23, Noble from the City, Ranger"
+    """
+    parts = []
+
+    # Age
+    base_age = char_data.get("base_age", 16)
+    years = char_data.get("interactive_years", 0)
+    age = base_age + years
+    parts.append(f"Age {age}")
+
+    # Provenance (social class or sub-class if available)
+    provenance = char_data.get("provenance_sub_class") or char_data.get(
+        "provenance_social_class"
+    )
+    if provenance:
+        parts.append(provenance)
+
+    # Location
+    location = char_data.get("location")
+    if location:
+        parts.append(f"from {location}")
+
+    # Track (if has prior experience)
+    skill_track = char_data.get("skill_track", {})
+    if skill_track:
+        track_name = skill_track.get("track")
+        if track_name:
+            parts.append(track_name)
+
+    return ", ".join(parts) if parts else "New character"

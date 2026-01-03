@@ -104,3 +104,43 @@ class SavedCharacter(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.user.username})"
+
+    @property
+    def auto_description(self):
+        """Generate a brief auto-description based on character data.
+
+        Format: "Age X, [Provenance] from [Location], [Track]"
+        Example: "Age 23, Noble from the City, Ranger"
+        """
+        if not self.character_data:
+            return "New character"
+
+        parts = []
+        char_data = self.character_data
+
+        # Age
+        base_age = char_data.get("base_age", 16)
+        years = char_data.get("interactive_years", 0)
+        age = base_age + years
+        parts.append(f"Age {age}")
+
+        # Provenance (social class or sub-class if available)
+        provenance = char_data.get("provenance_sub_class") or char_data.get(
+            "provenance_social_class"
+        )
+        if provenance:
+            parts.append(provenance)
+
+        # Location
+        location = char_data.get("location")
+        if location:
+            parts.append(f"from {location}")
+
+        # Track (if has prior experience)
+        skill_track = char_data.get("skill_track", {})
+        if skill_track:
+            track_name = skill_track.get("track")
+            if track_name:
+                parts.append(track_name)
+
+        return ", ".join(parts) if parts else "New character"

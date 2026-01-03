@@ -140,7 +140,7 @@
             {% for char in characters %}
             <tr class="character-row" onclick="window.location='{% url 'character_sheet' char.id %}'">
                 <td><a href="{% url 'character_sheet' char.id %}">{{ char.name }}</a></td>
-                <td class="description-cell">{{ char.character_data.description|default:"-"|truncatechars:50 }}</td>
+                <td class="description-cell">{{ char.auto_description|truncatechars:50 }}</td>
                 <td>
                     {% if char.character_data.interactive_died %}
                     <span class="status-deceased">Deceased</span>
