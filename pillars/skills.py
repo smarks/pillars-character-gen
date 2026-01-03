@@ -66,11 +66,12 @@ def to_roman(num: int) -> str:
 
 
 def normalize_skill_name(skill: str) -> str:
-    """Normalize skill name for point tracking.
+    """Normalize skill name for point tracking (case-insensitive).
 
-    Groups skills by base name and type.
-    'Sword +1 to hit' and 'Sword +1 parry' are kept separate as 'Sword to hit' and 'Sword parry'.
-    'Sword +1 to hit' and 'Sword +2 to hit' both become 'Sword to hit' (number stripped).
+    Groups skills by base name and type, using lowercase for consistent matching.
+    'Sword +1 to hit' and 'Sword +1 parry' are kept separate as 'sword to hit' and 'sword parry'.
+    'Sword +1 to hit' and 'Sword +2 to hit' both become 'sword to hit' (number stripped).
+    'Parry I' and 'parry 1' both become 'parry' (case-insensitive, number stripped).
     """
     if not skill:
         return ""
@@ -78,12 +79,12 @@ def normalize_skill_name(skill: str) -> str:
     skill = skill.strip()
 
     # Extract base name and suffix type, keeping them separate
-    # Pattern: "BaseName +N suffix" -> "BaseName suffix"
+    # Pattern: "BaseName +N suffix" -> "basename suffix"
     match = re.match(
         r"^(.+?)\s*\+\d+\s+(to\s+hit|parry|damage)(\s*$)", skill, re.IGNORECASE
     )
     if match:
-        base = match.group(1).strip()
+        base = match.group(1).strip().lower()
         suffix = match.group(2).strip().lower()
         return f"{base} {suffix}"
 
@@ -94,12 +95,13 @@ def normalize_skill_name(skill: str) -> str:
     patterns = [
         r"\s*\(x\d+\)\s*$",
         r"\s+\d+\s*$",  # Trailing numbers with space
+        r"\s+[IVXivx]+\s*$",  # Trailing Roman numerals (I, II, III, IV, V, etc.)
     ]
 
     for pattern in patterns:
         skill = re.sub(pattern, "", skill, flags=re.IGNORECASE)
 
-    return skill.strip()
+    return skill.strip().lower()
 
 
 @dataclass
@@ -108,6 +110,7 @@ class SkillPoints:
 
     automatic: int = 0  # Points from rolled skills during prior experience
     allocated: int = 0  # Points manually allocated by player
+    display_name: str = ""  # Original display name (preserves user's casing)
 
     @property
     def total(self) -> int:
@@ -130,13 +133,16 @@ class SkillPoints:
             "automatic": self.automatic,
             "allocated": self.allocated,
             "total": self.total,
+            "display_name": self.display_name,
         }
 
     @classmethod
     def from_dict(cls, data: dict) -> "SkillPoints":
         """Create from dictionary (JSON deserialization)."""
         return cls(
-            automatic=data.get("automatic", 0), allocated=data.get("allocated", 0)
+            automatic=data.get("automatic", 0),
+            allocated=data.get("allocated", 0),
+            display_name=data.get("display_name", ""),
         )
 
 
@@ -152,13 +158,16 @@ class CharacterSkills:
         """Add 1 automatic point from a rolled skill.
 
         The skill name is normalized to group related skills.
+        The original skill name is preserved as display_name.
         """
         normalized = normalize_skill_name(skill_name)
         if not normalized:
             return
 
         if normalized not in self.skills:
-            self.skills[normalized] = SkillPoints()
+            # Preserve the original name (stripped but not lowercased) as display
+            display = skill_name.strip()
+            self.skills[normalized] = SkillPoints(display_name=display)
         self.skills[normalized].automatic += 1
 
     def add_free_point(self) -> None:
@@ -169,6 +178,7 @@ class CharacterSkills:
         """Allocate a free point to a skill.
 
         Returns True if successful, False if no free points available.
+        The original skill name is preserved as display_name if this is a new skill.
         """
         if self.free_points <= 0:
             return False
@@ -178,7 +188,9 @@ class CharacterSkills:
             return False
 
         if normalized not in self.skills:
-            self.skills[normalized] = SkillPoints()
+            # Preserve the original name as display
+            display = skill_name.strip()
+            self.skills[normalized] = SkillPoints(display_name=display)
 
         self.skills[normalized].allocated += 1
         self.free_points -= 1
@@ -208,23 +220,27 @@ class CharacterSkills:
         """Get display string for a single skill.
 
         Returns format like "Sword II (+2)" or "Tracking I".
+        Uses the stored display_name if available, otherwise falls back to
+        title-casing the normalized name.
         """
         normalized = normalize_skill_name(skill_name)
         if normalized not in self.skills:
             return skill_name
 
         sp = self.skills[normalized]
+        # Use stored display name, or title-case the normalized name as fallback
+        display = sp.display_name if sp.display_name else normalized.title()
         level, excess = level_from_points(sp.total)
 
         if level >= 1:
             roman = to_roman(level)
             if excess > 0:
-                return f"{normalized} {roman} (+{excess})"
+                return f"{display} {roman} (+{excess})"
             else:
-                return f"{normalized} {roman}"
+                return f"{display} {roman}"
         else:
             # Less than 1 point - shouldn't happen but handle gracefully
-            return f"{normalized} (+{sp.total})"
+            return f"{display} (+{sp.total})"
 
     def get_display_list(self) -> List[str]:
         """Get formatted skill list for display.
@@ -247,11 +263,14 @@ class CharacterSkills:
             sp = self.skills[name]
             level, excess = level_from_points(sp.total)
             points_needed = points_for_level(level + 1) - sp.total
+            # Raw display name for editing (without level suffix)
+            display_name = sp.display_name if sp.display_name else name.title()
 
             result.append(
                 {
-                    "name": name,
-                    "display": self.get_skill_display(name),
+                    "name": name,  # normalized key (lowercase)
+                    "display_name": display_name,  # editable display name
+                    "display": self.get_skill_display(name),  # full display with level
                     "level": level,
                     "level_roman": to_roman(level) if level > 0 else "",
                     "total_points": sp.total,
@@ -262,6 +281,44 @@ class CharacterSkills:
                 }
             )
         return result
+
+    def rename_skill(self, old_name: str, new_name: str) -> bool:
+        """Rename a skill's display name.
+
+        The normalized key remains the same if the new name normalizes to the same value.
+        If it normalizes to a different value, the skill is moved to the new key.
+        Returns True if successful, False if skill not found.
+        """
+        old_normalized = normalize_skill_name(old_name)
+        if old_normalized not in self.skills:
+            return False
+
+        new_normalized = normalize_skill_name(new_name)
+        if not new_normalized:
+            return False
+
+        sp = self.skills[old_normalized]
+
+        if old_normalized == new_normalized:
+            # Same key, just update display name
+            sp.display_name = new_name.strip()
+        else:
+            # Different key - merge into existing or create new
+            if new_normalized in self.skills:
+                # Merge into existing skill
+                existing = self.skills[new_normalized]
+                existing.automatic += sp.automatic
+                existing.allocated += sp.allocated
+                # Keep the new display name
+                existing.display_name = new_name.strip()
+            else:
+                # Move to new key with new display name
+                sp.display_name = new_name.strip()
+                self.skills[new_normalized] = sp
+            # Remove old entry
+            del self.skills[old_normalized]
+
+        return True
 
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""

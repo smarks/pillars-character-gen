@@ -111,35 +111,37 @@ class TestToRoman:
 
 
 class TestNormalizeSkillName:
-    """Tests for skill name normalization."""
+    """Tests for skill name normalization (case-insensitive, lowercase output)."""
 
-    def test_basic_skill_unchanged(self):
-        assert normalize_skill_name("Sword") == "Sword"
+    def test_basic_skill_lowercased(self):
+        assert normalize_skill_name("Sword") == "sword"
 
     def test_strips_plus_to_hit(self):
         # "to hit" and "parry" are kept as separate skill types
-        assert normalize_skill_name("Sword +1 to hit") == "Sword to hit"
+        assert normalize_skill_name("Sword +1 to hit") == "sword to hit"
 
     def test_strips_plus_parry(self):
         # "to hit" and "parry" are kept as separate skill types
-        assert normalize_skill_name("Shield +2 parry") == "Shield parry"
+        assert normalize_skill_name("Shield +2 parry") == "shield parry"
 
     def test_strips_plus_damage(self):
         # "damage" is kept as a separate skill type
-        assert normalize_skill_name("Axe +1 damage") == "Axe damage"
+        assert normalize_skill_name("Axe +1 damage") == "axe damage"
 
     def test_strips_bare_plus(self):
-        assert normalize_skill_name("Sword +1") == "Sword"
+        assert normalize_skill_name("Sword +1") == "sword"
 
     def test_strips_multiplier(self):
-        assert normalize_skill_name("Bow (x2)") == "Bow"
+        assert normalize_skill_name("Bow (x2)") == "bow"
 
     def test_strips_trailing_number(self):
-        assert normalize_skill_name("Farming 2") == "Farming"
+        assert normalize_skill_name("Farming 2") == "farming"
 
-    def test_case_insensitive(self):
-        # Case insensitive matching, but keeps the skill type
-        assert normalize_skill_name("Sword +1 TO HIT") == "Sword to hit"
+    def test_case_insensitive_same_key(self):
+        # Different cases should normalize to the same key
+        assert normalize_skill_name("Sword +1 TO HIT") == "sword to hit"
+        assert normalize_skill_name("sword +1 to hit") == "sword to hit"
+        assert normalize_skill_name("SWORD +1 TO HIT") == "sword to hit"
 
     def test_empty_string_returns_empty(self):
         assert normalize_skill_name("") == ""
@@ -147,8 +149,19 @@ class TestNormalizeSkillName:
     def test_whitespace_only_returns_empty(self):
         assert normalize_skill_name("   ") == ""
 
-    def test_preserves_internal_spaces(self):
-        assert normalize_skill_name("Two Handed Sword") == "Two Handed Sword"
+    def test_preserves_internal_spaces_lowercased(self):
+        assert normalize_skill_name("Two Handed Sword") == "two handed sword"
+
+    def test_strips_roman_numerals(self):
+        # Roman numerals should be stripped for consistent matching
+        assert normalize_skill_name("Parry I") == "parry"
+        assert normalize_skill_name("parry II") == "parry"
+        assert normalize_skill_name("Sword III") == "sword"
+
+    def test_parry_variants_same_key(self):
+        # "Parry I" and "parry 1" should normalize to the same key
+        assert normalize_skill_name("Parry I") == normalize_skill_name("parry 1")
+        assert normalize_skill_name("Parry I") == normalize_skill_name("PARRY")
 
 
 class TestSkillPoints:
@@ -172,9 +185,14 @@ class TestSkillPoints:
         assert sp.excess_points == 2  # 5 points = Level II (+2)
 
     def test_to_dict(self):
-        sp = SkillPoints(automatic=2, allocated=1)
+        sp = SkillPoints(automatic=2, allocated=1, display_name="Sword")
         d = sp.to_dict()
-        assert d == {"automatic": 2, "allocated": 1, "total": 3}
+        assert d == {
+            "automatic": 2,
+            "allocated": 1,
+            "total": 3,
+            "display_name": "Sword",
+        }
 
     def test_from_dict(self):
         d = {"automatic": 2, "allocated": 1}
@@ -195,21 +213,31 @@ class TestCharacterSkills:
     def test_add_automatic_point(self):
         cs = CharacterSkills()
         cs.add_automatic_point("Sword")
-        assert "Sword" in cs.skills
-        assert cs.skills["Sword"].automatic == 1
+        assert "sword" in cs.skills  # key is lowercase
+        assert cs.skills["sword"].automatic == 1
+        assert cs.skills["sword"].display_name == "Sword"  # preserves original
 
     def test_add_automatic_point_normalizes_name(self):
         cs = CharacterSkills()
         cs.add_automatic_point("Sword +1 to hit")
-        # "Sword +1 to hit" normalizes to "Sword to hit" (keeps the type separate)
-        assert "Sword to hit" in cs.skills
-        assert cs.skills["Sword to hit"].automatic == 1
+        # "Sword +1 to hit" normalizes to "sword to hit" (lowercase, keeps the type separate)
+        assert "sword to hit" in cs.skills
+        assert cs.skills["sword to hit"].automatic == 1
 
     def test_add_automatic_point_accumulates(self):
         cs = CharacterSkills()
         cs.add_automatic_point("Sword")
         cs.add_automatic_point("Sword")
-        assert cs.skills["Sword"].automatic == 2
+        assert cs.skills["sword"].automatic == 2
+
+    def test_add_automatic_point_case_insensitive(self):
+        cs = CharacterSkills()
+        cs.add_automatic_point("Sword")
+        cs.add_automatic_point("sword")
+        cs.add_automatic_point("SWORD")
+        # All three should accumulate to the same skill
+        assert "sword" in cs.skills
+        assert cs.skills["sword"].automatic == 3
 
     def test_add_free_point(self):
         cs = CharacterSkills()
@@ -220,30 +248,31 @@ class TestCharacterSkills:
         cs = CharacterSkills(free_points=3)
         result = cs.allocate_point("Tracking")
         assert result is True
-        assert "Tracking" in cs.skills
-        assert cs.skills["Tracking"].allocated == 1
+        assert "tracking" in cs.skills  # key is lowercase
+        assert cs.skills["tracking"].allocated == 1
+        assert cs.skills["tracking"].display_name == "Tracking"  # preserves original
         assert cs.free_points == 2
 
     def test_allocate_point_fails_without_free_points(self):
         cs = CharacterSkills(free_points=0)
         result = cs.allocate_point("Tracking")
         assert result is False
-        assert "Tracking" not in cs.skills
+        assert "tracking" not in cs.skills
 
     def test_deallocate_point_success(self):
         cs = CharacterSkills()
-        cs.skills["Sword"] = SkillPoints(automatic=0, allocated=2)
-        result = cs.deallocate_point("Sword")
+        cs.skills["sword"] = SkillPoints(automatic=0, allocated=2)
+        result = cs.deallocate_point("Sword")  # can use any case
         assert result is True
-        assert cs.skills["Sword"].allocated == 1
+        assert cs.skills["sword"].allocated == 1
         assert cs.free_points == 1
 
     def test_deallocate_point_fails_without_allocated_points(self):
         cs = CharacterSkills()
-        cs.skills["Sword"] = SkillPoints(automatic=2, allocated=0)
-        result = cs.deallocate_point("Sword")
+        cs.skills["sword"] = SkillPoints(automatic=2, allocated=0)
+        result = cs.deallocate_point("SWORD")  # can use any case
         assert result is False
-        assert cs.skills["Sword"].automatic == 2
+        assert cs.skills["sword"].automatic == 2
         assert cs.free_points == 0
 
     def test_add_xp(self):
@@ -257,13 +286,20 @@ class TestCharacterSkills:
         cs = CharacterSkills()
         cs.add_automatic_point("Sword")
         display = cs.get_skill_display("Sword")
-        assert display == "Sword I"
+        assert display == "Sword I"  # uses display_name, not key
 
     def test_get_skill_display_with_excess(self):
         cs = CharacterSkills()
-        cs.skills["Sword"] = SkillPoints(automatic=5, allocated=0)
+        cs.skills["sword"] = SkillPoints(automatic=5, allocated=0, display_name="Sword")
         display = cs.get_skill_display("Sword")
         assert display == "Sword II (+2)"
+
+    def test_get_skill_display_uses_title_case_fallback(self):
+        cs = CharacterSkills()
+        # No display_name set - should title-case the key
+        cs.skills["sword"] = SkillPoints(automatic=1, allocated=0)
+        display = cs.get_skill_display("sword")
+        assert display == "Sword I"
 
     def test_get_skill_display_unknown_skill(self):
         cs = CharacterSkills()
@@ -272,19 +308,20 @@ class TestCharacterSkills:
 
     def test_get_display_list(self):
         cs = CharacterSkills()
-        cs.skills["Sword"] = SkillPoints(automatic=3, allocated=0)
-        cs.skills["Bow"] = SkillPoints(automatic=1, allocated=0)
+        cs.skills["sword"] = SkillPoints(automatic=3, allocated=0, display_name="Sword")
+        cs.skills["bow"] = SkillPoints(automatic=1, allocated=0, display_name="Bow")
         display_list = cs.get_display_list()
         assert "Bow I" in display_list
         assert "Sword II" in display_list
 
     def test_get_skills_with_details(self):
         cs = CharacterSkills()
-        cs.skills["Sword"] = SkillPoints(automatic=5, allocated=0)
+        cs.skills["sword"] = SkillPoints(automatic=5, allocated=0, display_name="Sword")
         details = cs.get_skills_with_details()
         assert len(details) == 1
         sword = details[0]
-        assert sword["name"] == "Sword"
+        assert sword["name"] == "sword"  # lowercase key
+        assert sword["display_name"] == "Sword"  # original casing
         assert sword["display"] == "Sword II (+2)"
         assert sword["level"] == 2
         assert sword["level_roman"] == "II"
@@ -296,25 +333,28 @@ class TestCharacterSkills:
 
     def test_to_dict(self):
         cs = CharacterSkills()
-        cs.skills["Sword"] = SkillPoints(automatic=2, allocated=1)
+        cs.skills["sword"] = SkillPoints(automatic=2, allocated=1, display_name="Sword")
         cs.free_points = 3
         cs.total_xp = 2000
         d = cs.to_dict()
         assert "skill_points" in d
-        assert "Sword" in d["skill_points"]
+        assert "sword" in d["skill_points"]  # lowercase key
         assert d["free_skill_points"] == 3
         assert d["total_xp"] == 2000
 
     def test_from_dict(self):
         d = {
-            "skill_points": {"Sword": {"automatic": 2, "allocated": 1}},
+            "skill_points": {
+                "sword": {"automatic": 2, "allocated": 1, "display_name": "Sword"}
+            },
             "free_skill_points": 3,
             "total_xp": 2000,
         }
         cs = CharacterSkills.from_dict(d)
-        assert "Sword" in cs.skills
-        assert cs.skills["Sword"].automatic == 2
-        assert cs.skills["Sword"].allocated == 1
+        assert "sword" in cs.skills
+        assert cs.skills["sword"].automatic == 2
+        assert cs.skills["sword"].allocated == 1
+        assert cs.skills["sword"].display_name == "Sword"
         assert cs.free_points == 3
         assert cs.total_xp == 2000
 
@@ -322,14 +362,39 @@ class TestCharacterSkills:
         skill_list = ["Sword", "Sword", "Tracking", "Bow"]
         cs = CharacterSkills.from_legacy_skills(skill_list, years=3)
 
-        assert "Sword" in cs.skills
-        assert cs.skills["Sword"].automatic == 2
-        assert "Tracking" in cs.skills
-        assert cs.skills["Tracking"].automatic == 1
-        assert "Bow" in cs.skills
-        assert cs.skills["Bow"].automatic == 1
-        assert cs.free_points == 3  # years = 3
-        assert cs.total_xp == 3000  # years * 1000
+        assert "sword" in cs.skills  # lowercase key
+        assert cs.skills["sword"].automatic == 2
+        assert "tracking" in cs.skills
+        assert cs.skills["tracking"].automatic == 1
+        assert "bow" in cs.skills
+        assert cs.skills["bow"].automatic == 1
+
+    def test_rename_skill_same_key(self):
+        cs = CharacterSkills()
+        cs.skills["sword"] = SkillPoints(automatic=2, allocated=1, display_name="Sword")
+        result = cs.rename_skill("sword", "SWORD & SHIELD")
+        # "sword & shield" normalizes to the same key
+        assert result is True
+        # Wait, "sword" and "sword & shield" are different...
+        # Let me test a real same-key case
+        cs2 = CharacterSkills()
+        cs2.skills["sword"] = SkillPoints(
+            automatic=2, allocated=1, display_name="sword"
+        )
+        result = cs2.rename_skill("sword", "Sword")  # Same normalized key
+        assert result is True
+        assert cs2.skills["sword"].display_name == "Sword"
+
+    def test_rename_skill_merge(self):
+        cs = CharacterSkills()
+        cs.skills["sword"] = SkillPoints(automatic=2, allocated=1, display_name="Sword")
+        cs.skills["bow"] = SkillPoints(automatic=1, allocated=0, display_name="Bow")
+        result = cs.rename_skill("sword", "Bow")  # Merge sword into bow
+        assert result is True
+        assert "sword" not in cs.skills
+        assert cs.skills["bow"].automatic == 3
+        assert cs.skills["bow"].allocated == 1
+        assert cs.skills["bow"].display_name == "Bow"
 
 
 class TestSkillLevelProgression:

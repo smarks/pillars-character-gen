@@ -1182,18 +1182,18 @@ class UpdateCharacterAPITests(TestCase):
         self.saved_char.refresh_from_db()
         skill_points_data = self.saved_char.character_data.get("skill_points_data", {})
         skill_points = skill_points_data.get("skill_points", {})
-        # Sword +1 gets normalized to just "Sword"
-        self.assertIn("Sword", skill_points)
+        # Sword +1 gets normalized to lowercase "sword"
+        self.assertIn("sword", skill_points)
 
     def test_remove_skill(self):
         """Test removing (deallocating) a skill point."""
         import json
 
-        # First set up skill_points_data with allocated points
+        # First set up skill_points_data with allocated points (lowercase keys)
         self.saved_char.character_data["skill_points_data"] = {
             "skill_points": {
-                "Sword": {"automatic": 0, "allocated": 2},  # 2 allocated points
-                "Shield": {"automatic": 1, "allocated": 0},  # 1 automatic point
+                "sword": {"automatic": 0, "allocated": 2, "display_name": "Sword"},
+                "shield": {"automatic": 1, "allocated": 0, "display_name": "Shield"},
             },
             "free_skill_points": 0,
             "total_xp": 0,
@@ -1213,16 +1213,18 @@ class UpdateCharacterAPITests(TestCase):
         # Verify in database - one allocated point deallocated
         self.saved_char.refresh_from_db()
         skill_points_data = self.saved_char.character_data.get("skill_points_data", {})
-        self.assertEqual(skill_points_data["skill_points"]["Sword"]["allocated"], 1)
+        self.assertEqual(skill_points_data["skill_points"]["sword"]["allocated"], 1)
         self.assertEqual(skill_points_data["free_skill_points"], 1)
 
     def test_skill_allocation(self):
         """Test allocating a free skill point."""
         import json
 
-        # Set up with free points
+        # Set up with free points (lowercase keys)
         self.saved_char.character_data["skill_points_data"] = {
-            "skill_points": {"Sword": {"automatic": 1, "allocated": 0}},
+            "skill_points": {
+                "sword": {"automatic": 1, "allocated": 0, "display_name": "Sword"}
+            },
             "free_skill_points": 2,
             "total_xp": 2000,
         }
@@ -1243,7 +1245,7 @@ class UpdateCharacterAPITests(TestCase):
         # Verify in database
         self.saved_char.refresh_from_db()
         skill_points_data = self.saved_char.character_data.get("skill_points_data", {})
-        self.assertEqual(skill_points_data["skill_points"]["Sword"]["allocated"], 1)
+        self.assertEqual(skill_points_data["skill_points"]["sword"]["allocated"], 1)
         self.assertEqual(skill_points_data["free_skill_points"], 1)
 
     def test_update_notes(self):
@@ -2245,7 +2247,8 @@ class SkillAdditionConsolidationTests(TestCase):
         skills = data["computed"]["skills"]
         self.assertEqual(len(skills), 1)
         tracking_skill = skills[0]
-        self.assertEqual(tracking_skill["name"], "Tracking")
+        self.assertEqual(tracking_skill["name"], "tracking")  # lowercase key
+        self.assertEqual(tracking_skill["display_name"], "Tracking")  # preserved casing
         self.assertEqual(tracking_skill["total_points"], 2)  # 2 points total
         self.assertEqual(
             tracking_skill["display"], "Tracking I (+1)"

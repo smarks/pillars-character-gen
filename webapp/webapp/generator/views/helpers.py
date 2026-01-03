@@ -100,8 +100,9 @@ def consolidate_skills(skills):
     """Consolidate skills using the skill point system with triangular numbers.
 
     Each skill occurrence = 1 skill point.
-    Skills are grouped by base name (normalized).
+    Skills are grouped by base name (normalized, case-insensitive).
     Display uses triangular numbers: Level 1 = 1pt, Level 2 = 3pts, Level 3 = 6pts, etc.
+    Original casing is preserved for display (first occurrence wins).
 
     Examples:
         ['Cutlass +1 to hit', 'Cutlass +1 to hit', 'Cutlass +1 to hit']
@@ -116,24 +117,28 @@ def consolidate_skills(skills):
     if not skills:
         return []
 
-    # Count skill points by normalized skill name
+    # Count skill points by normalized skill name (now lowercase)
     skill_points = defaultdict(int)
-    skill_display = {}  # lowercase -> display version (first seen)
+    skill_display = (
+        {}
+    )  # normalized key -> display version (first seen, original casing)
 
     for skill in skills:
         if not skill:
             continue
         normalized = normalize_skill_name(skill)
         if normalized:
-            key = normalized.lower()
-            if key not in skill_display:
-                skill_display[key] = normalized
-            skill_points[key] += 1
+            if normalized not in skill_display:
+                # Use title-cased normalized name for display
+                # This removes modifiers like "+1" while preserving the base skill name
+                skill_display[normalized] = normalized.title()
+            skill_points[normalized] += 1
 
     # Build consolidated list using skill point system with triangular numbers
     consolidated = []
     for key, points in skill_points.items():
-        display_name = skill_display[key]
+        # Use stored display name, or title-case as fallback
+        display_name = skill_display.get(key, key.title())
         level, excess = level_from_points(points)
 
         if level >= 1:

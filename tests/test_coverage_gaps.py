@@ -111,10 +111,10 @@ class TestConsolidateSkills:
             "Cutlass +1 parry",
         ]
         result = consolidate_skills(skills)
-        # 3 Sword to hit skills = 3 points = Level 2
-        assert "Sword to hit II" in result
+        # 3 Sword to hit skills = 3 points = Level 2 (title-cased display)
+        assert "Sword To Hit II" in result
         # 2 Cutlass parry skills = 2 points = Level 1 (+1)
-        assert "Cutlass parry I (+1)" in result
+        assert "Cutlass Parry I (+1)" in result
 
     def test_consolidate_skills_mixed_patterns(self):
         """Test consolidating mixed skill patterns using skill points."""
@@ -126,9 +126,9 @@ class TestConsolidateSkills:
             "Tracking",
         ]
         result = consolidate_skills(skills)
-        # "to hit" and "parry" are separate skills now
-        assert "Sword to hit I" in result
-        assert "Sword parry I" in result
+        # "to hit" and "parry" are separate skills (title-cased display)
+        assert "Sword To Hit I" in result
+        assert "Sword Parry I" in result
         # 3 Tracking skills = 3 points = Level 2
         assert "Tracking II" in result
 
@@ -170,7 +170,7 @@ class TestSkillsEdgeCases:
         skills.add_automatic_point("Sword")
         result = skills.deallocate_point("Sword")
         assert result is False
-        assert skills.skills["Sword"].allocated == 0
+        assert skills.skills["sword"].allocated == 0  # lowercase key
 
     def test_get_skill_display_unknown_skill(self):
         """Test getting display for unknown skill."""

@@ -141,34 +141,34 @@ class TestToRoman(unittest.TestCase):
 
 
 class TestNormalizeSkillName(unittest.TestCase):
-    """Tests for skill name normalization."""
+    """Tests for skill name normalization (case-insensitive, lowercase output)."""
 
     def test_empty_string(self):
         """Empty string returns empty."""
         self.assertEqual(normalize_skill_name(""), "")
 
-    def test_simple_name_unchanged(self):
-        """Simple names are unchanged."""
-        self.assertEqual(normalize_skill_name("Sword"), "Sword")
-        self.assertEqual(normalize_skill_name("Tracking"), "Tracking")
+    def test_simple_name_lowercased(self):
+        """Simple names are lowercased."""
+        self.assertEqual(normalize_skill_name("Sword"), "sword")
+        self.assertEqual(normalize_skill_name("Tracking"), "tracking")
 
     def test_strips_whitespace(self):
         """Whitespace is stripped."""
-        self.assertEqual(normalize_skill_name("  Sword  "), "Sword")
+        self.assertEqual(normalize_skill_name("  Sword  "), "sword")
 
     def test_to_hit_suffix_preserved(self):
-        """'to hit' suffix is kept but number stripped."""
-        self.assertEqual(normalize_skill_name("Sword +1 to hit"), "Sword to hit")
-        self.assertEqual(normalize_skill_name("Sword +2 to hit"), "Sword to hit")
+        """'to hit' suffix is kept but number stripped, lowercase."""
+        self.assertEqual(normalize_skill_name("Sword +1 to hit"), "sword to hit")
+        self.assertEqual(normalize_skill_name("Sword +2 to hit"), "sword to hit")
 
     def test_parry_suffix_preserved(self):
-        """'parry' suffix is kept but number stripped."""
-        self.assertEqual(normalize_skill_name("Sword +1 parry"), "Sword parry")
-        self.assertEqual(normalize_skill_name("Sword +2 parry"), "Sword parry")
+        """'parry' suffix is kept but number stripped, lowercase."""
+        self.assertEqual(normalize_skill_name("Sword +1 parry"), "sword parry")
+        self.assertEqual(normalize_skill_name("Sword +2 parry"), "sword parry")
 
     def test_damage_suffix_preserved(self):
-        """'damage' suffix is kept but number stripped."""
-        self.assertEqual(normalize_skill_name("Bow +1 damage"), "Bow damage")
+        """'damage' suffix is kept but number stripped, lowercase."""
+        self.assertEqual(normalize_skill_name("Bow +1 damage"), "bow damage")
 
     def test_different_suffixes_kept_separate(self):
         """Different suffixes result in different normalized names."""
@@ -184,12 +184,12 @@ class TestNormalizeSkillName(unittest.TestCase):
 
     def test_trailing_number_stripped(self):
         """Trailing '+N' without suffix is stripped."""
-        self.assertEqual(normalize_skill_name("Haggle +1"), "Haggle")
-        self.assertEqual(normalize_skill_name("Stealth +2"), "Stealth")
+        self.assertEqual(normalize_skill_name("Haggle +1"), "haggle")
+        self.assertEqual(normalize_skill_name("Stealth +2"), "stealth")
 
     def test_x_multiplier_stripped(self):
         """'(x2)' patterns are stripped."""
-        self.assertEqual(normalize_skill_name("Climbing (x2)"), "Climbing")
+        self.assertEqual(normalize_skill_name("Climbing (x2)"), "climbing")
 
 
 class TestSkillPoints(unittest.TestCase):
@@ -252,20 +252,21 @@ class TestCharacterSkills(unittest.TestCase):
         self.assertEqual(cs.total_xp, 0)
 
     def test_add_automatic_point(self):
-        """Adding automatic point creates/updates skill."""
+        """Adding automatic point creates/updates skill (lowercase key)."""
         cs = CharacterSkills()
         cs.add_automatic_point("Sword")
-        self.assertEqual(cs.skills["Sword"].automatic, 1)
+        self.assertEqual(cs.skills["sword"].automatic, 1)
+        self.assertEqual(cs.skills["sword"].display_name, "Sword")
 
         cs.add_automatic_point("Sword")
-        self.assertEqual(cs.skills["Sword"].automatic, 2)
+        self.assertEqual(cs.skills["sword"].automatic, 2)
 
     def test_add_automatic_point_normalizes(self):
         """Automatic points normalize skill names."""
         cs = CharacterSkills()
         cs.add_automatic_point("Sword +1 to hit")
         cs.add_automatic_point("Sword +2 to hit")
-        self.assertEqual(cs.skills["Sword to hit"].automatic, 2)
+        self.assertEqual(cs.skills["sword to hit"].automatic, 2)
 
     def test_add_automatic_point_empty_ignored(self):
         """Empty skill names are ignored."""
@@ -290,13 +291,14 @@ class TestCharacterSkills(unittest.TestCase):
         self.assertEqual(cs.total_xp, 1500)
 
     def test_allocate_point_success(self):
-        """Can allocate free point to skill."""
+        """Can allocate free point to skill (lowercase key)."""
         cs = CharacterSkills()
         cs.free_points = 2
         result = cs.allocate_point("Tracking")
         self.assertTrue(result)
         self.assertEqual(cs.free_points, 1)
-        self.assertEqual(cs.skills["Tracking"].allocated, 1)
+        self.assertEqual(cs.skills["tracking"].allocated, 1)
+        self.assertEqual(cs.skills["tracking"].display_name, "Tracking")
 
     def test_allocate_point_no_free_points(self):
         """Cannot allocate without free points."""
@@ -316,18 +318,18 @@ class TestCharacterSkills(unittest.TestCase):
     def test_deallocate_point_success(self):
         """Can deallocate point back to free pool."""
         cs = CharacterSkills()
-        cs.skills["Sword"] = SkillPoints(automatic=0, allocated=2)
+        cs.skills["sword"] = SkillPoints(automatic=0, allocated=2, display_name="Sword")
         cs.free_points = 0
 
-        result = cs.deallocate_point("Sword")
+        result = cs.deallocate_point("Sword")  # Can use any case
         self.assertTrue(result)
         self.assertEqual(cs.free_points, 1)
-        self.assertEqual(cs.skills["Sword"].allocated, 1)
+        self.assertEqual(cs.skills["sword"].allocated, 1)
 
     def test_deallocate_point_no_allocated(self):
         """Cannot deallocate if no allocated points."""
         cs = CharacterSkills()
-        cs.skills["Sword"] = SkillPoints(automatic=2, allocated=0)
+        cs.skills["sword"] = SkillPoints(automatic=2, allocated=0)
 
         result = cs.deallocate_point("Sword")
         self.assertFalse(result)
@@ -339,16 +341,18 @@ class TestCharacterSkills(unittest.TestCase):
         self.assertFalse(result)
 
     def test_get_skill_display_level_one(self):
-        """Display for level 1 skill."""
+        """Display for level 1 skill uses display_name."""
         cs = CharacterSkills()
-        cs.skills["Sword"] = SkillPoints(automatic=1, allocated=0)
+        cs.skills["sword"] = SkillPoints(automatic=1, allocated=0, display_name="Sword")
         display = cs.get_skill_display("Sword")
         self.assertEqual(display, "Sword I")
 
     def test_get_skill_display_level_with_excess(self):
-        """Display shows excess points."""
+        """Display shows excess points with display_name."""
         cs = CharacterSkills()
-        cs.skills["Sword"] = SkillPoints(automatic=4, allocated=1)  # 5 points
+        cs.skills["sword"] = SkillPoints(
+            automatic=4, allocated=1, display_name="Sword"
+        )  # 5 points
         display = cs.get_skill_display("Sword")
         self.assertEqual(display, "Sword II (+2)")
 
@@ -361,8 +365,10 @@ class TestCharacterSkills(unittest.TestCase):
     def test_get_display_list(self):
         """Display list returns sorted formatted strings."""
         cs = CharacterSkills()
-        cs.skills["Tracking"] = SkillPoints(automatic=1, allocated=0)
-        cs.skills["Sword"] = SkillPoints(automatic=3, allocated=0)
+        cs.skills["tracking"] = SkillPoints(
+            automatic=1, allocated=0, display_name="Tracking"
+        )
+        cs.skills["sword"] = SkillPoints(automatic=3, allocated=0, display_name="Sword")
 
         display_list = cs.get_display_list()
         self.assertEqual(len(display_list), 2)
@@ -372,11 +378,14 @@ class TestCharacterSkills(unittest.TestCase):
     def test_get_skills_with_details(self):
         """Details includes all skill information."""
         cs = CharacterSkills()
-        cs.skills["Sword"] = SkillPoints(automatic=2, allocated=2)  # 4 points
+        cs.skills["sword"] = SkillPoints(
+            automatic=2, allocated=2, display_name="Sword"
+        )  # 4 points
 
         details = cs.get_skills_with_details()
         self.assertEqual(len(details), 1)
-        self.assertEqual(details[0]["name"], "Sword")
+        self.assertEqual(details[0]["name"], "sword")  # lowercase key
+        self.assertEqual(details[0]["display_name"], "Sword")  # preserved casing
         self.assertEqual(details[0]["level"], 2)  # 4 points = Level II
         self.assertEqual(details[0]["level_roman"], "II")
         self.assertEqual(details[0]["total_points"], 4)
@@ -388,8 +397,8 @@ class TestCharacterSkills(unittest.TestCase):
     def test_to_dict_and_from_dict_round_trip(self):
         """Serialization round trip preserves data."""
         cs = CharacterSkills()
-        cs.skills["Sword"] = SkillPoints(automatic=2, allocated=1)
-        cs.skills["Bow"] = SkillPoints(automatic=1, allocated=0)
+        cs.skills["sword"] = SkillPoints(automatic=2, allocated=1, display_name="Sword")
+        cs.skills["bow"] = SkillPoints(automatic=1, allocated=0, display_name="Bow")
         cs.free_points = 5
         cs.total_xp = 3000
 
@@ -398,9 +407,9 @@ class TestCharacterSkills(unittest.TestCase):
 
         self.assertEqual(restored.free_points, 5)
         self.assertEqual(restored.total_xp, 3000)
-        self.assertEqual(restored.skills["Sword"].automatic, 2)
-        self.assertEqual(restored.skills["Sword"].allocated, 1)
-        self.assertEqual(restored.skills["Bow"].automatic, 1)
+        self.assertEqual(restored.skills["sword"].automatic, 2)
+        self.assertEqual(restored.skills["sword"].allocated, 1)
+        self.assertEqual(restored.skills["bow"].automatic, 1)
 
     def test_from_legacy_skills(self):
         """Legacy migration creates proper skill structure."""
@@ -411,10 +420,10 @@ class TestCharacterSkills(unittest.TestCase):
         self.assertEqual(cs.free_points, 5)
         self.assertEqual(cs.total_xp, 5000)
 
-        # Check normalized skills
-        self.assertEqual(cs.skills["Sword to hit"].automatic, 2)  # Two sword hits
-        self.assertEqual(cs.skills["Tracking"].automatic, 1)
-        self.assertEqual(cs.skills["Bow damage"].automatic, 1)
+        # Check normalized skills (lowercase keys)
+        self.assertEqual(cs.skills["sword to hit"].automatic, 2)  # Two sword hits
+        self.assertEqual(cs.skills["tracking"].automatic, 1)
+        self.assertEqual(cs.skills["bow damage"].automatic, 1)
 
     def test_from_legacy_skills_empty_list(self):
         """Legacy migration handles empty list."""

@@ -42,7 +42,7 @@ def consolidate_skills(skills: List[str]) -> List[str]:
     Consolidate skills using the skill point system with triangular numbers.
 
     Each skill occurrence = 1 skill point.
-    Skills are grouped by base name (normalized).
+    Skills are grouped by base name (normalized, case-insensitive).
     Display uses triangular numbers: Level 1 = 1pt, Level 2 = 3pts, Level 3 = 6pts, etc.
 
     Examples:
@@ -58,7 +58,7 @@ def consolidate_skills(skills: List[str]) -> List[str]:
     if not skills:
         return []
 
-    # Count skill points by normalized skill name
+    # Count skill points by normalized skill name (now lowercase)
     # Each occurrence = 1 skill point
     skill_points: Dict[str, int] = {}
     for skill in skills:
@@ -71,16 +71,18 @@ def consolidate_skills(skills: List[str]) -> List[str]:
     for skill_name in sorted(skill_points.keys()):
         points = skill_points[skill_name]
         level, excess = level_from_points(points)
+        # Title-case the normalized name for display
+        display = skill_name.title()
 
         if level >= 1:
             roman = to_roman(level)
             if excess > 0:
-                result.append(f"{skill_name} {roman} (+{excess})")
+                result.append(f"{display} {roman} (+{excess})")
             else:
-                result.append(f"{skill_name} {roman}")
+                result.append(f"{display} {roman}")
         else:
             # Less than 1 point (shouldn't happen, but handle gracefully)
-            result.append(f"{skill_name} (+{points})")
+            result.append(f"{display} (+{points})")
 
     return result
 
