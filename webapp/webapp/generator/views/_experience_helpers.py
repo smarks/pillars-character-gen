@@ -25,6 +25,7 @@ from .helpers import validate_experience_years
 from .serialization import (
     deserialize_character,
     store_current_character,
+    migrate_track_name,
 )
 
 
@@ -44,10 +45,11 @@ def get_or_create_skill_track(char_data, character, chosen_track_name):
     wealth_level = char_data.get("wealth_level", "Moderate")
 
     if char_data.get("skill_track"):
-        # Use existing track
+        # Use existing track (migrate old track names if needed)
         track_data = char_data["skill_track"]
+        migrated_track = migrate_track_name(track_data["track"])
         skill_track = SkillTrack(
-            track=TrackType(track_data["track"]),
+            track=TrackType(migrated_track),
             acceptance_check=None,
             survivability=track_data["survivability"],
             survivability_roll=None,

@@ -14,6 +14,20 @@ from pillars.attributes import (
 from ..models import SavedCharacter
 from .helpers import get_modifier_for_value, consolidate_skills
 
+# Mapping from old track names to new consolidated track names
+# After track consolidation: Army/Navy -> Campaigner, Worker -> Laborer
+LEGACY_TRACK_MAPPING = {
+    "Army": "Campaigner",
+    "Navy": "Campaigner",
+    "Worker": "Laborer",
+    "Officer": "Campaigner",
+}
+
+
+def migrate_track_name(track_name):
+    """Convert old track names to new consolidated names."""
+    return LEGACY_TRACK_MAPPING.get(track_name, track_name)
+
 
 class MinimalCharacter:
     """Lightweight character representation for session storage.
@@ -55,8 +69,9 @@ class MinimalCharacter:
 
         # Handle None skill_track (initial character without track assigned)
         if data.get("skill_track") is not None:
+            migrated_track = migrate_track_name(data["skill_track"]["track"])
             self.skill_track = SkillTrack(
-                track=TrackType(data["skill_track"]["track"]),
+                track=TrackType(migrated_track),
                 acceptance_check=None,
                 survivability=data["skill_track"]["survivability"],
                 survivability_roll=None,
@@ -175,8 +190,17 @@ def serialize_character(character, preserve_data=None):
             "body_roll": character.attributes.body_roll,
         },
         "appearance": str(character.appearance),
-        "height": str(character.height),
-        "weight": str(character.weight),
+        # Store just the usable height/weight values, not full description strings
+        "height": (
+            character.height.imperial
+            if hasattr(character.height, "imperial")
+            else str(character.height)
+        ),
+        "weight": (
+            f"{character.weight.total_pounds} lbs"
+            if hasattr(character.weight, "total_pounds")
+            else str(character.weight)
+        ),
         "provenance": str(character.provenance),
         "provenance_social_class": (
             character.provenance.social_class

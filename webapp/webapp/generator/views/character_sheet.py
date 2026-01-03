@@ -44,6 +44,20 @@ from ._character_helpers import (
     calculate_adjusted_attributes,
 )
 
+# Mapping from old track names to new consolidated track names
+# After track consolidation: Army/Navy -> Campaigner, Worker -> Laborer
+LEGACY_TRACK_MAPPING = {
+    "Army": "Campaigner",
+    "Navy": "Campaigner",
+    "Worker": "Laborer",
+    "Officer": "Campaigner",  # Officer was removed, closest is Campaigner
+}
+
+
+def migrate_track_name(track_name):
+    """Convert old track names to new consolidated names."""
+    return LEGACY_TRACK_MAPPING.get(track_name, track_name)
+
 
 @login_required
 def character_sheet(request, char_id):
@@ -482,10 +496,11 @@ def add_experience_to_character(request, char_id):
 
     # Get or create skill track
     if char_data.get("skill_track"):
-        # Use existing skill track
+        # Use existing skill track (migrate old track names if needed)
         track_data = char_data["skill_track"]
+        migrated_track_name = migrate_track_name(track_data["track"])
         skill_track = SkillTrack(
-            track=TrackType(track_data["track"]),
+            track=TrackType(migrated_track_name),
             acceptance_check=None,
             survivability=track_data["survivability"],
             survivability_roll=None,
@@ -503,6 +518,9 @@ def add_experience_to_character(request, char_id):
             ),
             magic_school_rolls=track_data.get("magic_school_rolls"),
         )
+        # Update stored track name if it was migrated
+        if migrated_track_name != track_data["track"]:
+            char_data["skill_track"]["track"] = migrated_track_name
     else:
         # Create new skill track
         social_class = char_data.get("provenance_social_class", "Commoner")
