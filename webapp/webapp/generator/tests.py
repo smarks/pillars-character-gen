@@ -1687,8 +1687,8 @@ class TrackInfoTests(TestCase):
         self.assertContains(response, "Available Tracks")
         self.assertContains(response, "track-item")
 
-    def test_character_sheet_hides_track_info_when_has_track(self):
-        """Test that track info is hidden when character already has a track."""
+    def test_character_sheet_shows_track_info_when_has_track(self):
+        """Test that track info is always shown for reference."""
         self.client.login(username="trackinfo_test", password="test123")
 
         # Add a skill track and some experience so the Prior Experience section shows
@@ -1705,8 +1705,9 @@ class TrackInfoTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        # Should not have track_info since character has a track
-        self.assertIsNone(response.context["track_info"])
+        # Track info should always be shown for reference
+        self.assertIn("track_info", response.context)
+        self.assertIsNotNone(response.context["track_info"])
         # Should show track in Prior Experience section
         self.assertContains(response, "Prior Experience")
         self.assertContains(response, "Army")

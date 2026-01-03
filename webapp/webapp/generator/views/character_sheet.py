@@ -83,21 +83,19 @@ def character_sheet(request, char_id):
     years_served = char_data.get("interactive_years", 0)
     died = char_data.get("interactive_died", False)
 
-    # Build track info for characters that don't have a track yet
-    track_info = None
-    if not char_data.get("skill_track"):
-        str_mod = get_attribute_modifier(attrs.get("STR", 10))
-        dex_mod = get_attribute_modifier(attrs.get("DEX", 10))
-        int_mod = get_attribute_modifier(attrs.get("INT", 10))
-        wis_mod = get_attribute_modifier(attrs.get("WIS", 10))
+    # Build track info for display (always show for reference)
+    str_mod = get_attribute_modifier(attrs.get("STR", 10))
+    dex_mod = get_attribute_modifier(attrs.get("DEX", 10))
+    int_mod = get_attribute_modifier(attrs.get("INT", 10))
+    wis_mod = get_attribute_modifier(attrs.get("WIS", 10))
 
-        social_class = char_data.get("provenance_social_class", "Commoner")
-        wealth_level = char_data.get("wealth_level", "Moderate")
+    social_class = char_data.get("provenance_social_class", "Commoner")
+    wealth_level = char_data.get("wealth_level", "Moderate")
 
-        track_availability = get_track_availability(
-            str_mod, dex_mod, int_mod, wis_mod, social_class, wealth_level
-        )
-        track_info = build_track_info(track_availability)
+    track_availability = get_track_availability(
+        str_mod, dex_mod, int_mod, wis_mod, social_class, wealth_level
+    )
+    track_info = build_track_info(track_availability)
 
     # Extract aging penalties
     aging = char_data.get("interactive_aging", {})

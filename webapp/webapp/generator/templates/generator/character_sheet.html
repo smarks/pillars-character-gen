@@ -482,6 +482,57 @@ input.error, textarea.error {
         gap: 3px;
     }
 }
+
+/* Export dropdown */
+.export-dropdown {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+.export-dropdown .dropdown-btn {
+    width: 100%;
+    padding: 8px 12px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    text-align: left;
+}
+.export-dropdown .dropdown-btn:hover {
+    background: #e5e7eb;
+}
+.export-dropdown .dropdown-content {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border-radius: 4px;
+    z-index: 100;
+}
+.export-dropdown:hover .dropdown-content {
+    display: block;
+}
+.export-dropdown .dropdown-content a,
+.export-dropdown .dropdown-content button {
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    color: #333;
+    text-decoration: none;
+    font-size: 0.9em;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+.export-dropdown .dropdown-content a:hover,
+.export-dropdown .dropdown-content button:hover {
+    background: #f3f4f6;
+}
 {% endblock %}
 
 {% block content %}
@@ -611,10 +662,13 @@ input.error, textarea.error {
 
         <div class="sidebar-section">
             <h3>Export</h3>
-            <button type="button" class="btn" style="width: 100%; margin-bottom: 8px;" onclick="exportMarkdown()">Copy as Markdown</button>
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-                <a href="{% url 'export_character_pdf' character.id %}" class="btn" style="text-decoration: none; text-align: center; display: block; width: 100%;">Save as PDF</a>
-                <a href="{% url 'export_character_markdown' character.id %}" class="btn" style="text-decoration: none; text-align: center; display: block; width: 100%;">Save as MD</a>
+            <div class="export-dropdown">
+                <button type="button" class="dropdown-btn">Export &#9662;</button>
+                <div class="dropdown-content">
+                    <button type="button" onclick="exportMarkdown()">Copy as Markdown</button>
+                    <a href="{% url 'export_character_pdf' character.id %}">Save as PDF</a>
+                    <a href="{% url 'export_character_markdown' character.id %}">Save as Markdown</a>
+                </div>
             </div>
         </div>
 
