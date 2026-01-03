@@ -14,6 +14,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.utils.safestring import mark_safe
 
 from pillars.attributes import (
     roll_single_year,
@@ -108,6 +109,9 @@ def character_sheet(request, char_id):
         "con": aging.get("con", 0),
     }
 
+    # Serialize equipment data for JavaScript
+    equipment_json = mark_safe(json.dumps(char_data.get("equipment", {})))
+
     return render(
         request,
         "generator/character_sheet.html",
@@ -140,6 +144,7 @@ def character_sheet(request, char_id):
             "is_owner": is_owner,
             "character_owner": character.user,
             "aging_penalties": aging_penalties,
+            "equipment_json": equipment_json,
         },
     )
 

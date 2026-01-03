@@ -8,10 +8,12 @@ This module contains the main entry points and navigation views:
 - index: Main generator page
 """
 
+import json
 import os
 import markdown
 from django.shortcuts import render, redirect
 from django.conf import settings
+from django.utils.safestring import mark_safe
 
 from pillars import generate_character
 from pillars.attributes import TrackType, get_track_availability
@@ -266,6 +268,11 @@ def _build_index_context(request, character, char_data):
     # Get base_age (user's starting age before experience, defaults to 16)
     base_age = char_data.get("base_age", 16) if char_data else 16
 
+    # Serialize equipment data for JavaScript
+    equipment_json = mark_safe(
+        json.dumps(char_data.get("equipment", {}) if char_data else {})
+    )
+
     return {
         "character": character,
         "char_data": char_data or {},
@@ -289,6 +296,7 @@ def _build_index_context(request, character, char_data):
         "wis_mod": mods["wis"],
         "con_mod": mods["con"],
         "chr_mod": mods["chr"],
+        "equipment_json": equipment_json,
         **movement,
     }
 

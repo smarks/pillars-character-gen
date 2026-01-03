@@ -27,23 +27,31 @@ Attribute display variables (computed by view):
 
 <div class="character-sheet-component" id="{{ component_id|default:'cs' }}-container">
     {% if component_id == 'gensheet' %}
-    <!-- Name (only shown in generator view) -->
+    <!-- Name (only shown in generator view - character sheet has name in header) -->
     <div class="editable-field" style="margin-bottom: 15px;">
         <label>Name:</label>
-        <input type="text" name="char_name" id="char-name" data-field="name" 
+        <input type="text" name="char_name" id="char-name" data-field="name"
                value="{{ char_data.name|default:'' }}" placeholder="Enter character name">
     </div>
-    <!-- Age and Race (only shown in generator view) -->
+    {% endif %}
+
+    {% if component_id == 'gensheet' or component_id == 'charsheet' %}
+    <!-- Age and Race -->
     <div class="editable-field" style="margin-bottom: 15px; display: flex; gap: 25px; align-items: flex-start;">
         <div style="flex: 0 0 100px;">
             <label>Age:</label>
-            <input type="number" name="char_age" id="char-age" data-field="age"
-                   value="{{ char_data.age|default:current_age|default:16 }}" placeholder="Age" 
+            {% if editable %}
+            <input type="number" name="char_age" id="{{ component_id }}-char-age" data-field="age"
+                   value="{{ char_data.age|default:current_age|default:16 }}" placeholder="Age"
                    min="0" inputmode="numeric" style="width: 100%; padding: 6px 8px; font-family: inherit; font-size: 14px; border: 1px solid #ccc;">
+            {% else %}
+            <span class="field-value">{{ char_data.age|default:current_age|default:16 }}</span>
+            {% endif %}
         </div>
         <div style="flex: 0 0 200px;">
             <label>Race:</label>
-            <select name="char_race" id="char-race" data-field="race" 
+            {% if editable %}
+            <select name="char_race" id="{{ component_id }}-char-race" data-field="race"
                     style="width: 100%; padding: 6px 8px; font-family: inherit; font-size: 14px; border: 1px solid #ccc; margin-bottom: 5px;">
                 <option value="">-- Select Race --</option>
                 <option value="human" {% if char_data.race == 'human' %}selected{% endif %}>Human</option>
@@ -52,17 +60,24 @@ Attribute display variables (computed by view):
                 <option value="giant" {% if char_data.race == 'giant' %}selected{% endif %}>Giant</option>
                 <option value="other" {% if char_data.race and char_data.race != 'human' and char_data.race != 'elf' and char_data.race != 'dwarf' and char_data.race != 'giant' %}selected{% endif %}>Other</option>
             </select>
-            <input type="text" name="char_race_other" id="char-race-other" data-field="race" 
-                   value="{% if char_data.race and char_data.race != 'human' and char_data.race != 'elf' and char_data.race != 'dwarf' and char_data.race != 'giant' %}{{ char_data.race }}{% endif %}" 
-                   placeholder="Enter custom race" 
+            <input type="text" name="char_race_other" id="{{ component_id }}-char-race-other" data-field="race"
+                   value="{% if char_data.race and char_data.race != 'human' and char_data.race != 'elf' and char_data.race != 'dwarf' and char_data.race != 'giant' %}{{ char_data.race }}{% endif %}"
+                   placeholder="Enter custom race"
                    style="width: 100%; padding: 6px 8px; font-family: inherit; font-size: 14px; border: 1px solid #ccc; display: none;">
+            {% else %}
+            <span class="field-value">{{ char_data.race|default:'Human' }}</span>
+            {% endif %}
         </div>
     </div>
-    <!-- Description (only shown in generator view) -->
+    <!-- Description -->
     <div class="editable-field" style="margin-bottom: 15px;">
         <label>Description:</label>
-        <textarea name="char_description" id="char-description" data-field="description" 
+        {% if editable %}
+        <textarea name="char_description" id="{{ component_id }}-char-description" data-field="description"
                   placeholder="Enter character description" rows="3" style="width: 100%; padding: 6px 8px; font-family: inherit; font-size: 14px; border: 1px solid #ccc; resize: vertical;">{{ char_data.description|default:'' }}</textarea>
+        {% else %}
+        <div class="field-value">{{ char_data.description|default:'No description' }}</div>
+        {% endif %}
     </div>
     {% endif %}
     
@@ -2296,8 +2311,50 @@ var EncumbranceCalc = (function() {
         calculateEncumbrance(componentId);
     }
 
-    function init(componentId) {
-        if (!equipmentData[componentId]) {
+    function init(componentId, initialData) {
+        if (initialData && (initialData.weapons || initialData.armour || initialData.misc)) {
+            // Convert saved format to internal format
+            equipmentData[componentId] = {
+                weapons: (initialData.weapons || []).map(function(w) {
+                    return {
+                        name: w.name || '',
+                        desc: w.description || w.desc || '',
+                        hit: w.hit || '',
+                        crit: w.crit || '',
+                        dmg: w.damage || w.dmg || '',
+                        weight: parseFloat(w.weight) || 0,
+                        value: w.value || '',
+                        notes: w.notes || '',
+                        equipped: w.equipped !== false,
+                        inPack: w.inPack || false
+                    };
+                }),
+                armour: (initialData.armour || []).map(function(a) {
+                    return {
+                        name: a.name || '',
+                        desc: a.description || a.desc || '',
+                        absorb: parseInt(a.absorb) || 0,
+                        weight: parseFloat(a.weight) || 0,
+                        value: a.value || '',
+                        notes: a.notes || '',
+                        equipped: a.equipped !== false,
+                        inPack: a.inPack || false
+                    };
+                }),
+                misc: (initialData.misc || []).map(function(m) {
+                    return {
+                        name: m.name || '',
+                        desc: m.description || m.desc || '',
+                        attrMod: m.attr_mod || m.attrMod || '',
+                        weight: parseFloat(m.weight) || 0,
+                        value: m.value || '',
+                        equipped: m.equipped !== false,
+                        inPack: m.inPack || false
+                    };
+                }),
+                packDropped: false
+            };
+        } else if (!equipmentData[componentId]) {
             equipmentData[componentId] = getDefaultData();
         }
         renderAllTables(componentId);
@@ -2329,5 +2386,12 @@ var EncumbranceCalc = (function() {
         recalculate: calculateEncumbrance
     };
 })();
+
+// Initialize EncumbranceCalc with saved equipment data
+document.addEventListener('DOMContentLoaded', function() {
+    var componentId = '{{ component_id|default:"cs" }}';
+    var initialEquipment = {% if equipment_json %}{{ equipment_json }}{% else %}{}{% endif %};
+    EncumbranceCalc.init(componentId, initialEquipment);
+});
 </script>
 {% endif %}
