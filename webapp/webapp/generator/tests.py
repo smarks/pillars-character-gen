@@ -4615,3 +4615,65 @@ class BuildTrackInfoTests(TestCase):
         # Army before Worker
         self.assertEqual(result[1]["track"], "Army")
         self.assertEqual(result[2]["track"], "Worker")
+
+
+class ContentNegotiationTests(TestCase):
+    """Tests for content negotiation middleware (.md and .txt suffixes)."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_md_suffix_returns_markdown(self):
+        """Test that .md suffix returns markdown content."""
+        response = self.client.get("/.md")  # Welcome page as markdown
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/markdown; charset=utf-8")
+        # Should contain markdown formatting
+        content = response.content.decode("utf-8")
+        self.assertIn("Pillars", content)
+        # Should not contain HTML tags in the main content
+        self.assertNotIn("<html>", content.lower())
+
+    def test_txt_suffix_returns_plain_text(self):
+        """Test that .txt suffix returns plain text."""
+        response = self.client.get("/.txt")  # Welcome page as text
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/plain; charset=utf-8")
+        content = response.content.decode("utf-8")
+        self.assertIn("Pillars", content)
+
+    def test_accept_header_markdown(self):
+        """Test that Accept: text/markdown header returns markdown."""
+        response = self.client.get("/", HTTP_ACCEPT="text/markdown")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/markdown; charset=utf-8")
+
+    def test_normal_request_returns_html(self):
+        """Test that normal requests still return HTML."""
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/html", response["Content-Type"])
+
+    def test_ref_files_not_affected(self):
+        """Test that /ref/ files are not affected by content negotiation."""
+        # The /ref/ path serves actual markdown files
+        response = self.client.get("/ref/about.md")
+        self.assertEqual(response.status_code, 200)
+        # Should serve the actual file, not convert HTML to markdown
+        self.assertIn("text/markdown", response["Content-Type"])
+
+    def test_md_suffix_with_trailing_slash_url(self):
+        """Test that .md works with URLs that normally have trailing slashes."""
+        response = self.client.get("/about.md")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/markdown; charset=utf-8")
+        content = response.content.decode("utf-8")
+        self.assertIn("About", content)
+
+    def test_generator_page_as_markdown(self):
+        """Test that generator page can be retrieved as markdown."""
+        # First load to create character
+        self.client.get("/generator/")
+        response = self.client.get("/generator.md")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/markdown; charset=utf-8")
