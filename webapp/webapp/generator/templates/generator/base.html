@@ -515,6 +515,7 @@
                         {% if user.profile.is_admin %}
                         <a href="{% url 'manage_users' %}"{% if request.resolver_match.url_name == 'manage_users' %} class="current-page"{% endif %}>Users</a>
                         <a href="{% url 'admin_notes' %}"{% if request.resolver_match.url_name == 'admin_notes' %} class="current-page"{% endif %}>Notes</a>
+                        <a href="{% url 'admin:index' %}">Django Admin</a>
                         {% endif %}
                     </div>
                     {% endif %}
