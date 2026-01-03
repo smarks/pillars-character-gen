@@ -233,15 +233,18 @@ def serialize_character(character, preserve_data=None):
     # Store generation rolls log
     generation_log = []
 
-    # Attribute rolls
-    if hasattr(character.attributes, "rolls") and character.attributes.rolls:
-        for attr, rolls in character.attributes.rolls.items():
+    # Attribute rolls (from roll_details which contains AttributeRoll objects)
+    if (
+        hasattr(character.attributes, "roll_details")
+        and character.attributes.roll_details
+    ):
+        for roll_detail in character.attributes.roll_details:
             generation_log.append(
                 {
                     "type": "attribute",
-                    "name": attr,
-                    "rolls": rolls,
-                    "result": getattr(character.attributes, attr),
+                    "name": roll_detail.attribute_name,
+                    "rolls": list(roll_detail.all_rolls),
+                    "result": f"{roll_detail.value} ({roll_detail.modifier:+d})",
                 }
             )
 
