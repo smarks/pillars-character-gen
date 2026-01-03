@@ -217,6 +217,9 @@ def update_experience_session(
         "con": aging_effects.con_penalty,
     }
 
+    # Update age based on base_age + years of experience
+    char_data["age"] = char_data.get("base_age", 16) + total_years
+
     request.session["current_character"] = char_data
     request.session.modified = True
 
