@@ -207,7 +207,7 @@ class TestCharacterDisplay:
         import random
 
         random.seed(42)
-        char = generate_character(years=0, chosen_track=TrackType.CRAFTS)
+        char = generate_character(years=0, chosen_track=TrackType.CRAFT)
 
         result = str(char)
         assert "Craft:" in result or "Skill Track:" in result
@@ -240,7 +240,7 @@ class TestCharacterDisplay:
 
         random.seed(42)
         # Generate character with many years to trigger aging
-        char = generate_character(years=20, chosen_track=TrackType.WORKER)
+        char = generate_character(years=20, chosen_track=TrackType.LABORER)
 
         if char.prior_experience and char.prior_experience.aging_effects:
             result = str(char)
@@ -272,9 +272,9 @@ class TestCharacterDisplay:
         random.seed(42)
         attrs = generate_attributes_4d6_drop_lowest()
         track = SkillTrack(
-            track=TrackType.WORKER,
-            acceptance_check=create_auto_accept_check(TrackType.WORKER),
-            survivability=4,
+            track=TrackType.LABORER,
+            acceptance_check=create_auto_accept_check(TrackType.LABORER),
+            survivability=3,
             survivability_roll=None,
             initial_skills=[],
             craft_type=None,
@@ -284,8 +284,8 @@ class TestCharacterDisplay:
             starting_age=16,
             final_age=17,
             years_served=1,
-            track=TrackType.WORKER,
-            survivability_target=4,
+            track=TrackType.LABORER,
+            survivability_target=3,
             yearly_results=[],
             total_skill_points=0,
             all_skills=[],

@@ -10,17 +10,34 @@ from enum import Enum
 
 
 class TrackType(Enum):
-    """Enumeration of available skill tracks."""
+    """Enumeration of available skill tracks (from references/skills.csv)."""
 
-    ARMY = "Army"
-    NAVY = "Navy"
-    RANGER = "Ranger"
-    OFFICER = "Officer"
-    RANDOM = "Random"
-    WORKER = "Worker"
-    CRAFTS = "Crafts"
     MERCHANT = "Merchant"
+    CAMPAIGNER = "Campaigner"
+    LABORER = "Laborer"
     MAGIC = "Magic"
+    UNDERWORLD = "Underworld"
+    CIVIL_SERVICE = "Civil Service"
+    CRAFT = "Craft"
+    HUNTER_GATHERER = "Hunter/Gatherer"
+    RANDOM = "Random"
+
+    @classmethod
+    def from_csv_name(cls, name: str) -> "TrackType":
+        """Convert CSV column name to TrackType."""
+        name_map = {
+            "merchant": cls.MERCHANT,
+            "campaigner": cls.CAMPAIGNER,
+            "laborer": cls.LABORER,
+            "magic": cls.MAGIC,
+            "underworld": cls.UNDERWORLD,
+            "civil service": cls.CIVIL_SERVICE,
+            "craft": cls.CRAFT,
+            "hunter/gather": cls.HUNTER_GATHERER,
+            "hunter/gatherer": cls.HUNTER_GATHERER,
+            "random": cls.RANDOM,
+        }
+        return name_map.get(name.lower().strip())
 
 
 class CraftType(Enum):

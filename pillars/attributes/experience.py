@@ -170,7 +170,18 @@ def roll_yearly_skill(
             mastery_name = SPELL_SKILL_MASTERY.get(mastery_level, "")
             return f"Spell: {spell_name} ({mastery_name})", roll
 
-    skill_table = TRACK_YEARLY_SKILLS.get(track, TRACK_YEARLY_SKILLS[TrackType.RANDOM])
+    skill_table = TRACK_YEARLY_SKILLS.get(track, [])
+
+    # Special handling for Random track or empty skill tables:
+    # Pick a skill from a random non-Random track
+    if not skill_table or track == TrackType.RANDOM:
+        # Get all tracks except Random
+        other_tracks = [t for t in TrackType if t != TrackType.RANDOM]
+        random_track = random.choice(other_tracks)
+        skill_table = TRACK_YEARLY_SKILLS.get(random_track, [])
+        if not skill_table:
+            # Fallback to a generic skill
+            return "Random Skill", 0
 
     # Roll d12 (or use modulo for year progression variety)
     roll = roll_die(12)

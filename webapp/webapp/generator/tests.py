@@ -293,6 +293,7 @@ class MagicTrackTests(TestCase):
             dex_mod=0,
             int_mod=2,
             wis_mod=0,
+            chr_mod=0,
             social_class="Commoner",
             wealth_level="Moderate",
         )
@@ -311,6 +312,7 @@ class MagicTrackTests(TestCase):
             dex_mod=2,
             int_mod=0,
             wis_mod=0,
+            chr_mod=0,
             social_class="Commoner",
             wealth_level="Moderate",
         )
@@ -415,7 +417,7 @@ class InteractiveModeMagicTests(TestCase):
                 "action": "add_experience",
                 "years": 3,
                 "track_mode": "manual",
-                "chosen_track": "WORKER",
+                "chosen_track": "LABORER",
             },
         )
         # Should redirect back to generator
@@ -426,7 +428,7 @@ class InteractiveModeMagicTests(TestCase):
         self.assertGreaterEqual(years_added, 1)
         self.assertLessEqual(years_added, 3)
         # Track name should be set
-        self.assertEqual(self.client.session.get("interactive_track_name"), "Worker")
+        self.assertEqual(self.client.session.get("interactive_track_name"), "Laborer")
 
 
 class SessionSerializationTests(TestCase):
@@ -579,7 +581,7 @@ class UIFlowTests(TestCase):
         self.client.post(
             reverse("select_track"),
             {
-                "chosen_track": "WORKER",
+                "chosen_track": "LABORER",
                 "track_mode": "manual",
                 "interactive_mode": "on",
                 "action": "add_experience",
@@ -1692,7 +1694,7 @@ class TrackInfoTests(TestCase):
 
         # Add a skill track and some experience so the Prior Experience section shows
         self.saved_char.character_data["skill_track"] = {
-            "track": "Army",
+            "track": "Campaigner",
             "survivability": 5,
             "initial_skills": ["Sword"],
         }
@@ -1709,7 +1711,7 @@ class TrackInfoTests(TestCase):
         self.assertIsNotNone(response.context["track_info"])
         # Should show track in Prior Experience section
         self.assertContains(response, "Prior Experience")
-        self.assertContains(response, "Army")
+        self.assertContains(response, "Campaigner")
 
 
 class AdminViewAllCharactersTests(TestCase):
@@ -1909,7 +1911,7 @@ class AddExperienceTests(TestCase):
 
         response = self.client.post(
             reverse("add_experience_to_character", args=[self.saved_char.id]),
-            {"years": 3, "track": "ARMY"},
+            {"years": 3, "track": "CAMPAIGNER"},
         )
 
         # Should redirect to character sheet
@@ -1923,7 +1925,7 @@ class AddExperienceTests(TestCase):
 
         # Should have skill track
         self.assertIn("skill_track", char_data)
-        self.assertEqual(char_data["skill_track"]["track"], "Army")
+        self.assertEqual(char_data["skill_track"]["track"], "Campaigner")
 
         # Should have years of experience
         self.assertEqual(char_data["interactive_years"], 3)
@@ -1939,7 +1941,7 @@ class AddExperienceTests(TestCase):
         # Add first batch
         self.client.post(
             reverse("add_experience_to_character", args=[self.saved_char.id]),
-            {"years": 2, "track": "WORKER"},
+            {"years": 2, "track": "LABORER"},
         )
 
         self.saved_char.refresh_from_db()
@@ -1982,7 +1984,7 @@ class AddExperienceTests(TestCase):
         # Add 3 years of experience
         add_response = self.client.post(
             reverse("add_experience_to_character", args=[self.saved_char.id]),
-            {"years": 3, "track": "WORKER"},
+            {"years": 3, "track": "LABORER"},
             follow=True,  # Follow the redirect
         )
 
@@ -2006,7 +2008,7 @@ class AddExperienceTests(TestCase):
         self.assertContains(add_response, "Years Served")
 
         # Should show the track that was selected
-        self.assertContains(add_response, "Worker")
+        self.assertContains(add_response, "Laborer")
 
     def test_add_more_experience_updates_ui(self):
         """Test that adding more experience to existing updates UI correctly."""
@@ -2015,7 +2017,7 @@ class AddExperienceTests(TestCase):
         # Add initial experience
         self.client.post(
             reverse("add_experience_to_character", args=[self.saved_char.id]),
-            {"years": 2, "track": "WORKER"},
+            {"years": 2, "track": "LABORER"},
         )
 
         # Verify initial state
@@ -2127,7 +2129,7 @@ class AddExperienceTests(TestCase):
 
         response = self.client.post(
             reverse("add_experience_to_character", args=[self.saved_char.id]),
-            {"years": 3, "track": "ARMY"},
+            {"years": 3, "track": "CAMPAIGNER"},
         )
 
         # Should redirect to my_characters (not found for this user)
@@ -2139,7 +2141,7 @@ class AddExperienceTests(TestCase):
 
         response = self.client.post(
             reverse("add_experience_to_character", args=[99999]),
-            {"years": 3, "track": "ARMY"},
+            {"years": 3, "track": "CAMPAIGNER"},
         )
 
         # Should redirect to my_characters
@@ -2153,7 +2155,7 @@ class AddExperienceTests(TestCase):
         self.saved_char.character_data["interactive_died"] = True
         self.saved_char.character_data["interactive_years"] = 5
         self.saved_char.character_data["skill_track"] = {
-            "track": "Army",
+            "track": "Campaigner",
             "survivability": 5,
             "initial_skills": ["Sword"],
         }
@@ -2177,13 +2179,15 @@ class AddExperienceTests(TestCase):
 
         response = self.client.post(
             reverse("add_experience_to_character", args=[self.saved_char.id]),
-            {"years": 2, "track": "NAVY"},
+            {"years": 2, "track": "MERCHANT"},
         )
 
         self.assertEqual(response.status_code, 302)
 
         self.saved_char.refresh_from_db()
-        self.assertEqual(self.saved_char.character_data["skill_track"]["track"], "Navy")
+        self.assertEqual(
+            self.saved_char.character_data["skill_track"]["track"], "Merchant"
+        )
 
 
 class CharacterSheetLayoutTests(TestCase):
@@ -4648,7 +4652,7 @@ class BuildTrackInfoTests(TestCase):
         from webapp.generator.views.helpers import build_track_info
 
         availability = {
-            TrackType.ARMY: {
+            TrackType.CAMPAIGNER: {
                 "requires_roll": True,
                 "impossible": False,
                 "requirement": "STR/DEX bonus",
@@ -4657,8 +4661,8 @@ class BuildTrackInfoTests(TestCase):
 
         result = build_track_info(availability)
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]["track"], "Army")
-        self.assertEqual(result[0]["track_key"], "army")
+        self.assertEqual(result[0]["track"], "Campaigner")
+        self.assertEqual(result[0]["track_key"], "campaigner")
         self.assertTrue(result[0]["requires_roll"])
         self.assertFalse(result[0]["impossible"])
         self.assertIn("survivability", result[0])
@@ -4668,17 +4672,17 @@ class BuildTrackInfoTests(TestCase):
         from webapp.generator.views.helpers import build_track_info
 
         availability = {
-            TrackType.WORKER: {
+            TrackType.LABORER: {
                 "requires_roll": False,
                 "impossible": False,
                 "requirement": "",
             },
-            TrackType.OFFICER: {
+            TrackType.CIVIL_SERVICE: {
                 "requires_roll": False,
                 "impossible": True,
-                "requirement": "Rich or promoted",
+                "requirement": "INT/CHR/WIS bonus",
             },
-            TrackType.ARMY: {
+            TrackType.CAMPAIGNER: {
                 "requires_roll": True,
                 "impossible": False,
                 "requirement": "",
@@ -4687,12 +4691,12 @@ class BuildTrackInfoTests(TestCase):
 
         result = build_track_info(availability)
         self.assertEqual(len(result), 3)
-        # Available tracks first (Worker - no roll, not impossible)
-        self.assertEqual(result[0]["track"], "Worker")
-        # Roll-required tracks second (Army - requires roll)
-        self.assertEqual(result[1]["track"], "Army")
-        # Impossible tracks last (Officer - impossible)
-        self.assertEqual(result[2]["track"], "Officer")
+        # Available tracks first (Laborer - no roll, not impossible)
+        self.assertEqual(result[0]["track"], "Laborer")
+        # Roll-required tracks second (Campaigner - requires roll)
+        self.assertEqual(result[1]["track"], "Campaigner")
+        # Impossible tracks last (Civil Service - impossible)
+        self.assertEqual(result[2]["track"], "Civil Service")
 
 
 class ContentNegotiationTests(TestCase):

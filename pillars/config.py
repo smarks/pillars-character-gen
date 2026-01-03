@@ -37,19 +37,13 @@ POINT_BUY_DEFAULT = 65
 
 
 # =============================================================================
-# TRACK ACCEPTANCE TARGETS
+# TRACK ACCEPTANCE
 # =============================================================================
 
-# Target numbers for 2d6 rolls to join tracks
-ARMY_ACCEPTANCE_TARGET = 8
-NAVY_ACCEPTANCE_TARGET = 8
-
-# Merchant targets vary by social class
-MERCHANT_ACCEPTANCE_TARGETS = {
-    "poor": 10,
-    "working": 8,
-    "above": 6,
-}
+# Track requirements are now loaded from references/skills.csv
+# Most tracks have no requirements except:
+# - Magic: Requires INT or WIS bonus
+# - Civil Service: Requires INT, CHR, or WIS bonus
 
 
 # =============================================================================

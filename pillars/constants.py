@@ -6,6 +6,7 @@ used throughout the character generation system.
 """
 
 from pillars.enums import TrackType, MagicSchool
+from pillars.data import get_skill_tracks, get_track
 
 # Magic school spell progressions
 MAGIC_SPELL_PROGRESSION = {
@@ -117,165 +118,89 @@ SPELL_SKILL_MASTERY = {
     6: "Costs 2/3 less fatigue, invert spell, reflect same spell group back onto caster",
 }
 
-# Track survivability values
-TRACK_SURVIVABILITY = {
-    TrackType.ARMY: 5,
-    TrackType.NAVY: 5,
-    TrackType.RANGER: 6,
-    TrackType.OFFICER: 5,
-    TrackType.RANDOM: None,  # Roll d8, reroll 5s
-    TrackType.WORKER: 4,
-    TrackType.CRAFTS: 3,
-    TrackType.MERCHANT: 3,
-    TrackType.MAGIC: 7,  # Most dangerous track
-}
+# Track survivability and skills are loaded from references/skills.csv
+# Use the data module to access track information (imported at top of file)
 
-# Initial skills by track (Year 1 only)
-TRACK_INITIAL_SKILLS = {
-    TrackType.ARMY: ["Sword +1 to hit", "Sword +1 parry"],
-    TrackType.NAVY: ["Cutlass +1 to hit", "Cutlass +1 parry", "Swimming"],
-    TrackType.RANGER: [
-        "Weapon hit",
-        "Weapon parry",
-        "Tracking",
-        "Wood lore",
-        "Ken",
-        "Literacy",
-    ],
-    TrackType.OFFICER: ["Morale", "Ken", "Literacy", "Weapon hit", "Weapon parry"],
-    TrackType.RANDOM: ["Random skill", "Swimming"],
-    TrackType.WORKER: ["Laborer"],  # Additional Laborer if poor/working class
-    TrackType.CRAFTS: ["Laborer", "Literacy"],  # Plus craft type
-    TrackType.MERCHANT: ["Coins", "Literacy"],
-    TrackType.MAGIC: [],  # See Magic spell tables
-}
 
-# Skill tables by track - skills gained each year (roll d6 or use year index)
-# These are representative skills; actual tables may vary
-TRACK_YEARLY_SKILLS = {
-    TrackType.ARMY: [
-        "Sword +1 to hit",
-        "Sword +1 parry",
-        "Shield",
-        "Tactics",
-        "Formation Fighting",
-        "Polearm",
-        "Archery",
-        "Riding",
-        "Survival",
-        "First Aid",
-        "Intimidation",
-        "Leadership",
-    ],
-    TrackType.NAVY: [
-        "Cutlass +1 to hit",
-        "Cutlass +1 parry",
-        "Swimming",
-        "Sailing",
-        "Navigation",
-        "Rope Use",
-        "Climbing",
-        "Weather Sense",
-        "Ship Knowledge",
-        "Trading",
-        "Leadership",
-    ],
-    TrackType.RANGER: [
-        "Weapon hit",
-        "Weapon parry",
-        "Tracking",
-        "Wood Lore",
-        "Survival",
-        "Herb Lore",
-        "Stealth",
-        "Archery",
-        "Animal Handling",
-        "Camouflage",
-        "Trapping",
-        "Ken",
-    ],
-    TrackType.OFFICER: [
-        "Morale",
-        "Ken",
-        "Tactics",
-        "Leadership",
-        "Weapon hit",
-        "Weapon parry",
-        "Riding",
-        "Etiquette",
-        "Strategy",
-        "Logistics",
-        "Diplomacy",
-        "Command",
-    ],
-    TrackType.RANDOM: [
-        "Random Skill",
-        "Swimming",
-        "Gambling",
-        "Streetwise",
-        "Brawling",
-        "Running",
-        "Climbing",
-        "Persuasion",
-        "Observation",
-        "Luck",
-        "Contacts",
-        "Survival",
-    ],
-    TrackType.WORKER: [
-        "Laborer",
-        "Strength Training",
-        "Endurance",
-        "Hauling",
-        "Tool Use",
-        "Construction",
-        "Mining",
-        "Farming",
-        "Animal Handling",
-        "Repair",
-        "Teamwork",
-        "Fortitude",
-    ],
-    TrackType.CRAFTS: [
-        "Craft Skill",
-        "Literacy",
-        "Mathematics",
-        "Drafting",
-        "Apprentice Work",
-        "Journeyman Work",
-        "Master Technique",
-        "Teaching",
-        "Business",
-        "Negotiation",
-        "Quality Control",
-        "Innovation",
-    ],
-    TrackType.MERCHANT: [
-        "Coins",
-        "Literacy",
-        "Negotiation",
-        "Appraisal",
-        "Bookkeeping",
-        "Contacts",
-        "Trading",
-        "Languages",
-        "Law",
-        "Contracts",
-        "Investment",
-        "Management",
-    ],
-    TrackType.MAGIC: [
-        "Spell",
-        "Ritual",
-        "Magical Theory",
-        "Concentration",
-        "Meditation",
-        "Arcane Lore",
-        "Spell",
-        "Component Knowledge",
-        "Enchanting",
-        "Warding",
-        "Spell",
-        "Mastery",
-    ],
-}
+class _DynamicTrackDict:
+    """
+    A dict-like class that rebuilds from CSV on each access.
+
+    This ensures the spreadsheet is always the source of truth -
+    any edits to references/skills.csv are immediately reflected.
+    """
+
+    def __init__(self, builder_func):
+        self._builder = builder_func
+
+    def _get_data(self):
+        # get_skill_tracks() checks file mtime and reloads if CSV changed
+        return self._builder()
+
+    def __getitem__(self, key):
+        return self._get_data()[key]
+
+    def __contains__(self, key):
+        return key in self._get_data()
+
+    def get(self, key, default=None):
+        return self._get_data().get(key, default)
+
+    def keys(self):
+        return self._get_data().keys()
+
+    def values(self):
+        return self._get_data().values()
+
+    def items(self):
+        return self._get_data().items()
+
+    def __iter__(self):
+        return iter(self._get_data())
+
+    def __len__(self):
+        return len(self._get_data())
+
+
+def _build_survivability_dict():
+    """Build survivability dict from CSV data."""
+    result = {}
+    for track_data in get_skill_tracks().values():
+        track_type = TrackType.from_csv_name(track_data.name)
+        if track_type:
+            result[track_type] = track_data.survival_target
+    return result
+
+
+def _build_initial_skills_dict():
+    """Build initial skills dict from CSV data (first 2 skills)."""
+    result = {}
+    for track_data in get_skill_tracks().values():
+        track_type = TrackType.from_csv_name(track_data.name)
+        if track_type:
+            result[track_type] = track_data.skills[:2] if track_data.skills else []
+    return result
+
+
+def _build_yearly_skills_dict():
+    """Build yearly skills dict from CSV data."""
+    result = {}
+    for track_data in get_skill_tracks().values():
+        track_type = TrackType.from_csv_name(track_data.name)
+        if track_type:
+            result[track_type] = track_data.skills
+    return result
+
+
+# Dynamic track data - automatically reloads when CSV file changes
+TRACK_SURVIVABILITY = _DynamicTrackDict(_build_survivability_dict)
+TRACK_INITIAL_SKILLS = _DynamicTrackDict(_build_initial_skills_dict)
+TRACK_YEARLY_SKILLS = _DynamicTrackDict(_build_yearly_skills_dict)
+
+
+def get_track_requirements(track_type: TrackType) -> str:
+    """Get requirements string for a track from CSV."""
+    track_data = get_track(track_type.value)
+    if track_data:
+        return track_data.requirements
+    return "None"

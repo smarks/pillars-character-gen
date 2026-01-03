@@ -35,6 +35,7 @@ class SkillTrack:
 
 
 _cache: Optional[Dict[str, SkillTrack]] = None
+_cache_mtime: Optional[float] = None  # Track file modification time
 
 
 def load_skill_tracks(csv_path: Optional[Path] = None) -> Dict[str, SkillTrack]:
@@ -100,19 +101,36 @@ def load_skill_tracks(csv_path: Optional[Path] = None) -> Dict[str, SkillTrack]:
     return tracks
 
 
-def get_skill_tracks() -> Dict[str, SkillTrack]:
-    """Get cached skill track data, loading from CSV if needed."""
-    global _cache
-    if _cache is None:
+def get_skill_tracks(force_reload: bool = False) -> Dict[str, SkillTrack]:
+    """
+    Get skill track data, reloading from CSV if file has changed.
+
+    The CSV is automatically reloaded when:
+    - First access (no cache)
+    - File has been modified since last load
+    - force_reload=True is passed
+
+    Args:
+        force_reload: If True, always reload from CSV regardless of cache
+
+    Returns:
+        Dict mapping track name (lowercase) to SkillTrack
+    """
+    global _cache, _cache_mtime
+
+    # Check if CSV file has been modified
+    current_mtime = SKILLS_CSV.stat().st_mtime if SKILLS_CSV.exists() else None
+
+    if force_reload or _cache is None or _cache_mtime != current_mtime:
         _cache = load_skill_tracks()
+        _cache_mtime = current_mtime
+
     return _cache
 
 
 def reload_tracks():
     """Force reload of track data from CSV."""
-    global _cache
-    _cache = None
-    return get_skill_tracks()
+    return get_skill_tracks(force_reload=True)
 
 
 def get_track(name: str) -> Optional[SkillTrack]:

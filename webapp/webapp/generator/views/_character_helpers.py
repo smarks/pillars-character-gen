@@ -86,9 +86,38 @@ def deallocate_skill_point(char_data, skill_name):
         return False, "No allocated points to remove from this skill", []
 
 
-def recalculate_derived(char_data):
-    """Recalculate fatigue_points and body_points based on attributes."""
+def calculate_adjusted_attributes(char_data):
+    """Calculate adjusted attribute values after aging penalties.
+
+    Returns dict with:
+    - {attr}_adjusted: effective value after penalties
+    - {attr}_adj_mod: modifier based on adjusted value
+    """
     attrs = char_data.get("attributes", {})
+    aging = char_data.get("interactive_aging", {})
+
+    result = {}
+    for attr in ["STR", "DEX", "INT", "WIS", "CON"]:
+        base_val = get_attribute_base_value(attrs.get(attr, 10))
+        penalty = aging.get(attr.lower(), 0)
+        adjusted = base_val - penalty
+        adj_mod = get_attribute_modifier(adjusted)
+
+        result[f"{attr.lower()}_adjusted"] = adjusted
+        result[f"{attr.lower()}_adj_mod"] = adj_mod
+
+    # CHR has no aging penalty
+    chr_val = get_attribute_base_value(attrs.get("CHR", 10))
+    result["chr_adjusted"] = chr_val
+    result["chr_adj_mod"] = get_attribute_modifier(chr_val)
+
+    return result
+
+
+def recalculate_derived(char_data):
+    """Recalculate fatigue_points, body_points, and adjusted attributes."""
+    attrs = char_data.get("attributes", {})
+    aging = char_data.get("interactive_aging", {})
 
     # Get base values for calculations (the integer part)
     str_val = get_attribute_base_value(attrs.get("STR", 10))
@@ -96,9 +125,17 @@ def recalculate_derived(char_data):
     con_val = get_attribute_base_value(attrs.get("CON", 10))
     wis_val = get_attribute_base_value(attrs.get("WIS", 10))
 
-    # Get modifiers used in fatigue/body calculations
-    wis_mod = get_attribute_modifier(attrs.get("WIS", 10))
-    int_mod = get_attribute_modifier(attrs.get("INT", 10))
+    # Apply aging penalties for derived stat calculations
+    str_adj = str_val - aging.get("str", 0)
+    dex_adj = dex_val - aging.get("dex", 0)
+    con_adj = con_val - aging.get("con", 0)
+    wis_adj = wis_val - aging.get("wis", 0)
+
+    # Get modifiers from adjusted values
+    wis_mod = get_attribute_modifier(wis_adj)
+    int_val = get_attribute_base_value(attrs.get("INT", 10))
+    int_adj = int_val - aging.get("int", 0)
+    int_mod = get_attribute_modifier(int_adj)
 
     # Use existing rolls if available, otherwise default to 3
     fatigue_roll = attrs.get("fatigue_roll", 3)
@@ -106,21 +143,26 @@ def recalculate_derived(char_data):
 
     # Fatigue = CON + WIS + max(DEX, STR) + 1d6 + int_mod + wis_mod
     fatigue_points = (
-        con_val + wis_val + max(dex_val, str_val) + fatigue_roll + int_mod + wis_mod
+        con_adj + wis_adj + max(dex_adj, str_adj) + fatigue_roll + int_mod + wis_mod
     )
 
     # Body = CON + max(DEX, STR) + 1d6 + int_mod + wis_mod
-    body_points = con_val + max(dex_val, str_val) + body_roll + int_mod + wis_mod
+    body_points = con_adj + max(dex_adj, str_adj) + body_roll + int_mod + wis_mod
 
     # Update in char_data
     char_data["attributes"]["fatigue_points"] = fatigue_points
     char_data["attributes"]["body_points"] = body_points
 
-    return {
+    result = {
         "fatigue_points": fatigue_points,
         "body_points": body_points,
-        "fatigue_pool": str_val,  # Fatigue Pool = base STR value
+        "fatigue_pool": str_adj,  # Fatigue Pool = adjusted STR value
     }
+
+    # Add adjusted attribute values and modifiers
+    result.update(calculate_adjusted_attributes(char_data))
+
+    return result
 
 
 def calculate_track_info(char_data):
@@ -130,11 +172,12 @@ def calculate_track_info(char_data):
     dex_mod = get_attribute_modifier(attrs.get("DEX", 10))
     int_mod = get_attribute_modifier(attrs.get("INT", 10))
     wis_mod = get_attribute_modifier(attrs.get("WIS", 10))
+    chr_mod = get_attribute_modifier(attrs.get("CHR", 10))
     social_class = char_data.get("provenance_social_class", "Commoner")
     wealth_level = char_data.get("wealth_level", "Moderate")
 
     track_availability = get_track_availability(
-        str_mod, dex_mod, int_mod, wis_mod, social_class, wealth_level
+        str_mod, dex_mod, int_mod, wis_mod, chr_mod, social_class, wealth_level
     )
     return build_track_info(track_availability)
 

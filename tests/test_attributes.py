@@ -27,11 +27,8 @@ from pillars.attributes import (
     roll_prior_experience,
     roll_yearly_skill,
     roll_survivability_check,
-    check_army_acceptance,
-    check_navy_acceptance,
-    check_ranger_acceptance,
-    check_officer_acceptance,
-    check_merchant_acceptance,
+    check_magic_acceptance,
+    check_civil_service_acceptance,
     get_eligible_tracks,
     select_optimal_track,
     get_nobility_rank,
@@ -918,19 +915,19 @@ class TestLiteracyCheck(unittest.TestCase):
 
 
 class TestSkillTrack(unittest.TestCase):
-    """Test skill track selection and acceptance checks."""
+    """Test skill track selection and acceptance checks (CSV-based tracks)."""
 
     def test_track_type_enum(self):
-        """Test TrackType enum values."""
-        self.assertEqual(TrackType.ARMY.value, "Army")
-        self.assertEqual(TrackType.NAVY.value, "Navy")
-        self.assertEqual(TrackType.RANGER.value, "Ranger")
-        self.assertEqual(TrackType.OFFICER.value, "Officer")
-        self.assertEqual(TrackType.RANDOM.value, "Random")
-        self.assertEqual(TrackType.WORKER.value, "Worker")
-        self.assertEqual(TrackType.CRAFTS.value, "Crafts")
+        """Test TrackType enum values (from CSV)."""
         self.assertEqual(TrackType.MERCHANT.value, "Merchant")
+        self.assertEqual(TrackType.CAMPAIGNER.value, "Campaigner")
+        self.assertEqual(TrackType.LABORER.value, "Laborer")
         self.assertEqual(TrackType.MAGIC.value, "Magic")
+        self.assertEqual(TrackType.UNDERWORLD.value, "Underworld")
+        self.assertEqual(TrackType.CIVIL_SERVICE.value, "Civil Service")
+        self.assertEqual(TrackType.CRAFT.value, "Craft")
+        self.assertEqual(TrackType.HUNTER_GATHERER.value, "Hunter/Gatherer")
+        self.assertEqual(TrackType.RANDOM.value, "Random")
 
     def test_craft_type_enum(self):
         """Test CraftType enum values."""
@@ -940,161 +937,110 @@ class TestSkillTrack(unittest.TestCase):
         self.assertEqual(CraftType.MAGIC.value, "Magic")
 
     def test_track_survivability_values(self):
-        """Test survivability values are correct."""
-        self.assertEqual(TRACK_SURVIVABILITY[TrackType.ARMY], 5)
-        self.assertEqual(TRACK_SURVIVABILITY[TrackType.NAVY], 5)
-        self.assertEqual(TRACK_SURVIVABILITY[TrackType.RANGER], 6)
-        self.assertEqual(TRACK_SURVIVABILITY[TrackType.OFFICER], 5)
-        self.assertIsNone(TRACK_SURVIVABILITY[TrackType.RANDOM])  # Rolled
-        self.assertEqual(TRACK_SURVIVABILITY[TrackType.WORKER], 4)
-        self.assertEqual(TRACK_SURVIVABILITY[TrackType.CRAFTS], 3)
-        self.assertEqual(TRACK_SURVIVABILITY[TrackType.MERCHANT], 3)
+        """Test survivability values are loaded from CSV."""
+        self.assertEqual(TRACK_SURVIVABILITY[TrackType.MERCHANT], 4)
+        self.assertEqual(TRACK_SURVIVABILITY[TrackType.CAMPAIGNER], 5)
+        self.assertEqual(TRACK_SURVIVABILITY[TrackType.LABORER], 3)
+        self.assertEqual(TRACK_SURVIVABILITY[TrackType.MAGIC], 7)
+        self.assertEqual(TRACK_SURVIVABILITY[TrackType.UNDERWORLD], 7)
+        self.assertEqual(TRACK_SURVIVABILITY[TrackType.CIVIL_SERVICE], 4)
+        self.assertEqual(TRACK_SURVIVABILITY[TrackType.CRAFT], 3)
+        self.assertEqual(TRACK_SURVIVABILITY[TrackType.HUNTER_GATHERER], 5)
+        self.assertIsNone(TRACK_SURVIVABILITY[TrackType.RANDOM])
 
     def test_track_initial_skills(self):
-        """Test initial skills are defined for each track."""
-        self.assertIn("Sword +1 to hit", TRACK_INITIAL_SKILLS[TrackType.ARMY])
-        self.assertIn("Swimming", TRACK_INITIAL_SKILLS[TrackType.NAVY])
-        self.assertIn("Tracking", TRACK_INITIAL_SKILLS[TrackType.RANGER])
-        self.assertIn("Morale", TRACK_INITIAL_SKILLS[TrackType.OFFICER])
-        self.assertIn("Laborer", TRACK_INITIAL_SKILLS[TrackType.WORKER])
-        self.assertIn("Literacy", TRACK_INITIAL_SKILLS[TrackType.CRAFTS])
-        self.assertIn("Coins", TRACK_INITIAL_SKILLS[TrackType.MERCHANT])
+        """Test initial skills are loaded from CSV (first 2 skills per track)."""
+        # Merchant starts with Weapon, Weapon Parry
+        self.assertEqual(len(TRACK_INITIAL_SKILLS[TrackType.MERCHANT]), 2)
+        # Campaigner starts with Weapon Parry, Weapon
+        self.assertEqual(len(TRACK_INITIAL_SKILLS[TrackType.CAMPAIGNER]), 2)
+        # Magic starts with Deceit, Persuasion
+        self.assertIn("Deceit", TRACK_INITIAL_SKILLS[TrackType.MAGIC])
 
-    def test_army_acceptance_with_bonuses(self):
-        """Test Army acceptance with good modifiers."""
-        random.seed(42)
-        # With +2 STR and +2 DEX, should pass most of the time
-        check = check_army_acceptance(str_mod=2, dex_mod=2)
-        self.assertIsInstance(check, AcceptanceCheck)
-        self.assertEqual(check.track, TrackType.ARMY)
-        self.assertEqual(check.target, 8)
-        self.assertIsNotNone(check.roll)
+    def test_magic_acceptance_requires_mental_bonus(self):
+        """Test Magic requires INT or WIS bonus."""
+        # No bonus - should fail
+        check = check_magic_acceptance(int_mod=0, wis_mod=0)
+        self.assertFalse(check.accepted)
+        self.assertEqual(check.track, TrackType.MAGIC)
 
-    def test_army_acceptance_with_penalties(self):
-        """Test Army acceptance with negative modifiers."""
-        # With -5 STR and -5 DEX, very unlikely to pass
-        failed_count = 0
-        for seed in range(50):
-            random.seed(seed)
-            check = check_army_acceptance(str_mod=-5, dex_mod=-5)
-            if not check.accepted:
-                failed_count += 1
-        # Most should fail
-        self.assertGreater(failed_count, 40)
-
-    def test_navy_acceptance(self):
-        """Test Navy acceptance check."""
-        random.seed(42)
-        check = check_navy_acceptance(str_mod=1, dex_mod=1, int_mod=1)
-        self.assertEqual(check.track, TrackType.NAVY)
-        self.assertEqual(check.target, 8)
-        self.assertIn("INT", check.modifiers)
-
-    def test_ranger_acceptance_requires_both_bonuses(self):
-        """Test Ranger requires both physical and mental bonuses."""
-        # Has both - should pass
-        check = check_ranger_acceptance(str_mod=1, dex_mod=0, int_mod=0, wis_mod=1)
+        # INT bonus - should pass
+        check = check_magic_acceptance(int_mod=1, wis_mod=0)
         self.assertTrue(check.accepted)
 
-        # Only physical - should fail
-        check = check_ranger_acceptance(str_mod=1, dex_mod=1, int_mod=0, wis_mod=0)
-        self.assertFalse(check.accepted)
-
-        # Only mental - should fail
-        check = check_ranger_acceptance(str_mod=0, dex_mod=0, int_mod=1, wis_mod=1)
-        self.assertFalse(check.accepted)
-
-        # Neither - should fail
-        check = check_ranger_acceptance(str_mod=0, dex_mod=0, int_mod=0, wis_mod=0)
-        self.assertFalse(check.accepted)
-
-    def test_officer_acceptance_rich(self):
-        """Test Officer acceptance for Rich characters."""
-        check = check_officer_acceptance(wealth_level="Rich", is_promoted=False)
+        # WIS bonus - should pass
+        check = check_magic_acceptance(int_mod=0, wis_mod=1)
         self.assertTrue(check.accepted)
-        self.assertIn("Rich", check.reason)
 
-    def test_officer_acceptance_promoted(self):
-        """Test Officer acceptance for promoted characters."""
-        check = check_officer_acceptance(wealth_level="Moderate", is_promoted=True)
-        self.assertTrue(check.accepted)
-        self.assertIn("Promoted", check.reason)
-
-    def test_officer_acceptance_neither(self):
-        """Test Officer rejection when neither Rich nor promoted."""
-        check = check_officer_acceptance(wealth_level="Moderate", is_promoted=False)
+    def test_civil_service_acceptance_requires_mental_or_charisma_bonus(self):
+        """Test Civil Service requires INT, CHR, or WIS bonus."""
+        # No bonus - should fail
+        check = check_civil_service_acceptance(int_mod=0, chr_mod=0, wis_mod=0)
         self.assertFalse(check.accepted)
+        self.assertEqual(check.track, TrackType.CIVIL_SERVICE)
 
-    def test_merchant_acceptance_poor(self):
-        """Test Merchant acceptance for poor (Subsistence) characters."""
-        random.seed(42)
-        check = check_merchant_acceptance(
-            social_class="Commoner", wealth_level="Subsistence"
-        )
-        self.assertEqual(check.target, 10)
-        self.assertIn("poor", check.reason)
+        # INT bonus - should pass
+        check = check_civil_service_acceptance(int_mod=1, chr_mod=0, wis_mod=0)
+        self.assertTrue(check.accepted)
 
-    def test_merchant_acceptance_working_class(self):
-        """Test Merchant acceptance for working class characters."""
-        random.seed(42)
-        check = check_merchant_acceptance(
-            social_class="Commoner", wealth_level="Moderate"
-        )
-        # Working class: Moderate wealth + Commoner/Laborer = target 8
-        self.assertEqual(check.target, 8)
-        self.assertIn("working class", check.reason)
+        # CHR bonus - should pass
+        check = check_civil_service_acceptance(int_mod=0, chr_mod=1, wis_mod=0)
+        self.assertTrue(check.accepted)
 
-    def test_merchant_acceptance_above_working_class(self):
-        """Test Merchant acceptance for above working class."""
-        random.seed(42)
-        # Above working class: Not poor and not (Moderate + Commoner/Laborer)
-        # Merchant wealth level with Nobility = above working class, target 6
-        check = check_merchant_acceptance(
-            social_class="Nobility", wealth_level="Merchant"
-        )
-        self.assertEqual(check.target, 6)
-        self.assertIn("above working class", check.reason)
+        # WIS bonus - should pass
+        check = check_civil_service_acceptance(int_mod=0, chr_mod=0, wis_mod=1)
+        self.assertTrue(check.accepted)
 
-    def test_get_eligible_tracks_always_includes_basics(self):
-        """Test that Random, Worker, and Crafts are always eligible."""
+    def test_get_eligible_tracks_always_includes_no_requirement_tracks(self):
+        """Test that no-requirement tracks are always eligible."""
         eligible = get_eligible_tracks(
             str_mod=0,
             dex_mod=0,
             int_mod=0,
             wis_mod=0,
+            chr_mod=0,
             social_class="Commoner",
             wealth_level="Moderate",
         )
         eligible_types = {t for t, _ in eligible}
         self.assertIn(TrackType.RANDOM, eligible_types)
-        self.assertIn(TrackType.WORKER, eligible_types)
-        self.assertIn(TrackType.CRAFTS, eligible_types)
+        self.assertIn(TrackType.MERCHANT, eligible_types)
+        self.assertIn(TrackType.CAMPAIGNER, eligible_types)
+        self.assertIn(TrackType.LABORER, eligible_types)
+        self.assertIn(TrackType.UNDERWORLD, eligible_types)
+        self.assertIn(TrackType.CRAFT, eligible_types)
+        self.assertIn(TrackType.HUNTER_GATHERER, eligible_types)
+        # Magic and Civil Service should NOT be eligible (no bonuses)
+        self.assertNotIn(TrackType.MAGIC, eligible_types)
+        self.assertNotIn(TrackType.CIVIL_SERVICE, eligible_types)
 
-    def test_select_optimal_track_prioritizes_officer_for_rich(self):
-        """Test that Officer is selected for Rich characters."""
+    def test_select_optimal_track_prioritizes_magic_when_eligible(self):
+        """Test that Magic is selected when eligible."""
         track, check = select_optimal_track(
-            str_mod=2,
-            dex_mod=2,
-            int_mod=2,
-            wis_mod=2,
-            social_class="Nobility",
-            wealth_level="Rich",
-            sub_class="Baron",
-        )
-        self.assertEqual(track, TrackType.OFFICER)
-
-    def test_select_optimal_track_prioritizes_ranger(self):
-        """Test that Ranger is prioritized when eligible (and not Officer)."""
-        track, check = select_optimal_track(
-            str_mod=2,
+            str_mod=0,
             dex_mod=0,
             int_mod=2,
-            wis_mod=0,
+            wis_mod=1,
+            chr_mod=0,
             social_class="Commoner",
             wealth_level="Moderate",
             sub_class="Laborer",
         )
-        self.assertEqual(track, TrackType.RANGER)
+        self.assertEqual(track, TrackType.MAGIC)
+
+    def test_select_optimal_track_prioritizes_civil_service_for_charismatic(self):
+        """Test that Civil Service is selected for charismatic characters."""
+        track, check = select_optimal_track(
+            str_mod=0,
+            dex_mod=0,
+            int_mod=0,
+            wis_mod=0,
+            chr_mod=2,
+            social_class="Commoner",
+            wealth_level="Moderate",
+            sub_class="Laborer",
+        )
+        self.assertEqual(track, TrackType.CIVIL_SERVICE)
 
     def test_roll_survivability_random_never_returns_5(self):
         """Test that Random track survivability never returns 5."""
@@ -1146,8 +1092,8 @@ class TestSkillTrack(unittest.TestCase):
         self.assertIsInstance(track.survivability, int)
         self.assertIsInstance(track.initial_skills, list)
 
-    def test_roll_skill_track_crafts_has_craft_type(self):
-        """Test that Crafts track includes craft type."""
+    def test_roll_skill_track_craft_has_craft_type(self):
+        """Test that Craft track includes craft type."""
         for seed in range(100):
             random.seed(seed)
             track = roll_skill_track(
@@ -1155,102 +1101,72 @@ class TestSkillTrack(unittest.TestCase):
                 dex_mod=-5,
                 int_mod=-5,
                 wis_mod=-5,
+                chr_mod=-5,
                 social_class="Commoner",
                 sub_class="Crafts",
                 wealth_level="Subsistence",
                 optimize=False,  # Random selection
             )
-            if track.track == TrackType.CRAFTS:
+            if track.track == TrackType.CRAFT:
                 self.assertIsNotNone(track.craft_type)
                 self.assertIsNotNone(track.craft_rolls)
-                break
-
-    def test_roll_skill_track_worker_bonus_for_poor(self):
-        """Test Worker track gives bonus Laborer for poor characters."""
-        for seed in range(100):
-            random.seed(seed)
-            track = roll_skill_track(
-                str_mod=-5,
-                dex_mod=-5,
-                int_mod=-5,
-                wis_mod=-5,
-                social_class="Commoner",
-                sub_class="Laborer",
-                wealth_level="Subsistence",
-                optimize=False,
-            )
-            if track.track == TrackType.WORKER:
-                self.assertIn("Laborer (bonus)", track.initial_skills)
                 break
 
     def test_skill_track_str_representation(self):
         """Test string representation of SkillTrack."""
         track = SkillTrack(
-            track=TrackType.ARMY,
+            track=TrackType.CAMPAIGNER,
             acceptance_check=AcceptanceCheck(
-                track=TrackType.ARMY,
+                track=TrackType.CAMPAIGNER,
                 accepted=True,
-                roll=9,
-                target=8,
-                modifiers={"STR": 1, "DEX": 1},
-                reason="Total 11 ≥ 8",
+                roll=None,
+                target=None,
+                modifiers={},
+                reason="No requirements",
             ),
             survivability=5,
             survivability_roll=None,
-            initial_skills=["Sword +1 to hit", "Sword +1 parry"],
+            initial_skills=["Weapon Parry", "Weapon"],
             craft_type=None,
             craft_rolls=None,
         )
         result = str(track)
-        self.assertIn("Army", result)
+        self.assertIn("Campaigner", result)
         self.assertIn("Survivability: 5", result)
-        self.assertIn("Sword", result)
-
-    def test_acceptance_check_str_with_roll(self):
-        """Test AcceptanceCheck string with roll."""
-        check = AcceptanceCheck(
-            track=TrackType.ARMY,
-            accepted=True,
-            roll=9,
-            target=8,
-            modifiers={"STR": 2, "DEX": 1},
-            reason="Total 12 ≥ 8",
-        )
-        result = str(check)
-        self.assertIn("Army", result)
-        self.assertIn("Accepted", result)
-        self.assertIn("9", result)
+        self.assertIn("Weapon", result)
 
     def test_acceptance_check_str_without_roll(self):
         """Test AcceptanceCheck string without roll."""
         check = AcceptanceCheck(
-            track=TrackType.OFFICER,
+            track=TrackType.MAGIC,
             accepted=True,
             roll=None,
             target=None,
-            modifiers={},
-            reason="Rich wealth level",
+            modifiers={"INT": 2, "WIS": 1},
+            reason="Has INT or WIS bonus",
         )
         result = str(check)
-        self.assertIn("Officer", result)
-        self.assertIn("Rich", result)
+        self.assertIn("Magic", result)
+        self.assertIn("INT", result)
 
 
 class TestPriorExperience(unittest.TestCase):
     """Test prior experience generation."""
 
     def test_track_yearly_skills_defined(self):
-        """Test that yearly skills are defined for all tracks."""
+        """Test that yearly skills are defined for most tracks (Random has none)."""
         for track in TrackType:
             self.assertIn(track, TRACK_YEARLY_SKILLS)
-            self.assertGreater(len(TRACK_YEARLY_SKILLS[track]), 0)
+            # Random track may have empty skills (picks from others)
+            if track != TrackType.RANDOM:
+                self.assertGreater(len(TRACK_YEARLY_SKILLS[track]), 0)
 
     def test_roll_yearly_skill_returns_skill(self):
         """Test that roll_yearly_skill returns a valid skill."""
         random.seed(42)
-        skill, roll = roll_yearly_skill(TrackType.ARMY, 0)
+        skill, roll = roll_yearly_skill(TrackType.CAMPAIGNER, 0)
         self.assertIsInstance(skill, str)
-        self.assertIn(skill, TRACK_YEARLY_SKILLS[TrackType.ARMY])
+        self.assertIn(skill, TRACK_YEARLY_SKILLS[TrackType.CAMPAIGNER])
         self.assertGreaterEqual(roll, 1)
         self.assertLessEqual(roll, 12)
 
@@ -1300,28 +1216,28 @@ class TestPriorExperience(unittest.TestCase):
         """Test that roll_prior_experience returns a PriorExperience object."""
         random.seed(42)
         skill_track = SkillTrack(
-            track=TrackType.ARMY,
+            track=TrackType.CAMPAIGNER,
             acceptance_check=None,
             survivability=5,
             survivability_roll=None,
-            initial_skills=["Sword +1 to hit", "Sword +1 parry"],
+            initial_skills=["Weapon Parry", "Weapon"],
             craft_type=None,
             craft_rolls=None,
         )
         experience = roll_prior_experience(skill_track, years=5)
         self.assertIsInstance(experience, PriorExperience)
         self.assertEqual(experience.starting_age, 16)
-        self.assertEqual(experience.track, TrackType.ARMY)
+        self.assertEqual(experience.track, TrackType.CAMPAIGNER)
 
     def test_prior_experience_skill_points_match_years(self):
         """Test that skill points equal years served (if survived)."""
         random.seed(42)
         skill_track = SkillTrack(
-            track=TrackType.CRAFTS,  # Low survivability = 3, easy to survive
+            track=TrackType.CRAFT,  # Low survivability = 3, easy to survive
             acceptance_check=None,
             survivability=3,
             survivability_roll=None,
-            initial_skills=["Laborer"],
+            initial_skills=["Weapon"],
             craft_type=None,
             craft_rolls=None,
         )
@@ -1332,9 +1248,9 @@ class TestPriorExperience(unittest.TestCase):
     def test_prior_experience_includes_initial_skills(self):
         """Test that initial skills from track are included."""
         random.seed(42)
-        initial_skills = ["Sword +1 to hit", "Sword +1 parry"]
+        initial_skills = ["Weapon Parry", "Weapon"]
         skill_track = SkillTrack(
-            track=TrackType.ARMY,
+            track=TrackType.CAMPAIGNER,
             acceptance_check=None,
             survivability=3,
             survivability_roll=None,
@@ -1352,9 +1268,9 @@ class TestPriorExperience(unittest.TestCase):
         for seed in range(200):
             random.seed(seed)
             skill_track = SkillTrack(
-                track=TrackType.RANGER,  # Survivability 6
+                track=TrackType.MAGIC,  # Survivability 7
                 acceptance_check=None,
-                survivability=6,
+                survivability=7,
                 survivability_roll=None,
                 initial_skills=[],
                 craft_type=None,
@@ -1392,7 +1308,7 @@ class TestPriorExperience(unittest.TestCase):
         """Test that final age is calculated correctly."""
         random.seed(42)
         skill_track = SkillTrack(
-            track=TrackType.CRAFTS,
+            track=TrackType.CRAFT,
             acceptance_check=None,
             survivability=3,
             survivability_roll=None,
@@ -1407,7 +1323,7 @@ class TestPriorExperience(unittest.TestCase):
     def test_prior_experience_random_years(self):
         """Test that years=-1 gives random years (0-18)."""
         skill_track = SkillTrack(
-            track=TrackType.CRAFTS,
+            track=TrackType.CRAFT,
             acceptance_check=None,
             survivability=3,
             survivability_roll=None,
@@ -1427,7 +1343,7 @@ class TestPriorExperience(unittest.TestCase):
     def test_prior_experience_clamps_years(self):
         """Test that years are clamped to 0-18 range."""
         skill_track = SkillTrack(
-            track=TrackType.CRAFTS,
+            track=TrackType.CRAFT,
             acceptance_check=None,
             survivability=3,
             survivability_roll=None,
@@ -1450,8 +1366,8 @@ class TestPriorExperience(unittest.TestCase):
         """Test YearResult string representation."""
         result = YearResult(
             year=20,
-            track=TrackType.ARMY,
-            skill_gained="Tactics",
+            track=TrackType.CAMPAIGNER,
+            skill_gained="Weapon",
             skill_roll=4,
             skill_points=1,
             survivability_target=5,
@@ -1462,7 +1378,7 @@ class TestPriorExperience(unittest.TestCase):
         )
         result_str = str(result)
         self.assertIn("Year 20", result_str)
-        self.assertIn("Tactics", result_str)
+        self.assertIn("Weapon", result_str)
         self.assertIn("Survived", result_str)
         self.assertIn("+2", result_str)  # Modifier should be shown
         self.assertIn("=10", result_str)  # Total should be shown
@@ -1471,11 +1387,11 @@ class TestPriorExperience(unittest.TestCase):
         """Test YearResult string representation on death."""
         result = YearResult(
             year=22,
-            track=TrackType.RANGER,
-            skill_gained="Tracking",
+            track=TrackType.MAGIC,
+            skill_gained="Deceit",
             skill_roll=3,
             skill_points=1,
-            survivability_target=6,
+            survivability_target=7,
             survivability_roll=4,
             survivability_modifier=-2,
             survivability_total=2,
@@ -1491,11 +1407,11 @@ class TestPriorExperience(unittest.TestCase):
             starting_age=16,
             final_age=20,
             years_served=4,
-            track=TrackType.NAVY,
-            survivability_target=6,
+            track=TrackType.MERCHANT,
+            survivability_target=4,
             yearly_results=[],
             total_skill_points=4,
-            all_skills=["Swimming", "Sailing", "Navigation", "Rope Use"],
+            all_skills=["Weapon", "Weapon Parry", "Coins", "Deceit"],
             died=False,
             death_year=None,
             attribute_scores={
@@ -1516,10 +1432,10 @@ class TestPriorExperience(unittest.TestCase):
             },
         )
         result_str = str(experience)
-        self.assertIn("Navy", result_str)
+        self.assertIn("Merchant", result_str)
         self.assertIn("**Skills** (4)", result_str)
-        self.assertIn("Swimming", result_str)
-        self.assertIn("Survivability Target: 6+", result_str)
+        self.assertIn("Weapon", result_str)
+        self.assertIn("Survivability Target: 4+", result_str)
 
     def test_prior_experience_str_on_death(self):
         """Test PriorExperience string shows death."""
@@ -1527,11 +1443,11 @@ class TestPriorExperience(unittest.TestCase):
             starting_age=16,
             final_age=19,
             years_served=3,
-            track=TrackType.ARMY,
+            track=TrackType.CAMPAIGNER,
             survivability_target=5,
             yearly_results=[],
             total_skill_points=3,
-            all_skills=["Sword +1 to hit"],
+            all_skills=["Weapon Parry"],
             died=True,
             death_year=19,
         )
@@ -1545,16 +1461,16 @@ class TestPriorExperience(unittest.TestCase):
             starting_age=16,
             final_age=20,
             years_served=4,
-            track=TrackType.ARMY,
+            track=TrackType.CAMPAIGNER,
             survivability_target=5,
             yearly_results=[],
             total_skill_points=4,
-            all_skills=["Sword +1 to hit", "Sword +1 to hit", "Shield", "Tactics"],
+            all_skills=["Weapon Parry", "Weapon Parry", "Weapon", "Tracker"],
             died=False,
             death_year=None,
         )
         result_str = str(experience)
-        self.assertIn("Sword +1 to hit x2", result_str)
+        self.assertIn("Weapon Parry x2", result_str)
 
 
 class TestWealth(unittest.TestCase):

@@ -99,7 +99,11 @@ Attribute display variables (computed by view):
                 {% endif %}
                 <span class="modifier" data-computed="str_mod">({% if str_mod >= 0 %}+{% endif %}{{ str_mod|default:"0" }})</span>
                 {% if aging_penalties.str|default:0 %}
-                <span class="aging-penalty" title="Aging penalty">(Aging: -{{ aging_penalties.str }})</span>
+                <span class="adjusted-attr" title="Effective value after aging">
+                    <span class="arrow">→</span>
+                    <span data-computed="str_adjusted">{{ str_adjusted|default:char_data.attributes.STR }}</span>
+                    <span class="adj-mod" data-computed="str_adj_mod">({% if str_adj_mod >= 0 %}+{% endif %}{{ str_adj_mod|default:"0" }})</span>
+                </span>
                 {% endif %}
             </div>
             <div class="attr-box">
@@ -112,7 +116,11 @@ Attribute display variables (computed by view):
                 {% endif %}
                 <span class="modifier" data-computed="dex_mod">({% if dex_mod >= 0 %}+{% endif %}{{ dex_mod|default:"0" }})</span>
                 {% if aging_penalties.dex|default:0 %}
-                <span class="aging-penalty" title="Aging penalty">(Aging: -{{ aging_penalties.dex }})</span>
+                <span class="adjusted-attr" title="Effective value after aging">
+                    <span class="arrow">→</span>
+                    <span data-computed="dex_adjusted">{{ dex_adjusted|default:char_data.attributes.DEX }}</span>
+                    <span class="adj-mod" data-computed="dex_adj_mod">({% if dex_adj_mod >= 0 %}+{% endif %}{{ dex_adj_mod|default:"0" }})</span>
+                </span>
                 {% endif %}
             </div>
             <div class="attr-box">
@@ -125,7 +133,11 @@ Attribute display variables (computed by view):
                 {% endif %}
                 <span class="modifier" data-computed="int_mod">({% if int_mod >= 0 %}+{% endif %}{{ int_mod|default:"0" }})</span>
                 {% if aging_penalties.int|default:0 %}
-                <span class="aging-penalty" title="Aging penalty">(Aging: -{{ aging_penalties.int }})</span>
+                <span class="adjusted-attr" title="Effective value after aging">
+                    <span class="arrow">→</span>
+                    <span data-computed="int_adjusted">{{ int_adjusted|default:char_data.attributes.INT }}</span>
+                    <span class="adj-mod" data-computed="int_adj_mod">({% if int_adj_mod >= 0 %}+{% endif %}{{ int_adj_mod|default:"0" }})</span>
+                </span>
                 {% endif %}
             </div>
             <div class="attr-box">
@@ -138,7 +150,11 @@ Attribute display variables (computed by view):
                 {% endif %}
                 <span class="modifier" data-computed="wis_mod">({% if wis_mod >= 0 %}+{% endif %}{{ wis_mod|default:"0" }})</span>
                 {% if aging_penalties.wis|default:0 %}
-                <span class="aging-penalty" title="Aging penalty">(Aging: -{{ aging_penalties.wis }})</span>
+                <span class="adjusted-attr" title="Effective value after aging">
+                    <span class="arrow">→</span>
+                    <span data-computed="wis_adjusted">{{ wis_adjusted|default:char_data.attributes.WIS }}</span>
+                    <span class="adj-mod" data-computed="wis_adj_mod">({% if wis_adj_mod >= 0 %}+{% endif %}{{ wis_adj_mod|default:"0" }})</span>
+                </span>
                 {% endif %}
             </div>
             <div class="attr-box">
@@ -151,7 +167,11 @@ Attribute display variables (computed by view):
                 {% endif %}
                 <span class="modifier" data-computed="con_mod">({% if con_mod >= 0 %}+{% endif %}{{ con_mod|default:"0" }})</span>
                 {% if aging_penalties.con|default:0 %}
-                <span class="aging-penalty" title="Aging penalty">(Aging: -{{ aging_penalties.con }})</span>
+                <span class="adjusted-attr" title="Effective value after aging">
+                    <span class="arrow">→</span>
+                    <span data-computed="con_adjusted">{{ con_adjusted|default:char_data.attributes.CON }}</span>
+                    <span class="adj-mod" data-computed="con_adj_mod">({% if con_adj_mod >= 0 %}+{% endif %}{{ con_adj_mod|default:"0" }})</span>
+                </span>
                 {% endif %}
             </div>
             <div class="attr-box">
@@ -192,7 +212,9 @@ Attribute display variables (computed by view):
         <div class="field-row">
             <label>Height:</label>
             {% if editable %}
-            <input type="text" data-field="height" value="{{ char_data.height|default:'' }}">
+            <input type="text" data-field="height" value="{{ char_data.height|default:'' }}"
+                   inputmode="numeric" pattern="[0-9'\".\s]+" class="numeric-field"
+                   placeholder="e.g., 5'8&quot; or 68">
             {% else %}
             <span class="field-value">{{ char_data.height|default:'-' }}</span>
             {% endif %}
@@ -200,7 +222,9 @@ Attribute display variables (computed by view):
         <div class="field-row">
             <label>Weight:</label>
             {% if editable %}
-            <input type="text" data-field="weight" value="{{ char_data.weight|default:'' }}">
+            <input type="text" data-field="weight" value="{{ char_data.weight|default:'' }}"
+                   inputmode="numeric" pattern="[0-9.\s]+" class="numeric-field"
+                   placeholder="e.g., 150 or 10.5">
             {% else %}
             <span class="field-value">{{ char_data.weight|default:'-' }}</span>
             {% endif %}
@@ -253,6 +277,33 @@ Attribute display variables (computed by view):
             {% endif %}
         </div>
     </div>
+
+    {% if char_data.generation_log %}
+    <!-- Generation Log Section (Character Creation Rolls) -->
+    <div class="sheet-section generation-log-section">
+        <h2>Character Generation Log</h2>
+        <div class="generation-log">
+            {% regroup char_data.generation_log by type as log_by_type %}
+            {% for type_group in log_by_type %}
+            <div class="log-group">
+                <h3>{{ type_group.grouper|title }}</h3>
+                <ul class="log-entries">
+                    {% for entry in type_group.list %}
+                    <li class="log-entry">
+                        <span class="log-name">{{ entry.name }}:</span>
+                        <span class="log-rolls">
+                            {% for roll in entry.rolls %}{{ roll }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                        </span>
+                        <span class="log-arrow">&rarr;</span>
+                        <span class="log-result">{{ entry.result }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Skills Section (separate div as requested) -->
     <div class="sheet-section skills-section">
@@ -793,6 +844,23 @@ Attribute display variables (computed by view):
     color: #666;
 }
 
+.attr-box .adjusted-attr {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.9em;
+    color: #c44;
+}
+
+.attr-box .adjusted-attr .arrow {
+    color: #999;
+    margin-right: 3px;
+}
+
+.attr-box .adjusted-attr .adj-mod {
+    font-size: 0.85em;
+    color: #966;
+}
+
 /* Derived stats */
 .derived-stats {
     display: flex;
@@ -1034,6 +1102,64 @@ Attribute display variables (computed by view):
     font-size: 0.85em;
     display: block;
     margin-top: 2px;
+}
+
+/* Generation Log Section */
+.generation-log-section {
+    background: #fafafa;
+}
+
+.generation-log {
+    font-size: 0.9em;
+}
+
+.generation-log .log-group {
+    margin-bottom: 12px;
+}
+
+.generation-log .log-group h3 {
+    font-size: 0.95em;
+    color: #555;
+    margin: 0 0 6px 0;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #ddd;
+}
+
+.generation-log .log-entries {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 10px;
+}
+
+.generation-log .log-entry {
+    padding: 3px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: baseline;
+}
+
+.generation-log .log-name {
+    font-weight: 600;
+    color: #333;
+    min-width: 80px;
+}
+
+.generation-log .log-rolls {
+    color: #666;
+    font-family: monospace;
+    background: #eee;
+    padding: 1px 5px;
+    border-radius: 3px;
+}
+
+.generation-log .log-arrow {
+    color: #999;
+}
+
+.generation-log .log-result {
+    color: #2a6496;
+    font-weight: 500;
 }
 
 /* Notes */
@@ -1564,6 +1690,16 @@ var CharacterSheet = (function() {
         return result;
     }
 
+    function validateNumericField(element) {
+        // Allow only numbers, spaces, periods, and height notation (' and ")
+        var field = element.dataset.field;
+        var allowedPattern = field === 'height' ? /[^0-9'"\s.]/g : /[^0-9\s.]/g;
+        var cleaned = element.value.replace(allowedPattern, '');
+        if (cleaned !== element.value) {
+            element.value = cleaned;
+        }
+    }
+
     function showStatus(element, status) {
         element.classList.remove('saving', 'saved', 'error');
         if (status) {
@@ -1633,7 +1769,8 @@ var CharacterSheet = (function() {
                         }
                         var el = container.querySelector('[data-computed="' + key + '"]');
                         if (el) {
-                            if (key.endsWith('_mod')) {
+                            if (key.endsWith('_mod') || key.endsWith('_adj_mod')) {
+                                // Format modifiers with +/- prefix
                                 var mod = result.computed[key];
                                 el.textContent = '(' + (mod >= 0 ? '+' : '') + mod + ')';
                             } else {
@@ -1903,6 +2040,20 @@ var CharacterSheet = (function() {
 
         // Initialize all editable fields
         container.querySelectorAll('input[data-field], select[data-field], textarea[data-field]').forEach(function(input) {
+            // For attribute inputs, select all text on focus for easy replacement
+            if (input.dataset.attr === 'true') {
+                input.addEventListener('focus', function() {
+                    this.select();
+                });
+            }
+
+            // For numeric fields (height, weight), strip non-numeric characters
+            if (input.classList.contains('numeric-field')) {
+                input.addEventListener('input', function() {
+                    validateNumericField(this);
+                });
+            }
+
             input.addEventListener('input', function() {
                 if (this.dataset.attr === 'true') {
                     validateAttributeInput(this);

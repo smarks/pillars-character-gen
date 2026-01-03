@@ -107,7 +107,7 @@ class Character:
         location: Where character grew up (affects literacy and skills)
         literacy: Whether character can read/write
         wealth: Starting money
-        skill_track: Career path (Ranger, Army, Magic, etc.) - None until selected
+        skill_track: Career path (Merchant, Campaigner, Magic, etc.) - None until selected
         prior_experience: Years of experience before play - None until added
 
     Example:
@@ -115,7 +115,7 @@ class Character:
         char = generate_character(skip_track=True)
 
         # Generate complete character with track and experience
-        char = generate_character(years=5, chosen_track=TrackType.RANGER)
+        char = generate_character(years=5, chosen_track=TrackType.CAMPAIGNER)
     """
 
     attributes: CharacterAttributes

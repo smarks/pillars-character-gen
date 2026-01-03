@@ -44,13 +44,14 @@ def select_track(request):
     dex_mod = request.session.get("pending_dex_mod", 0)
     int_mod = request.session.get("pending_int_mod", 0)
     wis_mod = request.session.get("pending_wis_mod", 0)
+    chr_mod = request.session.get("pending_chr_mod", 0)
     social_class = request.session.get("pending_social_class", "Commoner")
     sub_class = request.session.get("pending_sub_class", "Laborer")
     wealth_level = request.session.get("pending_wealth_level", "Moderate")
 
     # Get track availability
     track_availability = get_track_availability(
-        str_mod, dex_mod, int_mod, wis_mod, social_class, wealth_level
+        str_mod, dex_mod, int_mod, wis_mod, chr_mod, social_class, wealth_level
     )
     track_info = build_track_info(track_availability)
 

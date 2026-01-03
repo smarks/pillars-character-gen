@@ -30,6 +30,9 @@ from .serialization import (
     build_final_str_repr,
     store_current_character,
 )
+from ._character_helpers import (
+    calculate_adjusted_attributes,
+)
 
 
 # =============================================================================
@@ -231,6 +234,7 @@ def _build_index_context(request, character, char_data):
             mods["dex"],
             mods["int"],
             mods["wis"],
+            mods["chr"],
             social_class,
             wealth_level,
         )
@@ -265,6 +269,9 @@ def _build_index_context(request, character, char_data):
         "con": aging.get("con", 0),
     }
 
+    # Calculate adjusted attribute values (base - aging penalties)
+    adjusted_attrs = calculate_adjusted_attributes(char_data or {})
+
     # Get base_age (user's starting age before experience, defaults to 16)
     base_age = char_data.get("base_age", 16) if char_data else 16
 
@@ -296,6 +303,19 @@ def _build_index_context(request, character, char_data):
         "wis_mod": mods["wis"],
         "con_mod": mods["con"],
         "chr_mod": mods["chr"],
+        # Adjusted values (after aging)
+        "str_adjusted": adjusted_attrs.get("str_adjusted"),
+        "dex_adjusted": adjusted_attrs.get("dex_adjusted"),
+        "int_adjusted": adjusted_attrs.get("int_adjusted"),
+        "wis_adjusted": adjusted_attrs.get("wis_adjusted"),
+        "con_adjusted": adjusted_attrs.get("con_adjusted"),
+        "chr_adjusted": adjusted_attrs.get("chr_adjusted"),
+        "str_adj_mod": adjusted_attrs.get("str_adj_mod"),
+        "dex_adj_mod": adjusted_attrs.get("dex_adj_mod"),
+        "int_adj_mod": adjusted_attrs.get("int_adj_mod"),
+        "wis_adj_mod": adjusted_attrs.get("wis_adj_mod"),
+        "con_adj_mod": adjusted_attrs.get("con_adj_mod"),
+        "chr_adj_mod": adjusted_attrs.get("chr_adj_mod"),
         "equipment_json": equipment_json,
         **movement,
     }

@@ -31,7 +31,7 @@ class TestCharacterClass(unittest.TestCase):
 
     def test_character_died_with_prior_experience_alive(self):
         """Test that died returns False when character survived."""
-        char = generate_character(years=1, chosen_track=TrackType.WORKER)
+        char = generate_character(years=1, chosen_track=TrackType.LABORER)
         if char.prior_experience and not char.prior_experience.died:
             self.assertFalse(char.died)
 
@@ -42,7 +42,7 @@ class TestCharacterClass(unittest.TestCase):
 
     def test_character_age_with_prior_experience(self):
         """Test that age reflects years of experience."""
-        char = generate_character(years=5, chosen_track=TrackType.WORKER)
+        char = generate_character(years=5, chosen_track=TrackType.LABORER)
         if char.prior_experience and not char.prior_experience.died:
             self.assertEqual(char.age, char.prior_experience.final_age)
 
@@ -58,12 +58,12 @@ class TestCharacterClass(unittest.TestCase):
 
     def test_character_str_with_track_and_experience(self):
         """Test __str__ with skill track and prior experience."""
-        char = generate_character(years=2, chosen_track=TrackType.WORKER)
+        char = generate_character(years=2, chosen_track=TrackType.LABORER)
         result = str(char)
         self.assertIn("Pillars Character", result)
         self.assertIn("STR:", result)
         # Should have skill track info
-        self.assertIn("Worker", result)
+        self.assertIn("Laborer", result)
 
     def test_character_str_with_dead_character(self):
         """Test __str__ shows death message when character died."""
@@ -101,8 +101,8 @@ class TestGenerateCharacterFunction(unittest.TestCase):
 
     def test_generate_character_with_chosen_track(self):
         """Test character generation with a chosen track."""
-        char = generate_character(years=3, chosen_track=TrackType.NAVY)
-        self.assertEqual(char.skill_track.track, TrackType.NAVY)
+        char = generate_character(years=3, chosen_track=TrackType.MERCHANT)
+        self.assertEqual(char.skill_track.track, TrackType.MERCHANT)
         self.assertIsNotNone(char.prior_experience)
         if not char.died:
             self.assertEqual(char.prior_experience.years_served, 3)
@@ -143,19 +143,20 @@ class TestGenerateCharacterFunction(unittest.TestCase):
     def test_generate_character_with_years(self):
         """Test character generation with various years."""
         for years in [0, 1, 5, 10]:
-            char = generate_character(years=years, chosen_track=TrackType.WORKER)
+            char = generate_character(years=years, chosen_track=TrackType.LABORER)
             if not char.died and char.prior_experience:
                 self.assertEqual(char.prior_experience.years_served, years)
 
     def test_generate_character_all_tracks(self):
-        """Test character generation can use all track types."""
+        """Test character generation can use all track types (no-requirement tracks)."""
         for track in [
-            TrackType.WORKER,
-            TrackType.ARMY,
-            TrackType.NAVY,
-            TrackType.RANGER,
-            TrackType.CRAFTS,
             TrackType.MERCHANT,
+            TrackType.CAMPAIGNER,
+            TrackType.LABORER,
+            TrackType.UNDERWORLD,
+            TrackType.CRAFT,
+            TrackType.HUNTER_GATHERER,
+            TrackType.RANDOM,
         ]:
             char = generate_character(years=1, chosen_track=track)
             self.assertEqual(char.skill_track.track, track)
@@ -178,7 +179,7 @@ class TestCharacterIntegration(unittest.TestCase):
 
     def test_character_has_all_required_attributes(self):
         """Test that generated character has all expected fields."""
-        char = generate_character(years=1, chosen_track=TrackType.ARMY)
+        char = generate_character(years=1, chosen_track=TrackType.CAMPAIGNER)
 
         # Check all basic attributes exist
         self.assertIsInstance(char.attributes, CharacterAttributes)

@@ -202,6 +202,138 @@ def serialize_character(character, preserve_data=None):
         "str_repr": str(character),
     }
 
+    # Store generation rolls log
+    generation_log = []
+
+    # Attribute rolls
+    if hasattr(character.attributes, "rolls") and character.attributes.rolls:
+        for attr, rolls in character.attributes.rolls.items():
+            generation_log.append(
+                {
+                    "type": "attribute",
+                    "name": attr,
+                    "rolls": rolls,
+                    "result": getattr(character.attributes, attr),
+                }
+            )
+
+    # Fatigue and Body rolls
+    if character.attributes.fatigue_roll:
+        generation_log.append(
+            {
+                "type": "derived",
+                "name": "Fatigue",
+                "rolls": [character.attributes.fatigue_roll],
+                "result": character.attributes.fatigue_points,
+            }
+        )
+    if character.attributes.body_roll:
+        generation_log.append(
+            {
+                "type": "derived",
+                "name": "Body",
+                "rolls": [character.attributes.body_roll],
+                "result": character.attributes.body_points,
+            }
+        )
+
+    # Appearance roll
+    if hasattr(character.appearance, "rolls"):
+        generation_log.append(
+            {
+                "type": "physical",
+                "name": "Appearance",
+                "rolls": list(character.appearance.rolls),
+                "result": character.appearance.description,
+            }
+        )
+
+    # Height roll
+    if hasattr(character.height, "rolls"):
+        generation_log.append(
+            {
+                "type": "physical",
+                "name": "Height",
+                "rolls": list(character.height.rolls),
+                "result": (
+                    character.height.imperial
+                    if hasattr(character.height, "imperial")
+                    else str(character.height)
+                ),
+            }
+        )
+
+    # Weight roll
+    if hasattr(character.weight, "rolls"):
+        generation_log.append(
+            {
+                "type": "physical",
+                "name": "Weight",
+                "rolls": list(character.weight.rolls),
+                "result": (
+                    f"{character.weight.total_stones:.1f} stones"
+                    if hasattr(character.weight, "total_stones")
+                    else str(character.weight)
+                ),
+            }
+        )
+
+    # Provenance roll
+    if hasattr(character.provenance, "main_roll"):
+        prov_rolls = [character.provenance.main_roll]
+        if character.provenance.sub_roll is not None:
+            prov_rolls.append(character.provenance.sub_roll)
+        if character.provenance.craft_roll is not None:
+            prov_rolls.append(character.provenance.craft_roll)
+        prov_result = character.provenance.social_class
+        if character.provenance.sub_class:
+            prov_result += f" - {character.provenance.sub_class}"
+        generation_log.append(
+            {
+                "type": "background",
+                "name": "Provenance",
+                "rolls": prov_rolls,
+                "result": prov_result,
+            }
+        )
+
+    # Location roll
+    if hasattr(character.location, "roll"):
+        generation_log.append(
+            {
+                "type": "background",
+                "name": "Location",
+                "rolls": [character.location.roll],
+                "result": character.location.location_type,
+            }
+        )
+
+    # Wealth roll
+    if hasattr(character.wealth, "roll"):
+        generation_log.append(
+            {
+                "type": "background",
+                "name": "Wealth",
+                "rolls": [character.wealth.roll],
+                "result": character.wealth.wealth_level,
+            }
+        )
+
+    # Literacy roll
+    if hasattr(character.literacy, "roll"):
+        generation_log.append(
+            {
+                "type": "background",
+                "name": "Literacy",
+                "rolls": [character.literacy.roll],
+                "result": (
+                    "Literate" if character.literacy.is_literate else "Illiterate"
+                ),
+            }
+        )
+
+    data["generation_log"] = generation_log
+
     # Add default equipment if not already present
     data["equipment"] = get_default_equipment()
 
@@ -215,6 +347,10 @@ def serialize_character(character, preserve_data=None):
             data["skill_points_data"] = preserve_data["skill_points_data"]
         if "equipment" in preserve_data:
             data["equipment"] = preserve_data["equipment"]
+        # Preserve generation_log if character object doesn't have roll data
+        # (e.g., when updating a deserialized MinimalCharacter)
+        if not data.get("generation_log") and "generation_log" in preserve_data:
+            data["generation_log"] = preserve_data["generation_log"]
 
     # Only include skill_track if it exists
     if character.skill_track is not None:

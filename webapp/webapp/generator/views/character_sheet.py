@@ -41,6 +41,7 @@ from ._character_helpers import (
     deallocate_skill_point,
     recalculate_derived,
     calculate_track_info,
+    calculate_adjusted_attributes,
 )
 
 
@@ -88,12 +89,13 @@ def character_sheet(request, char_id):
     dex_mod = get_attribute_modifier(attrs.get("DEX", 10))
     int_mod = get_attribute_modifier(attrs.get("INT", 10))
     wis_mod = get_attribute_modifier(attrs.get("WIS", 10))
+    chr_mod = get_attribute_modifier(attrs.get("CHR", 10))
 
     social_class = char_data.get("provenance_social_class", "Commoner")
     wealth_level = char_data.get("wealth_level", "Moderate")
 
     track_availability = get_track_availability(
-        str_mod, dex_mod, int_mod, wis_mod, social_class, wealth_level
+        str_mod, dex_mod, int_mod, wis_mod, chr_mod, social_class, wealth_level
     )
     track_info = build_track_info(track_availability)
 
@@ -106,6 +108,9 @@ def character_sheet(request, char_id):
         "wis": aging.get("wis", 0),
         "con": aging.get("con", 0),
     }
+
+    # Calculate adjusted attributes (base - aging penalties)
+    adjusted_attrs = calculate_adjusted_attributes(char_data)
 
     # Serialize equipment data for JavaScript
     equipment_json = mark_safe(json.dumps(char_data.get("equipment", {})))
@@ -134,6 +139,19 @@ def character_sheet(request, char_id):
             "wis_mod": get_attribute_modifier(attrs.get("WIS", 10)),
             "con_mod": get_attribute_modifier(attrs.get("CON", 10)),
             "chr_mod": get_attribute_modifier(attrs.get("CHR", 10)),
+            # Adjusted values (after aging)
+            "str_adjusted": adjusted_attrs.get("str_adjusted"),
+            "dex_adjusted": adjusted_attrs.get("dex_adjusted"),
+            "int_adjusted": adjusted_attrs.get("int_adjusted"),
+            "wis_adjusted": adjusted_attrs.get("wis_adjusted"),
+            "con_adjusted": adjusted_attrs.get("con_adjusted"),
+            "chr_adjusted": adjusted_attrs.get("chr_adjusted"),
+            "str_adj_mod": adjusted_attrs.get("str_adj_mod"),
+            "dex_adj_mod": adjusted_attrs.get("dex_adj_mod"),
+            "int_adj_mod": adjusted_attrs.get("int_adj_mod"),
+            "wis_adj_mod": adjusted_attrs.get("wis_adj_mod"),
+            "con_adj_mod": adjusted_attrs.get("con_adj_mod"),
+            "chr_adj_mod": adjusted_attrs.get("chr_adj_mod"),
             "yearly_results": yearly_results,
             "years_served": years_served,
             "current_age": char_data.get("base_age", 16) + years_served,

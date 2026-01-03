@@ -9,16 +9,16 @@ from pillars.attributes import TrackType
 MIN_EXPERIENCE_YEARS = 1
 MAX_EXPERIENCE_YEARS = 50
 
-# Track order for display
+# Track order for display (from CSV: references/skills.csv)
 TRACK_DISPLAY_ORDER = [
-    TrackType.OFFICER,
-    TrackType.RANGER,
     TrackType.MAGIC,
-    TrackType.NAVY,
-    TrackType.ARMY,
+    TrackType.CIVIL_SERVICE,
     TrackType.MERCHANT,
-    TrackType.CRAFTS,
-    TrackType.WORKER,
+    TrackType.CAMPAIGNER,
+    TrackType.UNDERWORLD,
+    TrackType.CRAFT,
+    TrackType.HUNTER_GATHERER,
+    TrackType.LABORER,
     TrackType.RANDOM,
 ]
 
@@ -202,29 +202,41 @@ def get_attribute_modifier(value):
     """Get modifier for an attribute value.
 
     For values 1-18: use standard ATTRIBUTE_MODIFIERS table.
-    For values > 18 (including decimal notation): calculate based on effective value.
-    18.10-18.100 counts as 18, 19.10-19.100 counts as 19, etc.
+    For values > 18: +5 base + 1 per point over 18 (19=+6, 20=+7, etc.)
+    For values < 3: -5 (floor)
+    Supports decimal notation: "18.20" -> base 18, "19.50" -> base 19.
     """
     from pillars.attributes import ATTRIBUTE_MODIFIERS
 
-    if isinstance(value, int):
-        return ATTRIBUTE_MODIFIERS.get(value, 0)
+    # Get base integer value
+    if isinstance(value, str):
+        if "." in value:
+            # Parse decimal notation: "18.20" -> base 18
+            try:
+                base = int(value.split(".")[0])
+            except ValueError:
+                return 0
+        else:
+            try:
+                base = int(value)
+            except ValueError:
+                return 0
+    elif isinstance(value, (int, float)):
+        base = int(value)
+    else:
+        return 0
 
-    if isinstance(value, str) and "." in value:
-        # Parse decimal notation: "18.20" -> base 18
-        try:
-            base = int(value.split(".")[0])
-            # For values > 18, each whole number adds +1 to the modifier
-            # Base modifier at 18 is +5, so 19 is +6, 20 is +7, etc.
-            if base >= 18:
-                return 5 + (base - 18)
-        except ValueError:
-            pass
+    # Look up in table for standard range
+    if base in ATTRIBUTE_MODIFIERS:
+        return ATTRIBUTE_MODIFIERS[base]
 
-    # Try parsing as int
-    try:
-        return ATTRIBUTE_MODIFIERS.get(int(value), 0)
-    except (ValueError, TypeError):
+    # Handle values outside standard range
+    if base < 3:
+        return -5  # Floor
+    elif base > 18:
+        # Each point above 18 adds +1 to the +5 base
+        return 5 + (base - 18)
+    else:
         return 0
 
 
