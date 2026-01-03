@@ -17,6 +17,7 @@ from pillars.attributes import (
     MagicSchool,
     roll_skill_track,
     create_skill_track_for_choice,
+    get_aging_effects_for_age,
 )
 
 from ..models import SavedCharacter
@@ -115,9 +116,24 @@ def get_or_create_skill_track(char_data, character, track_mode, chosen_track_nam
 
 
 def roll_experience_years(
-    skill_track, years, existing_years, existing_skills, total_modifier, aging_effects
+    skill_track,
+    years,
+    existing_years,
+    existing_skills,
+    total_modifier,
+    aging_effects,
+    base_age=16,
 ):
     """Roll experience for the specified number of years.
+
+    Args:
+        skill_track: The character's skill track
+        years: Number of years to roll
+        existing_years: Years of experience already completed
+        existing_skills: Skills already gained
+        total_modifier: Sum of all attribute modifiers
+        aging_effects: Current aging effects
+        base_age: Character's age before any prior experience (default 16)
 
     Returns:
         tuple: (new_skills, new_yearly_results, died, updated_aging_effects)
@@ -133,6 +149,7 @@ def roll_experience_years(
             year_index=year_index,
             total_modifier=total_modifier,
             aging_effects=aging_effects,
+            starting_age=base_age,
         )
 
         new_skills.append(year_result.skill_gained)
@@ -263,6 +280,19 @@ def handle_add_experience(request):
             if existing_name:
                 char_data["name"] = existing_name
 
+        # Capture manually entered age as base_age (before any prior experience)
+        char_age = request.POST.get("char_age", "").strip()
+        if char_age:
+            try:
+                age_val = int(char_age)
+                # Store the user's age minus any existing experience years
+                existing_years = char_data.get("interactive_years", 0)
+                # base_age is the age before any prior experience was added
+                char_data["base_age"] = age_val - existing_years
+                char_data["age"] = age_val
+            except ValueError:
+                pass
+
     character = deserialize_character(char_data)
 
     # Get form parameters
@@ -290,14 +320,22 @@ def handle_add_experience(request):
     if died:
         return redirect("generator")
 
+    # Get base_age (user's manually set age before experience, defaults to 16)
+    base_age = char_data.get("base_age", 16)
+
     # Reconstruct aging effects
-    aging_effects = AgingEffects(
-        str_penalty=existing_aging.get("str", 0),
-        dex_penalty=existing_aging.get("dex", 0),
-        int_penalty=existing_aging.get("int", 0),
-        wis_penalty=existing_aging.get("wis", 0),
-        con_penalty=existing_aging.get("con", 0),
-    )
+    if existing_years == 0 and base_age > 16:
+        # First time adding experience with custom age - calculate aging from base_age
+        aging_effects = get_aging_effects_for_age(base_age)
+    else:
+        # Continue with existing aging effects
+        aging_effects = AgingEffects(
+            str_penalty=existing_aging.get("str", 0),
+            dex_penalty=existing_aging.get("dex", 0),
+            int_penalty=existing_aging.get("int", 0),
+            wis_penalty=existing_aging.get("wis", 0),
+            con_penalty=existing_aging.get("con", 0),
+        )
 
     # Add initial skills if this is the first experience
     if existing_years == 0:
@@ -312,6 +350,7 @@ def handle_add_experience(request):
         existing_skills,
         total_modifier,
         aging_effects,
+        base_age=base_age,
     )
 
     # Update session

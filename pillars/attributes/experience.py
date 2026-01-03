@@ -204,6 +204,7 @@ def roll_single_year(
     year_index: int,
     total_modifier: int,
     aging_effects: AgingEffects,
+    starting_age: int = 16,
 ) -> YearResult:
     """
     Roll a single year of prior experience.
@@ -213,18 +214,19 @@ def roll_single_year(
         year_index: Which year of service (0-based)
         total_modifier: Sum of all attribute modifiers (before aging)
         aging_effects: Current aging effects (will be updated if crossing threshold)
+        starting_age: Character's age before any prior experience (default 16)
 
     Returns:
         YearResult for this year
     """
-    starting_age = 16
     current_age = starting_age + year_index
-    years_of_experience = year_index + 1
+    # For aging calculations, use effective years from the standard base age of 16
+    effective_years_of_experience = current_age - 16 + 1
     track = skill_track.track
     survivability = skill_track.survivability
 
-    # Check for aging effects this year
-    aging_this_year = aging_effects.apply_year(years_of_experience)
+    # Check for aging effects this year (based on actual age, not just experience years)
+    aging_this_year = aging_effects.apply_year(effective_years_of_experience)
     has_aging = any(v != 0 for v in aging_this_year.values())
 
     # Adjust modifier for aging penalties

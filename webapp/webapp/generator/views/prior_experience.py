@@ -309,6 +309,9 @@ def select_track(request):
     died = request.session.get("interactive_died", False)
     track_name = request.session.get("interactive_track_name", "")
 
+    # Get base_age from pending_char or default to 16
+    base_age = pending_char.get("base_age", 16) if pending_char else 16
+
     return render(
         request,
         "generator/select_track.html",
@@ -316,7 +319,7 @@ def select_track(request):
             "character": character,
             "track_info": track_info,
             "years_completed": years_completed,
-            "current_age": 16 + years_completed,
+            "current_age": base_age + years_completed,
             "skills": skills,
             "yearly_results": yearly_results,
             "died": died,
@@ -347,7 +350,8 @@ def interactive(request):
 
     # Reconstruct character for display
     character = deserialize_character(char_data)
-    current_age = 16 + years_completed
+    base_age = char_data.get("base_age", 16)
+    current_age = base_age + years_completed
     latest_result = None
 
     if request.method == "POST":
@@ -372,6 +376,7 @@ def interactive(request):
                 year_index=years_completed,
                 total_modifier=total_modifier,
                 aging_effects=aging_effects,
+                starting_age=base_age,
             )
 
             # Update session state
@@ -418,7 +423,7 @@ def interactive(request):
             request.session["interactive_yearly_results"] = yearly_results_data
 
             latest_result = year_result
-            current_age = 16 + years_completed
+            current_age = base_age + years_completed
 
         elif action == "stop":
             # Go back to generator to add more experience

@@ -263,12 +263,15 @@ def _build_index_context(request, character, char_data):
         "con": aging.get("con", 0),
     }
 
+    # Get base_age (user's starting age before experience, defaults to 16)
+    base_age = char_data.get("base_age", 16) if char_data else 16
+
     return {
         "character": character,
         "char_data": char_data or {},
         "years_completed": years_completed,
         "years_served": years_completed,
-        "current_age": 16 + years_completed,
+        "current_age": base_age + years_completed,
         "skills": skills,
         "aging_penalties": aging_penalties,
         "skills_with_details": skills_with_details,

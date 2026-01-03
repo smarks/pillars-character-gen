@@ -54,7 +54,8 @@ def generate_markdown_from_char_data(char_data, character_name="Unnamed Characte
 
     # Current Age
     years_served = char_data.get("interactive_years", 0)
-    current_age = 16 + years_served
+    base_age = char_data.get("base_age", 16)
+    current_age = base_age + years_served
     md += f"**Age:** {current_age}\n\n"
 
     # Death status
@@ -242,7 +243,7 @@ def generate_markdown_from_char_data(char_data, character_name="Unnamed Characte
 
         # Summary
         md += f"**Years of Experience:** {years_served}\n"
-        md += "**Starting Age:** 16\n"
+        md += f"**Starting Age:** {base_age}\n"
         md += f"**Current Age:** {current_age}\n"
 
         if char_data.get("skill_track"):

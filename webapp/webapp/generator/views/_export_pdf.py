@@ -87,7 +87,8 @@ def generate_pdf_from_char_data(char_data, character_name="Unnamed Character"):
     )
 
     years_served = char_data.get("interactive_years", 0)
-    current_age = 16 + years_served
+    base_age = char_data.get("base_age", 16)
+    current_age = base_age + years_served
     aging = char_data.get("interactive_aging", {})
 
     # Title and age
@@ -487,7 +488,7 @@ def generate_pdf_from_char_data(char_data, character_name="Unnamed Character"):
         story.append(Paragraph("Prior Experience", heading_style))
         story.append(
             Paragraph(
-                f"<b>Years:</b> {years_served} | <b>Starting Age:</b> 16 | <b>Current Age:</b> {current_age}",
+                f"<b>Years:</b> {years_served} | <b>Starting Age:</b> {base_age} | <b>Current Age:</b> {current_age}",
                 styles["Normal"],
             )
         )

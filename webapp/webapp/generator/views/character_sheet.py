@@ -134,7 +134,7 @@ def character_sheet(request, char_id):
             "chr_mod": get_attribute_modifier(attrs.get("CHR", 10)),
             "yearly_results": yearly_results,
             "years_served": years_served,
-            "current_age": 16 + years_served,
+            "current_age": char_data.get("base_age", 16) + years_served,
             "died": died,
             "track_info": track_info,
             "is_owner": is_owner,

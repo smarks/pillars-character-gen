@@ -228,6 +228,46 @@ class IndexViewTests(TestCase):
         self.assertEqual(response.context["current_age"], expected_age)
         self.assertEqual(response.context["years_completed"], years_added)
 
+    def test_manual_age_with_prior_experience(self):
+        """Test that manually setting age affects current age after adding experience."""
+        # First load to create character
+        response = self.client.get(reverse("generator"))
+        self.assertEqual(response.context["current_age"], 16)
+
+        # Add experience with a manually set age of 40
+        response = self.client.post(
+            reverse("generator"),
+            {
+                "action": "add_experience",
+                "years": 1,
+                "track_mode": "auto",
+                "char_age": "40",
+            },
+            follow=True,
+        )
+
+        # Age should be 40 + 1 = 41 (not 16 + 1 = 17)
+        years_completed = response.context["years_completed"]
+        self.assertEqual(years_completed, 1)
+        # The base age should be set to 40 before experience
+        # So current age = 40 + 1 = 41
+        self.assertEqual(response.context["current_age"], 41)
+
+        # Add more experience
+        response = self.client.post(
+            reverse("generator"),
+            {
+                "action": "add_experience",
+                "years": 2,
+                "track_mode": "auto",
+            },
+            follow=True,
+        )
+
+        # Age should now be 40 + 3 = 43 (base_age stays at 40)
+        years_completed = response.context["years_completed"]
+        self.assertEqual(response.context["current_age"], 40 + years_completed)
+
 
 class SelectTrackViewTests(TestCase):
     """Tests for the track selection view (legacy - not used in new UI)."""
