@@ -546,6 +546,13 @@ Attribute display variables (computed by view):
                 </thead>
                 <tbody id="{{ component_id|default:'cs' }}-weapons-tbody">
                 </tbody>
+                <tfoot id="{{ component_id|default:'cs' }}-weapons-tfoot">
+                    <tr class="total-row">
+                        <td colspan="5" style="text-align:right;font-weight:bold;">Total:</td>
+                        <td id="{{ component_id|default:'cs' }}-weapons-total-weight">0</td>
+                        <td colspan="5"></td>
+                    </tr>
+                </tfoot>
             </table>
             <div class="add-item-row">
                 <button type="button" class="btn-add-item" onclick="EncumbranceCalc.showAddForm('{{ component_id|default:'cs' }}', 'weapon')">+ Add Weapon</button>
@@ -571,6 +578,13 @@ Attribute display variables (computed by view):
                 </thead>
                 <tbody id="{{ component_id|default:'cs' }}-armour-tbody">
                 </tbody>
+                <tfoot id="{{ component_id|default:'cs' }}-armour-tfoot">
+                    <tr class="total-row">
+                        <td colspan="3" style="text-align:right;font-weight:bold;">Total:</td>
+                        <td id="{{ component_id|default:'cs' }}-armour-total-weight">0</td>
+                        <td colspan="5"></td>
+                    </tr>
+                </tfoot>
             </table>
             <div class="add-item-row">
                 <button type="button" class="btn-add-item" onclick="EncumbranceCalc.showAddForm('{{ component_id|default:'cs' }}', 'armour')">+ Add Armour</button>
@@ -595,6 +609,13 @@ Attribute display variables (computed by view):
                 </thead>
                 <tbody id="{{ component_id|default:'cs' }}-misc-tbody">
                 </tbody>
+                <tfoot id="{{ component_id|default:'cs' }}-misc-tfoot">
+                    <tr class="total-row">
+                        <td colspan="3" style="text-align:right;font-weight:bold;">Total:</td>
+                        <td id="{{ component_id|default:'cs' }}-misc-total-weight">0</td>
+                        <td colspan="4"></td>
+                    </tr>
+                </tfoot>
             </table>
             <div class="add-item-row">
                 <button type="button" class="btn-add-item" onclick="EncumbranceCalc.showAddForm('{{ component_id|default:'cs' }}', 'misc')">+ Add Item</button>
@@ -1244,6 +1265,16 @@ Attribute display variables (computed by view):
 
 .equipment-table tbody tr.not-equipped {
     color: #888;
+}
+
+.equipment-table tfoot .total-row {
+    background: #f0f0f0;
+    font-weight: bold;
+}
+
+.equipment-table tfoot .total-row td {
+    padding: 6px 8px;
+    border-top: 2px solid #999;
 }
 
 .equipment-table .btn-remove {
@@ -2302,10 +2333,29 @@ var EncumbranceCalc = (function() {
         });
     }
 
+    function updateCategoryTotals(componentId) {
+        var data = equipmentData[componentId] || getDefaultData();
+
+        // Calculate totals for each category
+        var categories = ['weapons', 'armour', 'misc'];
+        categories.forEach(function(cat) {
+            var items = data[cat] || [];
+            var totalWeight = 0;
+            items.forEach(function(item) {
+                totalWeight += parseFloat(item.weight) || 0;
+            });
+            var totalEl = document.getElementById(componentId + '-' + cat + '-total-weight');
+            if (totalEl) {
+                totalEl.textContent = totalWeight.toFixed(1);
+            }
+        });
+    }
+
     function renderAllTables(componentId) {
         renderWeaponsTable(componentId);
         renderArmourTable(componentId);
         renderMiscTable(componentId);
+        updateCategoryTotals(componentId);
     }
 
     function showAddForm(componentId, category) {

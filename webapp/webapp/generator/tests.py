@@ -146,17 +146,16 @@ class IndexViewTests(TestCase):
         # Character should be auto-generated and displayed
         self.assertContains(response, "Pillars Character")
 
-    def test_initial_character_has_no_skill_track_or_experience(self):
-        """Test that initial character does NOT show skill track or prior experience."""
+    def test_initial_character_shows_track_selection_but_no_experience(self):
+        """Test that initial character shows track selection but NOT prior experience log."""
         response = self.client.get(reverse("generator"))
         self.assertEqual(response.status_code, 200)
         # Character should have basic info
         self.assertContains(response, "Wealth:")
-        # But NOT skill track or prior experience
+        # Should show track selection panels
+        self.assertContains(response, "track-panel")
+        # But NOT prior experience log (only shown after experience is added)
         self.assertNotContains(response, "PRIOR EXPERIENCE")
-        self.assertNotContains(
-            response, "Track)"
-        )  # Would appear as "(Ranger Track)" etc.
 
     def test_index_has_control_buttons(self):
         """Test that index page has the control buttons."""

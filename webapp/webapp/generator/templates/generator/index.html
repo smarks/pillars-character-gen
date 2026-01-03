@@ -357,7 +357,7 @@
                 {% endfor %}
             </div>
 
-            <button type="submit" name="action" value="add_experience" class="btn primary" style="margin-top: 10px;">
+            <button type="submit" name="action" value="add_experience" id="add-experience-btn" class="btn primary" style="margin-top: 10px;">
                 Add {% if has_experience %}More {% endif %}Experience
             </button>
         </div>
@@ -397,6 +397,21 @@
 </form>
 
 <script>
+// Check if a track is selected and enable/disable Add Experience button
+function updateAddExperienceButton() {
+    var addBtn = document.getElementById('add-experience-btn');
+    if (!addBtn) return;
+
+    var selectedTrack = document.querySelector('input[name="chosen_track"]:checked');
+    if (selectedTrack) {
+        addBtn.disabled = false;
+        addBtn.title = '';
+    } else {
+        addBtn.disabled = true;
+        addBtn.title = 'Select a skill track first';
+    }
+}
+
 // Initialize CharacterSheet component for editing
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof CharacterSheet !== 'undefined') {
@@ -407,6 +422,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof EncumbranceCalc !== 'undefined') {
         EncumbranceCalc.init('gensheet');
     }
+
+    // Check Add Experience button state on load
+    updateAddExperienceButton();
 
     // Home link confirmation for non-authenticated users
     var homeLink = document.getElementById('home-link');
@@ -586,12 +604,17 @@ document.addEventListener('trackInfoUpdated', function(e) {
                         p.classList.remove('selected');
                     });
                     this.classList.add('selected');
+                    // Update Add Experience button state
+                    updateAddExperienceButton();
                 }
             });
         }
 
         trackPanels.appendChild(panel);
     });
+
+    // Update Add Experience button state after rebuilding tracks
+    updateAddExperienceButton();
 });
 </script>
 {% endblock %}
