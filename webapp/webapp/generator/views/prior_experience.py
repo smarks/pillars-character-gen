@@ -426,10 +426,14 @@ def interactive(request):
             current_age = base_age + years_completed
 
         elif action == "stop":
-            # Go back to generator to add more experience
+            # Go back to where we came from
             if "interactive_return_to_generator" in request.session:
                 del request.session["interactive_return_to_generator"]
             request.session.modified = True
+            # If we came from a saved character, redirect back to it
+            saved_char_id = request.session.get("current_saved_character_id")
+            if saved_char_id:
+                return redirect("character_sheet", char_id=saved_char_id)
             return redirect("generator")
 
         elif action == "new":

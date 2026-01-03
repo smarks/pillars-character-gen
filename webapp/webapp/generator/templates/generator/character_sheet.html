@@ -541,11 +541,25 @@ input.error, textarea.error {
                         <option value="3">3 years</option>
                         <option value="4">4 years</option>
                         <option value="5" selected>5 years</option>
+                        <option value="6">6 years</option>
+                        <option value="7">7 years</option>
+                        <option value="8">8 years</option>
+                        <option value="9">9 years</option>
+                        <option value="10">10 years</option>
                     </select>
+                    <label style="display: block; margin-top: 8px; font-size: 0.9em;">
+                        <input type="checkbox" name="interactive_mode" id="interactive-checkbox">
+                        Interactive Mode (year by year)
+                    </label>
                 </div>
                 <div id="aging-warning" class="warning-box" style="display: none; margin-bottom: 10px;">
                     <strong>Aging Warning!</strong>
-                    <p style="margin: 5px 0; font-size: 0.85em;">Adding <span id="aging-years"></span> years will result in aging penalties (age <span id="final-age"></span>).</p>
+                    <p style="margin: 5px 0; font-size: 0.85em;">Adding <span id="aging-years"></span> years will push your character past age 34, resulting in aging penalties:</p>
+                    <ul style="margin: 5px 0 5px 20px; font-size: 0.8em;">
+                        <li>Age 35: STR -1, DEX -1</li>
+                        <li>Age 39: CON -1</li>
+                        <li>Age 67+: All attributes -1</li>
+                    </ul>
                 </div>
                 {% if not char_data.skill_track %}
                 <div style="margin-bottom: 10px;">
@@ -671,22 +685,35 @@ function saveCharacterName(name) {
     });
 }
 
-// Aging warning functionality
+// Aging warning and interactive mode functionality
 (function() {
     var yearsSelect = document.getElementById('years-select');
+    var interactiveCheckbox = document.getElementById('interactive-checkbox');
     var agingWarning = document.getElementById('aging-warning');
     var agingYearsSpan = document.getElementById('aging-years');
-    var finalAgeSpan = document.getElementById('final-age');
 
     function updateAgingWarning() {
         if (!agingWarning || !yearsSelect) return;
 
+        // Hide warning if interactive mode is checked
+        if (interactiveCheckbox && interactiveCheckbox.checked) {
+            agingWarning.style.display = 'none';
+            return;
+        }
+
         var selectedYears = parseInt(yearsSelect.value) || 0;
         var finalAge = CURRENT_AGE + selectedYears;
 
-        if (finalAge > 34) {
+        if (finalAge > 34 && CURRENT_AGE <= 34) {
             if (agingYearsSpan) agingYearsSpan.textContent = selectedYears;
-            if (finalAgeSpan) finalAgeSpan.textContent = finalAge;
+            agingWarning.style.display = 'block';
+        } else if (finalAge > 34 && CURRENT_AGE > 34) {
+            // Already past 34, update message for additional aging
+            if (agingYearsSpan) agingYearsSpan.textContent = selectedYears;
+            var warningP = agingWarning.querySelector('p');
+            if (warningP) {
+                warningP.innerHTML = 'Adding <span id="aging-years">' + selectedYears + '</span> years will result in additional aging penalties (current age: ' + CURRENT_AGE + '):';
+            }
             agingWarning.style.display = 'block';
         } else {
             agingWarning.style.display = 'none';
@@ -696,6 +723,14 @@ function saveCharacterName(name) {
     if (yearsSelect) {
         yearsSelect.addEventListener('change', updateAgingWarning);
         updateAgingWarning();
+    }
+
+    // Disable years selector when interactive mode is checked
+    if (interactiveCheckbox) {
+        interactiveCheckbox.addEventListener('change', function() {
+            yearsSelect.disabled = this.checked;
+            updateAgingWarning();
+        });
     }
 })();
 

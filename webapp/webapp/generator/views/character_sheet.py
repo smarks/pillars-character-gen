@@ -449,6 +449,7 @@ def add_experience_to_character(request, char_id):
         messages.error(request, "Character not found.")
         return redirect("my_characters")
 
+    interactive_mode = request.POST.get("interactive_mode") == "on"
     years = validate_experience_years(request.POST.get("years"), default=5)
     track_choice = request.POST.get("track", "auto")
 
@@ -530,6 +531,49 @@ def add_experience_to_character(request, char_id):
             ),
             "magic_school_rolls": skill_track.magic_school_rolls,
         }
+
+    # Handle interactive mode - set up session and redirect to interactive page
+    if interactive_mode:
+        # Save track to character before redirecting
+        character.character_data = char_data
+        character.save()
+
+        # Set up session for interactive mode
+        request.session["interactive_character"] = char_data
+        request.session["current_saved_character_id"] = char_id
+
+        # Get existing experience data for session
+        existing_years = char_data.get("interactive_years", 0)
+        existing_skills = char_data.get("interactive_skills", [])
+        existing_yearly_results = char_data.get("interactive_yearly_results", [])
+        existing_aging = char_data.get(
+            "interactive_aging", {"str": 0, "dex": 0, "int": 0, "wis": 0, "con": 0}
+        )
+
+        # Set up initial skills if this is the first experience
+        if existing_years == 0:
+            existing_skills = list(skill_track.initial_skills)
+
+        # Set all session variables needed for interactive mode
+        request.session["interactive_years"] = existing_years
+        request.session["interactive_skills"] = existing_skills
+        request.session["interactive_skill_points"] = existing_years  # 1 point per year
+        request.session["interactive_yearly_results"] = existing_yearly_results
+        request.session["interactive_aging"] = existing_aging
+        request.session["interactive_died"] = char_data.get("interactive_died", False)
+        request.session["interactive_track_name"] = skill_track.track.value
+        request.session["interactive_survivability"] = skill_track.survivability
+        request.session["interactive_initial_skills"] = list(skill_track.initial_skills)
+        request.session["interactive_total_modifier"] = (
+            get_attribute_modifier(attrs.get("STR", 10))
+            + get_attribute_modifier(attrs.get("DEX", 10))
+            + get_attribute_modifier(attrs.get("INT", 10))
+            + get_attribute_modifier(attrs.get("WIS", 10))
+            + get_attribute_modifier(attrs.get("CON", 10))
+        )
+        request.session.modified = True
+
+        return redirect("interactive")
 
     # Get existing experience data
     existing_years = char_data.get("interactive_years", 0)
