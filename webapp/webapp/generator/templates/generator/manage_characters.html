@@ -3,6 +3,120 @@
 {% block title %}Manage Characters - Pillars{% endblock %}
 
 {% block content %}
+<style>
+/* Characters table styles - same as My Characters */
+.characters-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.characters-table th,
+.characters-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.characters-table th {
+    background: #f5f5f5;
+    font-weight: 600;
+}
+
+.character-row {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.character-row:hover {
+    background-color: #f0f7ff;
+}
+
+.character-row td a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.character-row td a:hover {
+    text-decoration: underline;
+}
+
+.status-alive {
+    color: #16a34a;
+    font-weight: 500;
+}
+
+.status-deceased {
+    color: #dc2626;
+    font-weight: 500;
+}
+
+.description-cell {
+    color: #666;
+    font-size: 0.9em;
+    max-width: 200px;
+}
+
+.actions-cell {
+    white-space: nowrap;
+}
+
+/* Export dropdown */
+.export-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.export-dropdown .dropdown-btn {
+    padding: 6px 12px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.export-dropdown .dropdown-btn:hover {
+    background: #e5e7eb;
+}
+
+.export-dropdown .dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background: white;
+    min-width: 160px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border-radius: 4px;
+    z-index: 100;
+}
+
+.export-dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.export-dropdown .dropdown-content a {
+    display: block;
+    padding: 10px 15px;
+    color: #333;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+.export-dropdown .dropdown-content a:hover {
+    background: #f3f4f6;
+}
+
+.btn.danger {
+    margin-left: 8px;
+}
+
+/* Checkbox column */
+.checkbox-cell {
+    width: 30px;
+}
+</style>
+
 <div class="top-bar">
     <h1>Manage Characters</h1>
 </div>
@@ -37,27 +151,41 @@
             <button type="submit" class="btn danger" id="bulk-delete-btn" disabled onclick="return confirm('Are you sure you want to delete the selected characters?');">Delete Selected</button>
             <span id="selected-count" style="margin-left: 10px; color: #666;"></span>
         </div>
-        <table>
+        <table class="characters-table">
             <thead>
                 <tr>
-                    <th style="width: 30px;"><input type="checkbox" id="select-all" title="Select all"></th>
+                    <th class="checkbox-cell"><input type="checkbox" id="select-all" title="Select all"></th>
                     <th>Name</th>
                     <th>Player</th>
+                    <th>Description</th>
+                    <th>Status</th>
                     <th>Created</th>
-                    <th>Updated</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for char in characters %}
-                <tr>
-                    <td><input type="checkbox" name="character_ids" value="{{ char.id }}" class="char-checkbox"></td>
-                    <td>{{ char.name }}</td>
+                <tr class="character-row" onclick="if (!event.target.matches('input, button, a')) window.location='{% url 'character_sheet' char.id %}'">
+                    <td class="checkbox-cell" onclick="event.stopPropagation();"><input type="checkbox" name="character_ids" value="{{ char.id }}" class="char-checkbox"></td>
+                    <td><a href="{% url 'character_sheet' char.id %}">{{ char.name }}</a></td>
                     <td>{{ char.user.username }}</td>
-                    <td>{{ char.created_at|date:"M d, Y H:i" }}</td>
-                    <td>{{ char.updated_at|date:"M d, Y H:i" }}</td>
+                    <td class="description-cell">{{ char.character_data.description|default:"-"|truncatechars:50 }}</td>
                     <td>
-                        <a href="{% url 'character_sheet' char.id %}" class="btn primary">Edit</a>
+                        {% if char.character_data.interactive_died %}
+                        <span class="status-deceased">Deceased</span>
+                        {% else %}
+                        <span class="status-alive">Alive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ char.created_at|date:"M d, Y" }}</td>
+                    <td class="actions-cell" onclick="event.stopPropagation();">
+                        <div class="export-dropdown">
+                            <button type="button" class="dropdown-btn">Export &#9662;</button>
+                            <div class="dropdown-content">
+                                <a href="{% url 'export_character_pdf' char.id %}">Save as PDF</a>
+                                <a href="{% url 'export_character_markdown' char.id %}">Save as Markdown</a>
+                            </div>
+                        </div>
                         <form method="post" action="{% url 'admin_delete_character' char.id %}" style="display: inline;">
                             {% csrf_token %}
                             <button type="submit" class="btn danger" onclick="return confirm('Are you sure you want to delete {{ char.name }}?');">Delete</button>
