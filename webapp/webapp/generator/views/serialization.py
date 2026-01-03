@@ -83,6 +83,76 @@ class MinimalCharacter:
         return self._str_repr
 
 
+def get_default_equipment():
+    """Return default starting equipment for new characters."""
+    return {
+        "weapons": [
+            {
+                "name": "Dagger",
+                "description": "Simple blade",
+                "hit": "+0",
+                "crit": "20",
+                "damage": "1d4",
+                "weight": "1",
+                "value": "2 gp",
+                "notes": "",
+            },
+        ],
+        "armour": [],
+        "misc": [
+            {
+                "name": "Backpack",
+                "description": "Leather pack",
+                "attr_mod": "",
+                "weight": "2",
+                "value": "2 gp",
+            },
+            {
+                "name": "Waterskin",
+                "description": "Holds 1 quart",
+                "attr_mod": "",
+                "weight": "1",
+                "value": "1 gp",
+            },
+            {
+                "name": "Rations (1 week)",
+                "description": "Trail food",
+                "attr_mod": "",
+                "weight": "7",
+                "value": "5 gp",
+            },
+            {
+                "name": "Flint & Steel",
+                "description": "Fire starter",
+                "attr_mod": "",
+                "weight": "0",
+                "value": "1 gp",
+            },
+            {
+                "name": "Torches (3)",
+                "description": "1 hour burn each",
+                "attr_mod": "",
+                "weight": "3",
+                "value": "3 cp",
+            },
+            {
+                "name": "Bedroll",
+                "description": "Sleeping gear",
+                "attr_mod": "",
+                "weight": "5",
+                "value": "1 gp",
+            },
+            {
+                "name": "Belt Pouch",
+                "description": "Small pouch",
+                "attr_mod": "",
+                "weight": "0",
+                "value": "5 sp",
+            },
+        ],
+    }
+
+
 def serialize_character(character, preserve_data=None):
     """Serialize character to JSON-compatible dict for session storage.
 
@@ -132,6 +202,9 @@ def serialize_character(character, preserve_data=None):
         "str_repr": str(character),
     }
 
+    # Add default equipment if not already present
+    data["equipment"] = get_default_equipment()
+
     # Preserve user-edited fields if provided
     if preserve_data:
         if "name" in preserve_data:
@@ -140,6 +213,8 @@ def serialize_character(character, preserve_data=None):
             data["notes"] = preserve_data["notes"]
         if "skill_points_data" in preserve_data:
             data["skill_points_data"] = preserve_data["skill_points_data"]
+        if "equipment" in preserve_data:
+            data["equipment"] = preserve_data["equipment"]
 
     # Only include skill_track if it exists
     if character.skill_track is not None:
@@ -362,6 +437,11 @@ def store_current_character(request, character, preserve_data=None):
         existing_data.update(preserve_data)
 
     char_data = serialize_character(character, preserve_data=existing_data)
+
+    # Set default name from player username if not already set
+    if not char_data.get("name") and request.user.is_authenticated:
+        char_data["name"] = request.user.username
+
     request.session["current_character"] = char_data
     # Clear any prior experience data when re-rolling
     request.session["interactive_years"] = 0

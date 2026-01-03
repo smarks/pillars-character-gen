@@ -4677,3 +4677,80 @@ class ContentNegotiationTests(TestCase):
         response = self.client.get("/generator.md")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "text/markdown; charset=utf-8")
+
+
+class DefaultEquipmentTests(TestCase):
+    """Tests for default starting equipment and name."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_new_character_has_default_equipment(self):
+        """Test that new characters have default starting equipment."""
+        self.client.get(reverse("generator"))
+        char_data = self.client.session.get("current_character", {})
+
+        # Check equipment structure exists
+        equipment = char_data.get("equipment", {})
+        self.assertIsInstance(equipment, dict)
+
+        # Check weapons has a dagger
+        weapons = equipment.get("weapons", [])
+        self.assertTrue(len(weapons) >= 1)
+        dagger = weapons[0]
+        self.assertEqual(dagger.get("name"), "Dagger")
+
+        # Check misc items
+        misc = equipment.get("misc", [])
+        misc_names = [item.get("name") for item in misc]
+        self.assertIn("Backpack", misc_names)
+        self.assertIn("Waterskin", misc_names)
+        self.assertIn("Rations (1 week)", misc_names)
+
+    def test_logged_in_user_gets_username_as_default_name(self):
+        """Test that logged in users get their username as default character name."""
+        # Create a user and log in
+        User.objects.create_user(username="TestPlayer", password="testpass")
+        self.client.login(username="TestPlayer", password="testpass")
+
+        # Generate a new character
+        self.client.get(reverse("generator"))
+        self.client.post(
+            reverse("generator"),
+            {"action": "reroll", "method": "3d6"},
+            follow=True,
+        )
+
+        char_data = self.client.session.get("current_character", {})
+        self.assertEqual(char_data.get("name"), "TestPlayer")
+
+    def test_anonymous_user_has_no_default_name(self):
+        """Test that anonymous users don't get a default name."""
+        self.client.get(reverse("generator"))
+        char_data = self.client.session.get("current_character", {})
+
+        # Anonymous users should not have a name set
+        self.assertFalse(char_data.get("name"))
+
+    def test_equipment_preserved_on_reroll(self):
+        """Test that equipment is preserved when rerolling attributes."""
+        # First generate a character
+        self.client.get(reverse("generator"))
+
+        # Get initial equipment
+        char_data = self.client.session.get("current_character", {})
+        initial_equipment = char_data.get("equipment", {})
+
+        # Reroll the character
+        self.client.post(
+            reverse("generator"),
+            {"action": "reroll", "method": "3d6"},
+            follow=True,
+        )
+
+        # Equipment should still be present
+        char_data = self.client.session.get("current_character", {})
+        equipment = char_data.get("equipment", {})
+        self.assertEqual(
+            len(equipment.get("weapons", [])), len(initial_equipment.get("weapons", []))
+        )
