@@ -1,9 +1,3 @@
-## About 
-
----
-
-## Contents
-
 - [About the Author](#about-the-author)
 - [What is Pillars?](#what-is-pillars)
 - [System Foundation](#system-foundation)
