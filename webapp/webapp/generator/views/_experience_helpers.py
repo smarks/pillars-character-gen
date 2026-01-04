@@ -6,6 +6,7 @@ These are internal helpers for managing track selection and experience rolling.
 
 from django.shortcuts import redirect
 from django.contrib import messages
+from django.http import JsonResponse
 
 from pillars import generate_character
 from pillars.attributes import (
@@ -385,3 +386,137 @@ def handle_add_experience(request):
     )
 
     return redirect("generator")
+
+
+def handle_add_experience_ajax(request):
+    """Handle adding experience years via AJAX, returning JSON response."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+
+    char_data = request.session.get("current_character")
+    if not char_data:
+        character = generate_character(years=0, skip_track=True)
+        store_current_character(request, character)
+        char_data = request.session.get("current_character")
+
+    # Preserve name from form submission
+    char_name = request.POST.get("char_name", "").strip()
+    if char_name:
+        char_data["name"] = char_name
+
+    # Capture manually entered age as base_age
+    char_age = request.POST.get("char_age", "").strip()
+    if char_age:
+        try:
+            age_val = int(char_age)
+            existing_years = char_data.get("interactive_years", 0)
+            char_data["base_age"] = age_val - existing_years
+            char_data["age"] = age_val
+        except ValueError:
+            pass
+
+    character = deserialize_character(char_data)
+
+    # Get form parameters
+    years = validate_experience_years(request.POST.get("years"), default=5)
+    chosen_track_name = request.POST.get("chosen_track", "")
+
+    # Get or create skill track
+    skill_track, char_data, error = get_or_create_skill_track(
+        char_data, character, chosen_track_name
+    )
+    if error:
+        return JsonResponse({"error": error}, status=400)
+
+    # Get existing experience data
+    existing_years = request.session.get("interactive_years", 0)
+    existing_skills = request.session.get("interactive_skills", [])
+    existing_yearly_results = request.session.get("interactive_yearly_results", [])
+    existing_aging = request.session.get(
+        "interactive_aging", {"str": 0, "dex": 0, "int": 0, "wis": 0, "con": 0}
+    )
+    died = request.session.get("interactive_died", False)
+
+    if died:
+        return JsonResponse({"error": "Character is deceased"}, status=400)
+
+    # Get base_age
+    base_age = char_data.get("base_age", 16)
+
+    # Reconstruct aging effects
+    if existing_years == 0 and base_age > 16:
+        aging_effects = get_aging_effects_for_age(base_age)
+    else:
+        aging_effects = AgingEffects(
+            str_penalty=existing_aging.get("str", 0),
+            dex_penalty=existing_aging.get("dex", 0),
+            int_penalty=existing_aging.get("int", 0),
+            wis_penalty=existing_aging.get("wis", 0),
+            con_penalty=existing_aging.get("con", 0),
+        )
+
+    # Add initial skills if this is the first experience
+    if existing_years == 0:
+        existing_skills = list(skill_track.initial_skills)
+
+    # Roll experience years
+    total_modifier = sum(character.attributes.get_all_modifiers().values())
+    new_skills, new_yearly_results, died, aging_effects = roll_experience_years(
+        skill_track,
+        years,
+        existing_years,
+        existing_skills,
+        total_modifier,
+        aging_effects,
+        base_age=base_age,
+    )
+
+    # Update session
+    update_experience_session(
+        request,
+        char_data,
+        skill_track,
+        existing_years,
+        existing_skills,
+        new_skills,
+        existing_yearly_results,
+        new_yearly_results,
+        died,
+        aging_effects,
+    )
+
+    # Sync to database for logged-in users
+    sync_experience_to_database(
+        request,
+        char_data,
+        existing_years,
+        existing_skills,
+        new_skills,
+        existing_yearly_results,
+        new_yearly_results,
+        died,
+        aging_effects,
+    )
+
+    # Build response with new experience data
+    total_years = existing_years + len(new_yearly_results)
+    current_age = base_age + total_years
+
+    return JsonResponse(
+        {
+            "success": True,
+            "new_yearly_results": new_yearly_results,
+            "new_skills": new_skills,
+            "total_years": total_years,
+            "current_age": current_age,
+            "died": died,
+            "track_name": skill_track.track.value,
+            "aging": {
+                "str": aging_effects.str_penalty,
+                "dex": aging_effects.dex_penalty,
+                "int": aging_effects.int_penalty,
+                "wis": aging_effects.wis_penalty,
+                "con": aging_effects.con_penalty,
+            },
+        }
+    )

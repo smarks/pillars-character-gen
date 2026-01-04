@@ -357,9 +357,12 @@
                 {% endfor %}
             </div>
 
-            <button type="submit" name="action" value="add_experience" id="add-experience-btn" class="btn primary" style="margin-top: 10px;">
+            <button type="button" id="add-experience-btn" class="btn primary" style="margin-top: 10px;" onclick="addExperienceAjax()">
                 Add {% if has_experience %}More {% endif %}Experience
             </button>
+
+            <!-- Experience feedback area -->
+            <div id="experience-feedback" style="display: none; margin-top: 10px; padding: 10px; border-radius: 4px; font-size: 0.85em; max-height: 300px; overflow-y: auto;"></div>
         </div>
         {% endif %}
 
@@ -487,6 +490,109 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     updateAgingWarning();
 })();
+
+// AJAX-based experience adding with immediate feedback
+function addExperienceAjax() {
+    var btn = document.getElementById('add-experience-btn');
+    var feedback = document.getElementById('experience-feedback');
+    var yearsSelect = document.getElementById('years-select');
+    var selectedTrack = document.querySelector('input[name="chosen_track"]:checked');
+
+    if (!selectedTrack) {
+        feedback.style.display = 'block';
+        feedback.style.background = '#fff3cd';
+        feedback.style.border = '1px solid #ffc107';
+        feedback.innerHTML = '<strong>Select a skill track first</strong>';
+        return;
+    }
+
+    // Disable button and show loading
+    btn.disabled = true;
+    btn.textContent = 'Rolling...';
+    feedback.style.display = 'block';
+    feedback.style.background = '#e3f2fd';
+    feedback.style.border = '1px solid #2196f3';
+    feedback.innerHTML = '<em>Rolling experience years...</em>';
+
+    // Collect form data
+    var formData = new FormData();
+    formData.append('years', yearsSelect ? yearsSelect.value : '5');
+    formData.append('chosen_track', selectedTrack.value);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    // Get name and age if present
+    var nameInput = document.querySelector('input[name="char_name"]');
+    var ageInput = document.querySelector('input[name="char_age"]');
+    if (nameInput) formData.append('char_name', nameInput.value);
+    if (ageInput) formData.append('char_age', ageInput.value);
+
+    fetch('{% url "add_session_experience" %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.error) {
+            feedback.style.background = '#f8d7da';
+            feedback.style.border = '1px solid #dc3545';
+            feedback.innerHTML = '<strong>Error:</strong> ' + data.error;
+            btn.disabled = false;
+            btn.textContent = 'Add Experience';
+            return;
+        }
+
+        // Build feedback HTML
+        var html = '<div style="margin-bottom: 8px;"><strong>' + data.track_name + '</strong> - ' +
+                   data.new_yearly_results.length + ' year(s) added</div>';
+
+        // Show each year's result
+        data.new_yearly_results.forEach(function(yr) {
+            var survResult = yr.survived ?
+                '<span style="color: green;">Survived</span>' :
+                '<span style="color: red;">Died</span>';
+            var rollInfo = 'Roll: ' + yr.surv_roll + (yr.surv_mod >= 0 ? '+' : '') + yr.surv_mod +
+                          ' = ' + yr.surv_total + ' vs ' + yr.surv_target + '+';
+
+            html += '<div style="padding: 4px 0; border-bottom: 1px solid #ddd;">' +
+                   '<strong>Year ' + yr.year + ':</strong> ' + yr.skill + ' ' +
+                   '<span style="font-size: 0.8em; color: #666;">(' + rollInfo + ' ' + survResult + ')</span>';
+
+            if (yr.aging && yr.aging.length > 0) {
+                html += ' <span style="color: #c44; font-size: 0.8em;">[Aging: ' + yr.aging.join(', ') + ']</span>';
+            }
+            html += '</div>';
+        });
+
+        // Summary
+        html += '<div style="margin-top: 8px; font-weight: bold;">Age: ' + data.current_age +
+               ' | Total Years: ' + data.total_years + '</div>';
+
+        if (data.died) {
+            feedback.style.background = '#f8d7da';
+            feedback.style.border = '1px solid #dc3545';
+            html += '<div style="margin-top: 8px; color: #c44; font-weight: bold;">CHARACTER DIED</div>';
+            btn.disabled = true;
+            btn.textContent = 'Character Deceased';
+        } else {
+            feedback.style.background = '#d4edda';
+            feedback.style.border = '1px solid #28a745';
+            btn.disabled = false;
+            btn.textContent = 'Add More Experience';
+        }
+
+        feedback.innerHTML = html;
+
+        // Update the page's age display and experience log (need to reload for full update)
+        // For now, we just show the feedback. User can refresh or continue adding.
+    })
+    .catch(function(err) {
+        feedback.style.background = '#f8d7da';
+        feedback.style.border = '1px solid #dc3545';
+        feedback.innerHTML = '<strong>Error:</strong> ' + err.message;
+        btn.disabled = false;
+        btn.textContent = 'Add Experience';
+    });
+}
 
 function handleExport(format) {
     var select = document.getElementById('export-select');

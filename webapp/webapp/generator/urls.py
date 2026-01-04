@@ -6,6 +6,11 @@ urlpatterns = [
     path("generator/", views.index, name="generator"),
     # Note: 'index' is an alias for 'generator' for backwards compatibility
     # Both names point to the same URL pattern
+    path(
+        "generator/add-experience/",
+        views.add_session_experience_ajax,
+        name="add_session_experience",
+    ),
     path("interactive/", views.interactive, name="interactive"),
     path(
         "update-session-character/",

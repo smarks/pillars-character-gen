@@ -67,6 +67,7 @@ from .core import (
     dice_roller,
     start_over,
     index,
+    add_session_experience_ajax,
 )
 
 # Prior experience
@@ -185,6 +186,7 @@ __all__ = [
     "dice_roller",
     "start_over",
     "index",
+    "add_session_experience_ajax",
     # Prior experience
     "select_track",
     "interactive",

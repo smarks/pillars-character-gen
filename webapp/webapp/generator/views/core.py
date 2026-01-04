@@ -360,3 +360,10 @@ def index(request):
     char_data = request.session.get("current_character")
     context = _build_index_context(request, character, char_data)
     return render(request, "generator/index.html", context)
+
+
+def add_session_experience_ajax(request):
+    """AJAX endpoint for adding experience to session character."""
+    from ._experience_helpers import handle_add_experience_ajax
+
+    return handle_add_experience_ajax(request)

@@ -182,6 +182,36 @@ class IndexViewTests(TestCase):
         # Session should have experience data
         self.assertGreater(self.client.session.get("interactive_years", 0), 0)
 
+    def test_add_experience_ajax_returns_json(self):
+        """Test that AJAX add experience returns JSON with results."""
+        # First load to get character
+        self.client.get(reverse("generator"))
+        # Add experience via AJAX endpoint
+        response = self.client.post(
+            reverse("add_session_experience"),
+            {
+                "years": 3,
+                "chosen_track": "LABORER",
+            },
+        )
+        # Should return JSON
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/json")
+
+        import json
+
+        data = json.loads(response.content)
+        self.assertTrue(data.get("success"))
+        self.assertIn("new_yearly_results", data)
+        self.assertIn("new_skills", data)
+        self.assertIn("total_years", data)
+        self.assertIn("current_age", data)
+        self.assertIn("died", data)
+        self.assertIn("track_name", data)
+
+        # Session should have experience data
+        self.assertGreater(self.client.session.get("interactive_years", 0), 0)
+
     def test_finish_shows_character_sheet(self):
         """Test that finish displays the character sheet."""
         # First load to get character
