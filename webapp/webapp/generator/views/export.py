@@ -30,6 +30,28 @@ def export_session_character_markdown(request):
                 content_type="text/plain",
             )
 
+        # Merge interactive data from session if not already in char_data
+        # (interactive data may be stored separately in session keys)
+        char_data = dict(char_data)
+        if "interactive_years" not in char_data:
+            char_data["interactive_years"] = request.session.get("interactive_years", 0)
+        if "interactive_skills" not in char_data:
+            char_data["interactive_skills"] = request.session.get(
+                "interactive_skills", []
+            )
+        if "interactive_yearly_results" not in char_data:
+            char_data["interactive_yearly_results"] = request.session.get(
+                "interactive_yearly_results", []
+            )
+        if "interactive_aging" not in char_data:
+            char_data["interactive_aging"] = request.session.get(
+                "interactive_aging", {}
+            )
+        if "interactive_died" not in char_data:
+            char_data["interactive_died"] = request.session.get(
+                "interactive_died", False
+            )
+
         character_name = char_data.get("name", "Unnamed Character")
         md_content = generate_markdown_from_char_data(char_data, character_name)
 
@@ -56,6 +78,28 @@ def export_session_character_pdf(request):
                 "No character data found in session. Please generate a character first.",
                 status=404,
                 content_type="text/plain",
+            )
+
+        # Merge interactive data from session if not already in char_data
+        # (interactive data may be stored separately in session keys)
+        char_data = dict(char_data)
+        if "interactive_years" not in char_data:
+            char_data["interactive_years"] = request.session.get("interactive_years", 0)
+        if "interactive_skills" not in char_data:
+            char_data["interactive_skills"] = request.session.get(
+                "interactive_skills", []
+            )
+        if "interactive_yearly_results" not in char_data:
+            char_data["interactive_yearly_results"] = request.session.get(
+                "interactive_yearly_results", []
+            )
+        if "interactive_aging" not in char_data:
+            char_data["interactive_aging"] = request.session.get(
+                "interactive_aging", {}
+            )
+        if "interactive_died" not in char_data:
+            char_data["interactive_died"] = request.session.get(
+                "interactive_died", False
             )
 
         character_name = char_data.get("name", "Unnamed Character")
