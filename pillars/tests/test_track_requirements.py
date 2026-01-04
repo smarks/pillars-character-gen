@@ -1,7 +1,7 @@
 """
-Tests for skill track requirements and auto-selection logic.
+Tests for skill track availability and selection logic.
 
-Uses mock character data to verify that track requirements are properly enforced.
+All tracks have no requirements - any character can choose any track.
 Track data is loaded from references/skills.csv.
 """
 
@@ -22,7 +22,7 @@ from pillars.attributes import (
 
 @dataclass
 class MockCharacter:
-    """Mock character data for testing track requirements."""
+    """Mock character data for testing track selection."""
 
     str_mod: int = 0
     dex_mod: int = 0
@@ -106,7 +106,7 @@ BASELINE_CHARACTER = MockCharacter(
     wealth_level="Moderate",
 )
 
-# Smart character - mental focus (can do Magic)
+# Smart character - mental focus
 SMART_CHARACTER = MockCharacter(
     str_mod=0,
     dex_mod=0,
@@ -118,7 +118,7 @@ SMART_CHARACTER = MockCharacter(
     wealth_level="Moderate",
 )
 
-# Charismatic character - can do Civil Service
+# Charismatic character
 CHARISMATIC_CHARACTER = MockCharacter(
     str_mod=0,
     dex_mod=0,
@@ -130,30 +130,6 @@ CHARISMATIC_CHARACTER = MockCharacter(
     wealth_level="Moderate",
 )
 
-# Wise character - can do Magic and Civil Service
-WISE_CHARACTER = MockCharacter(
-    str_mod=0,
-    dex_mod=0,
-    int_mod=0,
-    wis_mod=2,
-    chr_mod=0,
-    social_class="Commoner",
-    sub_class="Laborer",
-    wealth_level="Moderate",
-)
-
-# Exceptional character - all positive modifiers
-EXCEPTIONAL_CHARACTER = MockCharacter(
-    str_mod=2,
-    dex_mod=2,
-    int_mod=2,
-    wis_mod=1,
-    chr_mod=1,
-    social_class="Gentry",
-    sub_class="Professional",
-    wealth_level="Rich",
-)
-
 
 # =============================================================================
 # TEST CLASSES
@@ -161,11 +137,11 @@ EXCEPTIONAL_CHARACTER = MockCharacter(
 
 
 class TestTrackAvailability(unittest.TestCase):
-    """Test get_track_availability correctly identifies track eligibility."""
+    """Test get_track_availability correctly identifies all tracks as available."""
 
-    def test_always_available_tracks(self):
-        """Most tracks have no requirements and are always available."""
-        no_req_tracks = [
+    def test_all_tracks_available(self):
+        """All tracks have no requirements and are always available."""
+        all_tracks = [
             TrackType.MERCHANT,
             TrackType.CAMPAIGNER,
             TrackType.LABORER,
@@ -173,64 +149,28 @@ class TestTrackAvailability(unittest.TestCase):
             TrackType.CRAFT,
             TrackType.HUNTER_GATHERER,
             TrackType.RANDOM,
+            TrackType.MAGIC,
+            TrackType.CIVIL_SERVICE,
         ]
 
-        for char in [BASELINE_CHARACTER, SMART_CHARACTER]:
+        for char in [BASELINE_CHARACTER, SMART_CHARACTER, CHARISMATIC_CHARACTER]:
             availability = char.get_track_availability()
 
-            for track in no_req_tracks:
+            for track in all_tracks:
                 with self.subTest(char=char, track=track):
                     self.assertTrue(availability[track]["available"])
                     self.assertTrue(availability[track]["auto_accept"])
                     self.assertFalse(availability[track]["impossible"])
                     self.assertFalse(availability[track]["requires_roll"])
 
-    def test_magic_requires_int_or_wis_bonus(self):
-        """Magic track requires INT or WIS bonus."""
-        # Baseline has no bonus - impossible
-        avail = BASELINE_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.MAGIC]["impossible"])
-        self.assertFalse(avail[TrackType.MAGIC]["available"])
-
-        # Smart (has INT bonus) - available
-        avail = SMART_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.MAGIC]["available"])
-        self.assertTrue(avail[TrackType.MAGIC]["auto_accept"])
-
-        # Wise (has WIS bonus) - available
-        avail = WISE_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.MAGIC]["available"])
-
-        # Charismatic (no INT/WIS) - impossible
-        avail = CHARISMATIC_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.MAGIC]["impossible"])
-
-    def test_civil_service_requires_int_chr_or_wis_bonus(self):
-        """Civil Service requires INT, CHR, or WIS bonus."""
-        # Baseline has no bonus - impossible
-        avail = BASELINE_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.CIVIL_SERVICE]["impossible"])
-
-        # Smart (has INT bonus) - available
-        avail = SMART_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.CIVIL_SERVICE]["available"])
-
-        # Charismatic (has CHR bonus) - available
-        avail = CHARISMATIC_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.CIVIL_SERVICE]["available"])
-
-        # Wise (has WIS bonus) - available
-        avail = WISE_CHARACTER.get_track_availability()
-        self.assertTrue(avail[TrackType.CIVIL_SERVICE]["available"])
-
 
 class TestAcceptanceChecks(unittest.TestCase):
-    """Test individual acceptance check functions."""
+    """Test individual acceptance check functions always accept."""
 
-    def test_magic_acceptance_mental_required(self):
-        """Magic needs INT or WIS bonus."""
+    def test_magic_acceptance_always_accepts(self):
+        """Magic accepts all characters."""
         result = check_magic_acceptance(0, 0)
-        self.assertFalse(result.accepted)
+        self.assertTrue(result.accepted)
 
         result = check_magic_acceptance(1, 0)
         self.assertTrue(result.accepted)
@@ -238,13 +178,10 @@ class TestAcceptanceChecks(unittest.TestCase):
         result = check_magic_acceptance(0, 1)
         self.assertTrue(result.accepted)
 
-        result = check_magic_acceptance(1, 1)
-        self.assertTrue(result.accepted)
-
-    def test_civil_service_acceptance(self):
-        """Civil Service needs INT, CHR, or WIS bonus."""
+    def test_civil_service_acceptance_always_accepts(self):
+        """Civil Service accepts all characters."""
         result = check_civil_service_acceptance(0, 0, 0)
-        self.assertFalse(result.accepted)
+        self.assertTrue(result.accepted)
 
         result = check_civil_service_acceptance(1, 0, 0)
         self.assertTrue(result.accepted)
@@ -252,71 +189,50 @@ class TestAcceptanceChecks(unittest.TestCase):
         result = check_civil_service_acceptance(0, 1, 0)
         self.assertTrue(result.accepted)
 
-        result = check_civil_service_acceptance(0, 0, 1)
-        self.assertTrue(result.accepted)
+
+class TestEligibleTracks(unittest.TestCase):
+    """Test that all tracks are eligible for all characters."""
+
+    def test_all_characters_eligible_for_all_tracks(self):
+        """All characters can access all tracks."""
+        all_tracks = {
+            TrackType.MERCHANT,
+            TrackType.CAMPAIGNER,
+            TrackType.LABORER,
+            TrackType.UNDERWORLD,
+            TrackType.CRAFT,
+            TrackType.HUNTER_GATHERER,
+            TrackType.RANDOM,
+            TrackType.MAGIC,
+            TrackType.CIVIL_SERVICE,
+        }
+
+        for char in [BASELINE_CHARACTER, SMART_CHARACTER, CHARISMATIC_CHARACTER]:
+            eligible = char.get_eligible_tracks()
+            eligible_types = {t for t, _ in eligible}
+
+            with self.subTest(char=char):
+                self.assertEqual(eligible_types, all_tracks)
 
 
-class TestAutoSelectTrack(unittest.TestCase):
-    """Test that auto-selection respects requirements."""
+class TestCreateTrack(unittest.TestCase):
+    """Test that any character can create any track."""
 
-    def test_baseline_cannot_get_restricted_tracks(self):
-        """Baseline character should not get Magic or Civil Service."""
-        eligible = BASELINE_CHARACTER.get_eligible_tracks()
-        eligible_types = {t for t, _ in eligible}
+    def test_anyone_can_create_magic(self):
+        """Any character can create Magic track."""
+        for char in [BASELINE_CHARACTER, SMART_CHARACTER, CHARISMATIC_CHARACTER]:
+            with self.subTest(char=char):
+                track = char.create_track(TrackType.MAGIC)
+                self.assertTrue(track.acceptance_check.accepted)
+                self.assertEqual(track.track, TrackType.MAGIC)
 
-        # Should not have restricted tracks
-        self.assertNotIn(TrackType.MAGIC, eligible_types)
-        self.assertNotIn(TrackType.CIVIL_SERVICE, eligible_types)
-
-        # Should have always-available tracks
-        self.assertIn(TrackType.MERCHANT, eligible_types)
-        self.assertIn(TrackType.CAMPAIGNER, eligible_types)
-        self.assertIn(TrackType.LABORER, eligible_types)
-        self.assertIn(TrackType.RANDOM, eligible_types)
-
-    def test_smart_character_can_get_magic(self):
-        """Smart character with INT bonus should be eligible for Magic."""
-        eligible = SMART_CHARACTER.get_eligible_tracks()
-        eligible_types = {t for t, _ in eligible}
-
-        self.assertIn(TrackType.MAGIC, eligible_types)
-        self.assertIn(TrackType.CIVIL_SERVICE, eligible_types)
-
-    def test_optimal_track_prefers_magic_when_available(self):
-        """Magic should be preferred when available."""
-        track, _ = SMART_CHARACTER.select_optimal_track()
-        self.assertEqual(track, TrackType.MAGIC)
-
-    def test_optimal_track_prefers_civil_service_for_charismatic(self):
-        """Civil Service should be preferred for charismatic non-magic characters."""
-        track, _ = CHARISMATIC_CHARACTER.select_optimal_track()
-        self.assertEqual(track, TrackType.CIVIL_SERVICE)
-
-
-class TestCreateTrackEnforcesRequirements(unittest.TestCase):
-    """Test that create_skill_track_for_choice enforces requirements."""
-
-    def test_baseline_cannot_create_magic(self):
-        """Baseline character cannot create Magic track."""
-        track = BASELINE_CHARACTER.create_track(TrackType.MAGIC)
-        self.assertFalse(track.acceptance_check.accepted)
-
-    def test_baseline_cannot_create_civil_service(self):
-        """Baseline character cannot create Civil Service track."""
-        track = BASELINE_CHARACTER.create_track(TrackType.CIVIL_SERVICE)
-        self.assertFalse(track.acceptance_check.accepted)
-
-    def test_smart_can_create_magic(self):
-        """Smart character can create Magic track."""
-        track = SMART_CHARACTER.create_track(TrackType.MAGIC)
-        self.assertTrue(track.acceptance_check.accepted)
-        self.assertEqual(track.track, TrackType.MAGIC)
-
-    def test_charismatic_can_create_civil_service(self):
-        """Charismatic character can create Civil Service track."""
-        track = CHARISMATIC_CHARACTER.create_track(TrackType.CIVIL_SERVICE)
-        self.assertTrue(track.acceptance_check.accepted)
-        self.assertEqual(track.track, TrackType.CIVIL_SERVICE)
+    def test_anyone_can_create_civil_service(self):
+        """Any character can create Civil Service track."""
+        for char in [BASELINE_CHARACTER, SMART_CHARACTER, CHARISMATIC_CHARACTER]:
+            with self.subTest(char=char):
+                track = char.create_track(TrackType.CIVIL_SERVICE)
+                self.assertTrue(track.acceptance_check.accepted)
+                self.assertEqual(track.track, TrackType.CIVIL_SERVICE)
 
     def test_anyone_can_create_laborer(self):
         """Any character can create Laborer track."""

@@ -22,13 +22,9 @@
     background: #fafafa;
 }
 .track-card.available { border-color: #4a4; background: #f8fff8; cursor: pointer; }
-.track-card.requires-roll { border-color: #fa0; background: #fffaf0; cursor: pointer; }
-.track-card.impossible { border-color: #ccc; background: #f4f4f4; opacity: 0.6; }
 .track-card.selected { border-color: #00f; border-width: 3px; background: #e8e8ff; }
 .track-card h4 { margin: 0 0 10px 0; }
 .track-card .details { font-size: 0.9em; color: #666; }
-.track-card .requirement { font-style: italic; margin: 5px 0; }
-.track-card .roll-info { color: #c60; font-weight: bold; }
 .track-card .skills { margin-top: 10px; }
 .track-card input[type="radio"] {
     position: absolute;
@@ -36,18 +32,7 @@
     right: 15px;
     transform: scale(1.5);
 }
-.track-card.impossible input[type="radio"] { display: none; }
 .track-card label { display: block; cursor: pointer; }
-.track-card.impossible label { cursor: not-allowed; }
-.status-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    font-size: 0.8em;
-    margin-left: 10px;
-}
-.status-badge.guaranteed { background: #4a4; color: white; }
-.status-badge.roll-required { background: #fa0; color: black; }
-.status-badge.impossible { background: #c44; color: white; }
 {% endblock %}
 
 {% block content %}
@@ -122,41 +107,18 @@
     </div>
     {% endif %}
 
-    {% if not has_experience %}
-    <!-- Track Selection -->
+    <!-- Track Selection (always shown - can change track each time) -->
     <div class="section" id="track-section">
-        <h3>Select Your Track</h3>
-        <p>Choose a track for your character. The recommended track is pre-selected based on your attributes.</p>
-
-        <div class="info-box">
-            <strong>Legend:</strong>
-            <span class="status-badge guaranteed">Guaranteed</span> - No requirements
-            <span class="status-badge roll-required">Roll Required</span> - Must pass dice roll
-            <span class="status-badge impossible">Impossible</span> - Cannot qualify
-        </div>
+        <h3>Select Your Track{% if has_experience %} for Next Experience{% endif %}</h3>
+        <p>{% if has_experience %}Choose a track for your next years of experience. You can continue with {{ current_track }} or switch to a different track.{% else %}Choose a track for your character. The recommended track is pre-selected based on your attributes.{% endif %}</p>
 
         <div class="track-list">
             {% for track in track_info %}
-            <div class="track-card {% if track.impossible %}impossible{% elif track.requires_roll %}requires-roll{% else %}available{% endif %}{% if track.recommended %} selected{% endif %}">
+            <div class="track-card available{% if current_track == track.track or track.recommended and not current_track %} selected{% endif %}">
                 <label>
-                    <h4>
-                        {{ track.track }}
-                        {% if track.impossible %}
-                        <span class="status-badge impossible">Impossible</span>
-                        {% elif track.requires_roll %}
-                        <span class="status-badge roll-required">Roll Required</span>
-                        {% else %}
-                        <span class="status-badge guaranteed">Guaranteed</span>
-                        {% endif %}
-                    </h4>
-                    {% if not track.impossible %}
-                    <input type="radio" name="chosen_track" value="{{ track.track_key }}"{% if track.recommended %} checked{% endif %}>
-                    {% endif %}
+                    <h4>{{ track.track }}</h4>
+                    <input type="radio" name="chosen_track" value="{{ track.track_key }}"{% if current_track == track.track or track.recommended and not current_track %} checked{% endif %}>
                     <div class="details">
-                        <p class="requirement"><strong>Requirement:</strong> {{ track.requirement }}</p>
-                        {% if track.roll_info and not track.auto_accept %}
-                        <p class="roll-info">{{ track.roll_info }}</p>
-                        {% endif %}
                         <p><strong>Survivability:</strong> {{ track.survivability }}+</p>
                         <div class="skills">
                             <strong>Initial Skills:</strong>
@@ -172,7 +134,6 @@
             {% endfor %}
         </div>
     </div>
-    {% endif %}
 
     {% include "generator/partials/control_section.html" %}
 </form>

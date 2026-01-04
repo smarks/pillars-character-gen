@@ -90,10 +90,6 @@
     border-color: #228b22;
     border-width: 3px;
 }
-.track-panel.requires-roll {
-    background: #ffffcc;
-    border-color: #cccc66;
-}
 .track-panel .track-name {
     font-weight: bold;
 }
@@ -102,19 +98,10 @@
     color: #555;
     margin-top: 3px;
 }
-.track-panel .track-requirement {
-    font-size: 0.8em;
-    color: #666;
-    margin-top: 4px;
-    font-style: italic;
-}
 .track-panel .track-checkbox {
     position: absolute;
     top: 8px;
     right: 8px;
-}
-.track-panel.unavailable .track-checkbox {
-    display: none;
 }
 
 /* Character sheet styling */
@@ -341,18 +328,14 @@
             <!-- Track selection -->
             <div id="track-panels">
                 {% for track in track_info %}
-                <div class="track-panel {% if track.impossible %}unavailable{% elif track.requires_roll %}requires-roll{% elif track.recommended and not selected_track %}selected{% elif selected_track == track.track_key %}selected{% else %}available{% endif %}"
+                <div class="track-panel {% if track.recommended and not selected_track %}selected{% elif selected_track == track.track_key %}selected{% else %}available{% endif %}"
                      data-track="{{ track.track_key }}">
-                    {% if not track.impossible %}
                     <input type="radio" name="chosen_track" value="{{ track.track_key }}" class="track-checkbox"
                            {% if track.recommended and not selected_track %}checked{% elif selected_track == track.track_key %}checked{% endif %}>
-                    {% endif %}
                     <div class="track-name">{{ track.track }}</div>
                     <div class="track-details">
-                        Surv: {{ track.survivability }}+ |
-                        {% if track.impossible %}Impossible{% elif track.requires_roll %}Roll Required{% else %}Available{% endif %}
+                        Surv: {{ track.survivability }}+
                     </div>
-                    <div class="track-requirement">{{ track.requirement }}</div>
                 </div>
                 {% endfor %}
             </div>
@@ -788,11 +771,7 @@ document.addEventListener('trackInfoUpdated', function(e) {
 
     trackInfo.forEach(function(track) {
         var panelClass = 'track-panel ';
-        if (track.impossible) {
-            panelClass += 'unavailable';
-        } else if (track.requires_roll) {
-            panelClass += 'requires-roll';
-        } else if (track.recommended) {
+        if (track.recommended) {
             panelClass += 'available selected';
         } else {
             panelClass += 'available';
@@ -803,41 +782,29 @@ document.addEventListener('trackInfoUpdated', function(e) {
         panel.dataset.track = track.track_key;
 
         var html = '';
-        if (!track.impossible) {
-            var checked = track.recommended ? 'checked' : '';
-            html += '<input type="radio" name="chosen_track" value="' + track.track_key + '" class="track-checkbox" ' + checked + '>';
-        }
+        var checked = track.recommended ? 'checked' : '';
+        html += '<input type="radio" name="chosen_track" value="' + track.track_key + '" class="track-checkbox" ' + checked + '>';
         html += '<div class="track-name">' + track.track + '</div>';
         html += '<div class="track-details">';
-        html += 'Surv: ' + track.survivability + '+ | ';
-        if (track.impossible) {
-            html += 'Impossible';
-        } else if (track.requires_roll) {
-            html += 'Roll Required';
-        } else {
-            html += 'Available';
-        }
+        html += 'Surv: ' + track.survivability + '+';
         html += '</div>';
-        html += '<div class="track-requirement">' + track.requirement + '</div>';
 
         panel.innerHTML = html;
 
-        // Add click handler for non-unavailable panels
-        if (!track.impossible) {
-            panel.addEventListener('click', function() {
-                var radio = this.querySelector('input[type="radio"]');
-                if (radio) {
-                    radio.checked = true;
-                    // Update visual state
-                    trackPanels.querySelectorAll('.track-panel').forEach(function(p) {
-                        p.classList.remove('selected');
-                    });
-                    this.classList.add('selected');
-                    // Update Add Experience button state
-                    updateAddExperienceButton();
-                }
-            });
-        }
+        // Add click handler
+        panel.addEventListener('click', function() {
+            var radio = this.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+                // Update visual state
+                trackPanels.querySelectorAll('.track-panel').forEach(function(p) {
+                    p.classList.remove('selected');
+                });
+                this.classList.add('selected');
+                // Update Add Experience button state
+                updateAddExperienceButton();
+            }
+        });
 
         trackPanels.appendChild(panel);
     });

@@ -228,59 +228,29 @@ def roll_magic_school() -> Tuple[MagicSchool, Dict[str, int]]:
             return MagicSchool.CONTROL, rolls
 
 
-def check_magic_acceptance(int_mod: int, wis_mod: int) -> AcceptanceCheck:
+def check_magic_acceptance(int_mod: int = 0, wis_mod: int = 0) -> AcceptanceCheck:
     """
     Check if character meets Magic track requirements.
-    Requirement: INT or WIS bonus required (from CSV: "Int or Wis bonus")
+    No requirements - all characters can choose Magic.
     """
-    has_mental = int_mod > 0 or wis_mod > 0
-    accepted = has_mental
-
-    if has_mental:
-        reason = f"Has INT({int_mod:+d}) or WIS({wis_mod:+d}) bonus"
-    else:
-        reason = "No INT or WIS bonus - magic requires mental aptitude"
-
-    return AcceptanceCheck(
-        track=TrackType.MAGIC,
-        accepted=accepted,
-        roll=None,
-        target=None,
-        modifiers={"INT": int_mod, "WIS": wis_mod},
-        reason=reason,
-    )
+    return create_auto_accept_check(TrackType.MAGIC)
 
 
 def check_civil_service_acceptance(
-    int_mod: int, chr_mod: int, wis_mod: int
+    int_mod: int = 0, chr_mod: int = 0, wis_mod: int = 0
 ) -> AcceptanceCheck:
     """
     Check if character meets Civil Service track requirements.
-    Requirement: INT, CHR, or WIS bonus required (from CSV: "Int, Chr or WIs bonus")
+    No requirements - all characters can choose Civil Service.
     """
-    has_bonus = int_mod > 0 or chr_mod > 0 or wis_mod > 0
-    accepted = has_bonus
-
-    if has_bonus:
-        reason = f"Has INT({int_mod:+d}), CHR({chr_mod:+d}), or WIS({wis_mod:+d}) bonus"
-    else:
-        reason = "No INT, CHR, or WIS bonus - civil service requires aptitude"
-
-    return AcceptanceCheck(
-        track=TrackType.CIVIL_SERVICE,
-        accepted=accepted,
-        roll=None,
-        target=None,
-        modifiers={"INT": int_mod, "CHR": chr_mod, "WIS": wis_mod},
-        reason=reason,
-    )
+    return create_auto_accept_check(TrackType.CIVIL_SERVICE)
 
 
 def get_track_availability(
-    str_mod: int,
-    dex_mod: int,
-    int_mod: int,
-    wis_mod: int,
+    str_mod: int = 0,
+    dex_mod: int = 0,
+    int_mod: int = 0,
+    wis_mod: int = 0,
     chr_mod: int = 0,
     social_class: str = "",
     wealth_level: str = "",
@@ -290,24 +260,15 @@ def get_track_availability(
     Get availability status for all tracks without rolling dice.
     Used to show which tracks are available for user selection.
 
-    Tracks from CSV:
-    - Merchant: No requirements
-    - Campaigner: No requirements
-    - Laborer: No requirements
-    - Magic: Int or Wis bonus
-    - Underworld: No requirements
-    - Civil Service: Int, Chr or Wis bonus
-    - Craft: No requirements
-    - Hunter/Gatherer: No requirements
-    - Random: No requirements
+    All tracks have no requirements.
 
     Returns:
         Dict mapping TrackType to availability info
     """
     availability = {}
 
-    # Tracks with no requirements (most tracks)
-    no_req_tracks = [
+    # All tracks have no requirements
+    all_tracks = [
         TrackType.MERCHANT,
         TrackType.CAMPAIGNER,
         TrackType.LABORER,
@@ -315,8 +276,10 @@ def get_track_availability(
         TrackType.CRAFT,
         TrackType.HUNTER_GATHERER,
         TrackType.RANDOM,
+        TrackType.MAGIC,
+        TrackType.CIVIL_SERVICE,
     ]
-    for track in no_req_tracks:
+    for track in all_tracks:
         availability[track] = {
             "available": True,
             "requires_roll": False,
@@ -325,28 +288,6 @@ def get_track_availability(
             "requirement": "No requirements",
             "roll_info": None,
         }
-
-    # Magic: Requires INT or WIS bonus
-    has_mental = int_mod > 0 or wis_mod > 0
-    availability[TrackType.MAGIC] = {
-        "available": has_mental,
-        "requires_roll": False,
-        "auto_accept": has_mental,
-        "impossible": not has_mental,
-        "requirement": "Requires INT or WIS bonus",
-        "roll_info": None,
-    }
-
-    # Civil Service: Requires INT, CHR, or WIS bonus
-    has_civil_bonus = int_mod > 0 or chr_mod > 0 or wis_mod > 0
-    availability[TrackType.CIVIL_SERVICE] = {
-        "available": has_civil_bonus,
-        "requires_roll": False,
-        "auto_accept": has_civil_bonus,
-        "impossible": not has_civil_bonus,
-        "requirement": "Requires INT, CHR, or WIS bonus",
-        "roll_info": None,
-    }
 
     return availability
 
@@ -445,35 +386,19 @@ def create_skill_track_for_choice(
     is_promoted: bool = False,
 ) -> SkillTrack:
     """
-    Create a skill track for a user-chosen track, checking requirements.
+    Create a skill track for a user-chosen track.
+
+    All tracks have no requirements - any character can choose any track.
 
     Args:
         chosen_track: The track the user wants
-        Other args: Character stats for acceptance checks
+        Other args: Kept for API compatibility
 
     Returns:
-        SkillTrack object (may have accepted=False if requirements not met)
+        SkillTrack object (always accepted)
     """
-    # Most tracks have no requirements
-    no_req_tracks = [
-        TrackType.MERCHANT,
-        TrackType.CAMPAIGNER,
-        TrackType.LABORER,
-        TrackType.UNDERWORLD,
-        TrackType.CRAFT,
-        TrackType.HUNTER_GATHERER,
-        TrackType.RANDOM,
-    ]
-
-    if chosen_track in no_req_tracks:
-        acceptance_check = create_auto_accept_check(chosen_track)
-    elif chosen_track == TrackType.MAGIC:
-        acceptance_check = check_magic_acceptance(int_mod, wis_mod)
-    elif chosen_track == TrackType.CIVIL_SERVICE:
-        acceptance_check = check_civil_service_acceptance(int_mod, chr_mod, wis_mod)
-    else:
-        # Unknown track - auto accept
-        acceptance_check = create_auto_accept_check(chosen_track, "Unknown track type")
+    # All tracks auto-accept with no requirements
+    acceptance_check = create_auto_accept_check(chosen_track)
 
     # Build the skill track using the helper function
     return build_skill_track(chosen_track, acceptance_check, sub_class, wealth_level)
@@ -492,13 +417,13 @@ def get_eligible_tracks(
     """
     Determine which tracks a character is eligible for.
 
-    Returns:
-        List of tuples (TrackType, AcceptanceCheck) for eligible tracks
-    """
-    eligible = []
+    All tracks have no requirements - returns all tracks.
 
-    # Tracks with no requirements (most tracks from CSV)
-    no_req_tracks = [
+    Returns:
+        List of tuples (TrackType, AcceptanceCheck) for all tracks
+    """
+    # All tracks are eligible with no requirements
+    all_tracks = [
         TrackType.MERCHANT,
         TrackType.CAMPAIGNER,
         TrackType.LABORER,
@@ -506,21 +431,10 @@ def get_eligible_tracks(
         TrackType.CRAFT,
         TrackType.HUNTER_GATHERER,
         TrackType.RANDOM,
+        TrackType.MAGIC,
+        TrackType.CIVIL_SERVICE,
     ]
-    for track in no_req_tracks:
-        eligible.append((track, create_auto_accept_check(track)))
-
-    # Magic - requires INT or WIS bonus
-    magic_check = check_magic_acceptance(int_mod, wis_mod)
-    if magic_check.accepted:
-        eligible.append((TrackType.MAGIC, magic_check))
-
-    # Civil Service - requires INT, CHR, or WIS bonus
-    civil_check = check_civil_service_acceptance(int_mod, chr_mod, wis_mod)
-    if civil_check.accepted:
-        eligible.append((TrackType.CIVIL_SERVICE, civil_check))
-
-    return eligible
+    return [(track, create_auto_accept_check(track)) for track in all_tracks]
 
 
 def select_optimal_track(

@@ -314,14 +314,14 @@ class MagicTrackTests(TestCase):
         self.client = Client()
 
     def test_magic_track_in_availability(self):
-        """Test that Magic track appears in track availability."""
+        """Test that Magic track appears in track availability for all characters."""
         from pillars.attributes import get_track_availability
 
-        # Character with INT bonus
+        # Any character can access Magic (no requirements)
         avail = get_track_availability(
             str_mod=0,
             dex_mod=0,
-            int_mod=2,
+            int_mod=0,
             wis_mod=0,
             chr_mod=0,
             social_class="Commoner",
@@ -331,23 +331,6 @@ class MagicTrackTests(TestCase):
         self.assertIn(TrackType.MAGIC, avail)
         self.assertTrue(avail[TrackType.MAGIC]["available"])
         self.assertFalse(avail[TrackType.MAGIC]["impossible"])
-
-    def test_magic_track_requires_mental_bonus(self):
-        """Test that Magic track requires INT or WIS bonus."""
-        from pillars.attributes import get_track_availability
-
-        # Character without INT/WIS bonus
-        avail = get_track_availability(
-            str_mod=2,
-            dex_mod=2,
-            int_mod=0,
-            wis_mod=0,
-            chr_mod=0,
-            social_class="Commoner",
-            wealth_level="Moderate",
-        )
-
-        self.assertTrue(avail[TrackType.MAGIC]["impossible"])
 
     def test_magic_track_survivability_is_highest(self):
         """Test that Magic track has survivability 7 (highest danger)."""
@@ -4684,9 +4667,9 @@ class BuildTrackInfoTests(TestCase):
 
         availability = {
             TrackType.CAMPAIGNER: {
-                "requires_roll": True,
+                "requires_roll": False,
                 "impossible": False,
-                "requirement": "STR/DEX bonus",
+                "requirement": "No requirements",
             }
         }
 
@@ -4694,40 +4677,38 @@ class BuildTrackInfoTests(TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["track"], "Campaigner")
         self.assertEqual(result[0]["track_key"], "campaigner")
-        self.assertTrue(result[0]["requires_roll"])
+        self.assertFalse(result[0]["requires_roll"])
         self.assertFalse(result[0]["impossible"])
         self.assertIn("survivability", result[0])
 
-    def test_sorted_by_availability_status(self):
-        """Tracks are sorted by availability: available, roll-required, impossible."""
+    def test_all_tracks_available(self):
+        """All tracks are available with no requirements."""
         from webapp.generator.views.helpers import build_track_info
 
         availability = {
             TrackType.LABORER: {
                 "requires_roll": False,
                 "impossible": False,
-                "requirement": "",
+                "requirement": "No requirements",
             },
             TrackType.CIVIL_SERVICE: {
                 "requires_roll": False,
-                "impossible": True,
-                "requirement": "INT/CHR/WIS bonus",
+                "impossible": False,
+                "requirement": "No requirements",
             },
             TrackType.CAMPAIGNER: {
-                "requires_roll": True,
+                "requires_roll": False,
                 "impossible": False,
-                "requirement": "",
+                "requirement": "No requirements",
             },
         }
 
         result = build_track_info(availability)
         self.assertEqual(len(result), 3)
-        # Available tracks first (Laborer - no roll, not impossible)
-        self.assertEqual(result[0]["track"], "Laborer")
-        # Roll-required tracks second (Campaigner - requires roll)
-        self.assertEqual(result[1]["track"], "Campaigner")
-        # Impossible tracks last (Civil Service - impossible)
-        self.assertEqual(result[2]["track"], "Civil Service")
+        # All tracks should be available
+        for track_info in result:
+            self.assertFalse(track_info["impossible"])
+            self.assertFalse(track_info["requires_roll"])
 
 
 class ContentNegotiationTests(TestCase):

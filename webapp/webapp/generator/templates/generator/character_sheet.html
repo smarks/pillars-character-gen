@@ -633,23 +633,13 @@ input.error, textarea.error {
         {% if track_info %}
         <div class="sidebar-section">
             <h3>Available Tracks</h3>
-            <div class="track-legend" style="font-size: 0.8em; margin-bottom: 10px;">
-                <span class="track-badge guaranteed">Guaranteed</span>
-                <span class="track-badge roll-required">Roll Required</span>
-                <span class="track-badge impossible">Impossible</span>
-            </div>
             <div class="track-list-compact">
                 {% for track in track_info %}
-                <div class="track-item {% if track.impossible %}impossible{% elif track.requires_roll and not track.auto_accept %}roll-required{% else %}guaranteed{% endif %}"
+                <div class="track-item guaranteed"
                      data-track="{{ track.track_key }}"
-                     onclick="{% if not track.impossible %}selectTrack('{{ track.track_key }}'){% endif %}"
-                     title="{{ track.requirement }}{% if track.roll_info %} - {{ track.roll_info }}{% endif %}">
+                     onclick="selectTrack('{{ track.track_key }}')">
                     <div>
                         <div class="track-name">{{ track.track }}</div>
-                        <div class="track-requirement">{{ track.requirement }}</div>
-                        {% if track.roll_info and not track.auto_accept %}
-                        <div class="track-roll-info">{{ track.roll_info }}</div>
-                        {% endif %}
                     </div>
                     <div class="track-details">
                         <span class="surv">{{ track.survivability }}+</span>

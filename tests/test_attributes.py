@@ -957,42 +957,37 @@ class TestSkillTrack(unittest.TestCase):
         # Magic starts with Deceit, Persuasion
         self.assertIn("Deceit", TRACK_INITIAL_SKILLS[TrackType.MAGIC])
 
-    def test_magic_acceptance_requires_mental_bonus(self):
-        """Test Magic requires INT or WIS bonus."""
-        # No bonus - should fail
+    def test_magic_acceptance_always_accepts(self):
+        """Test Magic has no requirements - always accepts."""
+        # All characters can access Magic
         check = check_magic_acceptance(int_mod=0, wis_mod=0)
-        self.assertFalse(check.accepted)
+        self.assertTrue(check.accepted)
         self.assertEqual(check.track, TrackType.MAGIC)
 
-        # INT bonus - should pass
         check = check_magic_acceptance(int_mod=1, wis_mod=0)
         self.assertTrue(check.accepted)
 
-        # WIS bonus - should pass
         check = check_magic_acceptance(int_mod=0, wis_mod=1)
         self.assertTrue(check.accepted)
 
-    def test_civil_service_acceptance_requires_mental_or_charisma_bonus(self):
-        """Test Civil Service requires INT, CHR, or WIS bonus."""
-        # No bonus - should fail
+    def test_civil_service_acceptance_always_accepts(self):
+        """Test Civil Service has no requirements - always accepts."""
+        # All characters can access Civil Service
         check = check_civil_service_acceptance(int_mod=0, chr_mod=0, wis_mod=0)
-        self.assertFalse(check.accepted)
+        self.assertTrue(check.accepted)
         self.assertEqual(check.track, TrackType.CIVIL_SERVICE)
 
-        # INT bonus - should pass
         check = check_civil_service_acceptance(int_mod=1, chr_mod=0, wis_mod=0)
         self.assertTrue(check.accepted)
 
-        # CHR bonus - should pass
         check = check_civil_service_acceptance(int_mod=0, chr_mod=1, wis_mod=0)
         self.assertTrue(check.accepted)
 
-        # WIS bonus - should pass
         check = check_civil_service_acceptance(int_mod=0, chr_mod=0, wis_mod=1)
         self.assertTrue(check.accepted)
 
-    def test_get_eligible_tracks_always_includes_no_requirement_tracks(self):
-        """Test that no-requirement tracks are always eligible."""
+    def test_get_eligible_tracks_always_includes_all_tracks(self):
+        """Test that all tracks are always eligible (no requirements)."""
         eligible = get_eligible_tracks(
             str_mod=0,
             dex_mod=0,
@@ -1010,9 +1005,9 @@ class TestSkillTrack(unittest.TestCase):
         self.assertIn(TrackType.UNDERWORLD, eligible_types)
         self.assertIn(TrackType.CRAFT, eligible_types)
         self.assertIn(TrackType.HUNTER_GATHERER, eligible_types)
-        # Magic and Civil Service should NOT be eligible (no bonuses)
-        self.assertNotIn(TrackType.MAGIC, eligible_types)
-        self.assertNotIn(TrackType.CIVIL_SERVICE, eligible_types)
+        # Magic and Civil Service are now also eligible for all characters
+        self.assertIn(TrackType.MAGIC, eligible_types)
+        self.assertIn(TrackType.CIVIL_SERVICE, eligible_types)
 
     def test_select_optimal_track_prioritizes_magic_when_eligible(self):
         """Test that Magic is selected when eligible."""
@@ -1028,8 +1023,10 @@ class TestSkillTrack(unittest.TestCase):
         )
         self.assertEqual(track, TrackType.MAGIC)
 
-    def test_select_optimal_track_prioritizes_civil_service_for_charismatic(self):
-        """Test that Civil Service is selected for charismatic characters."""
+    def test_select_optimal_track_always_prefers_magic(self):
+        """Test that Magic is always selected as optimal (no requirements)."""
+        # Since Magic has no requirements and is highest priority,
+        # all characters get Magic as the optimal track
         track, check = select_optimal_track(
             str_mod=0,
             dex_mod=0,
@@ -1040,7 +1037,7 @@ class TestSkillTrack(unittest.TestCase):
             wealth_level="Moderate",
             sub_class="Laborer",
         )
-        self.assertEqual(track, TrackType.CIVIL_SERVICE)
+        self.assertEqual(track, TrackType.MAGIC)
 
     def test_roll_survivability_random_never_returns_5(self):
         """Test that Random track survivability never returns 5."""

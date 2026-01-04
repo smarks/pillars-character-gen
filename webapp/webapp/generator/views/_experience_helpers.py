@@ -33,6 +33,9 @@ from .serialization import (
 def get_or_create_skill_track(char_data, character, chosen_track_name):
     """Get existing skill track or create a new one based on user selection.
 
+    If a track is explicitly chosen, it always creates a new track (allowing
+    the user to change tracks when adding more experience).
+
     Returns:
         tuple: (skill_track, char_data, error_message)
         If error_message is not None, track creation failed.
@@ -45,8 +48,25 @@ def get_or_create_skill_track(char_data, character, chosen_track_name):
     sub_class = char_data.get("provenance_sub_class", "Laborer")
     wealth_level = char_data.get("wealth_level", "Moderate")
 
-    if char_data.get("skill_track"):
-        # Use existing track (migrate old track names if needed)
+    # If user explicitly chose a track, always use that (allows changing tracks)
+    if chosen_track_name:
+        try:
+            # Track keys come in lowercase from the form, enum names are uppercase
+            chosen_track = TrackType[chosen_track_name.upper()]
+        except KeyError:
+            chosen_track = TrackType.RANDOM
+        skill_track = create_skill_track_for_choice(
+            chosen_track=chosen_track,
+            str_mod=str_mod,
+            dex_mod=dex_mod,
+            int_mod=int_mod,
+            wis_mod=wis_mod,
+            social_class=social_class,
+            sub_class=sub_class,
+            wealth_level=wealth_level,
+        )
+    elif char_data.get("skill_track"):
+        # No track chosen but we have an existing track - use it
         track_data = char_data["skill_track"]
         migrated_track = migrate_track_name(track_data["track"])
         skill_track = SkillTrack(
@@ -69,25 +89,8 @@ def get_or_create_skill_track(char_data, character, chosen_track_name):
             magic_school_rolls=track_data.get("magic_school_rolls"),
         )
         return skill_track, char_data, None
-
-    # Create new track - use selected track from radio button if provided
-    if chosen_track_name:
-        try:
-            # Track keys come in lowercase from the form, enum names are uppercase
-            chosen_track = TrackType[chosen_track_name.upper()]
-        except KeyError:
-            chosen_track = TrackType.RANDOM
-        skill_track = create_skill_track_for_choice(
-            chosen_track=chosen_track,
-            str_mod=str_mod,
-            dex_mod=dex_mod,
-            int_mod=int_mod,
-            wis_mod=wis_mod,
-            social_class=social_class,
-            sub_class=sub_class,
-            wealth_level=wealth_level,
-        )
     else:
+        # No track chosen and no existing track - roll randomly
         skill_track = roll_skill_track(
             str_mod=str_mod,
             dex_mod=dex_mod,
