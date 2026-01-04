@@ -105,7 +105,7 @@
                 <td>{{ char.created_at|date:"M d, Y H:i" }}</td>
                 <td>{{ char.updated_at|date:"M d, Y H:i" }}</td>
                 <td>
-                    <a href="{% url 'character_sheet' char.id %}" class="btn primary">View</a>
+                    <a href="{% url 'load_character' char.id %}" class="btn primary">Edit</a>
                     <form method="post" action="{% url 'admin_delete_character' char.id %}" style="display: inline;"
                           onsubmit="return confirm('Are you sure you want to delete &quot;{{ char.name }}&quot;? This cannot be undone.');">
                         {% csrf_token %}

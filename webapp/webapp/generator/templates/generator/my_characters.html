@@ -177,11 +177,11 @@
             </thead>
             <tbody>
                 {% for char in characters %}
-                <tr class="character-row" onclick="if (!event.target.matches('input, button, a')) window.location='{% url 'character_sheet' char.id %}'">
+                <tr class="character-row" onclick="if (!event.target.matches('input, button, a')) window.location='{% url 'load_character' char.id %}'">
                     {% if is_privileged %}
                     <td class="checkbox-cell" onclick="event.stopPropagation();"><input type="checkbox" name="character_ids" value="{{ char.id }}" class="char-checkbox"></td>
                     {% endif %}
-                    <td><a href="{% url 'character_sheet' char.id %}">{{ char.name }}</a></td>
+                    <td><a href="{% url 'load_character' char.id %}">{{ char.name }}</a></td>
                     {% if is_privileged %}
                     <td>{{ char.user.username }}</td>
                     {% endif %}

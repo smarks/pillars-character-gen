@@ -155,6 +155,9 @@ def load_character(request, char_id):
     )
     request.session["interactive_aging"] = char_data.get("interactive_aging", {})
     request.session["interactive_died"] = char_data.get("interactive_died", False)
+
+    # Set the saved character ID so edits sync back to database
+    request.session["current_saved_character_id"] = saved_char.id
     request.session.modified = True
 
     messages.success(request, f"Loaded character: {saved_char.name}")
