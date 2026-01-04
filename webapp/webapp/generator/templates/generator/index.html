@@ -528,7 +528,8 @@ function addExperienceAjax() {
 
     fetch('{% url "add_session_experience" %}', {
         method: 'POST',
-        body: formData
+        body: formData,
+        credentials: 'same-origin'
     })
     .then(function(response) { return response.json(); })
     .then(function(data) {
@@ -582,6 +583,17 @@ function addExperienceAjax() {
 
         feedback.innerHTML = html;
 
+        // Update the age input field with the new current age
+        var ageInput = document.querySelector('input[name="char_age"]');
+        if (ageInput && data.current_age) {
+            ageInput.value = data.current_age;
+        }
+
+        // Update the skills list in the character sheet
+        if (data.all_skills && data.all_skills.length > 0) {
+            updateSkillsList(data.all_skills);
+        }
+
         // Update the Character Log section at the bottom of the page
         updateCharacterLog(data);
     })
@@ -591,6 +603,34 @@ function addExperienceAjax() {
         feedback.innerHTML = '<strong>Error:</strong> ' + err.message;
         btn.disabled = false;
         btn.textContent = 'Add Experience';
+    });
+}
+
+// Update the skills list in the character sheet
+function updateSkillsList(skills) {
+    var skillsList = document.getElementById('gensheet-skills-list');
+    if (!skillsList) return;
+
+    // Clear existing skills
+    skillsList.innerHTML = '';
+
+    // Consolidate skills (count duplicates)
+    var skillCounts = {};
+    skills.forEach(function(skill) {
+        skillCounts[skill] = (skillCounts[skill] || 0) + 1;
+    });
+
+    // Build skill items
+    Object.keys(skillCounts).sort().forEach(function(skillName) {
+        var count = skillCounts[skillName];
+        var displayName = count > 1 ? skillName + ' ' + count : skillName;
+
+        var li = document.createElement('li');
+        li.className = 'skill-item';
+        li.dataset.skillName = skillName;
+        li.innerHTML = '<span class="skill-tag editable" onclick="CharacterSheet.startRenameSkill(\'gensheet\', this)" title="Click to rename">' +
+                       displayName + '</span>';
+        skillsList.appendChild(li);
     });
 }
 

@@ -100,7 +100,8 @@ def calculate_adjusted_attributes(char_data):
     for attr in ["STR", "DEX", "INT", "WIS", "CON"]:
         base_val = get_attribute_base_value(attrs.get(attr, 10))
         penalty = aging.get(attr.lower(), 0)
-        adjusted = base_val - penalty
+        # Penalty is stored as negative (e.g., -1), so add it to subtract
+        adjusted = base_val + penalty
         adj_mod = get_attribute_modifier(adjusted)
 
         result[f"{attr.lower()}_adjusted"] = adjusted

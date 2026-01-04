@@ -226,6 +226,8 @@ def update_experience_session(
 
     request.session["current_character"] = char_data
     request.session.modified = True
+    # Force session save for AJAX requests
+    request.session.save()
 
 
 def sync_experience_to_database(
@@ -405,13 +407,14 @@ def handle_add_experience_ajax(request):
     if char_name:
         char_data["name"] = char_name
 
-    # Capture manually entered age as base_age
+    # Capture manually entered age as base_age - but only on FIRST experience call
+    # (when there's no existing experience yet, otherwise we'd mess up the calculation)
     char_age = request.POST.get("char_age", "").strip()
-    if char_age:
+    existing_interactive_years = char_data.get("interactive_years", 0)
+    if char_age and existing_interactive_years == 0:
         try:
             age_val = int(char_age)
-            existing_years = char_data.get("interactive_years", 0)
-            char_data["base_age"] = age_val - existing_years
+            char_data["base_age"] = age_val
             char_data["age"] = age_val
         except ValueError:
             pass
@@ -502,12 +505,14 @@ def handle_add_experience_ajax(request):
     # Build response with new experience data
     total_years = existing_years + len(new_yearly_results)
     current_age = base_age + total_years
+    all_skills = existing_skills + new_skills
 
     return JsonResponse(
         {
             "success": True,
             "new_yearly_results": new_yearly_results,
             "new_skills": new_skills,
+            "all_skills": all_skills,
             "total_years": total_years,
             "current_age": current_age,
             "died": died,

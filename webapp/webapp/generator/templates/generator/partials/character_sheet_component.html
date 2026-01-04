@@ -91,98 +91,110 @@ Attribute display variables (computed by view):
         <div class="attributes-grid">
             <div class="attr-box">
                 <label>STR</label>
-                {% if editable %}
-                <input type="text" class="attr-input" data-field="attributes.STR" data-attr="true"
-                       value="{{ str_display|default:char_data.attributes.STR }}" inputmode="numeric">
-                {% else %}
-                <span class="attr-value">{{ str_display|default:char_data.attributes.STR }}</span>
-                {% endif %}
-                <span class="modifier" data-computed="str_mod">({% if str_mod >= 0 %}+{% endif %}{{ str_mod|default:"0" }})</span>
-                {% if aging_penalties.str|default:0 %}
-                <span class="adjusted-attr" title="Effective value after aging">
-                    <span class="arrow">→</span>
-                    <span data-computed="str_adjusted">{{ str_adjusted|default:char_data.attributes.STR }}</span>
-                    <span class="adj-mod" data-computed="str_adj_mod">({% if str_adj_mod >= 0 %}+{% endif %}{{ str_adj_mod|default:"0" }})</span>
-                </span>
-                {% endif %}
+                <div class="attr-values">
+                    {% if editable %}
+                    <input type="text" class="attr-input" data-field="attributes.STR" data-attr="true"
+                           value="{{ str_display|default:char_data.attributes.STR }}" inputmode="numeric">
+                    {% else %}
+                    <span class="attr-value">{{ str_display|default:char_data.attributes.STR }}</span>
+                    {% endif %}
+                    {% if aging_penalties.str|default:0 %}
+                    <span class="adjusted-attr" title="Effective value after aging ({{ aging_penalties.str }} from aging)">
+                        → <span class="adjusted-value" data-computed="str_adjusted">{{ str_adjusted|default:char_data.attributes.STR }}</span>
+                        <span class="adj-mod" data-computed="str_adj_mod">({% if str_adj_mod >= 0 %}+{% endif %}{{ str_adj_mod|default:"0" }})</span>
+                    </span>
+                    {% else %}
+                    <span class="modifier" data-computed="str_mod">({% if str_mod >= 0 %}+{% endif %}{{ str_mod|default:"0" }})</span>
+                    {% endif %}
+                </div>
             </div>
             <div class="attr-box">
                 <label>DEX</label>
-                {% if editable %}
-                <input type="text" class="attr-input" data-field="attributes.DEX" data-attr="true"
-                       value="{{ dex_display|default:char_data.attributes.DEX }}" inputmode="numeric">
-                {% else %}
-                <span class="attr-value">{{ dex_display|default:char_data.attributes.DEX }}</span>
-                {% endif %}
-                <span class="modifier" data-computed="dex_mod">({% if dex_mod >= 0 %}+{% endif %}{{ dex_mod|default:"0" }})</span>
-                {% if aging_penalties.dex|default:0 %}
-                <span class="adjusted-attr" title="Effective value after aging">
-                    <span class="arrow">→</span>
-                    <span data-computed="dex_adjusted">{{ dex_adjusted|default:char_data.attributes.DEX }}</span>
-                    <span class="adj-mod" data-computed="dex_adj_mod">({% if dex_adj_mod >= 0 %}+{% endif %}{{ dex_adj_mod|default:"0" }})</span>
-                </span>
-                {% endif %}
+                <div class="attr-values">
+                    {% if editable %}
+                    <input type="text" class="attr-input" data-field="attributes.DEX" data-attr="true"
+                           value="{{ dex_display|default:char_data.attributes.DEX }}" inputmode="numeric">
+                    {% else %}
+                    <span class="attr-value">{{ dex_display|default:char_data.attributes.DEX }}</span>
+                    {% endif %}
+                    {% if aging_penalties.dex|default:0 %}
+                    <span class="adjusted-attr" title="Effective value after aging ({{ aging_penalties.dex }} from aging)">
+                        → <span class="adjusted-value" data-computed="dex_adjusted">{{ dex_adjusted|default:char_data.attributes.DEX }}</span>
+                        <span class="adj-mod" data-computed="dex_adj_mod">({% if dex_adj_mod >= 0 %}+{% endif %}{{ dex_adj_mod|default:"0" }})</span>
+                    </span>
+                    {% else %}
+                    <span class="modifier" data-computed="dex_mod">({% if dex_mod >= 0 %}+{% endif %}{{ dex_mod|default:"0" }})</span>
+                    {% endif %}
+                </div>
             </div>
             <div class="attr-box">
                 <label>INT</label>
-                {% if editable %}
-                <input type="text" class="attr-input" data-field="attributes.INT" data-attr="true"
-                       value="{{ int_display|default:char_data.attributes.INT }}" inputmode="numeric">
-                {% else %}
-                <span class="attr-value">{{ int_display|default:char_data.attributes.INT }}</span>
-                {% endif %}
-                <span class="modifier" data-computed="int_mod">({% if int_mod >= 0 %}+{% endif %}{{ int_mod|default:"0" }})</span>
-                {% if aging_penalties.int|default:0 %}
-                <span class="adjusted-attr" title="Effective value after aging">
-                    <span class="arrow">→</span>
-                    <span data-computed="int_adjusted">{{ int_adjusted|default:char_data.attributes.INT }}</span>
-                    <span class="adj-mod" data-computed="int_adj_mod">({% if int_adj_mod >= 0 %}+{% endif %}{{ int_adj_mod|default:"0" }})</span>
-                </span>
-                {% endif %}
+                <div class="attr-values">
+                    {% if editable %}
+                    <input type="text" class="attr-input" data-field="attributes.INT" data-attr="true"
+                           value="{{ int_display|default:char_data.attributes.INT }}" inputmode="numeric">
+                    {% else %}
+                    <span class="attr-value">{{ int_display|default:char_data.attributes.INT }}</span>
+                    {% endif %}
+                    {% if aging_penalties.int|default:0 %}
+                    <span class="adjusted-attr" title="Effective value after aging ({{ aging_penalties.int }} from aging)">
+                        → <span class="adjusted-value" data-computed="int_adjusted">{{ int_adjusted|default:char_data.attributes.INT }}</span>
+                        <span class="adj-mod" data-computed="int_adj_mod">({% if int_adj_mod >= 0 %}+{% endif %}{{ int_adj_mod|default:"0" }})</span>
+                    </span>
+                    {% else %}
+                    <span class="modifier" data-computed="int_mod">({% if int_mod >= 0 %}+{% endif %}{{ int_mod|default:"0" }})</span>
+                    {% endif %}
+                </div>
             </div>
             <div class="attr-box">
                 <label>WIS</label>
-                {% if editable %}
-                <input type="text" class="attr-input" data-field="attributes.WIS" data-attr="true"
-                       value="{{ wis_display|default:char_data.attributes.WIS }}" inputmode="numeric">
-                {% else %}
-                <span class="attr-value">{{ wis_display|default:char_data.attributes.WIS }}</span>
-                {% endif %}
-                <span class="modifier" data-computed="wis_mod">({% if wis_mod >= 0 %}+{% endif %}{{ wis_mod|default:"0" }})</span>
-                {% if aging_penalties.wis|default:0 %}
-                <span class="adjusted-attr" title="Effective value after aging">
-                    <span class="arrow">→</span>
-                    <span data-computed="wis_adjusted">{{ wis_adjusted|default:char_data.attributes.WIS }}</span>
-                    <span class="adj-mod" data-computed="wis_adj_mod">({% if wis_adj_mod >= 0 %}+{% endif %}{{ wis_adj_mod|default:"0" }})</span>
-                </span>
-                {% endif %}
+                <div class="attr-values">
+                    {% if editable %}
+                    <input type="text" class="attr-input" data-field="attributes.WIS" data-attr="true"
+                           value="{{ wis_display|default:char_data.attributes.WIS }}" inputmode="numeric">
+                    {% else %}
+                    <span class="attr-value">{{ wis_display|default:char_data.attributes.WIS }}</span>
+                    {% endif %}
+                    {% if aging_penalties.wis|default:0 %}
+                    <span class="adjusted-attr" title="Effective value after aging ({{ aging_penalties.wis }} from aging)">
+                        → <span class="adjusted-value" data-computed="wis_adjusted">{{ wis_adjusted|default:char_data.attributes.WIS }}</span>
+                        <span class="adj-mod" data-computed="wis_adj_mod">({% if wis_adj_mod >= 0 %}+{% endif %}{{ wis_adj_mod|default:"0" }})</span>
+                    </span>
+                    {% else %}
+                    <span class="modifier" data-computed="wis_mod">({% if wis_mod >= 0 %}+{% endif %}{{ wis_mod|default:"0" }})</span>
+                    {% endif %}
+                </div>
             </div>
             <div class="attr-box">
                 <label>CON</label>
-                {% if editable %}
-                <input type="text" class="attr-input" data-field="attributes.CON" data-attr="true"
-                       value="{{ con_display|default:char_data.attributes.CON }}" inputmode="numeric">
-                {% else %}
-                <span class="attr-value">{{ con_display|default:char_data.attributes.CON }}</span>
-                {% endif %}
-                <span class="modifier" data-computed="con_mod">({% if con_mod >= 0 %}+{% endif %}{{ con_mod|default:"0" }})</span>
-                {% if aging_penalties.con|default:0 %}
-                <span class="adjusted-attr" title="Effective value after aging">
-                    <span class="arrow">→</span>
-                    <span data-computed="con_adjusted">{{ con_adjusted|default:char_data.attributes.CON }}</span>
-                    <span class="adj-mod" data-computed="con_adj_mod">({% if con_adj_mod >= 0 %}+{% endif %}{{ con_adj_mod|default:"0" }})</span>
-                </span>
-                {% endif %}
+                <div class="attr-values">
+                    {% if editable %}
+                    <input type="text" class="attr-input" data-field="attributes.CON" data-attr="true"
+                           value="{{ con_display|default:char_data.attributes.CON }}" inputmode="numeric">
+                    {% else %}
+                    <span class="attr-value">{{ con_display|default:char_data.attributes.CON }}</span>
+                    {% endif %}
+                    {% if aging_penalties.con|default:0 %}
+                    <span class="adjusted-attr" title="Effective value after aging ({{ aging_penalties.con }} from aging)">
+                        → <span class="adjusted-value" data-computed="con_adjusted">{{ con_adjusted|default:char_data.attributes.CON }}</span>
+                        <span class="adj-mod" data-computed="con_adj_mod">({% if con_adj_mod >= 0 %}+{% endif %}{{ con_adj_mod|default:"0" }})</span>
+                    </span>
+                    {% else %}
+                    <span class="modifier" data-computed="con_mod">({% if con_mod >= 0 %}+{% endif %}{{ con_mod|default:"0" }})</span>
+                    {% endif %}
+                </div>
             </div>
             <div class="attr-box">
                 <label>CHR</label>
-                {% if editable %}
-                <input type="text" class="attr-input" data-field="attributes.CHR" data-attr="true"
-                       value="{{ chr_display|default:char_data.attributes.CHR }}" inputmode="numeric">
-                {% else %}
-                <span class="attr-value">{{ chr_display|default:char_data.attributes.CHR }}</span>
-                {% endif %}
-                <span class="modifier" data-computed="chr_mod">({% if chr_mod >= 0 %}+{% endif %}{{ chr_mod|default:"0" }})</span>
+                <div class="attr-values">
+                    {% if editable %}
+                    <input type="text" class="attr-input" data-field="attributes.CHR" data-attr="true"
+                           value="{{ chr_display|default:char_data.attributes.CHR }}" inputmode="numeric">
+                    {% else %}
+                    <span class="attr-value">{{ chr_display|default:char_data.attributes.CHR }}</span>
+                    {% endif %}
+                    <span class="modifier" data-computed="chr_mod">({% if chr_mod >= 0 %}+{% endif %}{{ chr_mod|default:"0" }})</span>
+                </div>
             </div>
         </div>
 
@@ -838,21 +850,26 @@ Attribute display variables (computed by view):
     color: #666;
 }
 
-.attr-box .adjusted-attr {
-    display: block;
-    margin-top: 4px;
-    font-size: 0.9em;
-    color: #c44;
+.attr-box .attr-values {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px;
 }
 
-.attr-box .adjusted-attr .arrow {
-    color: #999;
-    margin-right: 3px;
+.attr-box .adjusted-attr {
+    color: #2196f3;
+    font-weight: 500;
+}
+
+.attr-box .adjusted-attr .adjusted-value {
+    color: #1976d2;
+    font-weight: 600;
 }
 
 .attr-box .adjusted-attr .adj-mod {
     font-size: 0.85em;
-    color: #966;
+    color: #64b5f6;
 }
 
 /* Derived stats */
