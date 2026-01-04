@@ -536,8 +536,17 @@ function addExperienceAjax() {
                    '<strong>Year ' + yr.year + ':</strong> ' + yr.skill + ' ' +
                    '<span style="font-size: 0.8em; color: #666;">(' + rollInfo + ' ' + survResult + ')</span>';
 
-            if (yr.aging && yr.aging.length > 0) {
-                html += ' <span style="color: #c44; font-size: 0.8em;">[Aging: ' + yr.aging.join(', ') + ']</span>';
+            // yr.aging is an object like {str: -1, dex: 0, ...} - convert non-zero values to display
+            if (yr.aging) {
+                var agingParts = [];
+                Object.keys(yr.aging).forEach(function(attr) {
+                    if (yr.aging[attr]) {
+                        agingParts.push(attr.toUpperCase() + ' ' + yr.aging[attr]);
+                    }
+                });
+                if (agingParts.length > 0) {
+                    html += ' <span style="color: #c44; font-size: 0.8em;">[Aging: ' + agingParts.join(', ') + ']</span>';
+                }
             }
             html += '</div>';
         });
@@ -679,9 +688,12 @@ function updateCharacterLog(data) {
         yearDiv.className = 'year-entry' + (yr.survived ? '' : ' died');
 
         var agingHtml = '';
-        if (yr.aging && yr.aging.length > 0) {
-            yr.aging.forEach(function(penalty) {
-                agingHtml += '| <span class="aging-penalty">' + penalty + '</span> ';
+        // yr.aging is an object like {str: -1, dex: 0, ...} - convert non-zero values to display
+        if (yr.aging) {
+            Object.keys(yr.aging).forEach(function(attr) {
+                if (yr.aging[attr]) {
+                    agingHtml += '| <span class="aging-penalty">' + attr.toUpperCase() + ' ' + yr.aging[attr] + '</span> ';
+                }
             });
         }
 
