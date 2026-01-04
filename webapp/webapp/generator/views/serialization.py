@@ -216,7 +216,11 @@ def serialize_character(character, preserve_data=None):
             if hasattr(character.provenance, "sub_class")
             else "Laborer"
         ),
-        "location": str(character.location),
+        "location": (
+            character.location.location_type
+            if hasattr(character.location, "location_type")
+            else str(character.location)
+        ),
         "location_skills": (
             list(character.location.skills) if character.location.skills else []
         ),
@@ -338,6 +342,44 @@ def serialize_character(character, preserve_data=None):
                 "result": character.location.location_type,
             }
         )
+        # Add skill selection rolls for Rural (skill_rolls) or Village (skill_roll)
+        if character.location.skill_rolls:
+            # Rural: show which survival skills were rolled
+            generation_log.append(
+                {
+                    "type": "background",
+                    "name": "Location Skills",
+                    "rolls": character.location.skill_rolls,
+                    "result": ", ".join(character.location.skills),
+                }
+            )
+        elif character.location.skill_roll is not None:
+            # Village: single skill roll
+            generation_log.append(
+                {
+                    "type": "background",
+                    "name": "Location Skill",
+                    "rolls": [character.location.skill_roll],
+                    "result": (
+                        character.location.skills[0]
+                        if character.location.skills
+                        else "None"
+                    ),
+                }
+            )
+        # Add attribute roll for Village
+        if character.location.attribute_roll is not None:
+            attr_mods = []
+            for attr, mod in character.location.attribute_modifiers.items():
+                attr_mods.append(f"+{mod} {attr}" if mod > 0 else f"{mod} {attr}")
+            generation_log.append(
+                {
+                    "type": "background",
+                    "name": "Location Attribute",
+                    "rolls": [character.location.attribute_roll],
+                    "result": ", ".join(attr_mods),
+                }
+            )
 
     # Wealth roll
     if hasattr(character.wealth, "roll"):
