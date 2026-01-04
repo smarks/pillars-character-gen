@@ -400,9 +400,6 @@ def build_skill_track(
         if survivability is None:
             survivability = 5
 
-    # Get initial skills from CSV
-    initial_skills = list(TRACK_INITIAL_SKILLS.get(track, []))
-
     # Handle special cases
     craft_type = None
     craft_rolls = None
@@ -410,11 +407,17 @@ def build_skill_track(
     magic_school_rolls = None
 
     if track == TrackType.CRAFT:
+        # Get initial skills from CSV, then add craft type
+        initial_skills = list(TRACK_INITIAL_SKILLS.get(track, []))
         craft_type, craft_rolls = roll_craft_type()
         initial_skills.append(f"Craft: {craft_type.value}")
     elif track == TrackType.MAGIC:
+        # Magic uses spell progression, not CSV skills
         magic_school, magic_school_rolls = roll_magic_school()
-        initial_skills.extend(get_magic_initial_skills(magic_school))
+        initial_skills = get_magic_initial_skills(magic_school)
+    else:
+        # Get initial skills from CSV for other tracks
+        initial_skills = list(TRACK_INITIAL_SKILLS.get(track, []))
 
     return SkillTrack(
         track=track,
