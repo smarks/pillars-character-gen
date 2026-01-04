@@ -582,8 +582,8 @@ function addExperienceAjax() {
 
         feedback.innerHTML = html;
 
-        // Update the page's age display and experience log (need to reload for full update)
-        // For now, we just show the feedback. User can refresh or continue adding.
+        // Update the Character Log section at the bottom of the page
+        updateCharacterLog(data);
     })
     .catch(function(err) {
         feedback.style.background = '#f8d7da';
@@ -592,6 +592,92 @@ function addExperienceAjax() {
         btn.disabled = false;
         btn.textContent = 'Add Experience';
     });
+}
+
+// Update the Character Log section with new experience data
+function updateCharacterLog(data) {
+    var logSection = document.querySelector('.character-log-section');
+    var experienceLog = logSection ? logSection.querySelector('.experience-log') : null;
+
+    // If Character Log section doesn't exist, create it
+    if (!logSection) {
+        var sheetComponent = document.querySelector('.character-sheet-component');
+        if (!sheetComponent) return;
+
+        logSection = document.createElement('div');
+        logSection.className = 'sheet-section character-log-section';
+        logSection.innerHTML = '<h2>Character Log</h2>';
+        sheetComponent.appendChild(logSection);
+    }
+
+    // Find or create experience summary
+    var summary = logSection.querySelector('.experience-summary');
+    if (!summary) {
+        summary = document.createElement('div');
+        summary.className = 'experience-summary';
+        // Insert after h2
+        var h2 = logSection.querySelector('h2');
+        if (h2.nextSibling) {
+            logSection.insertBefore(summary, h2.nextSibling);
+        } else {
+            logSection.appendChild(summary);
+        }
+    }
+
+    // Update summary
+    summary.innerHTML = '<div class="summary-row">' +
+        '<span class="summary-label">Prior Experience:</span> ' +
+        '<span class="summary-value">' + data.total_years + ' years as ' + data.track_name + '</span> ' +
+        '<span class="summary-ages">(Age 16 → ' + data.current_age + ')</span>' +
+        (data.died ? ' <span class="died-badge">DECEASED</span>' : '') +
+        '</div>';
+
+    // Find or create Prior Experience Log header and experience-log div
+    var expHeader = logSection.querySelector('h3.prior-exp-header');
+    if (!expHeader) {
+        // Check if generation log exists to insert after it
+        var genLog = logSection.querySelector('.generation-log');
+        expHeader = document.createElement('h3');
+        expHeader.className = 'prior-exp-header';
+        expHeader.textContent = 'Prior Experience Log';
+
+        if (genLog) {
+            genLog.after(expHeader);
+        } else {
+            logSection.appendChild(expHeader);
+        }
+    }
+
+    // Find or create experience-log div
+    if (!experienceLog) {
+        experienceLog = document.createElement('div');
+        experienceLog.className = 'experience-log';
+        expHeader.after(experienceLog);
+    }
+
+    // Append new year entries
+    data.new_yearly_results.forEach(function(yr) {
+        var yearDiv = document.createElement('div');
+        yearDiv.className = 'year-entry' + (yr.survived ? '' : ' died');
+
+        var agingHtml = '';
+        if (yr.aging && yr.aging.length > 0) {
+            yr.aging.forEach(function(penalty) {
+                agingHtml += '| <span class="aging-penalty">' + penalty + '</span> ';
+            });
+        }
+
+        yearDiv.innerHTML = '<strong>Year ' + yr.year + ':</strong> ' + yr.skill + ' | ' +
+            'Survival: ' + yr.surv_roll + (yr.surv_mod >= 0 ? '+' : '') + yr.surv_mod + '=' + yr.surv_total +
+            ' vs ' + yr.surv_target + '+ ' +
+            '[' + (yr.survived ? '<span class="survived">Survived</span>' : '<span class="died-text">DIED</span>') + '] ' +
+            agingHtml;
+
+        experienceLog.appendChild(yearDiv);
+    });
+
+    // Scroll to the Character Log section
+    logSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function handleExport(format) {
