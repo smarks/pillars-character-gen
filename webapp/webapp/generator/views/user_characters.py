@@ -61,6 +61,10 @@ def save_character(request):
         character_data=save_data,
     )
 
+    # Set the saved character ID so future experience additions sync to database
+    request.session["current_saved_character_id"] = saved_char.id
+    request.session.modified = True
+
     return JsonResponse({"success": True, "id": saved_char.id, "name": saved_char.name})
 
 

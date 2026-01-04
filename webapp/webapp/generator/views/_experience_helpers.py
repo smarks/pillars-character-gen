@@ -251,10 +251,12 @@ def sync_experience_to_database(
 
     try:
         saved_char = SavedCharacter.objects.get(id=saved_id, user=request.user)
+        total_years = existing_years + len(new_yearly_results)
+
+        # Update all experience-related fields
         saved_char.character_data["skill_track"] = char_data.get("skill_track")
-        saved_char.character_data["interactive_years"] = existing_years + len(
-            new_yearly_results
-        )
+        saved_char.character_data["base_age"] = char_data.get("base_age", 16)
+        saved_char.character_data["interactive_years"] = total_years
         saved_char.character_data["interactive_skills"] = existing_skills + new_skills
         saved_char.character_data["interactive_yearly_results"] = (
             existing_yearly_results + new_yearly_results
@@ -267,6 +269,10 @@ def sync_experience_to_database(
             "wis": aging_effects.wis_penalty,
             "con": aging_effects.con_penalty,
         }
+
+        # Update the model's age field to current age
+        saved_char.age = saved_char.character_data["base_age"] + total_years
+
         # Clear skill_points_data so it gets rebuilt with updated skills
         saved_char.character_data.pop("skill_points_data", None)
         saved_char.save()
