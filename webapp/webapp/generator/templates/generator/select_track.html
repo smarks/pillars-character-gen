@@ -19,10 +19,15 @@
     border: 2px solid #ccc;
     padding: 15px;
     position: relative;
-    background: #fafafa;
+    cursor: pointer;
 }
-.track-card.available { border-color: #4a4; background: #f8fff8; cursor: pointer; }
-.track-card.selected { border-color: #00f; border-width: 3px; background: #e8e8ff; }
+/* Survivability-based colors: lower = more dangerous (red), higher = safer (green) */
+.track-card.surv-3 { background: #ffcccc; border-color: #cc6666; }
+.track-card.surv-4 { background: #ffe6cc; border-color: #cc9966; }
+.track-card.surv-5 { background: #ffffcc; border-color: #cccc66; }
+.track-card.surv-6 { background: #e6ffcc; border-color: #99cc66; }
+.track-card.surv-7 { background: #ccffcc; border-color: #66cc66; }
+.track-card.selected { border-color: #00f; border-width: 3px; }
 .track-card h4 { margin: 0 0 10px 0; }
 .track-card .details { font-size: 0.9em; color: #666; }
 .track-card .skills { margin-top: 10px; }
@@ -114,7 +119,7 @@
 
         <div class="track-list">
             {% for track in track_info %}
-            <div class="track-card available{% if current_track == track.track or track.recommended and not current_track %} selected{% endif %}">
+            <div class="track-card surv-{{ track.survivability }}{% if current_track == track.track or track.recommended and not current_track %} selected{% endif %}">
                 <label>
                     <h4>{{ track.track }}</h4>
                     <input type="radio" name="chosen_track" value="{{ track.track_key }}"{% if current_track == track.track or track.recommended and not current_track %} checked{% endif %}>

@@ -75,18 +75,13 @@
 .track-panel:last-child {
     margin-bottom: 0;
 }
-.track-panel.unavailable {
-    background: #ffcccc;
-    border-color: #cc6666;
-    color: #884444;
-    cursor: not-allowed;
-}
-.track-panel.available {
-    background: #ccffcc;
-    border-color: #66cc66;
-}
+/* Survivability-based colors: lower = more dangerous (red), higher = safer (green) */
+.track-panel.surv-3 { background: #ffcccc; border-color: #cc6666; } /* Most dangerous */
+.track-panel.surv-4 { background: #ffe6cc; border-color: #cc9966; }
+.track-panel.surv-5 { background: #ffffcc; border-color: #cccc66; }
+.track-panel.surv-6 { background: #e6ffcc; border-color: #99cc66; }
+.track-panel.surv-7 { background: #ccffcc; border-color: #66cc66; } /* Safest */
 .track-panel.selected {
-    background: #ccffcc;
     border-color: #228b22;
     border-width: 3px;
 }
@@ -328,8 +323,8 @@
             <!-- Track selection -->
             <div id="track-panels">
                 {% for track in track_info %}
-                <div class="track-panel {% if track.recommended and not selected_track %}selected{% elif selected_track == track.track_key %}selected{% else %}available{% endif %}"
-                     data-track="{{ track.track_key }}">
+                <div class="track-panel surv-{{ track.survivability }}{% if track.recommended and not selected_track %} selected{% elif selected_track == track.track_key %} selected{% endif %}"
+                     data-track="{{ track.track_key }}" data-survivability="{{ track.survivability }}">
                     <input type="radio" name="chosen_track" value="{{ track.track_key }}" class="track-checkbox"
                            {% if track.recommended and not selected_track %}checked{% elif selected_track == track.track_key %}checked{% endif %}>
                     <div class="track-name">{{ track.track }}</div>
@@ -770,16 +765,15 @@ document.addEventListener('trackInfoUpdated', function(e) {
     trackPanels.innerHTML = '';
 
     trackInfo.forEach(function(track) {
-        var panelClass = 'track-panel ';
+        var panelClass = 'track-panel surv-' + track.survivability;
         if (track.recommended) {
-            panelClass += 'available selected';
-        } else {
-            panelClass += 'available';
+            panelClass += ' selected';
         }
 
         var panel = document.createElement('div');
         panel.className = panelClass;
         panel.dataset.track = track.track_key;
+        panel.dataset.survivability = track.survivability;
 
         var html = '';
         var checked = track.recommended ? 'checked' : '';
