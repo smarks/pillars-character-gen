@@ -429,14 +429,14 @@ def handle_add_experience_ajax(request):
     if error:
         return JsonResponse({"error": error}, status=400)
 
-    # Get existing experience data
-    existing_years = request.session.get("interactive_years", 0)
-    existing_skills = request.session.get("interactive_skills", [])
-    existing_yearly_results = request.session.get("interactive_yearly_results", [])
-    existing_aging = request.session.get(
+    # Get existing experience data from char_data (more reliable than session keys)
+    existing_years = char_data.get("interactive_years", 0)
+    existing_skills = char_data.get("interactive_skills", [])
+    existing_yearly_results = char_data.get("interactive_yearly_results", [])
+    existing_aging = char_data.get(
         "interactive_aging", {"str": 0, "dex": 0, "int": 0, "wis": 0, "con": 0}
     )
-    died = request.session.get("interactive_died", False)
+    died = char_data.get("interactive_died", False)
 
     if died:
         return JsonResponse({"error": "Character is deceased"}, status=400)
