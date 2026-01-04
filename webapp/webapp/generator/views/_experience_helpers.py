@@ -73,7 +73,8 @@ def get_or_create_skill_track(char_data, character, chosen_track_name):
     # Create new track - use selected track from radio button if provided
     if chosen_track_name:
         try:
-            chosen_track = TrackType[chosen_track_name]
+            # Track keys come in lowercase from the form, enum names are uppercase
+            chosen_track = TrackType[chosen_track_name.upper()]
         except KeyError:
             chosen_track = TrackType.RANDOM
         skill_track = create_skill_track_for_choice(
