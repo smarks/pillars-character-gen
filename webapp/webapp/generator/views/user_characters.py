@@ -130,8 +130,18 @@ def my_characters(request):
 @login_required
 def load_character(request, char_id):
     """Load a saved character into the session."""
+    # Check if user is DM or admin
+    profile = getattr(request.user, "profile", None)
+    is_dm_or_admin = (
+        profile and (profile.is_dm or profile.is_admin) if profile else False
+    )
+
     try:
-        saved_char = SavedCharacter.objects.get(id=char_id, user=request.user)
+        if is_dm_or_admin:
+            # DM/admin can load any character
+            saved_char = SavedCharacter.objects.get(id=char_id)
+        else:
+            saved_char = SavedCharacter.objects.get(id=char_id, user=request.user)
     except SavedCharacter.DoesNotExist:
         messages.error(request, "Character not found.")
         return redirect("my_characters")
