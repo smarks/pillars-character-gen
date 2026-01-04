@@ -6,7 +6,10 @@ from io import BytesIO
 from xml.sax.saxutils import escape
 
 from .helpers import get_attribute_modifier, get_attribute_base_value
-from ._character_helpers import build_skill_points_from_char_data
+from ._character_helpers import (
+    build_skill_points_from_char_data,
+    calculate_adjusted_attributes,
+)
 
 
 # Movement and encumbrance constants (same as core.py)
@@ -114,21 +117,44 @@ def generate_pdf_from_char_data(char_data, character_name="Unnamed Character"):
     # Attributes with aging
     story.append(Paragraph("Attributes", heading_style))
     attrs = char_data.get("attributes", {})
-    attr_data = [["Attr", "Value", "Mod"]]
+    has_aging = any(v != 0 for v in aging.values())
+    adjusted = calculate_adjusted_attributes(char_data) if has_aging else {}
+
+    if has_aging:
+        attr_data = [["Attr", "Base", "Adjusted", "Mod"]]
+    else:
+        attr_data = [["Attr", "Value", "Mod"]]
+
     attr_names = ["STR", "DEX", "INT", "WIS", "CON", "CHR"]
     for attr in attr_names:
         val = attrs.get(attr, "-")
-        mod = get_attribute_modifier(val) if isinstance(val, int) else 0
-        mod_str = f"{mod:+d}" if mod != 0 else "0"
+        base_val = get_attribute_base_value(val) if val != "-" else "-"
         aging_key = attr.lower()
         aging_penalty = aging.get(aging_key, 0)
-        if aging_penalty:
-            val_str = f"{val} ({aging_penalty:+d})"
-        else:
-            val_str = str(val)
-        attr_data.append([attr, val_str, mod_str])
 
-    attr_table = Table(attr_data, colWidths=[0.8 * inch, 1.2 * inch, 0.8 * inch])
+        if has_aging and attr != "CHR":  # CHR has no aging
+            adj_val = adjusted.get(f"{aging_key}_adjusted", base_val)
+            adj_mod = adjusted.get(f"{aging_key}_adj_mod", 0)
+            mod_str = f"{adj_mod:+d}" if adj_mod != 0 else "0"
+            if aging_penalty:
+                adj_str = f"{adj_val} ({aging_penalty:+d})"
+            else:
+                adj_str = str(adj_val)
+            attr_data.append([attr, str(base_val), adj_str, mod_str])
+        else:
+            mod = get_attribute_modifier(val) if val != "-" else 0
+            mod_str = f"{mod:+d}" if mod != 0 else "0"
+            if has_aging:
+                attr_data.append([attr, str(base_val), str(base_val), mod_str])
+            else:
+                attr_data.append([attr, str(base_val), mod_str])
+
+    if has_aging:
+        attr_table = Table(
+            attr_data, colWidths=[0.6 * inch, 0.8 * inch, 1.0 * inch, 0.8 * inch]
+        )
+    else:
+        attr_table = Table(attr_data, colWidths=[0.8 * inch, 1.2 * inch, 0.8 * inch])
     attr_table.setStyle(
         TableStyle(
             [

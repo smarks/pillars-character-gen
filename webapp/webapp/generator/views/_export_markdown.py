@@ -3,7 +3,10 @@ Markdown export generation for character data.
 """
 
 from .helpers import get_attribute_modifier, get_attribute_base_value
-from ._character_helpers import build_skill_points_from_char_data
+from ._character_helpers import (
+    build_skill_points_from_char_data,
+    calculate_adjusted_attributes,
+)
 
 
 # Movement and encumbrance constants (same as core.py)
@@ -64,23 +67,41 @@ def generate_markdown_from_char_data(char_data, character_name="Unnamed Characte
 
     # Attributes
     md += "## Attributes\n\n"
-    md += "| Attr | Value | Modifier |\n"
-    md += "|------|-------|----------|\n"
 
     attrs = char_data.get("attributes", {})
     aging = char_data.get("interactive_aging", {})
+    adjusted = calculate_adjusted_attributes(char_data)
+    has_aging = any(v != 0 for v in aging.values())
+
+    if has_aging:
+        md += "| Attr | Base | Adjusted | Modifier |\n"
+        md += "|------|------|----------|----------|\n"
+    else:
+        md += "| Attr | Value | Modifier |\n"
+        md += "|------|-------|----------|\n"
+
     attr_names = ["STR", "DEX", "INT", "WIS", "CON", "CHR"]
     for attr in attr_names:
         val = attrs.get(attr, "-")
-        mod = get_attribute_modifier(val) if isinstance(val, int) else 0
-        mod_str = f"{mod:+d}" if mod != 0 else "0"
-        # Show aging penalty if applicable
+        base_val = get_attribute_base_value(val) if val != "-" else "-"
         aging_key = attr.lower()
         aging_penalty = aging.get(aging_key, 0)
-        if aging_penalty:
-            md += f"| {attr} | {val} ({aging_penalty:+d} aging) | {mod_str} |\n"
+
+        if has_aging and attr != "CHR":  # CHR has no aging
+            adj_val = adjusted.get(f"{aging_key}_adjusted", base_val)
+            adj_mod = adjusted.get(f"{aging_key}_adj_mod", 0)
+            mod_str = f"{adj_mod:+d}" if adj_mod != 0 else "0"
+            if aging_penalty:
+                md += f"| {attr} | {base_val} | {adj_val} ({aging_penalty}) | {mod_str} |\n"
+            else:
+                md += f"| {attr} | {base_val} | {adj_val} | {mod_str} |\n"
         else:
-            md += f"| {attr} | {val} | {mod_str} |\n"
+            mod = get_attribute_modifier(val) if val != "-" else 0
+            mod_str = f"{mod:+d}" if mod != 0 else "0"
+            if has_aging:
+                md += f"| {attr} | {base_val} | {base_val} | {mod_str} |\n"
+            else:
+                md += f"| {attr} | {base_val} | {mod_str} |\n"
 
     md += "\n"
 

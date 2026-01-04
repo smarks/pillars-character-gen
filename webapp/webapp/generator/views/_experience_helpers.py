@@ -221,6 +221,9 @@ def update_experience_session(
         "con": aging_effects.con_penalty,
     }
 
+    # Clear skill_points_data so it gets rebuilt with updated skills
+    char_data.pop("skill_points_data", None)
+
     # Update age based on base_age + years of experience
     char_data["age"] = char_data.get("base_age", 16) + total_years
 
@@ -264,6 +267,8 @@ def sync_experience_to_database(
             "wis": aging_effects.wis_penalty,
             "con": aging_effects.con_penalty,
         }
+        # Clear skill_points_data so it gets rebuilt with updated skills
+        saved_char.character_data.pop("skill_points_data", None)
         saved_char.save()
     except SavedCharacter.DoesNotExist:
         pass
