@@ -502,6 +502,7 @@
                         <a href="{% url 'spells' %}"{% if request.resolver_match.url_name == 'spells' %} class="current-page"{% endif %}>Spells</a>
                         {% endif %}
                         <a href="{% url 'turn_sequence' %}"{% if request.resolver_match.url_name == 'turn_sequence' %} class="current-page"{% endif %}>Turn Sequence</a>
+                        <a href="{% url 'reference_html' 'player_recruit' %}"{% if request.resolver_match.url_name == 'reference_html' and request.resolver_match.kwargs.name == 'player_recruit' %} class="current-page"{% endif %}>Player Recruit</a>
                         {% if user.is_authenticated %}
                         <a href="{% url 'notes' %}"{% if request.resolver_match.url_name == 'notes' %} class="current-page"{% endif %}>Notes</a>
                         {% endif %}
