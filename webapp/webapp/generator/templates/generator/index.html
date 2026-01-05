@@ -329,7 +329,7 @@
                            {% if track.recommended and not selected_track %}checked{% elif selected_track == track.track_key %}checked{% endif %}>
                     <div class="track-name">{{ track.track }}</div>
                     <div class="track-details">
-                        Surv: {{ track.survivability }}+
+                        Survivability: {{ track.survivability }}+
                     </div>
                 </div>
                 {% endfor %}
@@ -792,7 +792,7 @@ document.addEventListener('trackInfoUpdated', function(e) {
         html += '<input type="radio" name="chosen_track" value="' + track.track_key + '" class="track-checkbox" ' + checked + '>';
         html += '<div class="track-name">' + track.track + '</div>';
         html += '<div class="track-details">';
-        html += 'Surv: ' + track.survivability + '+';
+        html += 'Survivability: ' + track.survivability + '+';
         html += '</div>';
 
         panel.innerHTML = html;

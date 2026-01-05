@@ -60,16 +60,9 @@ def build_track_info(track_availability):
             }
         )
 
-    # Sort by availability status: available first, roll-required second, impossible last
-    def sort_key(track):
-        if track["impossible"]:
-            return 2  # Last
-        elif track["requires_roll"]:
-            return 1  # Middle
-        else:
-            return 0  # First (available/guaranteed)
-
-    track_info.sort(key=sort_key)
+    # Sort by survivability (hardest first = highest target number first)
+    # Random track has None survivability, put it at the end
+    track_info.sort(key=lambda t: -(t["survivability"] or 0))
 
     # Mark first non-impossible track as recommended
     for track in track_info:
