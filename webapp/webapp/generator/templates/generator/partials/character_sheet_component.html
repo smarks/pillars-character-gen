@@ -315,22 +315,40 @@ Attribute display variables (computed by view):
             {% endif %}
         </div>
 
-        <ul class="skills-list" id="{{ component_id|default:'cs' }}-skills-list">
+        <table class="skills-table" id="{{ component_id|default:'cs' }}-skills-list">
+            <thead>
+                <tr>
+                    <th>Skill</th>
+                    <th>Level</th>
+                    <th>Points</th>
+                    <th>Acquired</th>
+                    {% if editable and free_skill_points > 0 %}<th></th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
             {% for skill in skills %}
-            <li class="skill-item" data-skill-name="{{ skill.name|default:skill }}">
-                {% if editable %}
-                <span class="skill-tag editable" onclick="CharacterSheet.startRenameSkill('{{ component_id|default:'cs' }}', this)" title="Click to rename">{{ skill.display|default:skill }}</span>
-                {% else %}
-                <span class="skill-tag">{{ skill.display|default:skill }}</span>
-                {% endif %}
-                {% if editable and free_skill_points > 0 %}
-                <button type="button" class="btn-allocate" onclick="CharacterSheet.allocatePoint('{{ component_id|default:'cs' }}', '{{ skill.name|default:skill }}')" title="Allocate 1 free point">+1</button>
-                {% endif %}
-            </li>
+                <tr data-skill-name="{{ skill.name|default:skill }}">
+                    <td class="skill-name-cell">
+                        {% if editable %}
+                        <span class="skill-name editable" onclick="CharacterSheet.startRenameSkill('{{ component_id|default:'cs' }}', this)" title="Click to rename">{{ skill.display_name|default:skill }}</span>
+                        {% else %}
+                        <span class="skill-name">{{ skill.display_name|default:skill }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="skill-level-cell">{{ skill.level_roman|default:"-" }}</td>
+                    <td class="skill-points-cell">{% if skill.excess_points %}+{{ skill.excess_points }}{% else %}-{% endif %}</td>
+                    <td class="skill-acquired-cell">{{ skill.acquired|default:"Automatic" }}</td>
+                    {% if editable and free_skill_points > 0 %}
+                    <td class="skill-action-cell">
+                        <button type="button" class="btn-allocate" onclick="CharacterSheet.allocatePoint('{{ component_id|default:'cs' }}', '{{ skill.name|default:skill }}')" title="Allocate 1 free point">+1</button>
+                    </td>
+                    {% endif %}
+                </tr>
             {% empty %}
-            <li class="skill-item no-skills-msg"><em>No skills yet</em></li>
+                <tr><td colspan="4" class="no-skills-msg"><em>No skills yet</em></td></tr>
             {% endfor %}
-        </ul>
+            </tbody>
+        </table>
 
         {% if editable %}
         <div class="add-skill-row">
@@ -925,49 +943,74 @@ Attribute display variables (computed by view):
     padding: 4px 0;
 }
 
-/* Skills section */
-.skills-section .skills-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.skill-item {
-    display: inline-block;
-}
-
-.skill-tag {
-    background: #333;
-    color: white;
-    padding: 5px 12px;
+/* Skills table */
+.skills-table {
+    width: 100%;
+    border-collapse: collapse;
     font-size: 0.9em;
-    display: inline-block;
+    margin-bottom: 10px;
 }
 
-.skill-tag.editable {
+.skills-table th {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.skills-table td {
+    border: 1px solid #ddd;
+    padding: 6px 12px;
+}
+
+.skills-table tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+
+.skills-table tbody tr:hover {
+    background: #f0f7ff;
+}
+
+.skill-name-cell {
+    min-width: 120px;
+}
+
+.skill-name.editable {
     cursor: pointer;
+    padding: 2px 4px;
 }
 
-.skill-tag.editable:hover {
-    background: #444;
-    outline: 1px dashed #666;
+.skill-name.editable:hover {
+    background: #eef;
+    outline: 1px dashed #99c;
+}
+
+.skill-level-cell,
+.skill-points-cell,
+.skill-acquired-cell {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.skill-action-cell {
+    text-align: center;
+    padding: 4px;
 }
 
 .skill-rename-input {
     font-family: inherit;
     font-size: 0.9em;
-    padding: 4px 10px;
+    padding: 4px 8px;
     border: 1px solid #666;
-    background: #222;
-    color: white;
+    background: #fff;
     min-width: 100px;
 }
 
-.skill-item.no-skills-msg {
+.no-skills-msg {
     color: #666;
+    font-style: italic;
+    text-align: center;
 }
 
 .add-skill-row {

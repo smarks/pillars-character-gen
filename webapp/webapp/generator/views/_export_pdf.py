@@ -248,22 +248,22 @@ def generate_pdf_from_char_data(char_data, character_name="Unnamed Character"):
 
     skills_details = char_skills.get_skills_with_details()
     if skills_details:
-        skill_data = [["Skill", "Level", "Points", "To Next"]]
+        skill_data = [["Skill", "Level", "Points", "Acquired"]]
         for skill in skills_details:
-            level_display = skill.get("level_roman", "-")
-            if skill.get("excess_points", 0) > 0:
-                level_display += f" (+{skill['excess_points']})"
+            level_display = skill.get("level_roman", "-") or "-"
+            excess = skill.get("excess_points", 0)
+            points_display = f"+{excess}" if excess > 0 else "-"
             skill_data.append(
                 [
-                    skill["name"],
+                    skill.get("display_name", skill["name"]),
                     level_display,
-                    str(skill["total_points"]),
-                    str(skill["points_to_next_level"]),
+                    points_display,
+                    skill.get("acquired", "Automatic"),
                 ]
             )
 
         skill_table = Table(
-            skill_data, colWidths=[2 * inch, 0.8 * inch, 0.6 * inch, 0.7 * inch]
+            skill_data, colWidths=[2 * inch, 0.7 * inch, 0.6 * inch, 0.8 * inch]
         )
         skill_table.setStyle(
             TableStyle(

@@ -28,6 +28,7 @@ from .serialization import (
     store_current_character,
     migrate_track_name,
 )
+from ._character_helpers import build_skill_points_from_char_data
 
 
 def get_or_create_skill_track(char_data, character, chosen_track_name):
@@ -521,12 +522,18 @@ def handle_add_experience_ajax(request):
     current_age = base_age + total_years
     all_skills = existing_skills + new_skills
 
+    # Get updated char_data from session for skill details
+    updated_char_data = request.session.get("current_character", char_data)
+    char_skills = build_skill_points_from_char_data(updated_char_data)
+    skills_with_details = char_skills.get_skills_with_details()
+
     return JsonResponse(
         {
             "success": True,
             "new_yearly_results": new_yearly_results,
             "new_skills": new_skills,
             "all_skills": all_skills,
+            "skills_with_details": skills_with_details,
             "total_years": total_years,
             "current_age": current_age,
             "died": died,

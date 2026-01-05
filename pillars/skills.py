@@ -278,6 +278,7 @@ class CharacterSkills:
                     "allocated_points": sp.allocated,
                     "excess_points": excess,
                     "points_to_next_level": points_needed,
+                    "acquired": "Assigned" if sp.allocated > 0 else "Automatic",
                 }
             )
         return result

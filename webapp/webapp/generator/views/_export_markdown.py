@@ -169,13 +169,15 @@ def generate_markdown_from_char_data(char_data, character_name="Unnamed Characte
 
     skills_details = char_skills.get_skills_with_details()
     if skills_details:
-        md += "| Skill | Level | Points | To Next |\n"
-        md += "|-------|-------|--------|--------|\n"
+        md += "| Skill | Level | Points | Acquired |\n"
+        md += "|-------|-------|--------|----------|\n"
         for skill in skills_details:
-            level_display = skill.get("level_roman", "-")
-            if skill.get("excess_points", 0) > 0:
-                level_display += f" (+{skill['excess_points']})"
-            md += f"| {skill['name']} | {level_display} | {skill['total_points']} | {skill['points_to_next_level']} |\n"
+            level_display = skill.get("level_roman", "-") or "-"
+            excess = skill.get("excess_points", 0)
+            points_display = f"+{excess}" if excess > 0 else "-"
+            acquired = skill.get("acquired", "Automatic")
+            display_name = skill.get("display_name", skill["name"])
+            md += f"| {display_name} | {level_display} | {points_display} | {acquired} |\n"
     else:
         md += "_No skills acquired_\n"
     md += "\n"

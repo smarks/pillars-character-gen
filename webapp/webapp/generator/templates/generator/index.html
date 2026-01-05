@@ -576,9 +576,9 @@ function addExperienceAjax() {
             ageInput.value = data.current_age;
         }
 
-        // Update the skills list in the character sheet
-        if (data.all_skills && data.all_skills.length > 0) {
-            updateSkillsList(data.all_skills);
+        // Update the skills table in the character sheet
+        if (data.skills_with_details && data.skills_with_details.length > 0) {
+            updateSkillsTable(data.skills_with_details);
         }
 
         // Update the Character Log section at the bottom of the page
@@ -593,31 +593,37 @@ function addExperienceAjax() {
     });
 }
 
-// Update the skills list in the character sheet
-function updateSkillsList(skills) {
-    var skillsList = document.getElementById('gensheet-skills-list');
-    if (!skillsList) return;
+// Update the skills table in the character sheet
+function updateSkillsTable(skillsWithDetails) {
+    var skillsTable = document.getElementById('gensheet-skills-list');
+    if (!skillsTable) return;
 
-    // Clear existing skills
-    skillsList.innerHTML = '';
+    // Find or create tbody
+    var tbody = skillsTable.querySelector('tbody');
+    if (!tbody) {
+        // If this was an old list, rebuild as table
+        skillsTable.innerHTML = '<thead><tr><th>Skill</th><th>Level</th><th>Points</th><th>Acquired</th></tr></thead><tbody></tbody>';
+        tbody = skillsTable.querySelector('tbody');
+    }
 
-    // Consolidate skills (count duplicates)
-    var skillCounts = {};
-    skills.forEach(function(skill) {
-        skillCounts[skill] = (skillCounts[skill] || 0) + 1;
-    });
+    // Clear existing rows
+    tbody.innerHTML = '';
 
-    // Build skill items
-    Object.keys(skillCounts).sort().forEach(function(skillName) {
-        var count = skillCounts[skillName];
-        var displayName = count > 1 ? skillName + ' ' + count : skillName;
+    // Build table rows from skill details
+    skillsWithDetails.forEach(function(skill) {
+        var tr = document.createElement('tr');
+        tr.dataset.skillName = skill.name;
 
-        var li = document.createElement('li');
-        li.className = 'skill-item';
-        li.dataset.skillName = skillName;
-        li.innerHTML = '<span class="skill-tag editable" onclick="CharacterSheet.startRenameSkill(\'gensheet\', this)" title="Click to rename">' +
-                       displayName + '</span>';
-        skillsList.appendChild(li);
+        var pointsDisplay = skill.excess_points > 0 ? '+' + skill.excess_points : '-';
+
+        tr.innerHTML = '<td class="skill-name-cell">' +
+                       '<span class="skill-name editable" onclick="CharacterSheet.startRenameSkill(\'gensheet\', this)" title="Click to rename">' +
+                       skill.display_name + '</span></td>' +
+                       '<td class="skill-level-cell">' + (skill.level_roman || '-') + '</td>' +
+                       '<td class="skill-points-cell">' + pointsDisplay + '</td>' +
+                       '<td class="skill-acquired-cell">' + (skill.acquired || 'Automatic') + '</td>';
+
+        tbody.appendChild(tr);
     });
 }
 
