@@ -21,12 +21,12 @@
     position: relative;
     cursor: pointer;
 }
-/* Survivability-based colors: lower = more dangerous (red), higher = safer (green) */
-.track-card.surv-3 { background: #ffcccc; border-color: #cc6666; }
-.track-card.surv-4 { background: #ffe6cc; border-color: #cc9966; }
-.track-card.surv-5 { background: #ffffcc; border-color: #cccc66; }
-.track-card.surv-6 { background: #e6ffcc; border-color: #99cc66; }
-.track-card.surv-7 { background: #ccffcc; border-color: #66cc66; }
+/* Survivability target colors: lower target = easier to survive (green), higher = harder (red) */
+.track-card.surv-3 { background: #ccffcc; border-color: #66cc66; } /* Easiest - need 3+ */
+.track-card.surv-4 { background: #e6ffcc; border-color: #99cc66; }
+.track-card.surv-5 { background: #ffffcc; border-color: #cccc66; } /* Medium */
+.track-card.surv-6 { background: #ffe6cc; border-color: #cc9966; }
+.track-card.surv-7 { background: #ffcccc; border-color: #cc6666; } /* Hardest - need 7+ */
 .track-card.selected { border-color: #00f; border-width: 3px; }
 .track-card h4 { margin: 0 0 10px 0; }
 .track-card .details { font-size: 0.9em; color: #666; }
