@@ -115,6 +115,7 @@
 .spell-tab[data-school="mending"].active { background: #a4a; border-color: #a4a; }
 .spell-tab[data-school="weather"].active { background: #666; border-color: #666; }
 .spell-tab[data-school="control"].active { background: #a44; border-color: #a44; }
+.spell-tab[data-school="arcane"].active { background: #84c; border-color: #84c; }
 
 /* Mobile adjustments */
 @media screen and (max-width: 768px) {
@@ -148,6 +149,7 @@
     <button class="spell-tab" data-school="mending" onclick="showSchool('mending')">Mending</button>
     <button class="spell-tab" data-school="weather" onclick="showSchool('weather')">Weather</button>
     <button class="spell-tab" data-school="control" onclick="showSchool('control')">Control</button>
+    <button class="spell-tab" data-school="arcane" onclick="showSchool('arcane')">Arcane</button>
 </div>
 
 <div class="handbook-content">
@@ -171,6 +173,9 @@
     </div>
     <div id="school-control" class="spell-content">
         {{ control_content|safe }}
+    </div>
+    <div id="school-arcane" class="spell-content">
+        {{ arcane_content|safe }}
     </div>
 </div>
 

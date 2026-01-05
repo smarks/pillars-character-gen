@@ -1182,6 +1182,196 @@ Overrides the target's will, forcing them to take specific actions.
 
 ---
 
+# Arcane School
+
+*True Magic—the magic of Naming. Where recipe mages speak formulas, Arcane practitioners speak the Primordial Tongue. To know a thing's Truename is to have power over its essence.*
+
+Arcane magic is fundamentally different from the other schools. Rather than learning specific spells, practitioners develop the ability to work directly with Truenames—the secret names of elements, concepts, and entities. Effects scale with mana invested, providing flexibility but greater risk.
+
+## Core Mechanics
+
+### The Arcane Skill
+
+Each level of Arcane increases your Channel—the amount of mana you can safely invest in any working.
+
+| Arcane Level | Channel Cap | SP Cost | Key Ability |
+|--------------|-------------|---------|-------------|
+| 1 | 3 mana | 4 | Summoning only |
+| 2 | 6 mana | 12 | Binding |
+| 3 | 9 mana | 24 | Commanding, +1 Control |
+| 4 | 12 mana | 40 | Multiple bindings |
+| 5 | 15 mana | 60 | Combine Truenames, +2 Control |
+| 6 | 18 mana | 84 | Master abilities |
+
+**Note:** Arcane training costs **double** normal skill point investment.
+
+---
+
+## The Three Pillars
+
+### Summoning (Arcane Level 1+)
+
+**Cost:** Variable based on effect
+**Range:** Variable
+**Casting Roll:** 3d6 ≤ INT (modified by Truename category)
+
+Calling forth that which is named. When you speak a Truename with intent to Summon, you call the named thing to manifest.
+
+**What Can Be Summoned:**
+- Elements (fire, water, stone) manifest as raw material or force
+- Concepts (fear, sleep, pain) manifest as effects on targets
+- Entities (specific spirits, demons) manifest in person
+
+**Failure:** The thing may come... but not as intended. Misdirected elements, warped concepts, or very angry entities.
+
+---
+
+### Binding (Arcane Level 2+)
+
+**Cost:** 1 mana per point of binding strength
+**Roll:** Opposed INT (your INT vs. target's INT or Name's resistance)
+**Duration:** Until terms fulfilled, binding broken, or released
+
+Constraining the summoned with terms and conditions. Summoning without Binding is dangerous.
+
+| Binding Strength | Effect |
+|------------------|--------|
+| 1-3 | Fragile: Holds minutes, simple constraints |
+| 4-6 | Standard: Holds hours to days, moderate constraints |
+| 7-9 | Strong: Holds weeks, complex terms possible |
+| 10+ | Masterwork: May hold indefinitely, intricate terms |
+
+**Failure:** Loopholes the summoned thing can exploit, shorter duration, or binding fails entirely.
+
+---
+
+### Commanding (Arcane Level 3+)
+
+**Cost:** 1 mana per command complexity
+**Roll:** 3d6 ≤ WIS (bound entities resist with WIS)
+**Duration:** Until command completed or countermanded
+
+Directing the bound according to will.
+
+| Complexity | Examples | Mana |
+|------------|----------|------|
+| Simple | "Stay here," "Burn that," "Be silent" | 1 |
+| Moderate | "Guard this door until dawn" | 2-3 |
+| Complex | "Protect this person from fire only" | 4-5 |
+| Intricate | Multi-step tasks, conditional responses | 6+ |
+
+**Failure:** Misinterpretation, delay, or rebellion if binding is weak.
+
+---
+
+## Truename Categories
+
+| Category | Examples | Control Modifier | Acquisition |
+|----------|----------|------------------|-------------|
+| Elemental | Fire, Water, Stone, Air, Light, Shadow | +0 | Study, Revelation, Bargain |
+| Conceptual (Basic) | Sleep, Fear, Pain, Binding, Illusion | −1 | Study, Revelation, Bargain |
+| Conceptual (Advanced) | Death, Time, Truth, Memory, Fate | −3 | Revelation or Bargain only |
+| Entity | Specific spirits, demons, dragons | −2 to −5 | Discovery or Bargain |
+| Personal | An individual's true name | −4 or worse | Extremely rare |
+
+---
+
+## Scaling Effects
+
+Unlike recipe magic, Arcane effects scale with mana invested.
+
+### Fire Truename
+
+| Mana | Effect |
+|------|--------|
+| 1 | Candle flame, light a torch, warm hands |
+| 2-3 | Campfire, 1d6 damage to single target |
+| 4-6 | Bonfire, 2d6 damage or 3 hexes of flame |
+| 7-9 | Conflagration, 3d6 damage, 1 megahex area |
+| 10-12 | Inferno, 4d6 damage, fire spreads uncontrolled |
+| 13-15 | Wall of fire (6 hexes), or summon minor fire elemental |
+| 16+ | Major transformation, permanent fire features |
+
+### Fear Truename (Basic Conceptual)
+
+| Mana | Effect |
+|------|--------|
+| 1 | Unease, −1 to target's next roll |
+| 2-3 | Target must make WIS save or hesitate (lose next action) |
+| 4-6 | Target flees for 1d6 turns (WIS save each turn) |
+| 7-9 | Multiple targets, or extended duration |
+| 10-12 | Panic: target acts irrationally |
+| 13+ | Permanent phobia |
+
+---
+
+## Casting Modifiers
+
+| Condition | Modifier |
+|-----------|----------|
+| Per Truename category | See table above |
+| Per 3 mana beyond base effect | −1 |
+| Combining Truenames (Arcane 5+) | −2 per additional Name |
+| Wounded (below half HP) | −1 |
+| Distracted or threatened | −2 |
+| Ritual casting (10× time) | +2 |
+| At a place of power | +1 to +3 |
+
+---
+
+## Why Arcane Is Dangerous
+
+### Push Penalties Escalate Faster
+
+| Push Amount | Recipe Penalty | Arcane Penalty |
+|-------------|----------------|----------------|
+| 1-3 mana beyond Channel | −2 | −3 |
+| 4-6 mana beyond Channel | −4 | −6 |
+| 7+ mana beyond Channel | −6 | −9 |
+
+### Runaway Thresholds
+
+| Condition | Effect |
+|-----------|--------|
+| Natural 17 on casting | Control Roll or Runaway |
+| Natural 18 on casting | Immediate Runaway |
+| Fail Control by 7+ | Automatic Runaway |
+
+### The Weave Notices
+
+Failed True Magic workings attract attention. The Weave may:
+- Demand more mana than intended (automatic Debt)
+- Twist the effect toward its own purposes
+- Remember the caster for later
+
+Entities spoken of by Truename become aware of the speaker. Ancient dragons investigate those who speak their Names freely. Demons send representatives.
+
+---
+
+## Acquiring Truenames
+
+### Study (Slow, Safe, Limited)
+
+**Requirements:** College access, INT 10+
+**Time:** 6 months per Truename
+**Roll:** 3d6 ≤ INT at end of study
+**Available:** Elemental Names, Basic Conceptual Names only
+
+### Revelation (Fast, Dangerous, Unpredictable)
+
+**Triggers:** Surviving Runaway, touching ley nexus, near-death experiences
+**Roll:** GM secretly rolls 3d6 ≤ (INT + WIS)
+**Risk:** Failed roll causes 1d6 temporary INT damage
+**Available:** Any category, depending on circumstances
+
+### Bargain (Reliable, Costly, Binding)
+
+**Teachers:** Elementals, demons, dragons, ghosts, Fae
+**Price:** Service, sacrifice, soul contracts, or favors
+**Available:** Any category, depending on teacher
+
+---
+
 # Appendix: Spell Cost Summary
 
 | School | Level 1 | Level 2 | Level 3 | Level 4 | Level 5 | Level 6 | Level 7 |
@@ -1192,6 +1382,9 @@ Overrides the target's will, forcing them to take specific actions.
 | **Mending** | Heal (1) | Cure (2) | Web-Joining, Breaking (3) | Shaping (4) | — | — | — |
 | **Weather** | Detect Weather (1) | Wind, Wind Counter (2) | Rain, Rain Counter (3) | Storm, Storm Counter (4) | — | — | — |
 | **Control** | Persuade Minor, Calm, Enrage (1) | Minor Illusion, Fatigue (2) | Wound, Effect Mental State (3) | Persuade Major, Illusion (4) | Major Illusion, Area Effect (5) | Force (6) | — |
+| **Arcane** | Summoning (var) | Binding (var) | Commanding (var) | — | — | — | — |
+
+*Arcane uses Truenames with variable mana costs rather than fixed spell levels. See Arcane School for details.*
 
 ---
 

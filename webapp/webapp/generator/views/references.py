@@ -400,10 +400,11 @@ def spells_tabbed(request):
     # - # Mending School
     # - # Weather School
     # - # Control School
+    # - # Arcane School
     # - Appendices at the end
 
     sections = re.split(
-        r"^(# (?:Elemental|Passage|Protection|Mending|Weather|Control) School)$",
+        r"^(# (?:Elemental|Passage|Protection|Mending|Weather|Control|Arcane) School)$",
         content,
         flags=re.MULTILINE,
     )
@@ -421,16 +422,16 @@ def spells_tabbed(request):
             school_name = header.replace("# ", "").replace(" School", "").lower()
             schools[school_name] = header + school_content
 
-    # Find and extract appendices (everything after Control school that starts with # Appendix)
+    # Find and extract appendices (everything after Arcane school that starts with # Appendix)
     appendix_content = ""
-    if "control" in schools:
-        control_parts = re.split(
-            r"^(# Appendix)", schools["control"], maxsplit=1, flags=re.MULTILINE
+    if "arcane" in schools:
+        arcane_parts = re.split(
+            r"^(# Appendix)", schools["arcane"], maxsplit=1, flags=re.MULTILINE
         )
-        if len(control_parts) > 1:
-            schools["control"] = control_parts[0]
+        if len(arcane_parts) > 1:
+            schools["arcane"] = arcane_parts[0]
             appendix_content = (
-                "# Appendix" + control_parts[2] if len(control_parts) > 2 else ""
+                "# Appendix" + arcane_parts[2] if len(arcane_parts) > 2 else ""
             )
 
     # Add appendices to overview
@@ -451,6 +452,7 @@ def spells_tabbed(request):
         "mending_content": md_to_html(schools.get("mending", "")),
         "weather_content": md_to_html(schools.get("weather", "")),
         "control_content": md_to_html(schools.get("control", "")),
+        "arcane_content": md_to_html(schools.get("arcane", "")),
     }
 
     return render(request, "generator/spells_tabbed.html", context)
