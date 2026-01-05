@@ -1,0 +1,204 @@
+{% extends "generator/base.html" %}
+
+{% block title %}Spell Compendium - Pillars{% endblock %}
+
+{% block extra_css %}
+.handbook-content {
+    line-height: 1.7;
+}
+.handbook-content h2 {
+    border-bottom: 2px solid #333;
+    padding-bottom: 10px;
+    margin-top: 40px;
+}
+.handbook-content h3 {
+    margin-top: 30px;
+    color: #333;
+}
+.handbook-content h4 {
+    margin-top: 25px;
+    color: #555;
+}
+.handbook-content p {
+    margin: 15px 0;
+}
+.handbook-content a {
+    color: #36c;
+}
+.handbook-content hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 30px 0;
+}
+.handbook-content ul, .handbook-content ol {
+    padding-left: 25px;
+}
+.handbook-content li {
+    margin: 8px 0;
+}
+.handbook-content code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border: 1px solid #ddd;
+}
+.handbook-content pre {
+    background: #f4f4f4;
+    padding: 15px;
+    border: 1px solid #ddd;
+    overflow-x: auto;
+}
+.handbook-content blockquote {
+    border-left: 4px solid #333;
+    margin: 20px 0;
+    padding-left: 20px;
+    color: #666;
+    font-style: italic;
+}
+.handbook-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+.handbook-content th, .handbook-content td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+.handbook-content th {
+    background: #f4f4f4;
+}
+
+/* Tab styles */
+.spell-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #333;
+    padding-bottom: 10px;
+}
+
+.spell-tab {
+    padding: 10px 16px;
+    background: #f4f4f4;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.spell-tab:hover {
+    background: #e4e4e4;
+}
+
+.spell-tab.active {
+    background: #333;
+    color: white;
+    border-color: #333;
+}
+
+.spell-content {
+    display: none;
+}
+
+.spell-content.active {
+    display: block;
+}
+
+/* School-specific colors for active tabs */
+.spell-tab[data-school="overview"].active { background: #555; border-color: #555; }
+.spell-tab[data-school="elemental"].active { background: #c44; border-color: #c44; }
+.spell-tab[data-school="passage"].active { background: #36c; border-color: #36c; }
+.spell-tab[data-school="protection"].active { background: #4a4; border-color: #4a4; }
+.spell-tab[data-school="mending"].active { background: #a4a; border-color: #a4a; }
+.spell-tab[data-school="weather"].active { background: #666; border-color: #666; }
+.spell-tab[data-school="control"].active { background: #a44; border-color: #a44; }
+
+/* Mobile adjustments */
+@media screen and (max-width: 768px) {
+    .spell-tabs {
+        gap: 3px;
+    }
+    .spell-tab {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .spell-tab {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>Spell Compendium</h1>
+</div>
+
+<div class="spell-tabs">
+    <button class="spell-tab active" data-school="overview" onclick="showSchool('overview')">Overview</button>
+    <button class="spell-tab" data-school="elemental" onclick="showSchool('elemental')">Elemental</button>
+    <button class="spell-tab" data-school="passage" onclick="showSchool('passage')">Passage</button>
+    <button class="spell-tab" data-school="protection" onclick="showSchool('protection')">Protection</button>
+    <button class="spell-tab" data-school="mending" onclick="showSchool('mending')">Mending</button>
+    <button class="spell-tab" data-school="weather" onclick="showSchool('weather')">Weather</button>
+    <button class="spell-tab" data-school="control" onclick="showSchool('control')">Control</button>
+</div>
+
+<div class="handbook-content">
+    <div id="school-overview" class="spell-content active">
+        {{ overview_content|safe }}
+    </div>
+    <div id="school-elemental" class="spell-content">
+        {{ elemental_content|safe }}
+    </div>
+    <div id="school-passage" class="spell-content">
+        {{ passage_content|safe }}
+    </div>
+    <div id="school-protection" class="spell-content">
+        {{ protection_content|safe }}
+    </div>
+    <div id="school-mending" class="spell-content">
+        {{ mending_content|safe }}
+    </div>
+    <div id="school-weather" class="spell-content">
+        {{ weather_content|safe }}
+    </div>
+    <div id="school-control" class="spell-content">
+        {{ control_content|safe }}
+    </div>
+</div>
+
+<script>
+function showSchool(school) {
+    // Hide all content
+    document.querySelectorAll('.spell-content').forEach(function(el) {
+        el.classList.remove('active');
+    });
+    // Deactivate all tabs
+    document.querySelectorAll('.spell-tab').forEach(function(el) {
+        el.classList.remove('active');
+    });
+    // Show selected content
+    document.getElementById('school-' + school).classList.add('active');
+    // Activate selected tab
+    document.querySelector('.spell-tab[data-school="' + school + '"]').classList.add('active');
+
+    // Update URL hash for bookmarking
+    history.replaceState(null, null, '#' + school);
+}
+
+// Check for hash on page load
+document.addEventListener('DOMContentLoaded', function() {
+    var hash = window.location.hash.substring(1);
+    if (hash && document.getElementById('school-' + hash)) {
+        showSchool(hash);
+    }
+});
+</script>
+{% endblock %}

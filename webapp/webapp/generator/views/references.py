@@ -369,6 +369,93 @@ def serve_reference_file(request, filename):
     return FileResponse(open(file_path, "rb"), content_type=content_type)
 
 
+def spells_tabbed(request):
+    """Serve the spells compendium with tabs for each school.
+
+    Requires DM or Admin role. Parses spells.md and splits into sections by school.
+    """
+    # Late import to avoid circular dependency
+    from .admin import dm_required_check
+
+    # Check DM access
+    redirect_response = dm_required_check(request)
+    if redirect_response:
+        return redirect_response
+
+    # Read the spells.md file
+    spells_path = os.path.join(settings.BASE_DIR, "..", "references", "spells.md")
+
+    try:
+        with open(spells_path, "r", encoding="utf-8") as f:
+            content = f.read()
+    except FileNotFoundError:
+        raise Http404("Spells file not found")
+
+    # Split content by H1 headers (# School Name)
+    # The file structure is:
+    # - Overview/mechanics at the top
+    # - # Elemental School
+    # - # Passage School
+    # - # Protection School
+    # - # Mending School
+    # - # Weather School
+    # - # Control School
+    # - Appendices at the end
+
+    sections = re.split(
+        r"^(# (?:Elemental|Passage|Protection|Mending|Weather|Control) School)$",
+        content,
+        flags=re.MULTILINE,
+    )
+
+    # First section is overview (before any school header)
+    overview_md = sections[0]
+
+    # Build a dict of school -> content
+    schools = {}
+    for i in range(1, len(sections), 2):
+        if i + 1 < len(sections):
+            header = sections[i]
+            school_content = sections[i + 1]
+            # Extract school name from header
+            school_name = header.replace("# ", "").replace(" School", "").lower()
+            schools[school_name] = header + school_content
+
+    # Find and extract appendices (everything after Control school that starts with # Appendix)
+    appendix_content = ""
+    if "control" in schools:
+        control_parts = re.split(
+            r"^(# Appendix)", schools["control"], maxsplit=1, flags=re.MULTILINE
+        )
+        if len(control_parts) > 1:
+            schools["control"] = control_parts[0]
+            appendix_content = (
+                "# Appendix" + control_parts[2] if len(control_parts) > 2 else ""
+            )
+
+    # Add appendices to overview
+    overview_md += "\n\n" + appendix_content
+
+    # Convert each section to HTML
+    def md_to_html(md_content):
+        html = markdown.markdown(
+            md_content, extensions=["tables", "fenced_code", "toc"]
+        )
+        return bleach.clean(html, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS)
+
+    context = {
+        "overview_content": md_to_html(overview_md),
+        "elemental_content": md_to_html(schools.get("elemental", "")),
+        "passage_content": md_to_html(schools.get("passage", "")),
+        "protection_content": md_to_html(schools.get("protection", "")),
+        "mending_content": md_to_html(schools.get("mending", "")),
+        "weather_content": md_to_html(schools.get("weather", "")),
+        "control_content": md_to_html(schools.get("control", "")),
+    }
+
+    return render(request, "generator/spells_tabbed.html", context)
+
+
 def dm_handbook(request, chapter=None):
     """DM Handbook - requires DM or Admin role. Supports chapter navigation.
 

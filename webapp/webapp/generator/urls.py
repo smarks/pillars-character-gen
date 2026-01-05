@@ -32,6 +32,8 @@ urlpatterns = [
     path("combat/", views.handbook_section, {"section": "combat"}, name="combat"),
     path("dm/chapter/<str:chapter>/", views.dm_handbook, name="dm_chapter"),
     path("dm/", views.dm_handbook, name="dm"),
+    # Spells compendium with tabbed interface
+    path("spells/", views.spells_tabbed, name="spells"),
     path(
         "rulebook/",
         views.handbook_section,

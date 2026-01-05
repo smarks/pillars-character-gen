@@ -111,6 +111,7 @@ from .references import (
     serve_reference_image,
     serve_reference_file,
     dm_handbook,
+    spells_tabbed,
 )
 
 # Admin
@@ -215,6 +216,7 @@ __all__ = [
     "serve_reference_image",
     "serve_reference_file",
     "dm_handbook",
+    "spells_tabbed",
     # Admin
     "dm_required",
     "admin_required",

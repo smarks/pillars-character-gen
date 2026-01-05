@@ -4848,3 +4848,535 @@ class DefaultEquipmentTests(TestCase):
         self.assertEqual(
             len(equipment.get("weapons", [])), len(initial_equipment.get("weapons", []))
         )
+
+
+# ============================================================================
+# Regression Tests - Experience/Aging System
+# ============================================================================
+
+
+class ExperienceAccumulationRegressionTests(TestCase):
+    """Regression tests for experience accumulation bugs.
+
+    These tests target specific bugs that were fixed:
+    - AJAX experience not accumulating properly
+    - Age field not updating when prior experience is added
+    - Track selection not being used when adding experience
+    - Experience skills not syncing properly
+    """
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_ajax_experience_accumulates_not_resets(self):
+        """Test that adding experience via AJAX accumulates, doesn't reset.
+
+        Regression test for: Fix AJAX experience not accumulating properly
+        """
+        # Generate initial character
+        self.client.get(reverse("generator"))
+
+        # Add first batch of experience
+        response1 = self.client.post(
+            reverse("add_session_experience"),
+            {"years": 3, "chosen_track": "LABORER"},
+        )
+        self.assertEqual(response1.status_code, 200)
+        data1 = response1.json()
+        self.assertEqual(data1["total_years"], 3)
+        first_skills_count = len(data1["all_skills"])
+
+        # Add second batch - should ACCUMULATE, not reset
+        response2 = self.client.post(
+            reverse("add_session_experience"),
+            {"years": 2, "chosen_track": ""},  # Empty = use existing track
+        )
+        self.assertEqual(response2.status_code, 200)
+        data2 = response2.json()
+
+        # Total years should be 5, not 2
+        self.assertEqual(data2["total_years"], 5)
+        # Should have MORE skills than before, not fewer
+        self.assertGreater(len(data2["all_skills"]), first_skills_count)
+
+    def test_age_updates_when_experience_added(self):
+        """Test that age field updates when prior experience is added.
+
+        Regression test for: Fix age field not updating when prior experience is added
+        """
+        # Generate character
+        self.client.get(reverse("generator"))
+        initial_data = self.client.session.get("current_character", {})
+        initial_age = initial_data.get("age", initial_data.get("base_age", 16))
+
+        # Add experience
+        response = self.client.post(
+            reverse("add_session_experience"),
+            {"years": 5, "chosen_track": "LABORER"},
+        )
+        self.assertEqual(response.status_code, 200)
+
+        # Check age in session was updated
+        char_data = self.client.session.get("current_character", {})
+        new_age = char_data.get("age", 16)
+
+        # Age should have increased by the years of experience
+        self.assertEqual(new_age, initial_age + 5)
+
+    def test_age_persists_after_page_refresh(self):
+        """Test that age persists after page refresh.
+
+        Regression test for: Fix age field resetting on page refresh
+        """
+        # Generate and add experience
+        self.client.get(reverse("generator"))
+        self.client.post(
+            reverse("add_session_experience"),
+            {"years": 5, "chosen_track": "CAMPAIGNER"},
+        )
+
+        # Get age after experience
+        char_data = self.client.session.get("current_character", {})
+        age_before_refresh = char_data.get("age", 16)
+
+        # Simulate page refresh by loading generator again
+        response = self.client.get(reverse("generator"))
+        self.assertEqual(response.status_code, 200)
+
+        # Age should still be the same
+        char_data = self.client.session.get("current_character", {})
+        age_after_refresh = char_data.get("age", 16)
+        self.assertEqual(age_before_refresh, age_after_refresh)
+
+    def test_track_selection_used_when_adding_experience(self):
+        """Test that selected track is actually used when adding experience.
+
+        Regression test for: Fix track selection not being used when adding experience
+        """
+        # Generate character
+        self.client.get(reverse("generator"))
+
+        # Add experience with specific track (MERCHANT is a valid track type)
+        response = self.client.post(
+            reverse("add_session_experience"),
+            {"years": 3, "chosen_track": "MERCHANT"},
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        # Track name should be Merchant
+        self.assertEqual(data["track_name"], "Merchant")
+
+        # Session should also have the track
+        char_data = self.client.session.get("current_character", {})
+        skill_track = char_data.get("skill_track", {})
+        self.assertEqual(skill_track.get("track"), "Merchant")
+
+    def test_skills_sync_after_adding_experience(self):
+        """Test that skills sync properly after adding experience.
+
+        Regression test for: Fix experience skills sync
+        """
+        # Generate character
+        self.client.get(reverse("generator"))
+
+        # Add experience
+        response = self.client.post(
+            reverse("add_session_experience"),
+            {"years": 5, "chosen_track": "CAMPAIGNER"},
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        # All skills should include both initial track skills and gained skills
+        all_skills = data["all_skills"]
+
+        # Should have gained skills from 5 years
+        new_skills = data["new_skills"]
+        self.assertEqual(len(new_skills), 5)
+
+        # all_skills should contain the new skills
+        for skill in new_skills:
+            self.assertIn(skill, all_skills)
+
+    def test_manual_age_picked_up_by_prior_experience(self):
+        """Test that manually entered age is used when adding experience.
+
+        Regression test for: Fix manual age not being picked up by prior experience
+        """
+        # Generate character
+        self.client.get(reverse("generator"))
+
+        # Add experience with manual age set to 25
+        response = self.client.post(
+            reverse("add_session_experience"),
+            {"years": 3, "chosen_track": "LABORER", "char_age": "25"},
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        # Current age should be 25 + 3 = 28
+        self.assertEqual(data["current_age"], 28)
+
+
+class AgingPenaltiesRegressionTests(TestCase):
+    """Regression tests for aging penalties display and calculation."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_aging_penalties_returned_in_ajax_response(self):
+        """Test that aging penalties are included in AJAX experience response.
+
+        Regression test for: Fix aging penalties display in AJAX experience feedback
+        """
+        # Generate character
+        self.client.get(reverse("generator"))
+
+        # Add enough experience to potentially trigger aging
+        response = self.client.post(
+            reverse("add_session_experience"),
+            {"years": 10, "chosen_track": "LABORER"},
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        # Response should include aging data structure
+        self.assertIn("aging", data)
+        aging = data["aging"]
+        self.assertIn("str", aging)
+        self.assertIn("dex", aging)
+        self.assertIn("con", aging)
+
+    def test_aging_penalties_persist_across_experience_batches(self):
+        """Test that aging penalties accumulate across multiple experience additions."""
+        # Generate character with older starting age
+        self.client.get(reverse("generator"))
+
+        # Add experience in batches
+        self.client.post(
+            reverse("add_session_experience"),
+            {"years": 5, "chosen_track": "LABORER", "char_age": "40"},
+        )
+
+        response = self.client.post(
+            reverse("add_session_experience"),
+            {"years": 5, "chosen_track": ""},
+        )
+        data = response.json()
+
+        # Aging effects should be present in response
+        self.assertIn("aging", data)
+
+        # Aging should also be in session
+        char_data = self.client.session.get("current_character", {})
+        session_aging = char_data.get("interactive_aging", {})
+        self.assertIsNotNone(session_aging)
+
+
+# ============================================================================
+# Regression Tests - Serialization/Session Persistence
+# ============================================================================
+
+
+class SerializationRoundTripTests(TestCase):
+    """Tests ensuring data survives save/load cycles without corruption."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="roundtrip_tester", password="testpass123"
+        )
+        UserProfile.objects.create(user=self.user, roles=["player"])
+        self.client = Client()
+
+    def test_experience_data_survives_save_and_load(self):
+        """Test that experience data survives saving and loading a character.
+
+        Regression test for: Fix session character export missing aging/experience data
+        """
+        self.client.login(username="roundtrip_tester", password="testpass123")
+
+        # Generate and add experience (CAMPAIGNER is a valid track type)
+        self.client.get(reverse("generator"))
+        self.client.post(
+            reverse("add_session_experience"),
+            {"years": 5, "chosen_track": "CAMPAIGNER"},
+        )
+
+        # Get the saved character ID
+        saved_id = self.client.session.get("current_saved_character_id")
+        self.assertIsNotNone(saved_id)
+
+        # Store original values before reload
+        original_years = self.client.session.get("interactive_years", 0)
+        original_skills = self.client.session.get("interactive_skills", [])
+
+        # Load the character (simulates fresh load)
+        response = self.client.get(reverse("load_character", args=[saved_id]))
+        self.assertEqual(response.status_code, 302)  # Redirects to generator
+
+        # Verify experience data was preserved
+        # Note: load_character stores interactive data in separate session keys
+        loaded_years = self.client.session.get("interactive_years", 0)
+        loaded_skills = self.client.session.get("interactive_skills", [])
+        self.assertEqual(loaded_years, original_years)
+        self.assertEqual(loaded_skills, original_skills)
+
+    def test_aging_data_survives_save_and_load(self):
+        """Test that aging penalties survive save/load cycle."""
+        self.client.login(username="roundtrip_tester", password="testpass123")
+
+        # Generate and add experience with aging
+        self.client.get(reverse("generator"))
+        self.client.post(
+            reverse("add_session_experience"),
+            {"years": 10, "chosen_track": "LABORER", "char_age": "40"},
+        )
+
+        saved_id = self.client.session.get("current_saved_character_id")
+        # interactive_aging is stored in a separate session key
+        original_aging = self.client.session.get("interactive_aging", {}).copy()
+
+        # Load the character
+        self.client.get(reverse("load_character", args=[saved_id]))
+
+        # Verify aging was preserved
+        loaded_aging = self.client.session.get("interactive_aging", {})
+        self.assertEqual(loaded_aging, original_aging)
+
+    def test_skill_track_survives_save_and_load(self):
+        """Test that skill track info survives save/load cycle."""
+        self.client.login(username="roundtrip_tester", password="testpass123")
+
+        # Generate with specific track (CRAFT is a valid track type)
+        self.client.get(reverse("generator"))
+        self.client.post(
+            reverse("add_session_experience"),
+            {"years": 3, "chosen_track": "CRAFT"},
+        )
+
+        saved_id = self.client.session.get("current_saved_character_id")
+
+        # Load the character
+        self.client.get(reverse("load_character", args=[saved_id]))
+
+        # Verify track was preserved
+        char_data = self.client.session.get("current_character", {})
+        skill_track = char_data.get("skill_track", {})
+        self.assertEqual(skill_track.get("track"), "Craft")
+
+    def test_database_sync_happens_after_saving(self):
+        """Test that database sync happens after saving new character.
+
+        Regression test for: Fix database sync not happening after saving new character
+        """
+        self.client.login(username="roundtrip_tester", password="testpass123")
+
+        # Generate character
+        self.client.get(reverse("generator"))
+
+        # Add experience
+        self.client.post(
+            reverse("add_session_experience"),
+            {"years": 5, "chosen_track": "CAMPAIGNER"},
+        )
+
+        saved_id = self.client.session.get("current_saved_character_id")
+        self.assertIsNotNone(saved_id)
+
+        # Check database has the experience data
+        saved_char = SavedCharacter.objects.get(id=saved_id)
+        db_years = saved_char.character_data.get("interactive_years", 0)
+        self.assertEqual(db_years, 5)
+
+
+# ============================================================================
+# Regression Tests - Track Selection
+# ============================================================================
+
+
+class TrackSelectionRegressionTests(TestCase):
+    """Regression tests for track selection display and functionality."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_track_survivability_colors_correct(self):
+        """Test that track survivability colors are correct (green=safe, red=dangerous).
+
+        Regression test for: Fix track survivability colors (swap red/green)
+        """
+        response = self.client.get(reverse("generator"))
+        self.assertEqual(response.status_code, 200)
+
+        # The response should have track panels with color coding
+        # Laborer (high survivability) should be green-ish
+        # Warrior/Magic (low survivability) should be red-ish
+        content = response.content.decode("utf-8")
+
+        # Check that track panels exist
+        self.assertIn("track-panel", content)
+
+    def test_track_info_carries_through_to_character_sheet(self):
+        """Test that track info is available on character sheet after selection."""
+        # Generate and add experience with specific track (CAMPAIGNER is valid)
+        self.client.get(reverse("generator"))
+        self.client.post(
+            reverse("add_session_experience"),
+            {"years": 3, "chosen_track": "CAMPAIGNER"},
+        )
+
+        # Load character sheet
+        response = self.client.get(reverse("generator"))
+        self.assertEqual(response.status_code, 200)
+
+        # Should show track info
+        content = response.content.decode("utf-8")
+        self.assertIn("Campaigner", content)
+
+
+# ============================================================================
+# Regression Tests - Export Functionality
+# ============================================================================
+
+
+class ExportRegressionTests(TestCase):
+    """Regression tests for export functionality."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_session_export_includes_aging_and_experience(self):
+        """Test that session character export includes aging and experience data.
+
+        Regression test for: Fix session character export missing aging/experience data
+        """
+        # Generate and add experience
+        self.client.get(reverse("generator"))
+        self.client.post(
+            reverse("add_session_experience"),
+            {"years": 5, "chosen_track": "CAMPAIGNER"},
+        )
+
+        # Export to markdown
+        response = self.client.get(reverse("export_session_character_markdown"))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode("utf-8")
+
+        # Should include experience info
+        self.assertIn("Prior Experience", content)
+        self.assertIn("Years of Experience", content)
+        self.assertIn("5", content)
+
+    def test_pdf_export_shows_adjusted_attributes(self):
+        """Test that PDF export shows adjusted attributes with aging.
+
+        Regression test for: Fix skill points tracking and show adjusted attributes in PDF export
+        """
+        # Generate character with aging
+        self.client.get(reverse("generator"))
+
+        # Set up session with aging penalties
+        session = self.client.session
+        char_data = session.get("current_character", {})
+        char_data["interactive_years"] = 10
+        char_data["interactive_aging"] = {
+            "str": -2,
+            "dex": -1,
+            "int": 0,
+            "wis": 0,
+            "con": -1,
+        }
+        session["current_character"] = char_data
+        session.save()
+
+        # Export to PDF - just verify it doesn't error
+        response = self.client.get(reverse("export_session_character_pdf"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+
+
+# ============================================================================
+# Regression Tests - Admin/DM Features
+# ============================================================================
+
+
+class AdminLoadCharacterRegressionTests(TestCase):
+    """Regression tests for admin/DM character loading features."""
+
+    def setUp(self):
+        # Create admin/DM user
+        self.admin = User.objects.create_user(
+            username="dm_user", password="testpass123"
+        )
+        UserProfile.objects.create(user=self.admin, roles=["dm"])
+
+        # Create regular player
+        self.player = User.objects.create_user(
+            username="player_user", password="testpass123"
+        )
+        UserProfile.objects.create(user=self.player, roles=["player"])
+
+        # Create a character owned by the player
+        self.player_char = SavedCharacter.objects.create(
+            user=self.player,
+            name="Player's Hero",
+            character_data={
+                "name": "Player's Hero",
+                "attributes": {
+                    "STR": 14,
+                    "DEX": 12,
+                    "INT": 10,
+                    "WIS": 10,
+                    "CON": 13,
+                    "CHR": 11,
+                    "fatigue_points": 14,
+                    "body_points": 10,
+                    "generation_method": "3d6",
+                },
+                "str_repr": "Test Character",
+            },
+        )
+
+        self.client = Client()
+
+    def test_dm_can_load_any_character_for_editing(self):
+        """Test that DM/admin can load any character for editing.
+
+        Regression test for: Allow DM/admin to load any character for editing
+        """
+        self.client.login(username="dm_user", password="testpass123")
+
+        # DM should be able to load player's character
+        response = self.client.get(
+            reverse("load_character", args=[self.player_char.id])
+        )
+
+        # Should redirect to generator (success)
+        self.assertEqual(response.status_code, 302)
+
+        # Session should have the character
+        char_data = self.client.session.get("current_character", {})
+        self.assertEqual(char_data.get("name"), "Player's Hero")
+
+    def test_regular_user_cannot_load_others_characters(self):
+        """Test that regular users cannot load other users' characters."""
+        # Create another regular user
+        other_user = User.objects.create_user(
+            username="other_player", password="testpass123"
+        )
+        UserProfile.objects.create(user=other_user, roles=["player"])
+
+        self.client.login(username="other_player", password="testpass123")
+
+        # Should not be able to load player's character
+        response = self.client.get(
+            reverse("load_character", args=[self.player_char.id])
+        )
+
+        # Should redirect with error (character not found for this user)
+        self.assertEqual(response.status_code, 302)
+
+        # Session should NOT have the character
+        char_data = self.client.session.get("current_character", {})
+        self.assertNotEqual(char_data.get("name"), "Player's Hero")

@@ -29,6 +29,26 @@ def migrate_track_name(track_name):
     return LEGACY_TRACK_MAPPING.get(track_name, track_name)
 
 
+def _build_provenance_label(provenance):
+    """Build a clean provenance label without roll information.
+
+    Args:
+        provenance: Provenance object with social_class, sub_class, craft_type
+
+    Returns:
+        String like "Merchant - Retail" or "Crafts - Smith (Blacksmith)"
+    """
+    if not hasattr(provenance, "social_class"):
+        return str(provenance)
+
+    label = provenance.social_class
+    if provenance.sub_class:
+        label += f" - {provenance.sub_class}"
+    if provenance.craft_type:
+        label += f" ({provenance.craft_type})"
+    return label
+
+
 class MinimalCharacter:
     """Lightweight character representation for session storage.
 
@@ -205,7 +225,7 @@ def serialize_character(character, preserve_data=None):
             if hasattr(character.weight, "total_pounds")
             else str(character.weight)
         ),
-        "provenance": str(character.provenance),
+        "provenance": _build_provenance_label(character.provenance),
         "provenance_social_class": (
             character.provenance.social_class
             if hasattr(character.provenance, "social_class")

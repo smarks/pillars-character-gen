@@ -499,7 +499,7 @@
                         <a href="{% url 'reference_html' 'public-rulebook' %}"{% if request.resolver_match.url_name == 'reference_html' and request.resolver_match.kwargs.name == 'public-rulebook' %} class="current-page"{% endif %}>Public Rules</a>
                         {% if user.is_authenticated and user.profile.is_dm or user.is_authenticated and user.profile.is_admin %}
                         <a href="{% url 'reference_html' 'dm-handbook' %}"{% if request.resolver_match.url_name == 'reference_html' and request.resolver_match.kwargs.name == 'dm-handbook' or request.resolver_match.url_name == 'dm_chapter' %} class="current-page"{% endif %}>Private Rules</a>
-                        <a href="{% url 'reference_html' 'spells' %}"{% if request.resolver_match.url_name == 'reference_html' and request.resolver_match.kwargs.name == 'spells' %} class="current-page"{% endif %}>Spells</a>
+                        <a href="{% url 'spells' %}"{% if request.resolver_match.url_name == 'spells' %} class="current-page"{% endif %}>Spells</a>
                         {% endif %}
                         <a href="{% url 'turn_sequence' %}"{% if request.resolver_match.url_name == 'turn_sequence' %} class="current-page"{% endif %}>Turn Sequence</a>
                         {% if user.is_authenticated %}
