@@ -12,7 +12,6 @@ from pillars.dice import roll_dice, roll_die
 from pillars.enums import TrackType, MagicSchool
 from pillars.constants import (
     MAGIC_SPELL_PROGRESSION,
-    SPELL_SKILL_MASTERY,
     TRACK_YEARLY_SKILLS,
 )
 from pillars.attributes.core import AgingEffects, format_total_modifier
@@ -166,9 +165,8 @@ def roll_yearly_skill(
             spell_index = (year_index + 1) % len(spells)
             roll = spell_index + 1  # Pseudo-roll for display
             spell_name = spells[spell_index]
-            mastery_level = min(spell_index + 1, 6)  # Mastery 1-6
-            mastery_name = SPELL_SKILL_MASTERY.get(mastery_level, "")
-            return f"Spell: {spell_name} ({mastery_name})", roll
+            # Don't include mastery in skill name - it will be added dynamically based on level
+            return f"Spell: {spell_name}", roll
 
     skill_table = TRACK_YEARLY_SKILLS.get(track, [])
 

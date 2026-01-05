@@ -15,8 +15,14 @@ Display format: "Sword II (+2)" means Level 2 with 2 extra points toward Level 3
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Optional
 import re
+
+# Import spell mastery constants if available
+try:
+    from pillars.constants import SPELL_SKILL_MASTERY
+except ImportError:
+    SPELL_SKILL_MASTERY = {}
 
 
 def points_for_level(level: int) -> int:
@@ -72,11 +78,21 @@ def normalize_skill_name(skill: str) -> str:
     'Sword +1 to hit' and 'Sword +1 parry' are kept separate as 'sword to hit' and 'sword parry'.
     'Sword +1 to hit' and 'Sword +2 to hit' both become 'sword to hit' (number stripped).
     'Parry I' and 'parry 1' both become 'parry' (case-insensitive, number stripped).
+
+    For spells (starting with "Spell:"), preserves the full spell name including numbers
+    to keep different spells separate (e.g., "Counter 1" vs "Counter 2").
     """
     if not skill:
         return ""
 
     skill = skill.strip()
+
+    # Special handling for spells - preserve full name including numbers
+    # This ensures "Spell: Counter 1" and "Spell: Counter 2" remain separate
+    if skill.lower().startswith("spell:"):
+        # For spells, just lowercase the entire name but preserve structure
+        # This keeps "Spell: Counter 1" and "Spell: Counter 2" as separate skills
+        return skill.lower()
 
     # Extract base name and suffix type, keeping them separate
     # Pattern: "BaseName +N suffix" -> "basename suffix"
@@ -159,7 +175,32 @@ class CharacterSkills:
 
         The skill name is normalized to group related skills.
         The original skill name is preserved as display_name.
+
+        For spells with slashes (e.g., "Spell: Counter 1/Shield/Detect Magic"),
+        splits them into separate spell skills.
         """
+        skill_name = skill_name.strip()
+
+        # Handle spell names with slashes - split into separate spells
+        if skill_name.startswith("Spell:") and "/" in skill_name:
+            # Split "Spell: Counter 1/Shield/Detect Magic" into separate spells
+            spell_prefix = "Spell: "
+            spell_content = skill_name[len(spell_prefix) :].strip()
+            spell_names = [s.strip() for s in spell_content.split("/") if s.strip()]
+
+            # Add each spell separately
+            for spell in spell_names:
+                full_spell_name = f"{spell_prefix}{spell}"
+                normalized = normalize_skill_name(full_spell_name)
+                if normalized:
+                    if normalized not in self.skills:
+                        self.skills[normalized] = SkillPoints(
+                            display_name=full_spell_name
+                        )
+                    self.skills[normalized].automatic += 1
+            return
+
+        # Normal handling for non-split skills
         normalized = normalize_skill_name(skill_name)
         if not normalized:
             return
@@ -179,10 +220,40 @@ class CharacterSkills:
 
         Returns True if successful, False if no free points available.
         The original skill name is preserved as display_name if this is a new skill.
+
+        For spells with slashes (e.g., "Spell: Counter 1/Shield/Detect Magic"),
+        splits them into separate spell skills.
         """
         if self.free_points <= 0:
             return False
 
+        skill_name = skill_name.strip()
+
+        # Handle spell names with slashes - split into separate spells
+        if skill_name.startswith("Spell:") and "/" in skill_name:
+            # Split "Spell: Counter 1/Shield/Detect Magic" into separate spells
+            spell_prefix = "Spell: "
+            spell_content = skill_name[len(spell_prefix) :].strip()
+            spell_names = [s.strip() for s in spell_content.split("/") if s.strip()]
+
+            # Need at least one free point per spell
+            if self.free_points < len(spell_names):
+                return False
+
+            # Add each spell separately
+            for spell in spell_names:
+                full_spell_name = f"{spell_prefix}{spell}"
+                normalized = normalize_skill_name(full_spell_name)
+                if normalized:
+                    if normalized not in self.skills:
+                        self.skills[normalized] = SkillPoints(
+                            display_name=full_spell_name
+                        )
+                    self.skills[normalized].allocated += 1
+                    self.free_points -= 1
+            return True
+
+        # Normal handling for non-split skills
         normalized = normalize_skill_name(skill_name)
         if not normalized:
             return False
@@ -216,10 +287,23 @@ class CharacterSkills:
         """Add XP to the character."""
         self.total_xp += amount
 
+    def _get_spell_mastery_description(self, level: int) -> Optional[str]:
+        """Get mastery description for a spell at the given level.
+
+        Returns None for level 1 (no mastery description needed).
+        Returns mastery text for level 2+.
+        """
+        if level <= 1:
+            return None
+        # Cap mastery level at 6
+        mastery_level = min(level, 6)
+        return SPELL_SKILL_MASTERY.get(mastery_level, "")
+
     def get_skill_display(self, skill_name: str) -> str:
         """Get display string for a single skill.
 
         Returns format like "Sword II (+2)" or "Tracking I".
+        For spells with level > 1, includes mastery description.
         Uses the stored display_name if available, otherwise falls back to
         title-casing the normalized name.
         """
@@ -232,12 +316,35 @@ class CharacterSkills:
         display = sp.display_name if sp.display_name else normalized.title()
         level, excess = level_from_points(sp.total)
 
+        # Check if this is a spell (starts with "Spell:")
+        is_spell = display.strip().startswith("Spell:") or normalized.startswith(
+            "spell:"
+        )
+
+        # Strip any existing mastery description from display name (in parentheses at the end)
+        # This handles legacy characters that had mastery baked into the name
+        if is_spell:
+            # Remove pattern like " (Cast spell normally)" from the end
+            display = re.sub(r"\s*\([^)]+\)\s*$", "", display).strip()
+
         if level >= 1:
             roman = to_roman(level)
+            mastery_desc = None
+            # Only show mastery description for spells with level > 1
+            if is_spell and level > 1:
+                mastery_desc = self._get_spell_mastery_description(level)
+
+            # Build the display string
             if excess > 0:
-                return f"{display} {roman} (+{excess})"
+                base = f"{display} {roman} (+{excess})"
             else:
-                return f"{display} {roman}"
+                base = f"{display} {roman}"
+
+            # Append mastery description if present
+            if mastery_desc:
+                return f"{base} ({mastery_desc})"
+            else:
+                return base
         else:
             # Less than 1 point - shouldn't happen but handle gracefully
             return f"{display} (+{sp.total})"
