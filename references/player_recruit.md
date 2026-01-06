@@ -13,7 +13,11 @@ around decisions that count. (Mechanics based on *The Fantasy Trip*—Steve Jack
 
 **The Game:** No predetermined plots—the world exists, and what you do in it is up to you. No character builds—your character becomes who they become through play. Magic with real consequences—push too hard, and something pushes back.
 
-**What I'm Looking For:** Mature players comfortable with serious themes. People who enjoy roleplay and problem-solving as much as combat. Collaborative storytellers who can improvise. Anyone interested in helping playtest and refine the system—your feedback shapes the game.
+**What I'm Looking For:** 
+- Mature players comfortable with serious themes who are looking for a new social activity that might harken back to high school or college days of gaming (even if those days were relatively recent). 
+- People who enjoy roleplay and problem-solving as much as combat. 
+- Collaborative storytellers who can and like to improvise. 
+- Anyone interested in helping playtest and refine the system. Your feedback will help evolve the game. 
 
 To learn more checkout https://pillars.duckdns.org  or just drop me a email: pillars@origamisoftware.com
 
