@@ -98,6 +98,7 @@ from .auth import (
 # User characters
 from .user_characters import (
     save_character,
+    quick_save_character,
     my_characters,
     load_character,
     delete_character,
@@ -206,6 +207,7 @@ __all__ = [
     "save_session_character_for_user",
     # User characters
     "save_character",
+    "quick_save_character",
     "my_characters",
     "load_character",
     "delete_character",

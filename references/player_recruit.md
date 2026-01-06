@@ -14,7 +14,8 @@ around decisions that count. (Mechanics based on *The Fantasy Trip*—Steve Jack
 **The Game:** No predetermined plots—the world exists, and what you do in it is up to you. No character builds—your character becomes who they become through play. Magic with real consequences—push too hard, and something pushes back.
 
 **What I'm Looking For:** 
-- Mature players comfortable with serious themes who are looking for a new social activity that might harken back to high school or college days of gaming (even if those days were relatively recent). 
+- Mature players comfortable with serious themes 
+- who are looking for a new social activity that might harken back to high school or college days of gaming (even if those days were recent). 
 - People who enjoy roleplay and problem-solving as much as combat. 
 - Collaborative storytellers who can and like to improvise. 
 - Anyone interested in helping playtest and refine the system. Your feedback will help evolve the game. 

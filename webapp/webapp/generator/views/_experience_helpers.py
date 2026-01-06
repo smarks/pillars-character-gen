@@ -20,6 +20,7 @@ from pillars.attributes import (
     create_skill_track_for_choice,
     get_aging_effects_for_age,
 )
+from pillars.skills import normalize_skill_name
 
 from ..models import SavedCharacter
 from .helpers import validate_experience_years
@@ -225,8 +226,38 @@ def update_experience_session(
         "con": aging_effects.con_penalty,
     }
 
+    # Preserve manually added skills and allocated points before clearing skill_points_data
+    existing_skill_points_data = char_data.get("skill_points_data", {})
+    if existing_skill_points_data:
+        # Get skills from other sources (that will be rebuilt)
+        rebuilt_skills = set()
+        for skill in char_data.get("location_skills", []):
+            rebuilt_skills.add(normalize_skill_name(skill))
+        if char_data.get("skill_track"):
+            for skill in char_data["skill_track"].get("initial_skills", []):
+                rebuilt_skills.add(normalize_skill_name(skill))
+        for skill in all_skills:  # interactive_skills (existing + new)
+            rebuilt_skills.add(normalize_skill_name(skill))
+
+        # Track allocated points per skill to preserve when rebuilding
+        # This ensures manually spent points are correctly accounted for
+        allocated_points_by_skill = {}
+        skill_points = existing_skill_points_data.get("skill_points", {})
+        for norm_name, skill_data in skill_points.items():
+            allocated = skill_data.get("allocated", 0)
+            if allocated > 0:
+                allocated_points_by_skill[norm_name] = {
+                    "allocated": allocated,
+                    "display_name": skill_data.get("display_name", norm_name),
+                }
+
+        # Store allocated points data for rebuild
+        char_data["allocated_points_by_skill"] = allocated_points_by_skill
+
     # Clear skill_points_data so it gets rebuilt with updated skills
     char_data.pop("skill_points_data", None)
+    # Clear manual_skills since we're now using allocated_points_by_skill
+    char_data.pop("manual_skills", None)
 
     # Update age based on base_age + years of experience
     char_data["age"] = char_data.get("base_age", 16) + total_years
@@ -534,6 +565,8 @@ def handle_add_experience_ajax(request):
             "new_skills": new_skills,
             "all_skills": all_skills,
             "skills_with_details": skills_with_details,
+            "free_skill_points": char_skills.free_points,
+            "total_xp": char_skills.total_xp,
             "total_years": total_years,
             "current_age": current_age,
             "died": died,

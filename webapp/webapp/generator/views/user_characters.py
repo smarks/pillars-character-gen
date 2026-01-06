@@ -69,6 +69,59 @@ def save_character(request):
 
 
 @login_required
+@require_POST
+def quick_save_character(request):
+    """Quick-save the current character with auto-generated name based on username.
+
+    Names are generated as: username, username 2, username 3, etc.
+    """
+    char_data = request.session.get("current_character")
+    if not char_data:
+        return JsonResponse(
+            {"success": False, "error": "No character to save"}, status=400
+        )
+
+    # Generate name based on username
+    username = request.user.username
+    existing_count = SavedCharacter.objects.filter(
+        user=request.user, name__startswith=username
+    ).count()
+
+    if existing_count == 0:
+        name = username
+    else:
+        # Find the next available number
+        name = f"{username} {existing_count + 1}"
+
+    # Get description, age, and race from the data
+    description = char_data.get("description", "")
+    age = char_data.get("age")
+    race = char_data.get("race", "")
+
+    # Include experience data if present
+    save_data = dict(char_data)
+    save_data["interactive_years"] = request.session.get("interactive_years", 0)
+    save_data["interactive_skills"] = request.session.get("interactive_skills", [])
+    save_data["interactive_yearly_results"] = request.session.get(
+        "interactive_yearly_results", []
+    )
+    save_data["interactive_aging"] = request.session.get("interactive_aging", {})
+    save_data["interactive_died"] = request.session.get("interactive_died", False)
+
+    # Create the saved character
+    saved_char = SavedCharacter.objects.create(
+        user=request.user,
+        name=name,
+        age=age,
+        race=race,
+        description=description,
+        character_data=save_data,
+    )
+
+    return JsonResponse({"success": True, "id": saved_char.id, "name": saved_char.name})
+
+
+@login_required
 def my_characters(request):
     """List saved characters - unified view for players and DMs/admins.
 

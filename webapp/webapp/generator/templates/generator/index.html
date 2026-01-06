@@ -285,13 +285,13 @@
 <div class="generator-layout">
     <!-- Left Sidebar - Controls -->
     <div class="generator-sidebar">
-        <!-- Re-roll Character -->
+        <!-- Roll Character -->
         <div class="sidebar-section">
-            <h3>Re-roll Character</h3>
-            <div class="focus-buttons">
-                <button type="submit" name="action" value="reroll_none" class="btn">No Focus</button>
-                <button type="submit" name="action" value="reroll_physical" class="btn">STR/DEX</button>
-                <button type="submit" name="action" value="reroll_mental" class="btn">INT/WIS</button>
+            <h3>Roll Character</h3>
+            <div class="focus-buttons roll-buttons">
+                <button type="button" class="btn roll-btn" data-action="reroll_none">No Focus</button>
+                <button type="button" class="btn roll-btn" data-action="reroll_physical">STR/DEX</button>
+                <button type="button" class="btn roll-btn" data-action="reroll_mental">INT/WIS</button>
             </div>
         </div>
 
@@ -367,7 +367,7 @@
     <!-- Main Content - Character Sheet -->
     <div class="generator-main">
         <div class="character-sheet">
-            <h3>Character Preview</h3>
+            <h3>Character</h3>
 
             {% with component_id="gensheet" editable=True show_experience=has_experience %}
             {% include "generator/partials/character_sheet_component.html" %}
@@ -431,13 +431,13 @@ document.addEventListener('DOMContentLoaded', function() {
     var agingYearsSpan = document.getElementById('aging-years');
     var trackPanels = document.getElementById('track-panels');
 
-    // Current age from context
-    var currentAge = {{ current_age|default:16 }};
+    // Current age from context - store in window so it can be updated after AJAX
+    window.currentAgeForWarning = {{ current_age|default:16 }};
 
     function updateAgingWarning() {
         if (!agingWarning || !yearsSelect) return;
         var selectedYears = parseInt(yearsSelect.value) || 0;
-        var finalAge = currentAge + selectedYears;
+        var finalAge = window.currentAgeForWarning + selectedYears;
 
         if (finalAge > 34) {
             if (agingYearsSpan) agingYearsSpan.textContent = selectedYears;
@@ -467,6 +467,9 @@ document.addEventListener('DOMContentLoaded', function() {
         yearsSelect.addEventListener('change', updateAgingWarning);
     }
     updateAgingWarning();
+
+    // Expose updateAgingWarning globally so AJAX can call it
+    window.updateAgingWarning = updateAgingWarning;
 })();
 
 // AJAX-based experience adding with immediate feedback
@@ -576,13 +579,57 @@ function addExperienceAjax() {
             ageInput.value = data.current_age;
         }
 
+        // Update the currentAge variable for aging warning calculations
+        if (data.current_age) {
+            window.currentAgeForWarning = data.current_age;
+            // Refresh the aging warning display
+            if (typeof updateAgingWarning === 'function') {
+                updateAgingWarning();
+            }
+        }
+
         // Update the skills table in the character sheet
         if (data.skills_with_details && data.skills_with_details.length > 0) {
             updateSkillsTable(data.skills_with_details);
         }
 
+        // Update free skill points display
+        if (data.free_skill_points !== undefined) {
+            var freePointsSpan = document.getElementById('gensheet-free-points');
+            if (freePointsSpan) {
+                freePointsSpan.textContent = data.free_skill_points;
+            }
+            var bannerSpan = document.getElementById('gensheet-free-points-banner');
+            if (bannerSpan) {
+                bannerSpan.textContent = data.free_skill_points;
+            }
+            // Show/hide banner based on points
+            var banner = document.querySelector('.free-points-banner');
+            if (banner) {
+                banner.style.display = data.free_skill_points > 0 ? 'block' : 'none';
+            }
+            // Update add button text
+            var addBtn = document.querySelector('.add-skill-row .btn-add');
+            if (addBtn) {
+                addBtn.textContent = data.free_skill_points > 0 ? '+ Add (uses 1 free point)' : '+ Add';
+            }
+        }
+
+        // Update XP display
+        if (data.total_xp !== undefined) {
+            var xpSpan = document.getElementById('gensheet-total-xp');
+            if (xpSpan) {
+                xpSpan.textContent = data.total_xp + ' XP';
+            }
+        }
+
         // Update the Character Log section at the bottom of the page
         updateCharacterLog(data);
+
+        // Mark that we now have experience (for roll button save prompt)
+        if (typeof updateHasExperience === 'function') {
+            updateHasExperience(true);
+        }
     })
     .catch(function(err) {
         feedback.style.background = '#f8d7da';
@@ -824,5 +871,83 @@ document.addEventListener('trackInfoUpdated', function(e) {
     // Update Add Experience button state after rebuilding tracks
     updateAddExperienceButton();
 });
+
+// Roll button handling - check for unsaved changes before rolling
+(function() {
+    var rollButtons = document.querySelectorAll('.roll-btn');
+    var form = document.getElementById('generator-form') || document.querySelector('form');
+    var isLoggedIn = {{ user.is_authenticated|yesno:"true,false" }};
+    var hasExperience = {{ has_experience|yesno:"true,false" }};
+    var quickSaveUrl = '{% url "quick_save_character" %}';
+    var csrfToken = '{{ csrf_token }}';
+
+    function hasUnsavedChanges() {
+        // Character has been modified if they have experience or skill points allocated
+        return hasExperience;
+    }
+
+    function doRoll(action) {
+        // Create a hidden input for the action and submit the form
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'action';
+        input.value = action;
+        form.appendChild(input);
+        form.submit();
+    }
+
+    function quickSaveAndRoll(action) {
+        fetch(quickSaveUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                alert('Character saved as "' + data.name + '"');
+                doRoll(action);
+            } else {
+                alert('Failed to save: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(function(err) {
+            alert('Error saving character: ' + err.message);
+        });
+    }
+
+    rollButtons.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var action = this.getAttribute('data-action');
+
+            if (hasUnsavedChanges()) {
+                if (isLoggedIn) {
+                    var save = confirm('You have unsaved changes. Would you like to save this character before rolling a new one?\n\nClick OK to save, Cancel to discard.');
+                    if (save) {
+                        quickSaveAndRoll(action);
+                    } else {
+                        doRoll(action);
+                    }
+                } else {
+                    var proceed = confirm('You have unsaved changes that will be lost. Continue?');
+                    if (proceed) {
+                        doRoll(action);
+                    }
+                }
+            } else {
+                doRoll(action);
+            }
+        });
+    });
+
+    // Update hasExperience dynamically after AJAX experience additions
+    window.updateHasExperience = function(value) {
+        hasExperience = value;
+    };
+})();
 </script>
 {% endblock %}

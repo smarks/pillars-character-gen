@@ -61,6 +61,9 @@ urlpatterns = [
     # Character save/load
     path("my-characters/", views.my_characters, name="my_characters"),
     path("save-character/", views.save_character, name="save_character"),
+    path(
+        "quick-save-character/", views.quick_save_character, name="quick_save_character"
+    ),
     path("load-character/<int:char_id>/", views.load_character, name="load_character"),
     path(
         "delete-character/<int:char_id>/",

@@ -88,115 +88,139 @@ Attribute display variables (computed by view):
         <p class="section-help">Values 1-18 are integers. Above 18, use decimal notation: 18.10, 18.20, ... 18.100 = 19</p>
         {% endif %}
 
-        <div class="attributes-grid">
-            <div class="attr-box">
-                <label>STR</label>
-                <div class="attr-values">
-                    {% if editable %}
-                    <input type="text" class="attr-input" data-field="attributes.STR" data-attr="true"
-                           value="{{ str_display|default:char_data.attributes.STR }}" inputmode="numeric">
-                    {% else %}
-                    <span class="attr-value">{{ str_display|default:char_data.attributes.STR }}</span>
-                    {% endif %}
-                    {% if aging_penalties.str|default:0 %}
-                    <span class="adjusted-attr" title="Effective value after aging ({{ aging_penalties.str }} from aging)">
-                        → <span class="adjusted-value" data-computed="str_adjusted">{{ str_adjusted|default:char_data.attributes.STR }}</span>
-                        <span class="adj-mod" data-computed="str_adj_mod">({% if str_adj_mod >= 0 %}+{% endif %}{{ str_adj_mod|default:"0" }})</span>
-                    </span>
-                    {% else %}
-                    <span class="modifier" data-computed="str_mod">({% if str_mod >= 0 %}+{% endif %}{{ str_mod|default:"0" }})</span>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="attr-box">
-                <label>DEX</label>
-                <div class="attr-values">
-                    {% if editable %}
-                    <input type="text" class="attr-input" data-field="attributes.DEX" data-attr="true"
-                           value="{{ dex_display|default:char_data.attributes.DEX }}" inputmode="numeric">
-                    {% else %}
-                    <span class="attr-value">{{ dex_display|default:char_data.attributes.DEX }}</span>
-                    {% endif %}
-                    {% if aging_penalties.dex|default:0 %}
-                    <span class="adjusted-attr" title="Effective value after aging ({{ aging_penalties.dex }} from aging)">
-                        → <span class="adjusted-value" data-computed="dex_adjusted">{{ dex_adjusted|default:char_data.attributes.DEX }}</span>
-                        <span class="adj-mod" data-computed="dex_adj_mod">({% if dex_adj_mod >= 0 %}+{% endif %}{{ dex_adj_mod|default:"0" }})</span>
-                    </span>
-                    {% else %}
-                    <span class="modifier" data-computed="dex_mod">({% if dex_mod >= 0 %}+{% endif %}{{ dex_mod|default:"0" }})</span>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="attr-box">
-                <label>INT</label>
-                <div class="attr-values">
-                    {% if editable %}
-                    <input type="text" class="attr-input" data-field="attributes.INT" data-attr="true"
-                           value="{{ int_display|default:char_data.attributes.INT }}" inputmode="numeric">
-                    {% else %}
-                    <span class="attr-value">{{ int_display|default:char_data.attributes.INT }}</span>
-                    {% endif %}
-                    {% if aging_penalties.int|default:0 %}
-                    <span class="adjusted-attr" title="Effective value after aging ({{ aging_penalties.int }} from aging)">
-                        → <span class="adjusted-value" data-computed="int_adjusted">{{ int_adjusted|default:char_data.attributes.INT }}</span>
-                        <span class="adj-mod" data-computed="int_adj_mod">({% if int_adj_mod >= 0 %}+{% endif %}{{ int_adj_mod|default:"0" }})</span>
-                    </span>
-                    {% else %}
-                    <span class="modifier" data-computed="int_mod">({% if int_mod >= 0 %}+{% endif %}{{ int_mod|default:"0" }})</span>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="attr-box">
-                <label>WIS</label>
-                <div class="attr-values">
-                    {% if editable %}
-                    <input type="text" class="attr-input" data-field="attributes.WIS" data-attr="true"
-                           value="{{ wis_display|default:char_data.attributes.WIS }}" inputmode="numeric">
-                    {% else %}
-                    <span class="attr-value">{{ wis_display|default:char_data.attributes.WIS }}</span>
-                    {% endif %}
-                    {% if aging_penalties.wis|default:0 %}
-                    <span class="adjusted-attr" title="Effective value after aging ({{ aging_penalties.wis }} from aging)">
-                        → <span class="adjusted-value" data-computed="wis_adjusted">{{ wis_adjusted|default:char_data.attributes.WIS }}</span>
-                        <span class="adj-mod" data-computed="wis_adj_mod">({% if wis_adj_mod >= 0 %}+{% endif %}{{ wis_adj_mod|default:"0" }})</span>
-                    </span>
-                    {% else %}
-                    <span class="modifier" data-computed="wis_mod">({% if wis_mod >= 0 %}+{% endif %}{{ wis_mod|default:"0" }})</span>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="attr-box">
-                <label>CON</label>
-                <div class="attr-values">
-                    {% if editable %}
-                    <input type="text" class="attr-input" data-field="attributes.CON" data-attr="true"
-                           value="{{ con_display|default:char_data.attributes.CON }}" inputmode="numeric">
-                    {% else %}
-                    <span class="attr-value">{{ con_display|default:char_data.attributes.CON }}</span>
-                    {% endif %}
-                    {% if aging_penalties.con|default:0 %}
-                    <span class="adjusted-attr" title="Effective value after aging ({{ aging_penalties.con }} from aging)">
-                        → <span class="adjusted-value" data-computed="con_adjusted">{{ con_adjusted|default:char_data.attributes.CON }}</span>
-                        <span class="adj-mod" data-computed="con_adj_mod">({% if con_adj_mod >= 0 %}+{% endif %}{{ con_adj_mod|default:"0" }})</span>
-                    </span>
-                    {% else %}
-                    <span class="modifier" data-computed="con_mod">({% if con_mod >= 0 %}+{% endif %}{{ con_mod|default:"0" }})</span>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="attr-box">
-                <label>CHR</label>
-                <div class="attr-values">
-                    {% if editable %}
-                    <input type="text" class="attr-input" data-field="attributes.CHR" data-attr="true"
-                           value="{{ chr_display|default:char_data.attributes.CHR }}" inputmode="numeric">
-                    {% else %}
-                    <span class="attr-value">{{ chr_display|default:char_data.attributes.CHR }}</span>
-                    {% endif %}
-                    <span class="modifier" data-computed="chr_mod">({% if chr_mod >= 0 %}+{% endif %}{{ chr_mod|default:"0" }})</span>
-                </div>
-            </div>
-        </div>
+        <table class="attributes-table">
+            <thead>
+                <tr>
+                    <th>Attr</th>
+                    <th>Base</th>
+                    <th>Mod</th>
+                    <th>Adj</th>
+                    <th>Why</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-attr-row="str">
+                    <td class="attr-label">STR</td>
+                    <td class="attr-base">
+                        {% if editable %}
+                        <input type="text" class="attr-input" data-field="attributes.STR" data-attr="true"
+                               value="{{ str_display|default:char_data.attributes.STR }}" inputmode="numeric">
+                        {% else %}
+                        <span class="attr-value">{{ str_display|default:char_data.attributes.STR }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="attr-mod">
+                        <span class="modifier {% if str_mod < 0 %}mod-negative{% elif str_mod > 0 %}mod-positive{% endif %}" data-computed="str_mod">({% if str_mod >= 0 %}+{% endif %}{{ str_mod|default:"0" }})</span>
+                    </td>
+                    <td class="attr-adjusted">
+                        <span class="adjusted-value{% if str_sources %} has-penalty{% endif %}" data-computed="str_adjusted">{{ str_adjusted|default:char_data.attributes.STR }}</span>
+                    </td>
+                    <td class="attr-why">
+                        <span class="attr-sources" data-computed="str_sources">{{ str_sources }}</span>
+                    </td>
+                </tr>
+                <tr data-attr-row="dex">
+                    <td class="attr-label">DEX</td>
+                    <td class="attr-base">
+                        {% if editable %}
+                        <input type="text" class="attr-input" data-field="attributes.DEX" data-attr="true"
+                               value="{{ dex_display|default:char_data.attributes.DEX }}" inputmode="numeric">
+                        {% else %}
+                        <span class="attr-value">{{ dex_display|default:char_data.attributes.DEX }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="attr-mod">
+                        <span class="modifier {% if dex_mod < 0 %}mod-negative{% elif dex_mod > 0 %}mod-positive{% endif %}" data-computed="dex_mod">({% if dex_mod >= 0 %}+{% endif %}{{ dex_mod|default:"0" }})</span>
+                    </td>
+                    <td class="attr-adjusted">
+                        <span class="adjusted-value{% if dex_sources %} has-penalty{% endif %}" data-computed="dex_adjusted">{{ dex_adjusted|default:char_data.attributes.DEX }}</span>
+                    </td>
+                    <td class="attr-why">
+                        <span class="attr-sources" data-computed="dex_sources">{{ dex_sources }}</span>
+                    </td>
+                </tr>
+                <tr data-attr-row="int">
+                    <td class="attr-label">INT</td>
+                    <td class="attr-base">
+                        {% if editable %}
+                        <input type="text" class="attr-input" data-field="attributes.INT" data-attr="true"
+                               value="{{ int_display|default:char_data.attributes.INT }}" inputmode="numeric">
+                        {% else %}
+                        <span class="attr-value">{{ int_display|default:char_data.attributes.INT }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="attr-mod">
+                        <span class="modifier {% if int_mod < 0 %}mod-negative{% elif int_mod > 0 %}mod-positive{% endif %}" data-computed="int_mod">({% if int_mod >= 0 %}+{% endif %}{{ int_mod|default:"0" }})</span>
+                    </td>
+                    <td class="attr-adjusted">
+                        <span class="adjusted-value{% if int_sources %} has-penalty{% endif %}" data-computed="int_adjusted">{{ int_adjusted|default:char_data.attributes.INT }}</span>
+                    </td>
+                    <td class="attr-why">
+                        <span class="attr-sources" data-computed="int_sources">{{ int_sources }}</span>
+                    </td>
+                </tr>
+                <tr data-attr-row="wis">
+                    <td class="attr-label">WIS</td>
+                    <td class="attr-base">
+                        {% if editable %}
+                        <input type="text" class="attr-input" data-field="attributes.WIS" data-attr="true"
+                               value="{{ wis_display|default:char_data.attributes.WIS }}" inputmode="numeric">
+                        {% else %}
+                        <span class="attr-value">{{ wis_display|default:char_data.attributes.WIS }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="attr-mod">
+                        <span class="modifier {% if wis_mod < 0 %}mod-negative{% elif wis_mod > 0 %}mod-positive{% endif %}" data-computed="wis_mod">({% if wis_mod >= 0 %}+{% endif %}{{ wis_mod|default:"0" }})</span>
+                    </td>
+                    <td class="attr-adjusted">
+                        <span class="adjusted-value{% if wis_sources %} has-penalty{% endif %}" data-computed="wis_adjusted">{{ wis_adjusted|default:char_data.attributes.WIS }}</span>
+                    </td>
+                    <td class="attr-why">
+                        <span class="attr-sources" data-computed="wis_sources">{{ wis_sources }}</span>
+                    </td>
+                </tr>
+                <tr data-attr-row="con">
+                    <td class="attr-label">CON</td>
+                    <td class="attr-base">
+                        {% if editable %}
+                        <input type="text" class="attr-input" data-field="attributes.CON" data-attr="true"
+                               value="{{ con_display|default:char_data.attributes.CON }}" inputmode="numeric">
+                        {% else %}
+                        <span class="attr-value">{{ con_display|default:char_data.attributes.CON }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="attr-mod">
+                        <span class="modifier {% if con_mod < 0 %}mod-negative{% elif con_mod > 0 %}mod-positive{% endif %}" data-computed="con_mod">({% if con_mod >= 0 %}+{% endif %}{{ con_mod|default:"0" }})</span>
+                    </td>
+                    <td class="attr-adjusted">
+                        <span class="adjusted-value{% if con_sources %} has-penalty{% endif %}" data-computed="con_adjusted">{{ con_adjusted|default:char_data.attributes.CON }}</span>
+                    </td>
+                    <td class="attr-why">
+                        <span class="attr-sources" data-computed="con_sources">{{ con_sources }}</span>
+                    </td>
+                </tr>
+                <tr data-attr-row="chr">
+                    <td class="attr-label">CHR</td>
+                    <td class="attr-base">
+                        {% if editable %}
+                        <input type="text" class="attr-input" data-field="attributes.CHR" data-attr="true"
+                               value="{{ chr_display|default:char_data.attributes.CHR }}" inputmode="numeric">
+                        {% else %}
+                        <span class="attr-value">{{ chr_display|default:char_data.attributes.CHR }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="attr-mod">
+                        <span class="modifier {% if chr_mod < 0 %}mod-negative{% elif chr_mod > 0 %}mod-positive{% endif %}" data-computed="chr_mod">({% if chr_mod >= 0 %}+{% endif %}{{ chr_mod|default:"0" }})</span>
+                    </td>
+                    <td class="attr-adjusted">
+                        <span class="adjusted-value" data-computed="chr_adjusted">{{ chr_adjusted|default:char_data.attributes.CHR }}</span>
+                    </td>
+                    <td class="attr-why">
+                        <span class="attr-sources" data-computed="chr_sources">{{ chr_sources }}</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
         <div class="derived-stats">
             <div class="derived-stat">
@@ -301,16 +325,10 @@ Attribute display variables (computed by view):
             <div class="free-points-display">
                 <label>Available Skill Points:</label>
                 <span class="free-points-value" id="{{ component_id|default:'cs' }}-free-points">{{ free_skill_points|default:0 }}</span>
-                {% if free_skill_points > 0 and editable %}
-                <span class="help-text">Click +1 next to a skill to allocate a point.</span>
-                {% endif %}
             </div>
             {% if free_skill_points > 0 %}
             <div class="free-points-banner">
                 <strong><span id="{{ component_id|default:'cs' }}-free-points-banner">{{ free_skill_points }}</span> Free Skill Points Available!</strong>
-                {% if editable %}
-                <span class="help-text">Click +1 to allocate a point to a skill.</span>
-                {% endif %}
             </div>
             {% endif %}
         </div>
@@ -322,7 +340,6 @@ Attribute display variables (computed by view):
                     <th>Level</th>
                     <th>Points</th>
                     <th>Acquired</th>
-                    {% if editable and free_skill_points > 0 %}<th></th>{% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -338,11 +355,6 @@ Attribute display variables (computed by view):
                     <td class="skill-level-cell">{{ skill.level_roman|default:"-" }}</td>
                     <td class="skill-points-cell">{% if skill.excess_points %}+{{ skill.excess_points }}{% else %}-{% endif %}</td>
                     <td class="skill-acquired-cell">{{ skill.acquired|default:"Automatic" }}</td>
-                    {% if editable and free_skill_points > 0 %}
-                    <td class="skill-action-cell">
-                        <button type="button" class="btn-allocate" onclick="CharacterSheet.allocatePoint('{{ component_id|default:'cs' }}', '{{ skill.name|default:skill }}')" title="Allocate 1 free point">+1</button>
-                    </td>
-                    {% endif %}
                 </tr>
             {% empty %}
                 <tr><td colspan="4" class="no-skills-msg"><em>No skills yet</em></td></tr>
@@ -820,74 +832,94 @@ Attribute display variables (computed by view):
     margin-bottom: 15px;
 }
 
-/* Attributes grid */
-.attributes-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+/* Attributes table */
+.attributes-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
 }
 
-.attr-box {
-    border: 1px solid #ddd;
-    padding: 10px;
-    background: #fff;
-    text-align: center;
+.attributes-table th,
+.attributes-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
 }
 
-.attr-box label {
-    display: block;
+.attributes-table th {
+    background: #f5f5f5;
+    font-weight: 600;
+    font-size: 0.85em;
+    color: #555;
+}
+
+.attributes-table .attr-label {
     font-weight: bold;
-    margin-bottom: 5px;
-    font-size: 0.9em;
+    width: 50px;
 }
 
-.attr-box .attr-input {
-    width: 60px;
+.attributes-table .attr-base {
+    width: 70px;
+}
+
+.attributes-table .attr-input {
+    width: 55px;
     text-align: center;
-    font-size: 18px;
+    font-size: 14px;
     font-weight: bold;
     padding: 4px;
     border: 1px solid #ccc;
 }
 
-.attr-box .attr-value {
-    display: block;
-    font-size: 18px;
+.attributes-table .attr-value {
+    font-size: 14px;
     font-weight: bold;
 }
 
-.attr-box .attr-input.invalid {
+.attributes-table .attr-input.invalid {
     border-color: #c44;
     background: #fee;
 }
 
-.attr-box .modifier {
-    display: block;
-    margin-top: 5px;
-    font-size: 0.85em;
+.attributes-table .attr-mod {
+    width: 50px;
+}
+
+.attributes-table .modifier {
+    font-size: 0.9em;
     color: #666;
 }
 
-.attr-box .attr-values {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 4px;
-}
-
-.attr-box .adjusted-attr {
-    color: #2196f3;
-    font-weight: 500;
-}
-
-.attr-box .adjusted-attr .adjusted-value {
+.attributes-table .modifier.mod-positive {
     color: #1976d2;
-    font-weight: 600;
 }
 
-.attr-box .adjusted-attr .adj-mod {
+.attributes-table .modifier.mod-negative {
+    color: #c62828;
+}
+
+.attributes-table .attr-adjusted {
+    width: 50px;
+}
+
+.attributes-table .adjusted-value {
+    font-weight: 600;
+    color: #1976d2;
+}
+
+.attributes-table .adjusted-value.has-penalty {
+    color: #c62828;
+}
+
+.attributes-table .attr-why {
     font-size: 0.85em;
-    color: #64b5f6;
+    color: #888;
+    font-style: italic;
+}
+
+.attributes-table .attr-sources:empty::after {
+    content: "-";
+    color: #ccc;
 }
 
 /* Derived stats */
@@ -1097,21 +1129,6 @@ Attribute display variables (computed by view):
     display: inline-flex;
     align-items: center;
     gap: 4px;
-}
-
-.btn-allocate {
-    background: #4caf50;
-    color: white;
-    border: none;
-    padding: 2px 8px;
-    font-size: 0.8em;
-    cursor: pointer;
-    border-radius: 3px;
-    font-weight: bold;
-}
-
-.btn-allocate:hover {
-    background: #388e3c;
 }
 
 /* Experience section */
@@ -1883,9 +1900,29 @@ var CharacterSheet = (function() {
                         var el = container.querySelector('[data-computed="' + key + '"]');
                         if (el) {
                             if (key.endsWith('_mod') || key.endsWith('_adj_mod')) {
-                                // Format modifiers with +/- prefix
+                                // Format modifiers with +/- prefix and update color class
                                 var mod = result.computed[key];
                                 el.textContent = '(' + (mod >= 0 ? '+' : '') + mod + ')';
+                                // Update color classes
+                                el.classList.remove('mod-positive', 'mod-negative');
+                                if (mod > 0) {
+                                    el.classList.add('mod-positive');
+                                } else if (mod < 0) {
+                                    el.classList.add('mod-negative');
+                                }
+                            } else if (key.endsWith('_adjusted')) {
+                                // For adjusted values, also check if less than base
+                                var adjustedVal = result.computed[key];
+                                el.textContent = adjustedVal;
+                                // Get the attribute name (e.g., "str" from "str_adjusted")
+                                var attrName = key.replace('_adjusted', '');
+                                // Check if there's a penalty (adjusted < base) by looking at sources
+                                var sourcesKey = attrName + '_sources';
+                                if (result.computed[sourcesKey] && result.computed[sourcesKey].length > 0) {
+                                    el.classList.add('has-penalty');
+                                } else {
+                                    el.classList.remove('has-penalty');
+                                }
                             } else {
                                 el.textContent = result.computed[key];
                             }
@@ -1938,7 +1975,7 @@ var CharacterSheet = (function() {
 
                 // Rebuild skills list if returned
                 if (result.computed && result.computed.skills) {
-                    rebuildSkillsList(componentId, result.computed.skills, result.computed.free_skill_points || 0);
+                    rebuildSkillsList(componentId, result.computed.skills, result.computed.free_skill_points || 0, result.computed.total_xp);
                 } else {
                     // Fallback: add to DOM directly
                     var list = document.getElementById(componentId + '-skills-list');
@@ -1957,33 +1994,52 @@ var CharacterSheet = (function() {
         });
     }
 
-    function rebuildSkillsList(componentId, skills, freePoints) {
-        var list = document.getElementById(componentId + '-skills-list');
+    function rebuildSkillsList(componentId, skills, freePoints, totalXp) {
+        var skillsTable = document.getElementById(componentId + '-skills-list');
         var container = document.getElementById(componentId + '-container');
-        list.innerHTML = '';
+
+        // Find or create tbody
+        var tbody = skillsTable.querySelector('tbody');
+        if (!tbody) {
+            // If this was an old list, rebuild as table
+            skillsTable.innerHTML = '<thead><tr><th>Skill</th><th>Level</th><th>Points</th><th>Acquired</th></tr></thead><tbody></tbody>';
+            tbody = skillsTable.querySelector('tbody');
+        }
+
+        // Clear existing rows
+        tbody.innerHTML = '';
 
         if (skills.length === 0) {
-            var li = document.createElement('li');
-            li.className = 'skill-item no-skills-msg';
-            li.innerHTML = '<em>No skills yet</em>';
-            list.appendChild(li);
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="4" class="no-skills-msg"><em>No skills yet</em></td>';
+            tbody.appendChild(tr);
             return;
         }
 
+        // Build table rows from skill details
         skills.forEach(function(skill) {
-            var li = document.createElement('li');
-            li.className = 'skill-item';
-            var skillName = skill.name || skill;
-            var skillDisplay = skill.display || skill;
-            li.dataset.skillName = skillName;
-            // Add editable class and click handler for renaming
-            var html = '<span class="skill-tag editable" onclick="CharacterSheet.startRenameSkill(\'' + componentId + '\', this)" title="Click to rename">' + escapeHtml(skillDisplay) + '</span>';
-            if (freePoints > 0) {
-                html += ' <button type="button" class="btn-allocate" onclick="CharacterSheet.allocatePoint(\'' + componentId + '\', \'' + escapeHtml(skillName).replace(/'/g, "\\'") + '\')" title="Allocate 1 free point">+1</button>';
-            }
-            li.innerHTML = html;
-            list.appendChild(li);
+            var tr = document.createElement('tr');
+            tr.dataset.skillName = skill.name;
+
+            var pointsDisplay = skill.excess_points > 0 ? '+' + skill.excess_points : '-';
+
+            tr.innerHTML = '<td class="skill-name-cell">' +
+                           '<span class="skill-name editable" onclick="CharacterSheet.startRenameSkill(\'' + componentId + '\', this)" title="Click to rename">' +
+                           escapeHtml(skill.display_name || skill.name) + '</span></td>' +
+                           '<td class="skill-level-cell">' + (skill.level_roman || '-') + '</td>' +
+                           '<td class="skill-points-cell">' + pointsDisplay + '</td>' +
+                           '<td class="skill-acquired-cell">' + (skill.acquired || 'Automatic') + '</td>';
+
+            tbody.appendChild(tr);
         });
+
+        // Update XP display if provided
+        if (totalXp !== undefined) {
+            var xpSpan = document.getElementById(componentId + '-total-xp');
+            if (xpSpan) {
+                xpSpan.textContent = totalXp + ' XP';
+            }
+        }
 
         // Update free points display (always visible)
         var freePointsSpan = document.getElementById(componentId + '-free-points');
@@ -2018,39 +2074,10 @@ var CharacterSheet = (function() {
         }
     }
 
-    function allocatePoint(componentId, skillName) {
-        var container = document.getElementById(componentId + '-container');
-        var saveUrl = container.dataset.saveUrl;
-        var csrfToken = container.dataset.csrfToken;
-
-        fetch(saveUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify({ field: 'skill_points', action: 'allocate', skill_name: skillName })
-        })
-        .then(function(response) { return response.json(); })
-        .then(function(result) {
-            if (result.success) {
-                // Rebuild skills list with updated data
-                if (result.computed && result.computed.skills) {
-                    rebuildSkillsList(componentId, result.computed.skills, result.computed.free_skill_points || 0);
-                }
-            } else {
-                console.error('Allocate point failed:', result.error);
-            }
-        })
-        .catch(function(error) {
-            console.error('Allocate point error:', error);
-        });
-    }
-
     function startRenameSkill(componentId, skillTagElement) {
-        // Get the skill name from the parent li element
-        var li = skillTagElement.closest('.skill-item');
-        var skillName = li.dataset.skillName;
+        // Get the skill name from the parent row
+        var row = skillTagElement.closest('tr');
+        var skillName = row.dataset.skillName;
         var currentDisplay = skillTagElement.textContent;
 
         // Extract just the base name (remove roman numerals and excess points)
@@ -2065,15 +2092,16 @@ var CharacterSheet = (function() {
         input.dataset.originalSkillName = skillName;
         input.dataset.componentId = componentId;
 
-        // Replace the span with the input
+        // Replace the span with the input (inside the same td cell)
+        var cell = skillTagElement.closest('td');
         skillTagElement.style.display = 'none';
-        li.insertBefore(input, skillTagElement);
+        cell.insertBefore(input, skillTagElement);
         input.focus();
         input.select();
 
         // Handle blur and enter key
         input.addEventListener('blur', function() {
-            finishRenameSkill(componentId, input, skillTagElement, li);
+            finishRenameSkill(componentId, input, skillTagElement, row);
         });
         input.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
@@ -2123,7 +2151,7 @@ var CharacterSheet = (function() {
             if (result.success) {
                 // Rebuild skills list with updated data
                 if (result.computed && result.computed.skills) {
-                    rebuildSkillsList(componentId, result.computed.skills, result.computed.free_skill_points || 0);
+                    rebuildSkillsList(componentId, result.computed.skills, result.computed.free_skill_points || 0, result.computed.total_xp);
                 }
             } else {
                 console.error('Rename skill failed:', result.error);
@@ -2256,7 +2284,6 @@ var CharacterSheet = (function() {
     return {
         init: init,
         addSkill: addSkill,
-        allocatePoint: allocatePoint,
         startRenameSkill: startRenameSkill,
         parseAttributeValue: parseAttributeValue
     };

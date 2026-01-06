@@ -38,10 +38,10 @@
         <button type="submit" name="action" value="finish" class="success">Finish Character</button>
     </div>
 
-    <div class="button-group">
-        <button type="submit" name="action" value="reroll_none">Re-roll (No Focus)</button>
-        <button type="submit" name="action" value="reroll_physical">Re-roll (STR/DEX Focus)</button>
-        <button type="submit" name="action" value="reroll_mental">Re-roll (INT/WIS Focus)</button>
+    <div class="button-group roll-buttons">
+        <button type="button" class="roll-btn" data-action="reroll_none">Roll (No Focus)</button>
+        <button type="button" class="roll-btn" data-action="reroll_physical">Roll (STR/DEX Focus)</button>
+        <button type="button" class="roll-btn" data-action="reroll_mental">Roll (INT/WIS Focus)</button>
     </div>
 </div>
 
@@ -91,5 +91,72 @@
 
     // Initial check
     updateAgingWarning();
+})();
+
+// Roll button handling - check for unsaved changes before rolling
+(function() {
+    var rollButtons = document.querySelectorAll('.roll-btn');
+    var form = document.querySelector('form');
+    var isLoggedIn = {% if user.is_authenticated %}true{% else %}false{% endif %};
+    var hasExperience = {% if has_experience %}true{% else %}false{% endif %};
+    var quickSaveUrl = '{% url "quick_save_character" %}';
+    var csrfToken = '{{ csrf_token }}';
+
+    function doRoll(action) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'action';
+        input.value = action;
+        form.appendChild(input);
+        form.submit();
+    }
+
+    function quickSaveAndRoll(action) {
+        fetch(quickSaveUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                alert('Character saved as "' + data.name + '"');
+                doRoll(action);
+            } else {
+                alert('Failed to save: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(function(err) {
+            alert('Error saving character: ' + err.message);
+        });
+    }
+
+    rollButtons.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var action = this.getAttribute('data-action');
+
+            if (hasExperience) {
+                if (isLoggedIn) {
+                    var save = confirm('You have unsaved changes. Would you like to save this character before rolling a new one?\n\nClick OK to save, Cancel to discard.');
+                    if (save) {
+                        quickSaveAndRoll(action);
+                    } else {
+                        doRoll(action);
+                    }
+                } else {
+                    var proceed = confirm('You have unsaved changes that will be lost. Continue?');
+                    if (proceed) {
+                        doRoll(action);
+                    }
+                }
+            } else {
+                doRoll(action);
+            }
+        });
+    });
 })();
 </script>

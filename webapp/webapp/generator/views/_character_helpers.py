@@ -4,6 +4,7 @@ Helper functions for character sheet views.
 These are internal helpers for skill points management and attribute calculations.
 """
 
+import re
 from pillars.attributes import get_track_availability
 
 from .helpers import (
@@ -11,6 +12,66 @@ from .helpers import (
     get_attribute_modifier,
     get_attribute_base_value,
 )
+
+
+def parse_equipment_bonuses(char_data):
+    """Parse equipment attr_mod fields and return bonuses by attribute.
+
+    Parses formats like:
+    - "+5 STR"
+    - "+3 DEX, +2 CON"
+    - "STR +5"
+
+    Returns dict like {"STR": 5, "DEX": 3} and sources dict {"STR": ["Girdle"], "DEX": ["Ring"]}
+    """
+    bonuses = {"STR": 0, "DEX": 0, "INT": 0, "WIS": 0, "CON": 0, "CHR": 0}
+    sources = {"STR": [], "DEX": [], "INT": [], "WIS": [], "CON": [], "CHR": []}
+
+    equipment = char_data.get("equipment", {})
+    if not equipment or not isinstance(equipment, dict):
+        return bonuses, sources
+
+    # Check all equipment categories for attr_mod
+    for category in ["misc", "armour", "weapons"]:
+        items = equipment.get(category, [])
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            # Only count equipped items
+            if item.get("equipped") is False:
+                continue
+
+            attr_mod = item.get("attr_mod", "") or item.get("attrMod", "")
+            if not attr_mod:
+                continue
+
+            item_name = item.get("name", "Equipment")
+
+            # Parse patterns like "+5 STR" or "STR +5" or "+3 DEX, +2 CON"
+            # Pattern: optional sign, number, optional whitespace, attribute name
+            # OR: attribute name, optional whitespace, optional sign, number
+            pattern = (
+                r"([+-]?\d+)\s*(STR|DEX|INT|WIS|CON|CHR)|"
+                r"(STR|DEX|INT|WIS|CON|CHR)\s*([+-]?\d+)"
+            )
+
+            for match in re.finditer(pattern, attr_mod, re.IGNORECASE):
+                if match.group(1) and match.group(2):
+                    # Format: "+5 STR"
+                    value = int(match.group(1))
+                    attr = match.group(2).upper()
+                elif match.group(3) and match.group(4):
+                    # Format: "STR +5"
+                    attr = match.group(3).upper()
+                    value = int(match.group(4))
+                else:
+                    continue
+
+                if attr in bonuses:
+                    bonuses[attr] += value
+                    sources[attr].append(item_name)
+
+    return bonuses, sources
 
 
 def build_skill_points_from_char_data(char_data):
@@ -29,6 +90,8 @@ def build_skill_points_from_char_data(char_data):
         return CharacterSkills.from_dict(char_data["skill_points_data"])
 
     # Migrate from legacy format
+    from pillars.skills import SkillPoints
+
     all_skills = []
 
     # Collect skills from all sources
@@ -43,6 +106,20 @@ def build_skill_points_from_char_data(char_data):
 
     # Build CharacterSkills from legacy data
     char_skills = CharacterSkills.from_legacy_skills(all_skills, years)
+
+    # Restore allocated points that were spent before rebuild
+    allocated_by_skill = char_data.get("allocated_points_by_skill", {})
+    for norm_name, alloc_data in allocated_by_skill.items():
+        allocated = alloc_data.get("allocated", 0)
+        display_name = alloc_data.get("display_name", norm_name)
+
+        if allocated > 0:
+            # Create or update the skill with allocated points
+            if norm_name not in char_skills.skills:
+                char_skills.skills[norm_name] = SkillPoints(display_name=display_name)
+            char_skills.skills[norm_name].allocated = allocated
+            # Subtract from free points (they were already spent)
+            char_skills.free_points = max(0, char_skills.free_points - allocated)
 
     return char_skills
 
@@ -87,30 +164,50 @@ def deallocate_skill_point(char_data, skill_name):
 
 
 def calculate_adjusted_attributes(char_data):
-    """Calculate adjusted attribute values after aging penalties.
+    """Calculate adjusted attribute values after aging penalties and equipment bonuses.
 
     Returns dict with:
-    - {attr}_adjusted: effective value after penalties
+    - {attr}_adjusted: effective value after penalties and bonuses
     - {attr}_adj_mod: modifier based on adjusted value
+    - {attr}_sources: list of modification sources (e.g., "aging, Girdle")
     """
     attrs = char_data.get("attributes", {})
     aging = char_data.get("interactive_aging", {})
+
+    # Get equipment bonuses
+    equip_bonuses, equip_sources = parse_equipment_bonuses(char_data)
 
     result = {}
     for attr in ["STR", "DEX", "INT", "WIS", "CON"]:
         base_val = get_attribute_base_value(attrs.get(attr, 10))
         penalty = aging.get(attr.lower(), 0)
+        bonus = equip_bonuses.get(attr, 0)
+
         # Penalty is stored as negative (e.g., -1), so add it to subtract
-        adjusted = base_val + penalty
+        # Bonus is positive from equipment
+        adjusted = base_val + penalty + bonus
         adj_mod = get_attribute_modifier(adjusted)
+
+        # Track sources of modifications
+        sources = []
+        if penalty != 0:
+            sources.append("aging")
+        # Add equipment sources
+        sources.extend(equip_sources.get(attr, []))
 
         result[f"{attr.lower()}_adjusted"] = adjusted
         result[f"{attr.lower()}_adj_mod"] = adj_mod
+        result[f"{attr.lower()}_sources"] = ", ".join(sources) if sources else ""
 
-    # CHR has no aging penalty
+    # CHR has no aging penalty but can have equipment bonuses
     chr_val = get_attribute_base_value(attrs.get("CHR", 10))
-    result["chr_adjusted"] = chr_val
-    result["chr_adj_mod"] = get_attribute_modifier(chr_val)
+    chr_bonus = equip_bonuses.get("CHR", 0)
+    chr_adjusted = chr_val + chr_bonus
+    chr_sources = equip_sources.get("CHR", [])
+
+    result["chr_adjusted"] = chr_adjusted
+    result["chr_adj_mod"] = get_attribute_modifier(chr_adjusted)
+    result["chr_sources"] = ", ".join(chr_sources) if chr_sources else ""
 
     return result
 
@@ -120,22 +217,26 @@ def recalculate_derived(char_data):
     attrs = char_data.get("attributes", {})
     aging = char_data.get("interactive_aging", {})
 
+    # Get equipment bonuses
+    equip_bonuses, _ = parse_equipment_bonuses(char_data)
+
     # Get base values for calculations (the integer part)
     str_val = get_attribute_base_value(attrs.get("STR", 10))
     dex_val = get_attribute_base_value(attrs.get("DEX", 10))
     con_val = get_attribute_base_value(attrs.get("CON", 10))
     wis_val = get_attribute_base_value(attrs.get("WIS", 10))
+    int_val = get_attribute_base_value(attrs.get("INT", 10))
 
-    # Apply aging penalties for derived stat calculations
-    str_adj = str_val - aging.get("str", 0)
-    dex_adj = dex_val - aging.get("dex", 0)
-    con_adj = con_val - aging.get("con", 0)
-    wis_adj = wis_val - aging.get("wis", 0)
+    # Apply aging penalties (stored as negative) and equipment bonuses
+    # aging.get("str", 0) is negative (e.g., -1), so we ADD it to subtract
+    str_adj = str_val + aging.get("str", 0) + equip_bonuses.get("STR", 0)
+    dex_adj = dex_val + aging.get("dex", 0) + equip_bonuses.get("DEX", 0)
+    con_adj = con_val + aging.get("con", 0) + equip_bonuses.get("CON", 0)
+    wis_adj = wis_val + aging.get("wis", 0) + equip_bonuses.get("WIS", 0)
+    int_adj = int_val + aging.get("int", 0) + equip_bonuses.get("INT", 0)
 
     # Get modifiers from adjusted values
     wis_mod = get_attribute_modifier(wis_adj)
-    int_val = get_attribute_base_value(attrs.get("INT", 10))
-    int_adj = int_val - aging.get("int", 0)
     int_mod = get_attribute_modifier(int_adj)
 
     # Use existing rolls if available, otherwise default to 3

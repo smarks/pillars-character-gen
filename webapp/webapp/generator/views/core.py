@@ -316,6 +316,13 @@ def _build_index_context(request, character, char_data):
         "wis_adj_mod": adjusted_attrs.get("wis_adj_mod"),
         "con_adj_mod": adjusted_attrs.get("con_adj_mod"),
         "chr_adj_mod": adjusted_attrs.get("chr_adj_mod"),
+        # Sources of attribute modifications
+        "str_sources": adjusted_attrs.get("str_sources", ""),
+        "dex_sources": adjusted_attrs.get("dex_sources", ""),
+        "int_sources": adjusted_attrs.get("int_sources", ""),
+        "wis_sources": adjusted_attrs.get("wis_sources", ""),
+        "con_sources": adjusted_attrs.get("con_sources", ""),
+        "chr_sources": adjusted_attrs.get("chr_sources", ""),
         "equipment_json": equipment_json,
         **movement,
     }

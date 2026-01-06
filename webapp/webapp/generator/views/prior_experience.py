@@ -66,6 +66,30 @@ def select_track(request):
             return redirect("start_over")
 
         elif action == "add_experience":
+            # Check if character has died - cannot add more experience
+            if request.session.get("interactive_died", False):
+                return render(
+                    request,
+                    "generator/select_track.html",
+                    {
+                        "character": character,
+                        "track_info": track_info,
+                        "current_age": 16 + request.session.get("interactive_years", 0),
+                        "error": "Cannot add experience to a dead character",
+                        "years_completed": request.session.get("interactive_years", 0),
+                        "skills": request.session.get("interactive_skills", []),
+                        "yearly_results": request.session.get(
+                            "interactive_yearly_results", []
+                        ),
+                        "died": True,
+                        "has_experience": request.session.get("interactive_years", 0)
+                        > 0,
+                        "current_track": request.session.get(
+                            "interactive_track_name", ""
+                        ),
+                    },
+                )
+
             # Get form data
             interactive_mode = request.POST.get("interactive_mode") == "on"
             years = (

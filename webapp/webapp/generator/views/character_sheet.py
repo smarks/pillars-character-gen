@@ -166,6 +166,13 @@ def character_sheet(request, char_id):
             "wis_adj_mod": adjusted_attrs.get("wis_adj_mod"),
             "con_adj_mod": adjusted_attrs.get("con_adj_mod"),
             "chr_adj_mod": adjusted_attrs.get("chr_adj_mod"),
+            # Sources of attribute modifications
+            "str_sources": adjusted_attrs.get("str_sources", ""),
+            "dex_sources": adjusted_attrs.get("dex_sources", ""),
+            "int_sources": adjusted_attrs.get("int_sources", ""),
+            "wis_sources": adjusted_attrs.get("wis_sources", ""),
+            "con_sources": adjusted_attrs.get("con_sources", ""),
+            "chr_sources": adjusted_attrs.get("chr_sources", ""),
             "yearly_results": yearly_results,
             "years_served": years_served,
             "current_age": char_data.get("base_age", 16) + years_served,
@@ -420,6 +427,12 @@ def update_session_character(request):
         attr_name = field.split(".")[1]
         if attr_name in ["STR", "DEX", "INT", "WIS", "CON", "CHR"]:
             char_data["attributes"][attr_name] = value
+            # Ensure aging data is included in char_data for adjusted calculations
+            if "interactive_aging" not in char_data:
+                char_data["interactive_aging"] = request.session.get(
+                    "interactive_aging",
+                    {"str": 0, "dex": 0, "int": 0, "wis": 0, "con": 0},
+                )
             computed.update(recalculate_derived(char_data))
             mod = get_attribute_modifier(value)
             computed[f"{attr_name.lower()}_mod"] = mod
@@ -484,6 +497,12 @@ def add_experience_to_character(request, char_id):
     track_choice = request.POST.get("track", "auto")
 
     char_data = character.character_data
+
+    # Check if character has died - cannot add more experience
+    if char_data.get("interactive_died", False):
+        messages.error(request, "Cannot add experience to a dead character.")
+        return redirect("character_sheet", char_id=char_id)
+
     attrs = char_data.get("attributes", {})
 
     # Get attribute modifiers
